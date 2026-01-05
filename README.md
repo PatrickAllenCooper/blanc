@@ -14,9 +14,20 @@ The Algorithm: We require a principled method for exracting incomplete rendition
 
 References:
 "Defeasible Logic" - Nute, 94'
+
 "A Skeptical Non-monotonic Reasoning System" - Nute, 87'
+
 "A Logic for Legal Reasoning" - Nute, 97'
+
 Java Framework - SPINdle
+
 Prolog Encodings
+
 Answer Set Programming
+
 LOGicalThought: Logic-Based Ontological Grounding of LLMs for High-Assurance Reasoning
+
+LOGicalThought (LogT)
+
+DARK (Deductive and Abductive Reasoning in Knowledge graphs)
+
