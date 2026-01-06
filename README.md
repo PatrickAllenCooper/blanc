@@ -12,6 +12,9 @@ The System: Create a set of statements K for which a deduction is arrived at via
 
 The Algorithm: We require a principled method for exracting incomplete renditions of knowledgebases which can be described in terms of defeasible logic. I will call this system the "Author."
 
+Tooling:
+We elect to use PyLog instead of Prolog directly (https://wiki.python.org/moin/PyLog) since it provides a prolog interface allowing us to keep this whole academic project within a single language (never a bad thing).
+
 References:
 "Defeasible Logic" - Nute, 94'
 
