@@ -26,7 +26,7 @@ Java Framework - SPINdle
 
 Prolog Encodings
 
-Answer Set Programming
+Answer Set Programming - Clingo or DLV
 
 LOGicalThought: Logic-Based Ontological Grounding of LLMs for High-Assurance Reasoning
 
