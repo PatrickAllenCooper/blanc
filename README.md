@@ -36,3 +36,5 @@ DARK (Deductive and Abductive Reasoning in Knowledge graphs)
 
 Rational Closure (KLM Framework)
 
+For LLM Constraints use Guidance + Outlines
+
