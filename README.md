@@ -12,6 +12,8 @@ The System: Create a set of statements K for which a deduction is arrived at via
 
 The Algorithm: We require a principled method for exracting incomplete renditions of knowledgebases which can be described in terms of defeasible logic. We call this process "authoring."
 
+We propose a new dataset "nifty dataset name" to fill this gap by generating a grounded dataset that. While we do not offer a general solution to the abductive reasoning problem, we offer a diverse and factual data which can be used to explore solutions, certify existing grounding knowledge of current foundation models, and provide a training corpus for future generations of foundation models.
+
 Tooling:
 We elect to use PyLog instead of Prolog directly (https://wiki.python.org/moin/PyLog) since it provides a prolog interface allowing us to keep this whole academic project within a single language (never a bad thing).
 
