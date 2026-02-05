@@ -1,0 +1,71 @@
+[project]
+name = "blanc"
+version = "0.1.0"
+description = "Unified API for querying heterogeneous knowledge bases for defeasible reasoning research"
+authors = [{name = "BLANC Research Team"}]
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+dependencies = [
+    "pyswip>=0.2.11",
+    "clingo>=5.8.0",
+    "clorm>=1.6.0",
+    "pydantic>=2.0.0",
+    "networkx>=3.0",
+    "typing-extensions>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "hypothesis>=6.0.0",
+    "mypy>=1.8.0",
+    "ruff>=0.1.0",
+]
+
+llm = [
+    "guidance>=0.1.0",
+    "outlines>=0.1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "A", "C4", "SIM", "TCH"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "--cov=src/blanc --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+source = ["src/blanc"]
+omit = ["tests/*", "**/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

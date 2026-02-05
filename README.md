@@ -1,42 +1,186 @@
-# blanc 🕵🏻‍♂️
+# BLANC
 
-LLMs struggle with regression to the best explanation. We wish to provide an efficient way to evaluate abductive reasoning. Our innovation is to use deductive proofs to create defeasible sets which can be used to grade our resulting generation for some generative model.
+**B**uilding **L**ogical **A**bductive **N**on-monotonic **C**orpora
 
-While modus tollens and modus ponens are able to generate certain determinations via -deduction- and as such do not require any appeal to grounding or uncertainty reasoning about the world itself is considerabley more nuanced.
+A unified Python API for querying heterogeneous knowledge bases to support research on abductive and defeasible reasoning in foundation models.
 
-The Novelty: We reframe grounding as a question of defeasible logic, thereby making it a question of reasoning from uncertainty.
+## Overview
 
-Aside: Defeasible non-monotonic logics are related to causal inference.
+LLMs struggle with regression to the best explanation (abductive reasoning). We provide an efficient framework to evaluate abductive reasoning by using deductive proofs to create defeasible sets for grading generative model outputs.
 
-The System: Create a set of statements K for which a deduction is arrived at via a prolog interpreter called E. Create a deliberate subset k_i for an incomplete rendition or subset of K for which a known defeasible logic can be dedduced which is likewise arrived at by a prolog interpreter.  We use some subset of statements k_i as input for a foundation model where ordered pairs (d_i, e_i) is the label or target. Note, e is the label of the defeasible inference method utilized.
+**The Innovation**: We reframe grounding as a question of defeasible logic, making it a question of reasoning from uncertainty rather than complete knowledge.
 
-The Algorithm: We require a principled method for exracting incomplete renditions of knowledgebases which can be described in terms of defeasible logic. We call this process "authoring."
+**The System**: Create complete knowledge bases K from which deductions can be derived. Generate principled incomplete renditions k_i that simulate reasoning under uncertainty. Use these incomplete theories as input for foundation models, with defeasible inference methods as training targets.
 
-We propose a new dataset "nifty dataset name" to fill this gap by generating a grounded dataset that. While we do not offer a general solution to the abductive reasoning problem, we offer a diverse and factual data which can be used to explore solutions, certify existing grounding knowledge of current foundation models, and provide a training corpus for future generations of foundation models.
+## Quick Start
 
-Tooling:
-We elect to use PyLog instead of Prolog directly (https://wiki.python.org/moin/PyLog) since it provides a prolog interface allowing us to keep this whole academic project within a single language (never a bad thing).
+```python
+from blanc import KnowledgeBase, Query
+from blanc.core.theory import Rule, RuleType, Theory
 
-References:
-"Defeasible Logic" - Nute, 94'
+# Create a theory programmatically
+theory = Theory()
+theory.add_fact("bird(tweety)")
+theory.add_rule(
+    Rule(
+        head="flies(X)",
+        body=("bird(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="r1"
+    )
+)
 
-"A Skeptical Non-monotonic Reasoning System" - Nute, 87'
+# Convert between formats
+print(theory.to_prolog())
+print(theory.to_defeasible())
 
-"A Logic for Legal Reasoning" - Nute, 97'
+# Query (when backends are implemented in Phase 2)
+kb = KnowledgeBase(backend='prolog', source='knowledge.pl')
+results = Query(kb).select('diagnosis(Patient, Disease)').execute()
+```
 
-Java Framework - SPINdle
+## Project Status
 
-Prolog Encodings
+**Current Phase: Phase 1 - Core Infrastructure (Complete)**
 
-Answer Set Programming - Clingo or DLV
+- Unified API design with adapter pattern
+- Theory representation supporting multiple rule types
+- Query builder for deductive, abductive, and defeasible queries
+- Result containers with provenance tracking
+- Comprehensive test suite (48 tests, 63% coverage)
 
-LOGicalThought: Logic-Based Ontological Grounding of LLMs for High-Assurance Reasoning
+**Next Phase: Phase 2 - Backend Implementations**
 
-LOGicalThought (LogT)
+Backend adapters for:
+- SWI-Prolog (via PySwip)
+- Clingo ASP solver (via Clorm ORM)
+- Defeasible logic systems
+- Rulelog integration (strategy TBD)
 
-DARK (Deductive and Abductive Reasoning in Knowledge graphs)
+## Architecture
 
-Rational Closure (KLM Framework)
+```
+blanc/
+├── core/              # Core abstractions (Theory, Query, Result)
+├── backends/          # Adapter implementations for different systems
+├── reasoning/         # Reasoning strategies (deductive, abductive, defeasible)
+├── generation/        # Dataset generation tools
+└── utils/             # Parsing and validation utilities
+```
 
-For LLM Constraints use Guidance + Outlines
+## Installation
+
+```bash
+# Install from source
+pip install -e .
+
+# With development dependencies
+pip install -e ".[dev]"
+
+# With LLM integration
+pip install -e ".[llm]"
+```
+
+## Features
+
+### Unified Query API
+
+```python
+# Deductive query
+Query(kb).select('p(X)').where('q(X)').execute()
+
+# Abductive query
+Query(kb).abduce('infected(john, covid)') \
+         .given('symptom(john, fever)') \
+         .minimize('hypothesis_count') \
+         .execute()
+
+# Defeasible query
+Query(kb).defeasibly_infer('flies(tweety)') \
+         .with_defeaters('wounded(tweety)') \
+         .execute()
+```
+
+### Rule Types
+
+- **Facts**: Ground truths
+- **Strict Rules**: Classical implications (->)
+- **Defeasible Rules**: Can be defeated by exceptions (=>)
+- **Defeaters**: Block inferences without asserting opposite (~>)
+
+### Format Conversion
+
+Convert theories between Prolog, ASP, and defeasible logic formats:
+
+```python
+theory.to_prolog()      # Prolog syntax
+theory.to_asp()         # Answer Set Programming
+theory.to_defeasible()  # Defeasible logic notation
+```
+
+## Research Application
+
+This framework supports the research goals outlined in our NeurIPS submission:
+
+1. **Dataset Generation**: Create grounded abductive reasoning benchmarks
+2. **Minimal Support Computation**: Find minimal facts needed for conclusions
+3. **Theory Ablation**: Generate incomplete theories for training
+4. **Derivation Tracing**: Extract proof trees for provenance
+
+## Testing
+
+```bash
+# Run test suite
+pytest tests -v
+
+# Run with coverage
+pytest tests --cov=src/blanc --cov-report=html
+
+# Run examples
+python examples/basic_usage.py
+```
+
+## Documentation
+
+Comprehensive documentation available in:
+- `Guidance_Documents/API_Design.md` - Detailed API specification
+- `examples/basic_usage.py` - Working examples
+- Inline docstrings with type hints throughout codebase
+
+## Technology Stack
+
+- **Python**: 3.11+ (modern type hints)
+- **PySwip**: SWI-Prolog interface
+- **Clingo**: 5.8.0+ for ASP
+- **Clorm**: Clingo ORM interface
+- **pytest**: Testing framework
+- **hypothesis**: Property-based testing
+- **ruff**: Fast linting and formatting
+
+## References
+
+**Defeasible Logic**:
+- Nute, "Defeasible Logic" (1994)
+- Nute, "A Skeptical Non-monotonic Reasoning System" (1987)
+- Nute, "A Logic for Legal Reasoning" (1997)
+
+**Systems**:
+- SPINdle (Java Framework)
+- Answer Set Programming (Clingo, DLV)
+- LOGicalThought (LogT)
+- DARK (Deductive and Abductive Reasoning in Knowledge graphs)
+- Rational Closure (KLM Framework)
+
+**Modern Implementations**:
+- Janus System (Prolog-Python integration, 2023)
+- Clorm ORM for Clingo
+- DePYsible (Python defeasible logic)
+
+## Contributing
+
+This is an academic research project. See `Guidance_Documents/` for development guidelines and design patterns.
+
+## License
+
+MIT
 
