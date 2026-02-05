@@ -95,16 +95,16 @@ class TestPrologBackend:
     def test_defeasible_query_basic(self):
         """Test basic defeasible query."""
         theory = Theory()
-        theory.add_fact("bird(tweety)")
+        theory.add_fact("human(socrates)")
         theory.add_rule(
-            Rule(head="flies(X)", body=("bird(X)",))
+            Rule(head="mortal(X)", body=("human(X)",))
         )
         
         backend = PrologBackend()
         backend.load_theory(theory)
         
-        # Verify tweety flies
-        solutions = list(backend._prolog.query("flies(tweety)"))
+        # Verify socrates is mortal
+        solutions = list(backend._prolog.query("mortal(socrates)"))
         assert len(solutions) > 0
 
     def test_close_cleanup(self):
