@@ -11,6 +11,11 @@ from blanc.author.support import (
 from blanc.author.metrics import (
     defeasible_yield,
 )
+from blanc.author.generation import (
+    AbductiveInstance,
+    generate_level1_instance,
+    generate_level2_instance,
+)
 
 __all__ = [
     "phi_kappa",
@@ -18,4 +23,7 @@ __all__ = [
     "full_theory_criticality",
     "redundancy_degree",
     "defeasible_yield",
+    "AbductiveInstance",
+    "generate_level1_instance",
+    "generate_level2_instance",
 ]

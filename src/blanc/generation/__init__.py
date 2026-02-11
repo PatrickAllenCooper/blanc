@@ -9,6 +9,10 @@ from blanc.generation.partition import (
     defeasibility_ratio,
     compute_dependency_depths,
 )
+from blanc.generation.distractor import (
+    sample_fact_distractors,
+    sample_rule_distractors,
+)
 
 __all__ = [
     "PartitionFunction",
@@ -18,4 +22,6 @@ __all__ = [
     "partition_random",
     "defeasibility_ratio",
     "compute_dependency_depths",
+    "sample_fact_distractors",
+    "sample_rule_distractors",
 ]

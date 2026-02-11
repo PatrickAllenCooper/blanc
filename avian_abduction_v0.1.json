@@ -1,0 +1,299 @@
+{
+  "metadata": {
+    "name": "Avian Abduction Benchmark v0.1",
+    "total_instances": 12,
+    "level1_count": 2,
+    "level2_count": 10,
+    "valid_count": 12,
+    "knowledge_base": "avian_biology",
+    "partition_strategy": "rule"
+  },
+  "instances": [
+    {
+      "target": "swims(opus)",
+      "level": 1,
+      "candidates": [
+        "aquatic_environment(opus)",
+        "aquatic_environment(donald)",
+        "aquatic_environment(daffy)"
+      ],
+      "gold": [
+        "aquatic_environment(opus)"
+      ],
+      "metadata": {
+        "ablated_element": "aquatic_environment(opus)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 3,
+      "num_gold": 1
+    },
+    {
+      "target": "swims(donald)",
+      "level": 1,
+      "candidates": [
+        "aquatic_environment(donald)",
+        "aquatic_environment(daffy)",
+        "aquatic_environment(opus)"
+      ],
+      "gold": [
+        "aquatic_environment(donald)"
+      ],
+      "metadata": {
+        "ablated_element": "aquatic_environment(donald)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 3,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(tweety)",
+      "level": 2,
+      "candidates": [
+        "r1: bird(X) => flies(X)",
+        "s1: sparrow(X) => bird(X)",
+        "s5: duck(X) => bird(X)",
+        "s3: penguin(X) => bird(X)",
+        "s7: canary(X) => small(X)",
+        "s4: canary(X) => bird(X)"
+      ],
+      "gold": [
+        "r1: bird(X) => flies(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r1",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(polly)",
+      "level": 2,
+      "candidates": [
+        "r1: bird(X) => flies(X)",
+        "s2: parrot(X) => bird(X)",
+        "s4: canary(X) => bird(X)",
+        "s5: duck(X) => bird(X)",
+        "s7: canary(X) => small(X)",
+        "s3: penguin(X) => bird(X)"
+      ],
+      "gold": [
+        "r1: bird(X) => flies(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r1",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "migrates(tweety)",
+      "level": 2,
+      "candidates": [
+        "r1: bird(X) => flies(X)",
+        "s7: canary(X) => small(X)",
+        "s5: duck(X) => bird(X)",
+        "s1: sparrow(X) => bird(X)",
+        "s2: parrot(X) => bird(X)",
+        "s3: penguin(X) => bird(X)"
+      ],
+      "gold": [
+        "r1: bird(X) => flies(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r1",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "migrates(polly)",
+      "level": 2,
+      "candidates": [
+        "r1: bird(X) => flies(X)",
+        "s2: parrot(X) => bird(X)",
+        "s7: canary(X) => small(X)",
+        "s4: canary(X) => bird(X)",
+        "s6: sparrow(X) => small(X)",
+        "s1: sparrow(X) => bird(X)"
+      ],
+      "gold": [
+        "r1: bird(X) => flies(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r1",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "sings(tweety)",
+      "level": 2,
+      "candidates": [
+        "r3: bird(X), small(X) => sings(X)",
+        "r4: bird(X), aquatic_environment(X) => swims(X)",
+        "r2: bird(X), flies(X) => migrates(X)",
+        "r5: bird(X), large(X) => predator(X)",
+        "r3_syn: sings(X), small(X) => bird(X)"
+      ],
+      "gold": [
+        "r3: bird(X), small(X) => sings(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r3",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 5,
+      "num_gold": 1
+    },
+    {
+      "target": "sings(chirpy)",
+      "level": 2,
+      "candidates": [
+        "r3: bird(X), small(X) => sings(X)",
+        "r4: bird(X), aquatic_environment(X) => swims(X)",
+        "r5: bird(X), large(X) => predator(X)",
+        "r2: bird(X), flies(X) => migrates(X)",
+        "r3_syn: sings(X), small(X) => bird(X)"
+      ],
+      "gold": [
+        "r3: bird(X), small(X) => sings(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r3",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 5,
+      "num_gold": 1
+    },
+    {
+      "target": "swims(opus)",
+      "level": 2,
+      "candidates": [
+        "r4: bird(X), aquatic_environment(X) => swims(X)",
+        "r5: bird(X), large(X) => predator(X)",
+        "r3: bird(X), small(X) => sings(X)",
+        "r2: bird(X), flies(X) => migrates(X)",
+        "r4_syn: swims(X), aquatic_environment(X) => bird(X)"
+      ],
+      "gold": [
+        "r4: bird(X), aquatic_environment(X) => swims(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r4",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 5,
+      "num_gold": 1
+    },
+    {
+      "target": "swims(donald)",
+      "level": 2,
+      "candidates": [
+        "r4: bird(X), aquatic_environment(X) => swims(X)",
+        "r3: bird(X), small(X) => sings(X)",
+        "r2: bird(X), flies(X) => migrates(X)",
+        "r5: bird(X), large(X) => predator(X)",
+        "r4_syn: swims(X), aquatic_environment(X) => bird(X)"
+      ],
+      "gold": [
+        "r4: bird(X), aquatic_environment(X) => swims(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r4",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 5,
+      "num_gold": 1
+    },
+    {
+      "target": "predator(opus)",
+      "level": 2,
+      "candidates": [
+        "r5: bird(X), large(X) => predator(X)",
+        "r4: bird(X), aquatic_environment(X) => swims(X)",
+        "r3: bird(X), small(X) => sings(X)",
+        "r2: bird(X), flies(X) => migrates(X)",
+        "r5_syn: predator(X), large(X) => bird(X)"
+      ],
+      "gold": [
+        "r5: bird(X), large(X) => predator(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r5",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 5,
+      "num_gold": 1
+    },
+    {
+      "target": "predator(donald)",
+      "level": 2,
+      "candidates": [
+        "r5: bird(X), large(X) => predator(X)",
+        "r2: bird(X), flies(X) => migrates(X)",
+        "r3: bird(X), small(X) => sings(X)",
+        "r4: bird(X), aquatic_environment(X) => swims(X)",
+        "r5_syn: predator(X), large(X) => bird(X)"
+      ],
+      "gold": [
+        "r5: bird(X), large(X) => predator(X)"
+      ],
+      "metadata": {
+        "ablated_element": "r5",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 31,
+      "num_candidates": 5,
+      "num_gold": 1
+    }
+  ]
+}
