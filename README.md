@@ -62,37 +62,36 @@ kb_asp.load(theory)
 - Tutorial notebook (650+ lines)
 - 73 tests (70 passing, 3 skipped, 52% coverage)
 
-🚧 **Phase 3 - Author Algorithm** (Weeks 1-2 Complete - 2026-02-11)
+🚧 **Phase 3 - Author Algorithm** (Weeks 1-3 Complete - 2026-02-11)
 
 ✅ **Week 1 - Defeasible Reasoning Engine** (Complete)
 - DefeasibleEngine: Definition 7 implementation (200 lines, 91% coverage)
 - DerivationTree: AND-OR proof trees (69 lines, 99% coverage)
 - Avian Biology KB: 6 birds, 5 defeasible rules, 4 defeaters (159 lines)
-- Tests: 33/33 passing
-- Proposition 2 verified (definite ⟹ defeasible)
-- Theorem 11 baseline established
+- Tests: 33/33 passing | Proposition 2 & Theorem 11 verified
 
 ✅ **Week 2 - Conversion & Criticality** (Complete)
 - Defeasible conversion φ_κ(Π): Definition 9 (177 lines, 63% coverage)
-- Partition functions: Definition 10 - κ_leaf, κ_rule, κ_depth, κ_rand (275 lines, 92% coverage)
+- Partition functions: Definition 10 (275 lines, 92% coverage)
 - Criticality Crit*(D,q): Definition 18 (179 lines, 94% coverage)
 - Yield Y(κ,Q): Definition 22 (64 lines, 100% coverage)
-- Tests: 35/35 passing, 68/68 total
-- Proposition 1 verified (conservative conversion)
-- Proposition 3 verified (yield monotonicity)
+- Tests: 35/35 passing, 68/68 total | Propositions 1 & 3 verified
 
-🔨 **Week 3 - Instance Generation** (Next)
-- Level 1-2 instance generation (Defs 20-21)
-- Distractor sampling strategies
-- Instance validation framework
-- Generate 20 instances from Avian Biology
+✅ **Week 3 - Instance Generation** (Complete)
+- AbductiveInstance: Definition 20 (331 lines, 90% coverage)
+- Level 1-2 generation: Definition 21 (614 lines total)
+- Distractor strategies: 3 types (283 lines, 59% coverage)
+- **Dataset generated**: avian_abduction_v0.1.json (12 instances, 100% valid)
+- Tests: 13/13 passing, 81/81 total
 
-📋 **Remaining** (Week 4)
-- Level 3 defeater abduction (Def 16)
-- Rendering codec (Defs 23-30) - M4+D1 only for MVP
-- Evaluation pipeline (Defs 31-32)
+🔨 **Week 4 - Codec & Final Integration** (In Progress)
+- Level 3 instances (5 hand-crafted)
+- M4 encoder (pure formal)
+- D1 decoder (exact match)
+- End-to-end pipeline
+- **Target: 17+ instances, 100% round-trip**
 
-**Goal: DeFAb MVP - 25 instances, 100% round-trip (Week 4)**
+**Milestone: MVP Foundation Complete - 81/81 tests, 12 valid instances generated**
 
 ## Architecture
 
