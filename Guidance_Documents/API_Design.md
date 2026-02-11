@@ -197,22 +197,27 @@ entry = gen.create_abductive_instance(
 - [x] 8 major datasets downloaded (1.9B+ facts)
 - [x] Total: 70/73 tests passing (95.8%)
 
-### Phase 3: Reasoning Engines
-- [ ] Deductive query execution
-- [ ] Abductive query execution (generate-and-test)
-- [ ] Defeasible reasoning with superiority relations
-- [ ] Derivation tracing and proof extraction
+### Phase 3: Author Algorithm & Dataset Generation (IN PROGRESS - 2026-02-11)
+- [ ] Defeasible reasoning engine (Def 7, O(|R|·|F|) complexity)
+- [ ] Defeasible conversion & partition functions (Defs 8-10)
+- [ ] Support set & criticality computation (Defs 17-20, O(|D|²·|F|))
+- [ ] Level 1-2 instance generation (Defs 20-21)
+- [ ] Level 3 defeater abduction (Defs 11-16)
+- [ ] Expectation sets & conservativity checking (Def 11, Remark 2)
+- [ ] Novelty & revision distance metrics (Defs 33-35)
 
-### Phase 4: Research Tools
-- [ ] Minimal support set computation
-- [ ] Theory ablation strategies
-- [ ] Syntactically similar distractor generation
-- [ ] Dataset generation pipeline
+### Phase 4: Rendering Codec (CRITICAL COMPONENT)
+- [ ] Encoder: Four modalities M1-M4 (Def 26, Appendix B)
+- [ ] Decoder: Three strategies D1-D3 (Def 29)
+- [ ] Ontological grounding map NL: HB → L* (Def 28)
+- [ ] Round-trip consistency validation (Def 30)
+- [ ] Faithfulness & naturalness metrics (Defs 24-25)
 
-### Phase 5: Integration
-- [ ] LLM interface (Guidance + Outlines for constrained generation)
-- [ ] Batch processing for dataset creation
-- [ ] Evaluation metrics for abductive reasoning
+### Phase 5: Evaluation & Experiments
+- [ ] Rendering-robust accuracy (Def 31)
+- [ ] Graded scoring for Level 3 (§4.5)
+- [ ] Dataset statistics & analysis (§4.3)
+- [ ] Batch evaluation pipeline
 - [ ] Visualization of derivation trees
 
 ## Technology Stack (Modern Best Practices 2026)
@@ -311,6 +316,15 @@ entry = gen.create_abductive_instance(
 - defeasible_logic.py: https://github.com/e-zorzi/defeasible_logic.py
 
 ## Change Log
+
+- 2026-02-11: Phase 3 Implementation Plan
+  - Created comprehensive implementation plan (IMPLEMENTATION_PLAN.md)
+  - Defined author.py as mathematical reference implementation
+  - Mapped all paper definitions (1-35) to code structure
+  - Specified codec architecture (CRITICAL: 4 modalities, 3 decoders)
+  - Established testing strategy (unit, integration, property-based)
+  - Identified risks: Codec (40%), Level 3 (30%), Expectations (20%)
+  - Status: Design phase complete, ready for implementation
 
 - 2026-02-05 (Evening): Phase 2 Complete
   - Implemented ASP backend (Clingo/Clorm) - 11 tests passing
