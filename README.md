@@ -101,7 +101,9 @@ kb_asp.load(theory)
 - Performance complexities match theoretical bounds
 - **VERDICT: Paper has strong merit - proceed to full implementation**
 
-**Next Phase**: Scale to full DeFAb benchmark (3 KBs, 1000+ instances, 4 modalities)
+**Next Phase**: Scale to full DeFAb benchmark  
+**See**: `NEURIPS_FULL_ROADMAP.md` for complete 14-week plan matching ALL paper requirements  
+**Note**: `PAPER_REQUIREMENTS_CHECKLIST.md` identifies gaps between MVP and paper
 
 ## Architecture
 
