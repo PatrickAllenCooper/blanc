@@ -62,16 +62,29 @@ kb_asp.load(theory)
 - Tutorial notebook (650+ lines)
 - 73 tests (70 passing, 3 skipped, 52% coverage)
 
-🚧 **Phase 3 - Author Algorithm** (In Progress - Started 2026-02-11)
-- Mathematical framework implementation (all paper definitions)
-- Defeasible reasoning engine (Def 7, O(|R|·|F|))
-- Conversion & partition functions (Defs 8-10)
+🚧 **Phase 3 - Author Algorithm** (Week 1 Complete - 2026-02-11)
+
+✅ **Week 1 - Defeasible Reasoning Engine** (Complete)
+- DefeasibleEngine: Definition 7 implementation (200 lines, 91% coverage)
+- DerivationTree: AND-OR proof trees (69 lines, 99% coverage)
+- Avian Biology KB: 6 birds, 5 defeasible rules, 4 defeaters (159 lines)
+- Comprehensive tests: 33 tests, 100% passing
+- Proposition 2 verified (definite ⟹ defeasible)
+- Theorem 11 baseline established
+
+🔨 **Week 2 - Conversion & Criticality** (Next)
+- Defeasible conversion φ_κ(Π) (Def 9)
+- Partition functions (Def 10): κ_leaf, κ_rule, κ_depth, κ_rand
 - Support & criticality computation (Defs 17-20)
+- Proposition 1 verification (conservative conversion)
+- Proposition 4 verification (Crit* ⊆ Crit)
+
+📋 **Remaining** (Weeks 3-4)
 - Level 1-3 instance generation (Defs 20-22, 16)
 - Rendering codec (Defs 23-30) - 4 modalities, 3 decoders
 - Evaluation pipeline (Defs 31-32)
 
-**Goal: DeFAb Benchmark Generation (NeurIPS 2026 Submission)**
+**Goal: DeFAb MVP - 25 instances, 100% round-trip (Week 4)**
 
 ## Architecture
 
