@@ -215,15 +215,38 @@ See `KNOWLEDGE_BASE_INVENTORY.md` for complete catalog.
 
 ## Documentation
 
-Comprehensive documentation available in:
-- **`notebooks/BLANC_Tutorial.ipynb`** - Complete interactive tutorial (START HERE!)
-- **`KNOWLEDGE_BASE_INVENTORY.md`** - Catalog of all 18 knowledge bases
-- **`COMPREHENSIVE_STATUS_REPORT.md`** - Full project status
-- `Guidance_Documents/` - 4 detailed design documents
-- `INSTALL.md` - Installation guide for all platforms
-- `VALIDATION_REPORT.md` - KB download validation
-- `examples/basic_usage.py` - Working code examples
-- Inline docstrings with type hints throughout codebase
+### Essential Documents (Start Here)
+
+- **`README.md`** - This file (project overview)
+- **`NEURIPS_ROADMAP.md`** - 8-week plan from MVP to full benchmark
+- **`INSTALL.md`** - Installation guide for all platforms
+- **`notebooks/MVP_Validation_Study_Results.ipynb`** - Validation study results
+
+### Guidance Documents
+
+- **`Guidance_Documents/API_Design.md`** - Complete API design and changelog
+- **`Guidance_Documents/Phase3_Complete.md`** - Phase 3 summary
+- `Guidance_Documents/Phase{1,2,3}_*.md` - Phase summaries and plans
+
+### Technical Documentation
+
+- **`PROJECT_SUMMARY.md`** - Comprehensive project overview
+- **`VALIDATION_STUDY_RESULTS.md`** - Empirical validation findings
+- **`IMPLEMENTATION_PLAN.md`** - 80-page technical specification
+- **`author.py`** - Mathematical reference (all paper definitions)
+- **`KNOWLEDGE_BASE_INVENTORY.md`** - Catalog of 18 knowledge bases
+- **`SLIDES_README.md`** - Presentation materials
+
+### Archive
+
+- `archive/week_reports/` - Weekly completion reports (Weeks 1-3)
+- `archive/mvp_docs/` - MVP development documents
+
+### Inline Documentation
+
+- Comprehensive docstrings with paper definition references
+- Type hints throughout codebase
+- Examples in `examples/` directory
 
 ## Technology Stack
 
