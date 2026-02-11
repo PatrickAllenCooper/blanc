@@ -45,18 +45,72 @@
 % to avoid loading the natbib package, add option nonatbib:
 %    \usepackage[nonatbib]{neurips_2025}
 
-\usepackage[utf8]{inputenc} % allow utf-8 input
-\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
-\usepackage{hyperref}       % hyperlinks
-\usepackage{url}            % simple URL typesetting
-\usepackage{booktabs}       % professional-quality tables
-\usepackage{amsfonts}       % blackboard math symbols
-\usepackage{nicefrac}       % compact symbols for 1/2, etc.
-\usepackage{microtype}      % microtypography
-\usepackage{xcolor}         % colors
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{nicefrac}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{mathtools}
+\usepackage{thmtools}
+\usepackage[margin=1in]{geometry}
 
+% Theorem environments
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+% Custom commands
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\Dm}{\mathcal{D}^{-}}
+\newcommand{\Dfull}{\mathcal{D}^{\mathrm{full}}}
+\newcommand{\HB}{\mathcal{H}_B}
+\newcommand{\HU}{\mathcal{H}_U}
+\newcommand{\Hcand}{\mathcal{H}_{\mathrm{cand}}}
+\newcommand{\Hgold}{\mathcal{H}^{*}}
+\newcommand{\Rgold}{\mathcal{H}^{*}_3}
+\newcommand{\La}{\mathcal{L}}
+\newcommand{\Rs}{R_s}
+\newcommand{\Rd}{R_d}
+\newcommand{\Rdf}{R_{df}}
+\newcommand{\Rdexc}{R_d^{\mathrm{exc}}}
+\newcommand{\Rdfspace}{\mathcal{R}_{df}}
+\newcommand{\Rdexcspace}{\mathcal{R}_{d}^{\mathrm{exc}}}
+\newcommand{\partfunc}{\kappa}
+\newcommand{\NL}{\mathrm{NL}}
+\newcommand{\pred}{\mathrm{pred}}
+\newcommand{\head}{\mathrm{head}}
+\newcommand{\Supp}{\mathrm{Supp}}
+\newcommand{\Crit}{\mathrm{Crit}}
+\newcommand{\CritStar}{\mathrm{Crit}^{*}}
+\newcommand{\AnSup}{\mathrm{AnSup}}
+\newcommand{\Exp}{\mathrm{Exp}}
+\newcommand{\Nov}{\mathrm{Nov}}
+\newcommand{\Nat}{\mathrm{Nat}}
+\newcommand{\Faith}{\mathrm{Faith}}
+\newcommand{\Diff}{\mathrm{Diff}}
+\newcommand{\proves}{\vdash}
+\newcommand{\pDelta}{\vdash_{\Delta}}
+\newcommand{\pPartial}{\vdash_{\partial}}
+\newcommand{\pSLD}{\vdash_{\mathrm{SLD}}}
+\newcommand{\defto}{\Rightarrow}
+\newcommand{\strictto}{\rightarrow}
+\newcommand{\defeatto}{\leadsto}
+\newcommand{\comp}[1]{\overline{#1}}
 % Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
-\title{Defeasible Reasoning as a Framework for Foundation Model Novelty and Grounding}
+\title{Defeasible Reasoning as a Framework for Foundation Model Grounding, Novelty, and Belief Revision}
 
 
 % The \author macro works with any number of authors. There are two commands
@@ -70,7 +124,7 @@
 
 \author{%
   David S.~Hippocampus\thanks{Use footnote for providing further information
-    about author (webpage, alternative address)---\emph{not} for acknowledging
+    about author (webpage, alternative address); \emph{not} for acknowledging
     funding agencies.} \\
   Department of Computer Science\\
   Cranberry-Lemon University\\
@@ -107,49 +161,308 @@
 
 
 \begin{abstract}
-  We address a critical gap in the progress in artificial intelligence. Although research has longstanding appreciation of how to inform deductions (prolog) we lack an appreciation for how to perform regression to the most likely explanation (abductive reasoning).
-
-  Large language models face a tautological constraint. They are required to assist in development of new scientific concepts, while simultaneously lending themselves to. Scientific progress often involves reevaluating previous abductive inferences in the light of new information, yet large language models depend upon these preexisting inferences as core constituents of their training corpus.
-
-  Large knowledge bases exist as a product of initiatives surrouding the effort to build.
-
-  Our innovation rests in recognizing that all defeasible or grounding problems within AI can be couched. While the initiatives surrounding FGCS, Alvey, 
-
-  We propose a new dataset "nifty dataset name" to fill this gap by generating a grounded dataset that. While we do not offer a general solution to the abductive reasoning problem, we offer a diverse and factual data which can be used to explore solutions, certify existing grounding knowledge of current foundation models, and provide a training corpus for future generations of foundation models.
+Foundation models are routinely evaluated on forward, monotonic inference, yet scientific progress depends on \emph{abduction} and \emph{revision}: proposing hypotheses that explain observations and retracting default conclusions when exceptions arise. We argue that current models suffer three entangled structural deficits: they cannot trace conclusions to supporting evidence (\emph{grounding}), cannot generate hypotheses that revise their training distribution (\emph{novelty}), and cannot update knowledge while preserving unrelated commitments (\emph{belief revision}). These deficits underlie hallucination, creative sterility, and the fragility of knowledge editing alike.
+We cast this triad as a defeasible reasoning problem. Starting from legacy deductive knowledge bases, we convert them into defeasible theories via a parameterized partition $\kappa$ that controls which clauses are strict versus revisable defaults. The resulting theories make epistemic commitments explicit: every conclusion has a traceable support set, every default is revisable, and every element's criticality is computable. We generate grounded abductive evaluation instances by ablating critical elements and computing verifier-backed gold hypotheses, with conservativity constraints that operationalize the AGM principle of minimal change \cite{alchourron1985logic}. The benchmark stratifies difficulty into (i)~fact completion, (ii)~rule abduction, and (iii)~\emph{defeater abduction}, where a model must introduce a conservative exception that blocks an incorrect default prediction: our formal analogue of rational scientific revision.
+We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and pipeline with polynomial-time instance generation, controllable distractors, explicit measures of novelty and revision distance, and a rendering-robust evaluation protocol that separates reasoning from surface-form sensitivity.
 \end{abstract}
+
 
 \section{Introduction}
 The challenge of creative AI extends across the scientific enterprise. Consider an AI capable of producing work worthy of a Nobel Prize in chemistry, physiology, or medicine. Such transformational creativity represents an extreme form of out-of-distribution generalization: the more novel an idea, the less likely it is to appear in the AI's training distribution.
 
-Yet, creative AI faces a challenge beyond mere distributional sparsity. Transformational discoveries do not simply extend existing knowledge. Rather, they often contradict it. A striking example from biology is the discovery of intrinsically disordered proteins (IDPs): proteins that lack fixed three-dimensional structure yet remain functionally essential \cite{dunker2001intrinsically}. Prior to this discovery, the prevailing dogma held that proteins required stable 3D conformations to perform their biological functions. An AI trained on data reflecting this conventional wisdom would be unlikely to hypothesize the existence of IDPs, since such a hypothesis would directly contradict the domain knowledge encoded in its training corpus.
-We address a fundamental limitation of current foundation models: their implicit treatment of knowledge as monotonic. Scientific reasoning, particularly transformational creativity, requires \textit{defeasible} inference, where conclusions can be revised in light of new evidence or competing defaults.
+Yet creative AI faces a challenge beyond mere distributional sparsity. Transformational discoveries do not simply extend existing knowledge; they often contradict it. A striking example from biology is the discovery of intrinsically disordered proteins (IDPs): proteins that lack fixed three-dimensional structure yet remain functionally essential \cite{dunker2001intrinsically}. Prior to this discovery, the prevailing dogma held that proteins required stable 3D conformations to perform biological functions. An AI trained on data reflecting this conventional wisdom would be unlikely to hypothesize the existence of IDPs, since such a hypothesis directly contradicts the domain knowledge encoded in its training corpus.
 
-We propose to develop formal methods for (1) converting deductive knowledge bases into defeasible rule sets that explicitly represent the revisability of scientific knowledge, (2) generating principled ``incomplete'' subsets of these knowledge bases to simulate reasoning under uncertainty, and (3) using this framework to evaluate and train foundation models on abductive and defeasible reasoning tasks.
+This failure reflects three entangled deficits in current foundation models. The first is a \textit{grounding deficit}: models lack an explicit epistemic structure distinguishing strict knowledge from revisable defaults, and cannot trace predictions to their supporting evidence (the root cause of hallucination). The second is a \textit{novelty deficit}: without knowing which beliefs are revisable, models cannot identify where creative exceptions might apply. The IDP discovery is hard for an AI precisely because the default ``proteins have stable 3D structure'' is not flagged as revisable anywhere in the model's representations. The third, and least recognized, is a \textit{belief revision deficit}: even when models do update their knowledge (through in-context learning, fine-tuning, or explicit editing methods such as ROME \cite{meng2022locating} and MEMIT \cite{meng2023mass}), they lack the formal machinery to ensure that changes satisfy the principle of minimal change \cite{alchourron1985logic, dalal1988investigations}: accommodating new evidence while disturbing as few existing commitments as possible. Without this principle, updating one fact risks cascading incoherence, precisely the ``ripple effect'' problem documented in knowledge editing evaluations \cite{cohen2024evaluating}. The IDP discovery illustrates all three: the creative act requires not merely asserting that disordered proteins exist, but doing so via a targeted revision that overrides the structure--function default for a specific subclass while leaving predictions about conventionally structured proteins intact.
 
-This approach treats the IDP-style challenge not as an anomaly but as the norm: scientific knowledge is structured around defaults and exceptions, and an AI capable of genuine scientific creativity must reason within this structure.
+These deficits are mutually reinforcing. A model without grounding cannot perform targeted revision because it cannot identify what supports the conclusion to be revised. A model without rational revision machinery cannot be genuinely creative because proposed exceptions may resolve one anomaly while introducing others. And a model that cannot generate novel exceptions cannot revise its knowledge at all, only extend it monotonically. The common structural absence is an explicit \emph{defeasible knowledge structure}: one that marks which rules are strict versus revisable, traces every conclusion to its support set, and enables targeted revision with formal conservativity guarantees.
 
-We recognize the problem of grounding and creativity as existing due to incomplete knowledge and incomplete understanding of...
+\textit{Defeasible reasoning} provides exactly this structure. In a defeasible theory, every conclusion is derived through a traceable chain of strict and defeasible rules, every default is explicitly revisable, and every piece of evidence participates in identifiable support sets. This provides grounding (one can determine \emph{why} the theory concludes what it does), the machinery for novelty (anomalous observations identify which defeasible rules to target), and a concrete operationalization of rational belief revision: our conservativity requirement (Definition~\ref{def:conserv}) ensures that resolutions preserve all expectations except the targeted anomaly, directly implementing AGM's minimal change postulate \cite{gardenfors1988knowledge, katsuno1991propositional}; our revision distance metric (Definition~\ref{def:revdist}) quantifies departure from this principle; and our graded scoring function (Section~\ref{subsec:partial_credit}) decomposes model failures along the stages of rational revision, from syntactic well-formedness through anomaly resolution to full conservativity.
 
-All problems of intelligence form as a result of ignorance so intuitively it stands to reason that all inferrable explanations are embedded into contextual knowledge frameworks in which they are obvious, ergo we hope to simulate this approach by leveraging existing knowledge bases, often built during the era of expert systems, to reinforce and interrogate existing AI systems.
+Current benchmarks leave this space largely untested. Tasks like entailment verification \cite{tafjord2021proofwriter} and proof checking evaluate forward, monotonic reasoning. Knowledge editing benchmarks such as CounterFact \cite{meng2022locating} measure whether a target fact changed but rely on ad hoc heuristics for side-effect assessment rather than formally verifying conservativity. What is missing is a principled method for generating grounded abductive instances: one that combines the expressivity of defeasible logic with verifiable gold-standard answers and formal revision guarantees.
 
+This creates what we term the \textit{tautological bottleneck}: the very hypotheses a model would need to generate are precisely those it has never seen, because the act of proposing them is what converts them from creative conjectures into textbook facts. To study this bottleneck, we need a benchmark with four properties: (i)~formally verifiable gold-standard hypotheses, (ii)~controllable difficulty from gap-filling to creative exception-finding, (iii)~explicit grounding structure with traceable support sets and formal conservativity checks, and (iv)~separation of logical reasoning from surface-form sensitivity.
+
+All four properties can be obtained by working backwards from existing deductive knowledge bases. The 1980s and 1990s produced large-scale, hand-engineered knowledge bases (Japan's Fifth Generation Computer Systems project, the UK's Alvey Programme, Cyc's million-axiom ontology) that formalize domain expertise as logic programs. By converting these legacy systems into defeasible theories, we obtain structures in which every element's epistemic status, every conclusion's support set, and every default's vulnerability to exception are formally specified. From these structures we generate evaluation instances where the gold-standard answer is guaranteed by the complete theory but hidden from the model.
+
+We introduce \textsc{DeFAb} (\textbf{De}feasible \textbf{A}bduction \textbf{B}enchmark), a dataset and generation pipeline grounded in this approach. Our contributions are:
+
+\begin{enumerate}[label=(\arabic*),nosep]
+    \item \textbf{A formal grounding framework} for converting definite logic programs into defeasible theories via a parameterized partition function $\kappa$ that controls which clauses are strict versus revisable. The resulting theories make epistemic commitments explicit: identifiable support sets, marked revisability, and polynomial-time criticality computation. The conversion is provably conservative when all clauses are strict (Proposition~\ref{prop:strict}).
+
+    \item \textbf{A three-level evaluation hierarchy} testing grounding, novelty, and rational revision. Level~1 (fact completion) asks models to identify missing observations; Level~2 (rule abduction) asks models to reconstruct missing generalizations; Level~3 (defeater abduction) asks models to construct novel exception rules satisfying the conservativity constraint, performing rational belief revision in the defeasible setting. Gold-standard hypotheses are computed by a polynomial-time, verifier-backed pipeline (Corollary~\ref{cor:cubic}).
+
+    \item \textbf{Controlled measures of novelty, revision, and difficulty.} Predicate novelty quantifies symbols introduced beyond the theory; revision distance (Definition~\ref{def:revdist}) measures total cost in AGM-style minimal change; conservativity (Definition~\ref{def:conserv}) verifies preservation of unrelated expectations. The graded scoring function (Section~\ref{subsec:partial_credit}) decomposes failures along the stages of rational belief revision.
+
+    \item \textbf{A rendering-robust evaluation protocol.} Four modalities from narrative to raw syntax; the headline metric is worst-case accuracy across all four, ensuring scores reflect epistemic reasoning rather than surface-form sensitivity.
+\end{enumerate}
+
+Returning to the IDP example: the default ``proteins have stable 3D structure'' is a defeasible rule $r_1$ with identifiable support and computable criticality. The discovery corresponds to constructing an exception rule $r_4$ (``disordered proteins function via conformational ensembles'') that overrides the default mechanism. Crucially, $r_4$ must be \emph{conservative}: resolving the anomaly for p53\_idr without disrupting predictions about conventionally structured proteins (the defeasible analogue of AGM's minimal change). A model that proposes $r_4$ but destabilizes unrelated predictions scores $0.5$; one that preserves all side-effects scores $1.0$. The benchmark thus measures not just whether a model can be creative, but whether it can be \emph{rationally} creative.
+
+Section~\ref{sec:method} formalizes the pipeline; Section~\ref{sec:experiments} presents the experimental design; full definitions and proofs appear in the appendices.
 
 
 \section{Related Work}
 Non-monotonic reasoning has a rich formal history. Reiter's default logic \cite{reiter1980logic} and McCarthy's circumscription \cite{mccarthy1980circumscription} addressed the inadequacy of classical logic for commonsense reasoning, where new information routinely overrides prior conclusions. Nute's defeasible logic \cite{nute1987defeasible, nute1994defeasible} offered a computationally tractable alternative by distinguishing strict rules, defeasible rules, and defeaters, with subsequent applications to legal reasoning \cite{nute1997logic}. The KLM framework \cite{kraus1990nonmonotonic} provided axiomatic foundations for rational non-monotonic inference, and recent work by Dennison, Heyninck, and Meyer \cite{dennison2026rational} has enabled algorithmic computation of Rational Closure via Answer Set Programming. These formalisms provide the machinery for reasoning about defaults and exceptions, yet their integration with modern language models remains limited.
 
-Recent neurosymbolic systems have begun to bridge this gap. LOGicalThought \cite{nananukul2025logicalt} translates natural language into RuleLog programs and feeds symbolic structure back into language models, achieving modest improvements on defeasible reasoning tasks. DARK \cite{gao2025dark} unifies deduction and abduction via masked diffusion over knowledge graphs, using a self-reflective cycle to generate and verify hypotheses. However, LogT focuses on forward reasoning (verifying conclusions) rather than abductive hypothesis generation, and DARK's reliance on knowledge graph triples sacrifices the expressivity needed for complex exception handling.
+The formal semantics underlying our source theories rests on the model-theoretic foundations of logic programming established by van Emden and Kowalski \cite{vanemden1976semantics}, who showed that the semantics of definite logic programs can be characterized via a least fixed point of an immediate consequence operator. Lloyd \cite{lloyd1987foundations} provided the standard treatment of Herbrand models, SLD-resolution, and the monotonicity properties of definite programs that our conversion exploits. Kakas, Kowalski, and Toni \cite{kakas1992abductive} extended logic programming to abductive reasoning, introducing the framework of abductive logic programming in which hypotheses are generated to explain observations relative to an incomplete theory. Our instance generation procedure (Section~\ref{subsec:abduction}) adapts this paradigm: given an ablated theory $\Dm$ and an unexplained target $q$, the task is to abduce a minimal hypothesis $h$ restoring the derivation.
+
+The proof theory we adopt for defeasible reasoning follows the formalization of Antoniou, Billington, Governatori, and Maher \cite{antoniou2001defeasible}, who established representation results, normal forms, and transformations for defeasible logic. Maher \cite{maher2001propositional} proved that propositional defeasible derivation has linear time complexity, a result that underlies the tractability of our generation pipeline. The ``team defeat'' mechanism in this proof theory, where every attacking rule must be individually neutralized, connects to Dung's \cite{dung1995acceptability} abstract argumentation frameworks, in which acceptability of arguments depends on defeating all attackers. Governatori, Maher, Antoniou, and Billington \cite{governatori2004argumentation} made this connection explicit by providing argumentation semantics for defeasible logic, showing that defeasible proof tags correspond to argument labellings. Our defeater abduction task (Section~\ref{subsec:level3}) requires models to construct arguments that defeat existing default inferences, operating within this argumentation-theoretic structure. The complexity results for our Defeater Abduction Problem draw on Eiter and Gottlob's \cite{eiter1995complexity} foundational analysis of abduction complexity, which established NP-completeness for propositional abduction and $\Sigma_2^P$-completeness for problems requiring universal quantification over counterexamples.
+
+Our framework connects to the theory of belief revision initiated by Alchourr\'{o}n, G\"{a}rdenfors, and Makinson \cite{alchourron1985logic}, who established rationality postulates for how an ideal agent should update beliefs in response to new evidence. G\"{a}rdenfors \cite{gardenfors1988knowledge} developed the principle of minimal change, and Katsuno and Mendelzon \cite{katsuno1991propositional} provided model-theoretic characterizations. Dalal \cite{dalal1988investigations} introduced distance-based revision using Hamming distance between models. Our conservativity requirement (Definition~\ref{def:conserv}) operationalizes minimal change in the defeasible setting, and our revision distance (Definition~\ref{def:revdist}) provides a tractable analogue of Dalal's distance. This connection is practically significant: the knowledge editing literature (including ROME \cite{meng2022locating}, MEMIT \cite{meng2023mass}, and evaluations of their side effects \cite{cohen2024evaluating}) addresses belief revision in neural models but lacks formally grounded measures of conservativity. Our benchmark provides exactly such measures, bridging the gap between the formal revision theory and empirical evaluation of neural knowledge updates.
+
+Recent neurosymbolic systems have begun to bridge the gap between formal reasoning and neural language models. LOGicalThought \cite{nananukul2025logicalt} translates natural language into RuleLog programs and feeds symbolic structure back into language models, achieving modest improvements on defeasible reasoning tasks. DARK \cite{gao2025dark} unifies deduction and abduction via masked diffusion over knowledge graphs, using a self-reflective cycle to generate and verify hypotheses. However, LogT focuses on forward reasoning (verifying conclusions) rather than abductive hypothesis generation, and DARK's reliance on knowledge graph triples sacrifices the expressivity needed for complex exception handling.
 
 Existing benchmarks reinforce this asymmetry. ProofWriter \cite{tafjord2021proofwriter} and LogicNLI \cite{tian2021diagnosing} evaluate deductive verification: given premises, determine truth values. The inverse problem, generating the missing premise that would license a given conclusion, remains underexplored. The INABHYD benchmark \cite{inabhyd2025} demonstrates that language models fail to follow Occam's Razor in abductive contexts, systematically hallucinating unnecessary entities when simpler explanations suffice. What is missing is a principled method for generating grounded abductive evaluation instances, one that combines the expressivity of defeasible logic with verifiable gold-standard answers derived from complete deductive theories.
 
-The 1980s witnessed an unprecedented international investment in knowledge-based systems, producing large-scale knowledge bases that remain underutilized for modern foundation model research. Japan's Fifth Generation Computer Systems (FGCS) project, launched in 1982 by MITI with approximately ¥54 billion in funding, aimed to develop computers capable of knowledge information processing through logic programming and parallel inference \cite{fuchi1984aiming, feigenbaum1993fgcs}. This initiative catalyzed competitive responses worldwide: the UK's Alvey Programme (1983--1990, £350 million) focused on Intelligent Knowledge-Based Systems alongside VLSI and software engineering \cite{alvey1985ikbs}; the European ESPRIT programme committed approximately \$2 billion to collaborative AI research; and DARPA's Strategic Computing Initiative tripled US investment in AI between 1984 and 1988. Concurrently, the Cyc project began at MCC in 1984 with the explicit goal of encoding commonsense knowledge, eventually assembling over $10610^6$
-106 handcrafted axioms spanning human consensus reality and developing CycL, a representation language with explicit support for default reasoning and non-monotonic inference \cite{lenat1990cyc, lenat1995cyc}. While these initiatives are often characterized as commercial failures, they produced substantial artifacts: formal ontologies, rule bases distinguishing strict from defeasible knowledge, and inference engines designed for reasoning under incomplete information. Our work proposes to leverage these knowledge engineering artifacts, particularly their explicit representation of defaults, exceptions, and revisable beliefs, as source material for generating grounded evaluation instances that probe foundation models' capacity for the abductive and defeasible reasoning these projects originally sought to mechanize.
+The 1980s witnessed an unprecedented international investment in knowledge-based systems, producing large-scale knowledge bases that remain underutilized for modern foundation model research. Japan's Fifth Generation Computer Systems project, launched in 1982 by MITI, aimed to develop computers capable of knowledge information processing through logic programming and parallel inference \cite{fuchi1984aiming, feigenbaum1993fgcs}. This initiative catalyzed competitive responses worldwide: the UK's Alvey Programme (1983--1990) focused on Intelligent Knowledge-Based Systems \cite{alvey1985ikbs}, and DARPA's Strategic Computing Initiative tripled US investment in AI between 1984 and 1988. Concurrently, the Cyc project began at MCC in 1984, eventually assembling over $10^6$ handcrafted axioms and developing CycL, a representation language with explicit support for default reasoning and non-monotonic inference \cite{lenat1990cyc, lenat1995cyc}. While these initiatives are often characterized as commercial failures, they produced substantial artefacts: formal ontologies, rule bases distinguishing strict from defeasible knowledge, and inference engines designed for reasoning under incomplete information. Our work proposes to leverage these knowledge engineering artefacts as source material for generating grounded evaluation instances that probe foundation models' capacity for the abductive and defeasible reasoning these projects originally sought to mechanize.
 
-\section{Our Method}
-This challenge motivates a formal approach to defeasible reasoning in foundation models. We propose to develop methods for converting deductive knowledge bases into defeasible rule sets that explicitly represent the revisability of scientific knowledge, distinguishing strict rules, defeasible defaults, and defeaters in the sense of Nute \cite{nute1994defeasible}. Given a complete defeasible theory $\mathcal{D}$ and a derivable conclusion $q$, we compute the minimal support set required to derive $q$, then identify critical elements whose removal blocks the derivation. By systematically ablating these elements and injecting syntactically similar distractors, we generate incomplete theories paired with gold hypothesis sets containing all minimal elements that restore the derivation.
 
-The resulting tasks require models to perform abductive inference: given an incomplete theory $\mathcal{D}^-$ and an observation $q$, generate a hypothesis $h$ such that $\mathcal{D}^- \cup \{h\}$ defeasibly entails $q$. Instances are stratified by complexity, from simple fact completion through rule abduction to reasoning about exceptions and defeaters. This framework directly addresses the IDP-style challenge: an AI reasoning over a theory encoding the structure-function dogma, when presented with evidence of functional yet disordered proteins, must abduce a defeater or exception rather than reject the observation. By grounding evaluation in verifiable derivations from complete theories, we obtain gold-standard answers for training and evaluating models on the non-monotonic reasoning required for transformational scientific creativity.
+\section{Our Method}\label{sec:method}
 
-This approach addresses a broad class of problems where transformational discovery requires overriding established defaults. Consider prion diseases, where the hypothesis that proteins alone could be infectious agents contradicted the central dogma that replication requires nucleic acids \cite{prusiner1982novel}. An AI equipped with defeasible reasoning could represent the nucleic acid requirement as a defeasible rule and, when presented with evidence of transmissible spongiform encephalopathies resistant to nucleic acid degradation, abduce a defeater licensing protein-only replication. Similarly, the discovery of horizontal gene transfer required revising the default that hereditary information flows vertically from parent to offspring \cite{doolittle1999phylogenetic}, and epigenetic inheritance challenged the assumption that phenotypic traits require changes to DNA sequence \cite{jablonka2009transgenerational}. In each case, the critical reasoning step is not deductive extension but abductive revision: inferring that an apparent anomaly is best explained by an exception to, rather than a violation of, the existing knowledge structure.
+Our approach addresses the three deficits identified in Section~1 (grounding, novelty, and belief revision) by constructing evaluation instances from knowledge bases whose epistemic structure is fully explicit. The pipeline has four stages: (1)~formalizing legacy knowledge bases as definite logic programs, whose monotonic semantics provides a complete ground truth; (2)~converting them into defeasible theories via a parameterized transformation that makes the strict/default distinction explicit, giving every conclusion a traceable support set; (3)~generating abductive evaluation instances by systematically ablating elements of these theories, producing tasks that require grounded reasoning (Levels~1--2) or rational belief revision (Level~3); and (4)~rendering the resulting tasks into natural language for evaluation of foundation models. We present the essential definitions and constructions here; full proofs and extended formalisms appear in Appendices~\ref{app:definitions}--\ref{app:rendering}.
+
+
+\subsection{Source Theories}\label{subsec:source}
+
+We formalize legacy knowledge bases (Cyc, FGCS-era Prolog programs, Alvey artefacts) as definite logic programs over a first-order signature $\Sigma = (\mathcal{C}, \mathcal{F}, \mathcal{P})$ of constants, function symbols, and predicate symbols. A definite logic program $\Pi$ is a finite set of clauses $h \leftarrow b_1, \ldots, b_n$ ($n \geq 0$), where facts have $n = 0$. Its semantics is given by the least Herbrand model $\mathcal{M}_\Pi = \mathrm{lfp}(T_\Pi)$, the least fixed point of the immediate consequence operator (Definitions~\ref{def:signature}--\ref{def:lhm}). The property we exploit is monotonicity: $\Pi \subseteq \Pi'$ implies $\mathcal{M}_\Pi \subseteq \mathcal{M}_{\Pi'}$. Adding clauses can only increase the set of derivable conclusions. This is precisely the limitation our framework addresses: monotonic theories cannot retract defaults in light of new evidence, and thus cannot model the belief revision that scientific discovery requires.
+
+
+\subsection{Defeasible Conversion}\label{subsec:conversion}
+
+A defeasible theory $\D = (F, \Rs, \Rd, \Rdf, {\succ})$ consists of facts $F$, strict rules $\Rs$ (invariable), defeasible rules $\Rd$ (revisable defaults), defeaters $\Rdf$ (rules that block but cannot support conclusions), and an acyclic superiority relation $\succ$ resolving conflicts (Definition~\ref{def:deftheory}). A literal $q$ is defeasibly provable, written $\D \pPartial q$, when there exists an applicable defeasible rule for $q$ and every attacking rule for $\comp{q}$ is either inapplicable or overridden by a superior rule (Definition~\ref{def:defderiv}).
+
+We convert a definite logic program $\Pi$ into a defeasible theory via a partition function $\partfunc: \Pi \to \{s, d\}$ that classifies each clause as strict or defeasible:
+\begin{equation}\label{eq:conversion}
+    \phi_\partfunc(\Pi) = (F_\partfunc,\; \Rs^{\partfunc},\; \Rd^{\partfunc},\; \emptyset,\; \emptyset).
+\end{equation}
+Clauses assigned $s$ become facts or strict rules; clauses assigned $d$ become defeasible rules. The conversion makes the theory's epistemic commitments explicit: for any derivable conclusion $q$, one can identify exactly which facts and rules support it (the support set, Definition~\ref{def:support}), which of those supports are revisable defaults, and whether $q$ would survive the retraction of any particular element (criticality, Definition~\ref{def:fullcrit}). This is the grounding structure that foundation models lack. The converted theory has empty defeater and superiority components by design: generating these is the task we pose to the model.
+
+We treat $\partfunc$ as an experimental parameter and study four structured families (Definition~\ref{def:structpart}): the leaf partition ($\partfunc_{\mathrm{leaf}}$, facts defeasible, rules strict), the rule partition ($\partfunc_{\mathrm{rule}}$, rules defeasible, facts strict), the depth-$k$ partition ($\partfunc_{\mathrm{depth}}(k)$, shallow clauses strict, deep clauses defeasible), and a random baseline ($\partfunc_{\mathrm{rand}}(\delta)$). When all clauses are strict, the conversion is conservative: $q \in \mathcal{M}_\Pi \iff \D_\partfunc \pDelta q$ (Proposition~\ref{prop:strict}). As $\delta(\partfunc)$ increases, more conclusions depend on defeasible rules and become candidates for revision: the conversion parameter thus directly controls the \emph{revisability surface} of the theory.
+
+\subsection{Abductive Instance Generation}\label{subsec:abduction}
+
+Given a converted theory $\D$ and a derivable target $q$ ($\D \pPartial q$), we generate evaluation instances by exploiting the grounding structure: because every conclusion has an identifiable support set, we can determine precisely which elements are necessary for a given derivation. An element $e$ is full-theory critical if $\D \setminus \{e\} \not\pPartial q$ (Definition~\ref{def:fullcrit}); this is decidable in polynomial time precisely because the defeasible theory makes its dependency structure explicit. We ablate a critical element to form $\Dm = \D \setminus \{e\}$, inject syntactically similar distractors, and define the gold set $\Hgold = \{h \mid \Dm \cup \{h\} \pPartial q,\; h \text{ minimal}\}$. The abductive task is: given $(\Dm, q, \Hcand)$, find $h \in \Hgold$.
+
+Instances are stratified into three levels of increasing difficulty:
+
+\textit{Level 1 (Fact completion).} The ablated element is a ground fact ($e \in F$). The model must identify the missing observation.
+
+\textit{Level 2 (Rule abduction).} The ablated element is a defeasible rule ($e \in \Rd$). The model must reconstruct a missing generalization.
+
+\textit{Level 3 (Defeater abduction).} The theory actively contradicts an observation $\alpha$, and the model must construct a novel defeater or exception rule to resolve the contradiction while preserving unrelated expectations, performing rational belief revision in the defeasible setting. This is the formal analogue of transformational scientific creativity (Section~\ref{subsec:level3}).
+
+
+\subsection{Defeater Abduction}\label{subsec:level3}
+
+A ground literal $\alpha$ is a defeasible anomaly when $\D \pPartial \comp{\alpha}$ but $\D \not\pDelta \comp{\alpha}$: the prediction of $\comp{\alpha}$ passes through at least one defeasible rule and can be blocked (Definition~\ref{def:anomclass}). A resolution is a defeater or exception rule $r$, possibly with superiority assertions $\Gamma$, such that $\D \cup \{r\} \cup \Gamma \cup \{\alpha\} \not\pPartial \comp{\alpha}$. We classify resolutions by strength (Definition~\ref{def:resstrength}):
+
+\begin{itemize}[nosep]
+    \item Weak (blocking): the theory becomes agnostic about $\alpha$.
+    \item Strong (overriding): $\alpha$ becomes defeasibly provable via a superior exception.
+    \item Restructuring: the priority structure is reorganized while preserving non-conflicting expectations.
+\end{itemize}
+
+A resolution is conservative if it preserves all expectations except $\comp{\alpha}$ (Definition~\ref{def:conserv}). This is our operationalization of the AGM principle of minimal change \cite{alchourron1985logic, gardenfors1988knowledge}: just as rational belief revision requires that an agent accommodate new evidence while disturbing as few existing commitments as possible \cite{katsuno1991propositional}, conservative resolution requires that correcting one anomaly not introduce new ones. The candidate space is constrained by a language bias $\La$ specifying permitted predicates, maximum antecedent length, and nesting depth (Definition~\ref{def:langbias}).
+
+For dataset generation, we work backwards from a complete theory $\Dfull$ that already contains the resolution $r^*$, remove $r^*$ and its superiority assertions to form a challenge theory $\Dm$, verify that $\alpha$ becomes anomalous, and compute the gold set of all conservative resolutions (Definition~\ref{def:level3gen}). By construction, $r^* \in \Rgold$ (Proposition~\ref{prop:goldnonempty}), though additional valid resolutions of varying strength may exist (Proposition~\ref{prop:goldnonuniq}).
+
+We measure the creativity of resolutions via predicate novelty $\Nov(r, \Dm)$, the fraction of predicate symbols in $r$ absent from $\Dm$ (Definition~\ref{def:novelty}), and revision distance $d_{\mathrm{rev}}$, which counts added elements plus changed expectations (Definition~\ref{def:revdist}). Revision distance is our defeasible analogue of Dalal's \cite{dalal1988investigations} distance-based approach to belief revision: it quantifies how far the revised theory departs from the original in the currency of structural changes and lost expectations, providing a scalar measure of adherence to minimal change.
+
+
+\subsection{Rendering and Evaluation}\label{subsec:rendering}
+
+A rendering codec $\rho = (\rho_{\mathrm{enc}}, \rho_{\mathrm{dec}})$ translates between formal theories and natural language. We define four encoding modalities: narrative (M1, linguistic hedging for defeasibility), semi-formal (M2, logical connectives with natural language predicates), annotated formal (M3, symbolic notation with glosses), and pure formal (M4, raw syntax). These modalities trade off naturalness against faithfulness (Definitions~\ref{def:modalities}--\ref{def:modorder}).
+
+The decoder maps model outputs back to formal rules via exact match (D1), template extraction (D2), or semantic parsing (D3). We require round-trip consistency: encoding a rule and decoding the result must recover the original (Definition~\ref{def:roundtrip}).
+
+We evaluate models using rendering-robust accuracy, the worst-case accuracy over all modalities (Definition~\ref{def:robustacc}). This ensures high scores reflect reasoning about the underlying epistemic structure (the grounding relations, default status, and revision consequences) rather than sensitivity to surface form. Instance difficulty is characterized by a structural tuple combining level, support set count, gold set size, hypothesis complexity, and minimum novelty (Definition~\ref{def:structdiff}).
+
+
+\subsection{Complexity Summary}\label{subsec:complexity}
+
+The following results (proofs in Appendix~\ref{app:proofs}) ensure tractability of the generation pipeline:
+
+\begin{center}
+\begin{tabular}{@{}lc@{}}
+\toprule
+Operation & Complexity \\
+\midrule
+Defeasible derivation $\D \pPartial q$ & $O(|R| \cdot |F|)$ \\
+Gold-standard verification & P \\
+Full-theory criticality $\CritStar(\D, q)$ & $O(|\D|^2 \cdot |F|)$ \\
+Full pipeline per instance & $O(|\D|^3)$ \\
+Minimum support set & NP-complete \\
+Weak DAP resolution & NP-complete \\
+Strong DAP resolution & $\Sigma_2^P$-complete \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Since we use $\CritStar$ (polynomial) rather than full support enumeration (NP-hard), the instance generation pipeline is cubic in $|\D|$. For first-order theories, grounding can be exponential in general, but the function-free (datalog) fragment used by legacy knowledge bases keeps grounding polynomial (Theorem~\ref{thm:firstorder}).
+
+
+\section{Experiments}\label{sec:experiments}
+
+Our experimental evaluation serves three purposes: (1) demonstrating that the generation pipeline of Section~\ref{sec:method} produces a dataset with controlled, diverse, and non-trivial properties; (2) establishing baseline performance of current foundation models on the three levels of defeasible abductive reasoning; and (3) characterizing the structural and statistical properties of the dataset that make it useful for future research on non-monotonic reasoning in neural systems.
+
+\subsection{Source Knowledge Bases}\label{subsec:sources}
+
+% TODO: The three source KBs below are motivated domain choices but placeholders.
+% The biology KB is closest to ready (IDP example exists). The legal and materials
+% science KBs will need actual construction or sourcing of Prolog programs.
+% Adjust domains to those where we have or can realistically build the programs.
+We instantiate the pipeline on knowledge bases spanning three domains and provenance types, selected to vary in size, predicate vocabulary, and ontological depth:
+
+\begin{enumerate}[label=(\roman*),nosep]
+    \item \textbf{Taxonomic biology.} A definite logic program $\Pi_{\mathrm{bio}}$ encoding phylogenetic classification, morphological properties, and functional mechanisms, drawn from the biological subset of the OpenCyc ontology and supplemented with curated Prolog formalizations of textbook biological knowledge. This domain provides natural defaults (``birds typically fly'') and well-documented exceptions (penguins, ostriches, IDPs), making it a rich source for all three levels.
+    
+    \item \textbf{Legal reasoning.} A program $\Pi_{\mathrm{law}}$ encoding statutory rules, case-based precedents, and jurisdictional hierarchies, adapted from existing Prolog formalizations of legal knowledge \cite{nute1997logic}. Legal domains are intrinsically defeasible: statutes admit exceptions, precedents can be overruled, and jurisdictional conflicts require priority resolution, providing natural material for Level~3 instances.
+    
+    \item \textbf{Materials science.} A program $\Pi_{\mathrm{mat}}$ encoding structure--property relationships, synthesis conditions, and phase behavior, constructed from domain ontologies and handcrafted rules validated by domain experts. This domain tests the framework on technical scientific knowledge where defaults reflect empirical generalizations (``crystalline materials are brittle'') that admit exceptions (shape-memory alloys, metallic glasses).
+\end{enumerate}
+
+For each source program $\Pi$, we report the signature statistics $|\mathcal{C}|$, $|\mathcal{P}|$, $|\Pi|$, the dependency graph depth, and the Herbrand base size $|\HB|$ after grounding. All source programs are function-free (datalog), ensuring polynomial grounding (Theorem~\ref{thm:firstorder}).
+
+
+\subsection{Dataset Generation and Parameterization}\label{subsec:generation}
+
+We apply the conversion and instance generation pipeline (Sections~\ref{subsec:conversion}--\ref{subsec:abduction}) with systematic variation of the experimental parameters.
+
+\paragraph{Partition functions.} Each source program is converted under all four structured partition families (Definition~\ref{def:structpart}): $\partfunc_{\mathrm{leaf}}$, $\partfunc_{\mathrm{rule}}$, $\partfunc_{\mathrm{depth}}(k)$ for $k \in \{1, 2, 3\}$, and $\partfunc_{\mathrm{rand}}(\delta)$ for $\delta \in \{0.1, 0.2, \ldots, 0.9\}$. For each $(\Pi, \partfunc)$ pair, we compute the defeasibility ratio $\delta(\partfunc)$ and the yield $Y(\partfunc, Q)$ over a target set $Q$ consisting of all ground atoms in $\mathcal{M}_\Pi$ at dependency depth $\geq 2$ (excluding trivially derivable facts). We report yield curves $Y$ as a function of $\delta$ to empirically validate the monotonicity prediction of Proposition~\ref{prop:yieldmono} and characterize the yield growth rate.
+
+\paragraph{Instance generation.} For each converted theory $\D_\partfunc$, we generate instances at all three levels:
+\begin{itemize}[nosep]
+    \item \textit{Level 1 (fact completion):} For each target $q$ and each $e \in \CritStar(\D, q) \cap F$, we generate one instance with $k = 5$ distractors sampled uniformly from facts sharing at least one predicate symbol with $e$.
+    % TODO: k=5 is a free parameter. Consider either justifying this choice
+    % (e.g., via pilot experiments or precedent from ProofWriter/LogicNLI)
+    % or adding k as an ablation variable in Section 4.7.
+    \item \textit{Level 2 (rule abduction):} For each $e \in \CritStar(\D, q) \cap \Rd$, we generate one instance with $k = 5$ distractors constructed by substituting predicate symbols or permuting arguments in $e$.
+    \item \textit{Level 3 (defeater abduction):} Following Definition~\ref{def:level3gen}, we construct challenge theories $\Dm$ from complete theories $\Dfull$ that include hand-authored defeaters and exception rules validated by domain experts.
+    % TODO: Level 3 instance generation requires complete theories D^full with
+    % pre-existing defeaters. This is the main bottleneck: we need domain experts
+    % to author the defeaters/exceptions for each source KB. Estimate the number
+    % of Level 3 instances we can realistically produce and whether this is
+    % sufficient for statistical power in the per-model comparisons. The language bias $\La$ permits antecedent predicates drawn from the source theory's vocabulary plus a controlled set of novel predicates, with $\mathrm{ar}_{\max} = 3$.
+\end{itemize}
+
+\paragraph{Distractor strategies.} To isolate the effect of distractor design on measured difficulty, we generate parallel instance sets under three distractor regimes for Levels~1 and 2: \textit{random} (uniformly sampled from the appropriate component of $\D$), \textit{syntactic} (sharing predicate symbols with the ablated element), and \textit{adversarial} (satisfying a strict subset of the conditions required for a valid hypothesis, constructed by ablating a proper subset of the gold element's antecedents or substituting a single argument). Adversarial distractors are designed to require the model to verify full derivability rather than relying on surface similarity. We hold distractor strategy fixed within each experimental condition and report performance separately.
+
+\paragraph{Language bias variation (Level~3).} We parameterize the language bias $\La$ along two axes: the permitted predicate set $\mathcal{P}^+$ (restricted to predicates appearing in $\Dm$, or expanded to include a controlled novel vocabulary), and the maximum antecedent length $\mathrm{ar}_{\max} \in \{1, 2, 3\}$. Expanding $\mathcal{P}^+$ increases the candidate space (Proposition~\ref{prop:candsize}) and raises the minimum achievable novelty $\Nov^*$ of gold-standard resolutions, directly controlling the degree of ``creative'' abduction required.
+
+
+\subsection{Dataset Statistics and Structural Analysis}\label{subsec:statistics}
+
+We report the following statistics over the generated dataset:
+
+\paragraph{Volume and balance.} Total instance counts per level, per source KB, and per partition function, together with the joint distribution to assess whether any $(\text{KB}, \partfunc, \text{level})$ cells are underpopulated.
+
+\paragraph{Structural difficulty distributions.} For each level, we report the marginal and joint distributions of the components of the structural difficulty tuple $\sigma(I) = (\ell, |\Supp|, |\Hgold|, \min|h|, \Nov^*)$ (Definition~\ref{def:structdiff}). We test for independence between these components via mutual information estimates. Low mutual information between, e.g., $|\Supp|$ and $|\Hgold|$ would indicate that support redundancy and gold set multiplicity constitute genuinely independent axes of difficulty, validating the multidimensional characterization.
+
+\paragraph{Novelty and revision spectrum (Level~3).} We report the joint distribution of predicate novelty $\Nov(r^*, \Dm)$ and revision distance $d_{\mathrm{rev}}(\Dm, \Dm \cup \{r^*\})$ across Level~3 instances, cross-tabulated against resolution strength (weak, strong, restructuring). We test two hypotheses: (i)~that high-novelty resolutions are disproportionately of the strong or restructuring type, confirming that genuinely creative explanations require more than blocking an inference; and (ii)~that conservative resolutions achieve lower revision distance than non-conservative ones, empirically validating that the conservativity check selects for minimal change.
+
+\paragraph{Yield analysis.} We plot yield curves $Y(\partfunc_{\mathrm{rand}}(\delta), Q)$ as a function of $\delta$ for each source KB. We fit parametric models (linear, logistic, power-law) to characterize the growth regime and test for phase transitions where yield undergoes a sharp increase, which would indicate critical thresholds in the redundancy structure of the source theories.
+
+\paragraph{Partition sensitivity.} We compare instance distributions across the four structured partition families applied to the same source KB. We report whether different partition strategies produce instances that are statistically distinguishable in their difficulty profiles, using two-sample tests on the $\sigma(I)$ distributions. If partition families produce interchangeable difficulty distributions, the conversion step is robust to this design choice; if they produce substantially different distributions, the partition function is a meaningful experimental control.
+
+
+\subsection{Foundation Model Evaluation}\label{subsec:evaluation}
+
+We evaluate a panel of foundation models spanning multiple families and scales.
+
+% TODO: Update model list to reflect what is current at submission time.
+% The structure matters more than the specific models: multiple families,
+% at least one family with two scales for within-family scaling analysis.
+\paragraph{Models.} We evaluate GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro, Llama~3 70B, and Llama~3 8B. The inclusion of two models from the same family at different scales enables within-family scaling analysis. All models are evaluated via API with greedy decoding (temperature $= 0$) and a standardized system prompt that presents the task without chain-of-thought scaffolding, except where noted.
+
+\paragraph{Rendering conditions.} Each instance is presented under all four rendering modalities (Definition~\ref{def:modalities}): narrative (M1), semi-formal (M2), annotated formal (M3), and pure formal (M4). Models receive the ablated theory $\Dm$, the target $q$, and the candidate set $\Hcand$ in the appropriate modality, and are asked to select or generate the hypothesis $h$ that restores derivability of $q$.
+
+\paragraph{Decoding pipeline.} Model outputs are decoded using the three-stage strategy of Definition~\ref{def:decoder}: exact match (D1) is attempted first; on failure, template extraction (D2) is applied; on further failure, semantic parsing (D3) via a dedicated parser model produces a candidate rule or $\bot$. Round-trip consistency of the decoder pipeline is validated prior to evaluation (Section~\ref{subsec:decoder_validation}).
+
+\paragraph{Primary metric.} The headline metric is rendering-robust accuracy (Definition~\ref{def:robustacc}): the worst-case accuracy over the four modalities, computed per model and per level. This ensures that high scores reflect reasoning about the underlying logical structure rather than sensitivity to surface presentation.
+
+\paragraph{Decomposed metrics.} We additionally report:
+\begin{itemize}[nosep]
+    \item Per-modality accuracy, to test the modality--level interaction predicted by Conjecture~\ref{conj:modlevel}.
+    \item Per-level accuracy, to empirically validate the difficulty ordering of Proposition~\ref{prop:difforder}.
+    \item Resolution strength distribution (Level~3 only): among correct responses, the fraction classified as weak, strong, or restructuring.
+    \item Novelty of correct resolutions (Level~3 only): the distribution of $\Nov(h, \Dm)$ for model-generated hypotheses $h \in \Hgold$.
+    \item Revision distance of correct resolutions (Level~3 only): the distribution of $d_{\mathrm{rev}}(\Dm, \Dm \cup \{h\})$, measuring adherence to minimal change.
+
+\end{itemize}
+
+
+\subsection{Partial Credit for Level~3 Resolutions}\label{subsec:partial_credit}
+
+Because Level~3 instances admit resolutions of varying strength (Definition~\ref{def:resstrength}), binary accuracy fails to capture meaningful distinctions between model outputs. We introduce a graded scoring function $\mathrm{Score}(h, \D, \alpha)$ defined as follows.
+
+% TODO: The score values (0, 0.25, 0.5, 0.75, 1.0) are evenly spaced for
+% simplicity. Consider whether the gaps between tiers should be uneven to
+% reflect the relative difficulty of each reasoning stage, or whether to
+% report results under multiple weighting schemes as a robustness check.
+Let $h$ be the decoded hypothesis (possibly with superiority assertions $\Gamma$) and let $\D' = \D \cup \{h\} \cup \Gamma \cup \{\alpha\}$.
+
+\begin{enumerate}[label=(\roman*),nosep]
+    \item \textit{No credit} (0): $h = \bot$ (decoder failure) or $\D' \pPartial \comp{\alpha}$ (the anomaly is unresolved).
+    \item \textit{Minimal credit} ($0.25$): $\D' \not\pPartial \comp{\alpha}$ but $h$ is not well-formed under $\La$ (syntactically valid but violates the language bias constraints).
+    \item \textit{Partial credit} ($0.5$): $\D' \not\pPartial \comp{\alpha}$ and $h$ is well-formed under $\La$ (a valid weak resolution), but $\D'$ is not conservative (Definition~\ref{def:conserv}): some expectation $q \in \Exp(\D) \setminus \{\comp{\alpha}\}$ is lost.
+    \item \textit{Substantial credit} ($0.75$): $h$ is a valid conservative weak resolution, or a non-conservative strong resolution.
+    \item \textit{Full credit} ($1.0$): $h$ is a conservative resolution. For strong or restructuring resolutions that additionally satisfy $\D' \pPartial \alpha$, full credit is awarded regardless of whether $h$ matches a specific element of $\Rgold$, provided conservativity holds.
+\end{enumerate}
+
+This scoring function is computable in polynomial time: each condition requires at most $O(|\Exp(\D)|)$ derivation checks, each in $O(|R| \cdot |F|)$ (Theorem~\ref{thm:derivP}). We report both binary accuracy (score $= 1.0$) and mean graded score across Level~3 instances.
+
+The graded score decomposes along the stages of rational belief revision \cite{gardenfors1988knowledge}: a model at $0.25$ can produce syntactically plausible revisions but cannot verify that they resolve the anomaly (failing AGM's \emph{success} postulate); a model at $0.5$ resolves the anomaly but not conservatively (failing \emph{minimal change}); a model at $0.75$ respects conservativity but cannot construct strong exceptions (satisfying minimal change but not \emph{recovery}); a model at $1.0$ achieves full rational revision. This decomposition directly diagnoses \emph{which} aspect of belief revision each model lacks.
+
+
+\subsection{Error Taxonomy}\label{subsec:errors}
+
+We classify incorrect model outputs into the following categories, which directly correspond to stages of the formal reasoning pipeline:
+
+\begin{enumerate}[label=(E\arabic*),nosep]
+    \item \textit{Decoder failure:} the model output cannot be parsed into a well-formed rule by any decoder strategy (D1--D3).
+    \item \textit{Derivation failure:} the decoded hypothesis $h$ does not restore derivability: $\Dm \cup \{h\} \not\pPartial q$.
+    \item \textit{Minimality violation:} $h$ restores derivability but is not minimal: there exists $h' \subset h$ with $\Dm \cup \{h'\} \pPartial q$.
+    \item \textit{Conservativity violation} (Level~3): $h$ resolves the anomaly but disrupts other expectations.
+    \item \textit{Strength shortfall} (Level~3): $h$ is a valid conservative resolution of weaker strength than the gold standard $r^*$; e.g., the model produces a blocking defeater where a strong exception exists. This is scored via the graded function but flagged as a qualitative limitation.
+\end{enumerate}
+
+We report the distribution over error types per model, per level, and per modality. The error taxonomy maps directly onto the three deficits: E1 is a communication failure (neither grounding nor reasoning); E2 is a \emph{grounding failure} (the model reasons about the wrong part of the theory because it cannot trace the target conclusion to its actual support set); E3 reflects a failure of parsimony (the model grounds its reasoning but over-specifies); and E4 is a \emph{belief revision failure} (the model resolves the local anomaly but cannot ensure global coherence, precisely the minimal change violation that our conservativity check detects). A model dominated by E2 errors lacks grounding; one dominated by E4 errors can ground but cannot revise rationally.
+
+
+\subsection{Analysis Conditions}\label{subsec:analysis}
+
+Beyond the primary evaluation, we conduct the following analyses:
+
+\paragraph{Scaling analysis.} We compare Llama~3 8B and 70B on identical instance sets to measure the scaling gradient $\Delta\mathrm{Acc} / \Delta\log(\text{params})$ per level. The hypothesis: Level~1 accuracy scales smoothly, Level~2 shows a steeper gradient, and Level~3 may exhibit threshold behavior (near-zero accuracy below a critical scale, non-trivial accuracy above). Threshold behavior at Level~3 would constitute evidence that rational belief revision in the defeasible setting (jointly requiring anomaly resolution, conservativity, and novel hypothesis generation) is an emergent capability not reducible to the pattern completion that suffices for lower levels.
+
+% TODO: The CoT scaffold below (identify rules, determine gaps, propose
+% hypothesis) mirrors the formal proof structure. Consider also testing a
+% "defeasible reasoning scaffold" that explicitly prompts the model to
+% check for attacking rules and superiority—this more closely matches
+% the team defeat mechanism and may help more at Level 3.
+\paragraph{Chain-of-thought prompting.} We evaluate each model under both direct prompting and a chain-of-thought (CoT) prompt that instructs the model to (a) identify which rules in $\Dm$ could derive $q$ or $\comp{q}$, (b) determine which elements are missing or blocking, and (c) propose a hypothesis. We report the CoT accuracy lift $\Delta_{\mathrm{CoT}} = \mathrm{Acc}_{\mathrm{CoT}} - \mathrm{Acc}_{\mathrm{direct}}$ per level. A large $\Delta_{\mathrm{CoT}}$ at Level~3 with small $\Delta_{\mathrm{CoT}}$ at Level~1 would suggest that defeasible abduction is bottlenecked by problem decomposition rather than by capability.
+
+% TODO: The theory size values {50, 100, 200, 500, 1000} are preliminary.
+% Actual values should be informed by the sizes of the source KBs after
+% grounding. If no source KB exceeds |D|=500 after grounding, adjust range
+% accordingly. Also consider whether context window limits of smaller models
+% impose an effective ceiling on presentable theory size.
+\paragraph{Theory size scaling.} For each source KB, we generate instances from subtheories of increasing size $|\D| \in \{50, 100, 200, 500, 1000\}$ (by selecting connected subgraphs of the dependency graph) and report accuracy as a function of $|\D|$. This characterizes whether performance degradation is gradual or catastrophic, and at what theory size models effectively fail. Because theory size directly increases the number of grounding relations a model must track (more support sets, more potential side-effects under revision), this analysis measures the scalability of both grounding and belief revision capabilities.
+
+% TODO: Specify which ASP solver (clingo, DLV, etc.) and encoding strategy.
+% The Dennison et al. Rational Closure via ASP approach may be directly
+% applicable here. Also decide on the timeout for Level 3 enumeration
+% and whether to report the number of instances where the solver times out.
+\paragraph{Symbolic ceiling.} We evaluate an Answer Set Programming (ASP) solver on the same instance sets, computing exact solutions for Levels~1 and 2 and enumerating solutions up to a timeout for Level~3. The symbolic solver provides an upper bound on achievable accuracy given the formal specification, and the neural--symbolic gap $\mathrm{Acc}_{\mathrm{ASP}} - \mathrm{Acc}_{\mathrm{model}}$ per level quantifies the deficit attributable to neural reasoning limitations rather than task ambiguity. At Level~3, this gap directly measures the \emph{grounding and revision deficit}: the symbolic solver has access to the explicit epistemic structure that neural models must infer.
+
+
+\subsection{Decoder Validation}\label{subsec:decoder_validation}
+
+The rendering codec $\rho$ mediates between formal structures and natural language, and decoder errors could confound the evaluation signal. We validate the decoder pipeline prior to the main evaluation as follows. For each modality, we encode all gold-standard hypotheses in the dataset, apply the three-stage decoder, and report round-trip recovery rate $\Pr[\rho_{\mathrm{dec}}(\rho_{\mathrm{enc}}(h)) = h]$. % TODO: The 95% round-trip recovery threshold is a judgment call.
+% If M1 narrative recovery is substantially below 95%, we need to decide
+% whether to relax the threshold for M1, exclude M1 from rendering-robust
+% accuracy, or invest in improving the narrative decoder.
+We require recovery rates above $95\%$ for modalities M2--M4 before proceeding. For narrative rendering (M1), where round-trip consistency is approximate by design, we report the recovery rate and conduct a manual audit of $200$ randomly sampled decode failures to classify them as true ambiguities (the natural language admits multiple valid parses) versus systematic decoder errors (the parser fails on a recoverable pattern). Full decoder validation results appear in Appendix~\ref{app:decoder}.
 
 
 \bibliographystyle{plainnat}
@@ -158,10 +471,474 @@ This approach addresses a broad class of problems where transformational discove
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+%% =================================================================
+%%  APPENDICES
+%% =================================================================
+
 \appendix
 
-\section{Technical Appendices and Supplementary Material}
-Technical appendices with additional results, figures, graphs and proofs may be submitted with the paper submission before the full submission deadline (see above), or as a separate PDF in the ZIP file below before the supplementary material deadline. There is no page limit for the technical appendices.
+\section{Formal Definitions}\label{app:definitions}
+
+\subsection{Signatures and Logic Programs}
+
+\begin{definition}[Signature]\label{def:signature}
+A first-order signature is a triple $\Sigma = (\mathcal{C}, \mathcal{F}, \mathcal{P})$ consisting of:
+\begin{enumerate}[label=(\roman*)]
+    \item a finite set of constants $\mathcal{C}$,
+    \item a finite set of function symbols $\mathcal{F}$, each equipped with an arity $\mathrm{ar}(f) \geq 1$, and
+    \item a finite set of predicate symbols $\mathcal{P}$, each equipped with an arity $\mathrm{ar}(p) \geq 0$.
+\end{enumerate}
+The Herbrand universe $\HU(\Sigma)$ is the set of all ground terms constructible from $\mathcal{C}$ and $\mathcal{F}$:
+\[
+    \HU(\Sigma) = \mathcal{C} \cup \{f(t_1, \ldots, t_{\mathrm{ar}(f)}) \mid f \in \mathcal{F},\; t_1, \ldots, t_{\mathrm{ar}(f)} \in \HU(\Sigma)\}.
+\]
+The Herbrand base $\HB(\Sigma)$ is the set of all ground atoms:
+\[
+    \HB(\Sigma) = \{p(t_1, \ldots, t_{\mathrm{ar}(p)}) \mid p \in \mathcal{P},\; t_1, \ldots, t_{\mathrm{ar}(p)} \in \HU(\Sigma)\}.
+\]
+When $\mathcal{F} = \emptyset$, we say $\Sigma$ is function-free (the datalog case), and $\HU(\Sigma) = \mathcal{C}$ is finite.
+\end{definition}
+
+\begin{definition}[Definite Logic Program]\label{def:deflp}
+A definite logic program over $\Sigma$ is a finite set $\Pi$ of definite clauses of the form
+\[
+    h \leftarrow b_1, b_2, \ldots, b_n \qquad (n \geq 0)
+\]
+where $h, b_1, \ldots, b_n$ are atoms over $\Sigma$ (possibly containing variables from a countably infinite set $\mathcal{V}$). When $n = 0$, the clause is a fact. When $n > 0$, it is a rule with head $\head(c) = h$ and body $\mathrm{body}(c) = \{b_1, \ldots, b_n\}$. The ground instantiation is
+\[
+    \mathrm{ground}(\Pi) = \{h\theta \leftarrow b_1\theta, \ldots, b_n\theta \mid (h \leftarrow b_1, \ldots, b_n) \in \Pi,\; \theta: \mathcal{V} \to \HU(\Sigma)\}.
+\]
+\end{definition}
+
+\begin{definition}[Immediate Consequence Operator]\label{def:tp}
+The immediate consequence operator $T_\Pi : 2^{\HB} \to 2^{\HB}$ is
+\[
+    T_\Pi(I) = \bigl\{h\theta \mid (h \leftarrow b_1, \ldots, b_n) \in \Pi,\; \theta: \mathcal{V} \to \HU(\Sigma),\; \{b_1\theta, \ldots, b_n\theta\} \subseteq I\bigr\}.
+\]
+\end{definition}
+
+\begin{definition}[Least Herbrand Model]\label{def:lhm}
+The least Herbrand model of $\Pi$ is
+\[
+    \mathcal{M}_\Pi = \mathrm{lfp}(T_\Pi) = \bigcup_{i=0}^{\infty} T_\Pi^i(\emptyset).
+\]
+Existence and uniqueness follow from the Knaster--Tarski theorem, since $T_\Pi$ is monotone on $(2^{\HB}, \subseteq)$.
+\end{definition}
+
+\begin{definition}[SLD-Derivability]\label{def:sld}
+A ground atom $q$ is SLD-derivable from $\Pi$, written $\Pi \pSLD q$, if there exists an SLD-refutation of $\leftarrow q$ from $\Pi$. For definite programs, $\Pi \pSLD q \iff q \in \mathcal{M}_\Pi$.
+\end{definition}
+
+
+\subsection{Defeasible Theories}
+
+\begin{definition}[Defeasible Theory]\label{def:deftheory}
+A defeasible theory is a quintuple $\D = (F, \Rs, \Rd, \Rdf, {\succ})$ where:
+\begin{enumerate}[label=(\roman*)]
+    \item $F \subseteq \HB$ is a finite set of facts;
+    \item $\Rs$ is a finite set of strict rules: $r_s\colon b_1, \ldots, b_n \strictto h$;
+    \item $\Rd$ is a finite set of defeasible rules: $r_d\colon b_1, \ldots, b_n \defto h$;
+    \item $\Rdf$ is a finite set of defeaters: $r_{df}\colon b_1, \ldots, b_n \defeatto \neg h$; and
+    \item ${\succ} \;\subseteq (\Rd \cup \Rdf) \times (\Rd \cup \Rdf)$ is an acyclic superiority relation.
+\end{enumerate}
+Write $A(r)$ for the antecedent of rule $r$, $C(r)$ for its consequent, $R = \Rs \cup \Rd \cup \Rdf$, and $|\D| = |F| + |R|$.
+\end{definition}
+
+\begin{definition}[Defeasible Derivation]\label{def:defderiv}
+Let $\D$ be a propositional defeasible theory. A proof in $\D$ is a finite sequence of tagged literals $+\Delta q$, $-\Delta q$, $+\partial q$, or $-\partial q$.
+
+$+\Delta q$ (definite provability) holds iff: (1) $q \in F$; or (2) $\exists\, r \in \Rs$ with $C(r) = q$ and $\forall\, a \in A(r)$: $+\Delta a$ holds.
+
+$+\partial q$ (defeasible provability) holds iff: (1) $+\Delta q$; or (2) all of:
+\begin{enumerate}[label=(\alph*)]
+    \item $-\Delta \comp{q}$ (the complement is not definitely provable);
+    \item $\exists\, r \in \Rd$ with $C(r) = q$ and $\forall\, a \in A(r)$: $+\partial a$ (an applicable rule for $q$ exists); and
+    \item $\forall\, s \in \Rd \cup \Rdf$ with $C(s) = \comp{q}$: either
+        (i) $\exists\, a \in A(s)$: $-\partial a$; or
+        (ii) $\exists\, t \in \Rd$ with $C(t) = q$, $\forall\, a \in A(t)$: $+\partial a$, and $t \succ s$.
+\end{enumerate}
+We write $\D \pDelta q$ and $\D \pPartial q$ accordingly. The notation $\comp{q}$ denotes the complement: if $q = p$ then $\comp{q} = \neg p$; if $q = \neg p$ then $\comp{q} = p$.
+\end{definition}
+
+Condition (2c) embodies team defeat: every possible attack on $q$ must be individually neutralized.
+
+\subsection{Conversion}
+
+\begin{definition}[Partition Function]\label{def:partition}
+A partition function for $\Pi$ is a mapping $\partfunc: \Pi \to \{s, d\}$.
+\end{definition}
+
+\begin{definition}[Defeasible Conversion]\label{def:conversion}
+Given $\Pi$ and $\partfunc$, the defeasible conversion $\phi_\partfunc(\Pi) = (F_\partfunc, \Rs^{\partfunc}, \Rd^{\partfunc}, \emptyset, \emptyset)$ where:
+\begin{align*}
+    F_\partfunc &= \{h \mid (h \leftarrow) \in \Pi,\; \partfunc(h \leftarrow) = s\}, \\
+    \Rs^{\partfunc} &= \{b_1, \ldots, b_n \strictto h \mid (h \leftarrow b_1, \ldots, b_n) \in \Pi,\; n > 0,\; \partfunc(\cdot) = s\}, \\
+    \Rd^{\partfunc} &= \{b_1, \ldots, b_n \defto h \mid (h \leftarrow b_1, \ldots, b_n) \in \Pi,\; \partfunc(\cdot) = d\}
+    \cup \{\top \defto h \mid (h \leftarrow) \in \Pi,\; \partfunc(h \leftarrow) = d\}.
+\end{align*}
+\end{definition}
+
+\begin{definition}[Dependency Graph]\label{def:depgraph}
+The dependency graph $G_\Pi = (V, E)$ has $V = \mathcal{P}$ and $(p, q) \in E$ iff some clause in $\Pi$ has head predicate $q$ and body predicate $p$. The depth of $p$ is the longest path from any source to $p$; predicates in cycles have depth $\infty$.
+\end{definition}
+
+\begin{definition}[Structured Partition Classes]\label{def:structpart}
+We define four families:
+\begin{enumerate}[label=(\roman*),nosep]
+    \item $\partfunc_{\mathrm{leaf}}$: facts defeasible, rules strict.
+    \item $\partfunc_{\mathrm{rule}}$: rules defeasible, facts strict.
+    \item $\partfunc_{\mathrm{depth}}(k)$: clauses with head predicate depth $\leq k$ strict; deeper clauses defeasible.
+    \item $\partfunc_{\mathrm{rand}}(\delta)$: each clause independently $d$ with probability $\delta$.
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Partition Space]\label{def:partspace}
+$\mathcal{K}(\Pi) = \{s, d\}^{|\Pi|}$. The defeasibility ratio is $\delta(\partfunc) = |\{c \in \Pi \mid \partfunc(c) = d\}|/|\Pi|$.
+\end{definition}
+
+
+\subsection{Support, Criticality, and Instance Generation}
+
+\begin{definition}[Support Set]\label{def:support}
+Given $\D$ and $q$ with $\D \pPartial q$, a support set is a minimal $S \subseteq F \cup \Rs \cup \Rd$ such that $(S \cap F, S \cap \Rs, S \cap \Rd, \emptyset, \succ|_S) \pPartial q$. Write $\Supp(\D, q)$ for the collection of all support sets.
+\end{definition}
+
+\begin{definition}[Full-Theory Criticality]\label{def:fullcrit}
+$\CritStar(\D, q) = \{e \in F \cup \Rs \cup \Rd \mid \D \setminus \{e\} \not\pPartial q\}$. We have $\CritStar(\D, q) \subseteq \Crit(\D, q)$ (Proposition~\ref{prop:critinclusion}).
+\end{definition}
+
+\begin{definition}[Redundancy Degree]\label{def:redundancy}
+$\mathrm{red}(e, \D, q) = |\{S \in \Supp(\D, q) \mid e \notin S\}|$. If $\mathrm{red}(e, \D, q) = 0$, then $e \in \CritStar(\D, q)$.
+\end{definition}
+
+\begin{definition}[Abductive Instance]\label{def:instance}
+Given $\D$, target $q$, and $e \in \CritStar(\D, q)$: (1) form $\Dm = \D \setminus \{e\}$; (2) sample $k$ syntactically similar distractors; (3) compute $\Hgold = \{h \mid \Dm \cup \{h\} \pPartial q,\; h \text{ minimal}\}$.
+\end{definition}
+
+\begin{definition}[Complexity Stratification]\label{def:levels12}
+Level 1: $e \in F$ (fact completion). Level 2: $e \in \Rd$ (rule abduction). Level 3: defeater abduction (Section~\ref{subsec:level3detail}).
+\end{definition}
+
+\begin{definition}[Defeasible Yield]\label{def:yield}
+$Y(\partfunc, Q) = \sum_{q \in Q} |\CritStar(\D_\partfunc, q)|$ for target set $Q \subseteq \mathcal{M}_\Pi$.
+\end{definition}
+
+
+\subsection{Level 3: Anomalies and Defeater Abduction}\label{subsec:level3detail}
+
+\begin{definition}[Expectation Set]\label{def:expectation}
+$\Exp(\D) = \{q \mid \D \pPartial q\}$.
+\end{definition}
+
+\begin{definition}[Anomaly]\label{def:anomclass}
+A ground literal $\alpha$ is an anomaly if $\D \pPartial \comp{\alpha}$. It is strict if $\D \pDelta \comp{\alpha}$ (excluded from Level 3), and defeasible if $\D \pPartial \comp{\alpha}$ and $\D \not\pDelta \comp{\alpha}$.
+\end{definition}
+
+\begin{definition}[Anomaly Support]\label{def:ansup}
+The derivation tree $\mathcal{T}(\D, q)$ is the AND-OR tree of the proof of $+\partial q$. The anomaly support is $\AnSup(\D, \alpha) = \{r \in \Rd \mid r \text{ appears in } \mathcal{T}(\D, \comp{\alpha})\}$.
+\end{definition}
+
+\begin{definition}[Language Bias]\label{def:langbias}
+$\La = (\mathcal{P}^+, \mathcal{P}^-, \mathrm{ar}_{\max}, d_{\max})$ specifies permitted antecedent predicates $\mathcal{P}^+$, consequent predicates $\mathcal{P}^-$, maximum antecedent length $\mathrm{ar}_{\max}$, and maximum nesting depth $d_{\max}$.
+\end{definition}
+
+\begin{definition}[Candidate Spaces]\label{def:candspace}
+The candidate defeater space is
+\[
+    \Rdfspace(\La) = \left\{r\colon b_1, \ldots, b_m \defeatto \neg h \;\middle|\;
+    m \leq \mathrm{ar}_{\max},\;
+    \pred(b_i) \in \mathcal{P}^+,\;
+    \pred(h) \in \mathcal{P}^-,\;
+    \mathrm{vars}(h) \subseteq \textstyle\bigcup_i \mathrm{vars}(b_i)
+    \right\}
+\]
+and the candidate exception space $\Rdexcspace(\La)$ is defined identically with $\defto$ replacing $\defeatto$.
+\end{definition}
+
+\begin{definition}[Defeater Abduction Problem]\label{def:dap}
+Given $\D$, a defeasible anomaly $\alpha$, and $\La$: find $r \in \Rdfspace(\La) \cup \Rdexcspace(\La)$, possibly with superiority assertions $\Gamma$, such that $\D \cup \{r\} \cup \Gamma \cup \{\alpha\} \not\pPartial \comp{\alpha}$.
+\end{definition}
+
+\begin{definition}[Resolution Strength]\label{def:resstrength}
+Let $\D' = \D \cup \{r\} \cup \Gamma \cup \{\alpha\}$.
+\begin{enumerate}[label=(\roman*),nosep]
+    \item Weak: $\D' \not\pPartial \comp{\alpha}$ and $\D' \not\pPartial \alpha$.
+    \item Strong: $r \in \Rdexcspace(\La)$, $\Gamma \neq \emptyset$, and $\D' \pPartial \alpha$.
+    \item Restructuring: $\D'$ derives $\alpha$ and preserves all $q \in \Exp(\D) \setminus \{\comp{\alpha}\}$.
+\end{enumerate}
+\end{definition}
+
+\begin{remark}[AGM Correspondence]\label{rem:agm}
+Conservativity specializes the AGM recovery postulate \cite{alchourron1985logic} to the defeasible setting. In AGM terms, if a belief set $K$ is revised by new evidence $\alpha$ to obtain $K^*_\alpha$, recovery requires $(K \cap K^*_\alpha) + \alpha = K^*_\alpha$: nothing is lost beyond what accommodation of $\alpha$ strictly requires. Our conservativity check verifies this for the defeasible expectation set: $\Exp(\D \cup \Delta \cup \{\alpha\}) \supseteq \Exp(\D) \setminus \{\comp{\alpha}\}$. The key difference is that defeasible theories make the check \emph{tractable}: each expectation can be verified in polynomial time (Theorem~\ref{thm:derivP}), whereas AGM revision over arbitrary belief sets is in general undecidable.
+\end{remark}
+
+\begin{definition}[Level 3 Instance Generation]\label{def:level3gen}
+Given complete theory $\Dfull$ with $\Rdf \neq \emptyset$ or ${\succ} \neq \emptyset$: (1) select $r^*$; (2) find $\alpha$ with $\Dfull \pPartial \alpha$ and $\Dfull \setminus \{r^*\} \pPartial \comp{\alpha}$; (3) form $\Dm$ by removing $r^*$ and all superiority assertions involving it; (4) verify $\Dm \pPartial \comp{\alpha}$ and $\Dm \not\pDelta \comp{\alpha}$; (5) compute $\Rgold$.
+\end{definition}
+
+
+\subsection{Novelty and Difficulty}
+
+\begin{definition}[Predicate Novelty]\label{def:novelty}
+$\Nov(r, \Dm) = |\pred(r) \setminus \pred(\Dm)| / |\pred(r)|$, where $\pred(\cdot)$ extracts predicate symbols.
+\end{definition}
+
+\begin{remark}[Relation to Dalal Distance]\label{rem:dalal}
+Revision distance is a defeasible analogue of Dalal's \cite{dalal1988investigations} Hamming-distance approach to belief revision, which measures revision cost as the number of propositional variables whose truth value changes between the nearest models of the original and revised theories. Our formulation substitutes \emph{structural changes} (rules and facts added, $|\Delta|$) and \emph{expectation changes} (conclusions lost) for Dalal's model-level bit flips, yielding a distance that is both interpretable and polynomial-time computable. A conservative resolution achieves $d_{\mathrm{rev}} = |\Delta|$ (the expectation-loss term vanishes), the minimum possible cost for a revision that adds $|\Delta|$ new elements.
+\end{remark}
+
+\begin{definition}[Structural Difficulty]\label{def:structdiff}
+$\sigma(I) = (\ell(I),\; |\Supp(\D, q)|,\; |\Hgold|,\; \min_{h \in \Hgold} |h|,\; \Nov^*(I))$, where $\Nov^*(I) = \min_{h \in \Hgold} \Nov(h, \Dm)$.
+\end{definition}
+
+
+\subsection{Rendering}\label{subsec:rendering_defs}
+
+\begin{definition}[Rendering Codec]\label{def:codec}
+A rendering codec $\rho = (\rho_{\mathrm{enc}}, \rho_{\mathrm{dec}})$ maps a theory with target and candidates to a token sequence (prompt), and maps a token sequence (response) to candidate rules or $\bot$.
+\end{definition}
+
+\begin{definition}[Faithfulness]\label{def:faithful}
+$\rho_{\mathrm{enc}}$ is faithful w.r.t.\ ideal reasoners $\mathfrak{R}$ if $R(\rho_{\mathrm{enc}}(\Dm, q, \Hcand)) \cap \Hgold \neq \emptyset$ for every $R \in \mathfrak{R}$ and instance with $\Hgold \neq \emptyset$.
+\end{definition}
+
+\begin{definition}[Naturalness]\label{def:naturalness}
+$\Nat(\rho_{\mathrm{enc}}) = \mathbb{E}_{(\D, q) \sim \mathcal{P}}[\log p_{\mathcal{T}}(\rho_{\mathrm{enc}}(\Dm, q, \Hcand))]$, where $p_\mathcal{T}$ is the density of a reference language model.
+\end{definition}
+
+\begin{definition}[Rendering Modalities]\label{def:modalities}
+Four encoding strategies, from most natural to most faithful:
+(M1) narrative, (M2) semi-formal, (M3) annotated formal, (M4) pure formal. See Appendix~\ref{app:rendering} for templates.
+\end{definition}
+
+\begin{definition}[Modality Ordering]\label{def:modorder}
+$\Nat(\rho^{\mathrm{nar}}) \geq \Nat(\rho^{\mathrm{semi}}) \geq \Nat(\rho^{\mathrm{form}}) \geq \Nat(\rho^{\mathrm{pure}})$ and $\Faith(\rho^{\mathrm{pure}}) \geq \Faith(\rho^{\mathrm{form}}) \geq \Faith(\rho^{\mathrm{semi}}) \geq \Faith(\rho^{\mathrm{nar}})$.
+\end{definition}
+
+\begin{definition}[Ontological Grounding Map]\label{def:nlmap}
+$\NL: \HB \to \La^*$ satisfying: (i) injectivity; (ii) compositionality via $\NL_\mathcal{P}$ and $\NL_\mathcal{C}$; (iii) domain coherence.
+\end{definition}
+
+\begin{definition}[Decoder Strategies]\label{def:decoder}
+(D1) Exact match. (D2) Template extraction via $\arg\min_r d_{\mathrm{edit}}(y, \tau(r))$. (D3) Semantic extraction via parser $M_{\mathrm{parse}}(y \mid \mathrm{schema}(\La))$.
+\end{definition}
+
+\begin{definition}[Round-Trip Consistency]\label{def:roundtrip}
+$\rho_{\mathrm{dec}}(\tau(r)) = r$ for every $r$ in the candidate space.
+\end{definition}
+
+\begin{definition}[Rendering-Robust Accuracy]\label{def:robustacc}
+$\mathrm{Acc}_{\mathrm{robust}}(M) = \frac{1}{N} \sum_{i=1}^N \min_{j} \Pr_M[h \in \Hgold_i \mid \rho^{(j)}_{\mathrm{enc}}(I_i)]$, where $j$ ranges over M1--M4.
+\end{definition}
+
+\begin{definition}[Empirical Difficulty]\label{def:empdiff}
+$\Diff_\rho(I, M) = 1 - \Pr_M[\rho_{\mathrm{dec}}(M(\rho_{\mathrm{enc}}(\Dm, q))) \in \Hgold]$.
+\end{definition}
+
+
+%% =================================================================
+\section{Proofs}\label{app:proofs}
+
+\begin{proposition}[Conservativity of Strict Conversion]\label{prop:strict}
+If $\partfunc \equiv s$, then $q \in \mathcal{M}_\Pi \iff \D_\partfunc \pDelta q$.
+\end{proposition}
+
+\begin{proof}
+When $\partfunc \equiv s$, we have $\Rd^{\partfunc} = \emptyset$, and the strict fragment $(\Rs^{\partfunc}, F_\partfunc)$ is isomorphic to $\Pi$ via $(h \leftarrow b_1, \ldots, b_n) \mapsto (b_1, \ldots, b_n \strictto h)$ for rules and $(h \leftarrow) \mapsto h \in F$ for facts. The definite provability relation $\pDelta$ on the strict fragment coincides with iterated application of $T_\Pi$, so $\{q \mid \D_\partfunc \pDelta q\} = \mathrm{lfp}(T_\Pi) = \mathcal{M}_\Pi$.
+\end{proof}
+
+\begin{proposition}[Defeasible Preservation]\label{prop:defpres}
+For any $\partfunc$, if $q \in \mathcal{M}_\Pi$ and $\D_\partfunc$ contains no rules with consequent $\comp{q}$, then $\D_\partfunc \pPartial q$.
+\end{proposition}
+
+\begin{proof}
+Without rules having consequent $\comp{q}$, condition (2c) of Definition~\ref{def:defderiv} is vacuously satisfied. Condition (2b) is met by the rules deriving $q$ in $\Pi$, whether classified as strict or defeasible, since the same body literals remain provable by induction on derivation depth.
+\end{proof}
+
+\begin{proposition}[Monotonicity of Expected Yield]\label{prop:yieldmono}
+$\mathbb{E}[Y(\partfunc_{\mathrm{rand}}(\delta), Q)]$ is non-decreasing in $\delta$.
+\end{proposition}
+
+\begin{proof}
+Increasing $\delta$ converts strict rules to defeasible rules, expanding the set of ablation-eligible elements. For $\partfunc, \partfunc'$ differing only in $\partfunc(c) = s$ and $\partfunc'(c) = d$, we have $\CritStar(\D_{\partfunc'}, q) \supseteq \CritStar(\D_\partfunc, q)$.
+\end{proof}
+
+\begin{proposition}\label{prop:critinclusion}
+$\CritStar(\D, q) \subseteq \Crit(\D, q)$, with possibly strict inclusion.
+\end{proposition}
+
+\begin{proof}
+If $e \in \CritStar(\D, q)$, then $\D \setminus \{e\} \not\pPartial q$, so for any support set $S$ containing $e$, $S \setminus \{e\} \not\pPartial q$. Strict inclusion occurs when $e$ belongs to some minimal support set but alternative derivation paths bypass it.
+\end{proof}
+
+\begin{theorem}[Defeasible Derivation in P]\label{thm:derivP}
+For propositional defeasible theories without defeaters and with acyclic $\succ$, deciding $\D \pPartial q$ is in P, computable in $O(|R| \cdot |F|)$ time \cite{maher2001propositional, billington2010framework}.
+\end{theorem}
+
+\begin{proof}
+The tagged proof procedure implements as forward chaining over tagged literals, iterating until a fixed point. Each iteration processes each rule at most once; the iteration count is bounded by $|F| + |R|$. Checking applicability and team defeat per iteration costs $O(|R|)$. Total: $O(|R| \cdot (|F| + |R|))$.
+\end{proof}
+
+\begin{corollary}\label{cor:verif}
+Verifying $\Dm \cup \{h\} \pPartial q$ is in P.
+\end{corollary}
+
+\begin{theorem}[Minimum Support Set is NP-Complete]\label{thm:suppNP}
+Given $\D$, $q$ with $\D \pPartial q$, and integer $k$: deciding $\exists\, S \in \Supp(\D, q)$ with $|S| \leq k$ is NP-complete.
+\end{theorem}
+
+\begin{proof}
+NP membership: guess $S$ with $|S| \leq k$, verify sufficiency (P by Theorem~\ref{thm:derivP}) and minimality ($|S|$ P-time checks).
+
+NP-hardness: reduce from Minimum Hitting Set. Given universe $U = \{u_1, \ldots, u_m\}$ and collection $\mathcal{S} = \{S_1, \ldots, S_\ell\}$, construct:
+\begin{itemize}[nosep]
+    \item Defeasible rules $r_i\colon \top \defto u_i$ for each $u_i$.
+    \item Strict rules $s_j\colon u_{j_1}, \ldots, u_{j_t} \strictto p_j$ for each $S_j = \{u_{j_1}, \ldots, u_{j_t}\}$.
+    \item Final strict rule $s_{\mathrm{all}}\colon p_1, \ldots, p_\ell \strictto q$.
+\end{itemize}
+Support sets for $q$ restricted to defeasible rules correspond bijectively to hitting sets of $\mathcal{S}$.
+\end{proof}
+
+\begin{theorem}\label{thm:critP}
+$\CritStar(\D, q)$ is computable in $O(|\D|^2 \cdot |F|)$ time.
+\end{theorem}
+
+\begin{proof}
+Test $\D \setminus \{e\} \pPartial q$ for each of the $|\D|$ elements $e$; each test costs $O(|R| \cdot |F|)$.
+\end{proof}
+
+\begin{corollary}\label{cor:cubic}
+The full instance generation pipeline runs in $O(|\D|^3)$.
+\end{corollary}
+
+\begin{theorem}[First-Order Complexity]\label{thm:firstorder}
+Deciding $\D \pPartial q$ for first-order defeasible theories is EXPTIME-complete in general. For the function-free (datalog) fragment, the pipeline remains in P with respect to the grounded size.
+\end{theorem}
+
+\begin{proof}
+The ground instantiation has size $O(|\D| \cdot |\mathcal{C}|^a)$ where $a = \max_p \mathrm{ar}(p)$. With function symbols, grounding can be exponential. Without function symbols, $|\HU| = |\mathcal{C}|$ and grounding is polynomial in $|\mathcal{C}|^a$.
+\end{proof}
+
+\begin{proposition}[Candidate Space Size]\label{prop:candsize}
+For a function-free signature with $|\mathcal{P}^+| = p$, max arity $a$, $|\mathcal{C}| = c$:
+$|\Rdfspace(\La)| = O(|\mathcal{P}^-| \cdot c^a \cdot \sum_{m=0}^{\mathrm{ar}_{\max}} \binom{p \cdot c^a}{m})$.
+For fixed $\mathrm{ar}_{\max}$ this is polynomial in $|\Sigma|$.
+\end{proposition}
+
+\begin{theorem}[DAP Complexity]\label{thm:dapcomplex}
+(i) Weak resolution with bounded $\mathrm{ar}_{\max}$: NP-complete. (ii) Strong resolution: $\Sigma_2^P$-complete. (iii) Conservative restructuring: $\Sigma_2^P$-hard.
+\end{theorem}
+
+\begin{proof}
+(i) NP membership: guess $r \in \Rdfspace(\La)$ (polynomial), verify $\D \cup \{r, \alpha\} \not\pPartial \comp{\alpha}$ in P. Hardness: reduce from SAT. Given CNF $\phi = C_1 \wedge \cdots \wedge C_m$ over $x_1, \ldots, x_n$, construct:
+\begin{itemize}[nosep]
+    \item Facts $\mathrm{var}(x_i)$; defeasible rules $r_i^\pm\colon \mathrm{var}(x_i) \defto \mathrm{pos/neg}(x_i)$.
+    \item Strict rules deriving $\mathrm{sat}(C_j)$ from appropriate literals; conjunction rule to $\mathrm{sat\_all}$.
+    \item Default $r_\neg\colon \top \defto \neg\mathrm{sat\_all}$; anomaly $\alpha = \mathrm{sat\_all}$.
+\end{itemize}
+An applicable defeater encodes a satisfying assignment.
+
+(ii) The existential guess of $r$ and $\Gamma$ is polynomial; verifying all attacks are neutralized is in coNP. Hardness via $\exists\forall$-QBF \cite{eiter1995complexity}.
+
+(iii) Follows from (ii).
+\end{proof}
+
+\begin{proposition}[Gold Set Non-Emptiness]\label{prop:goldnonempty}
+In Definition~\ref{def:level3gen}, $r^* \in \Rgold$ provided it satisfies $\La$.
+\end{proposition}
+
+\begin{proposition}[Gold Set Non-Uniqueness]\label{prop:goldnonuniq}
+In general $|\Rgold| > 1$, with resolutions of different strengths.
+\end{proposition}
+
+\begin{proposition}\label{prop:difforder}
+Expected empirical difficulty respects the level ordering: $\mathbb{E}[\Diff(\ell{=}1)] \leq \mathbb{E}[\Diff(\ell{=}2)] \leq \mathbb{E}[\Diff(\ell{=}3)]$.
+\end{proposition}
+
+\begin{proof}
+Each level subsumes the reasoning of the previous and introduces additional requirements. The search space grows from $|F|$ (Level 1) through $|\Rd|$ (Level 2) to $|\Rdfspace(\La) \cup \Rdexcspace(\La)|$ (Level 3, Proposition~\ref{prop:candsize}), with the conservativity constraint further reducing the effective gold set relative to the search space.
+\end{proof}
+
+
+%% =================================================================
+\section{Rendering Details}\label{app:rendering}
+
+\subsection{Encoder Templates}
+
+Narrative rendering (M1) uses:
+\begin{align*}
+    \tau_1(b_1, \ldots, b_n \strictto h) &= \text{``It is always the case that if } \NL(b_1) \text{ and \ldots\ and } \NL(b_n)\text{, then } \NL(h)\text{.''} \\
+    \tau_1(b_1, \ldots, b_n \defto h) &= \text{``Typically, if } \NL(b_1) \text{ and \ldots\ and } \NL(b_n)\text{, then } \NL(h)\text{.''} \\
+    \tau_1(b_1, \ldots, b_n \defeatto \neg h) &= \text{``The fact that } \NL(b_1) \text{ and \ldots\ may cast doubt on whether } \NL(h)\text{.''} \\
+    \tau_1(r \succ s) &= \text{``The principle in [}\mathrm{label}(r)\text{] takes precedence over [}\mathrm{label}(s)\text{] when both apply.''}
+\end{align*}
+
+Semi-formal rendering (M2): $\tau_2(b_1, \ldots, b_n \defto h) = \text{``}\NL(b_1) \wedge \ldots \wedge \NL(b_n) \Rightarrow \NL(h)\ [\text{defeasible}]\text{''}$.
+
+Annotated formal (M3): $\tau_3(r) = \mathrm{code}(r) \;\|\; \text{``\% ''} \circ \tau_1(r)$.
+
+Pure formal (M4): raw logical syntax without glosses.
+
+Narrative mode uses implicit universal quantification (``Proteins typically have stable three-dimensional structure''); formal modes use explicit quantification ($\forall X.\; \mathrm{protein}(X) \Rightarrow \mathrm{has\_stable\_3d}(X)$).
+
+\subsection{Decoder Properties}
+
+\begin{proposition}\label{prop:decprop}
+\begin{center}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Strategy & Sound & Complete & Faithful \\
+\midrule
+(D1) Exact match & \checkmark & $\times$ & \checkmark \\
+(D2) Template extraction & \checkmark & \checkmark & conditional$^\dagger$ \\
+(D3) Semantic extraction & conditional$^\ddagger$ & \checkmark & approximate \\
+\bottomrule
+\end{tabular}
+\end{center}
+$^\dagger$ Faithful iff $\tau$ is injective and the edit-distance minimum is unique.
+$^\ddagger$ Sound iff $M_{\mathrm{parse}}$ outputs only well-formed rules.
+\end{proposition}
+
+\begin{proposition}[Round-Trip Conditions]\label{prop:roundtrip}
+(i) $\rho_{\mathrm{dec}}^{\mathrm{exact}}$ satisfies round-trip consistency by construction. (ii) $\rho_{\mathrm{dec}}^{\mathrm{templ}}$ satisfies it iff $\tau$ is injective. (iii) $\rho_{\mathrm{dec}}^{\mathrm{sem}}$ satisfies it approximately, measurable via synthetic tests.
+\end{proposition}
+
+\subsection{Modality--Level Interaction}
+
+\begin{conjecture}\label{conj:modlevel}
+For Level 1 tasks, narrative rendering yields highest accuracy (cloze-like). For Level 3 tasks, semi-formal or formal rendering yields highest accuracy (logical structure must be precisely specified). If confirmed, this implies different reasoning tasks require different communication modalities between formal systems and neural models.
+\end{conjecture}
+
+
+%% =================================================================
+\section{Worked Example}\label{app:example}
+
+\begin{example}[IDP Discovery as Defeater Abduction]\label{ex:idp}
+Consider a simplified biochemistry program $\Pi_{\mathrm{bio}}$:
+\begin{align*}
+    &\text{protein}(\text{p53\_idr}) \leftarrow &\quad &\text{functional}(\text{p53\_idr}) \leftarrow \\
+    &\text{disordered}(\text{p53\_idr}) \leftarrow &\quad &\text{has\_stable\_3d}(X) \leftarrow \text{protein}(X) \\
+    &\text{func\_mech}(X, \text{lock\_key}) \leftarrow \text{protein}(X), \text{has\_stable\_3d}(X)
+\end{align*}
+
+Under $\partfunc_{\mathrm{rule}}$, we obtain $\D_{\mathrm{bio}}$ with $F = \{\text{protein}(\text{p53\_idr}), \text{functional}(\text{p53\_idr}), \text{disordered}(\text{p53\_idr})\}$ and $\Rd = \{r_1\colon \text{protein}(X) \defto \text{has\_stable\_3d}(X),\; r_2\colon \text{protein}(X), \text{has\_stable\_3d}(X) \defto \text{func\_mech}(X, \text{lock\_key})\}$.
+
+Extend to $\Dfull_{\mathrm{bio}}$ with the IDP exception:
+\begin{align*}
+    r_3 &\colon \text{disordered}(X) \defto \neg\text{has\_stable\_3d}(X), \quad
+    r_4 \colon \text{disordered}(X), \text{protein}(X) \defto \text{func\_mech}(X, \text{conf\_ensemble}) \\
+    &r_3 \succ r_1, \quad r_4 \succ r_2
+\end{align*}
+
+Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $\alpha = \text{func\_mech}(\text{p53\_idr}, \text{conf\_ensemble})$ is now anomalous.
+
+Valid resolutions: (i) weak defeater $d^*\colon \text{disordered}(X), \text{protein}(X) \defeatto \neg\text{func\_mech}(X, \text{lock\_key})$, with $\Nov = 0$; (ii) strong exception $r_4$ with $r_4 \succ r_2$, introducing $\text{conf\_ensemble}$, with $\Nov = 1/4 > 0$.
+
+Narrative rendering: ``Proteins typically have a stable three-dimensional structure. Proteins with stable structure typically function via a lock-and-key mechanism. However, it has been observed that p53\_idr is a protein that is disordered yet functional. What hypothesis would explain how p53\_idr can be functional despite lacking stable structure?''
+
+A model response such as ``Disordered proteins may function through a conformational ensemble mechanism rather than lock-and-key binding'' would decode via $\rho_{\mathrm{dec}}^{\mathrm{sem}}$ to match $r_4$, scoring as a correct strong resolution with $\Nov > 0$.
+\end{example}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
