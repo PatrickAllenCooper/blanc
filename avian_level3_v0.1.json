@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "name": "Avian Abduction Level 3 v0.1",
+    "total_instances": 3,
+    "level3_count": 3,
+    "valid_count": 3,
+    "knowledge_base": "avian_biology"
+  },
+  "instances": [
+    {
+      "target": "~flies(opus)",
+      "level": 3,
+      "candidates": [
+        "d1: penguin(X) ~> ~flies(X)"
+      ],
+      "gold": [
+        "d1: penguin(X) ~> ~flies(X)"
+      ],
+      "metadata": {
+        "anomaly": "flies(opus)",
+        "resolution": "d1",
+        "conservative": true,
+        "defeater_type": "weak"
+      },
+      "theory_size": 33,
+      "num_candidates": 1,
+      "num_gold": 1
+    },
+    {
+      "target": "~flies(chirpy)",
+      "level": 3,
+      "candidates": [
+        "d2: wing_injury(X) ~> ~flies(X)"
+      ],
+      "gold": [
+        "d2: wing_injury(X) ~> ~flies(X)"
+      ],
+      "metadata": {
+        "anomaly": "flies(chirpy)",
+        "resolution": "d2",
+        "conservative": true,
+        "defeater_type": "weak"
+      },
+      "theory_size": 5,
+      "num_candidates": 1,
+      "num_gold": 1
+    },
+    {
+      "target": "~migrates(donald)",
+      "level": 3,
+      "candidates": [
+        "d3: duck(X) ~> ~migrates(X)"
+      ],
+      "gold": [
+        "d3: duck(X) ~> ~migrates(X)"
+      ],
+      "metadata": {
+        "anomaly": "migrates(donald)",
+        "resolution": "d3",
+        "conservative": true,
+        "defeater_type": "weak"
+      },
+      "theory_size": 5,
+      "num_candidates": 1,
+      "num_gold": 1
+    }
+  ]
+}
