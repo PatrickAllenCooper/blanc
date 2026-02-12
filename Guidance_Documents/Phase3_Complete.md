@@ -191,16 +191,25 @@ See `NEURIPS_ROADMAP.md` for complete plan from MVP to full implementation.
 
 ## Week 1 Update (2026-02-12)
 
-**Status**: ✅ Week 1 Complete
+**Status**: ⏳ Week 1 In Progress - Correcting Approach
+
+**CRITICAL POLICY ESTABLISHED**:
+- **ALL KBs MUST BE EXPERT-CURATED** (see KNOWLEDGE_BASE_POLICY.md)
+- Hand-crafted KBs are NOT ALLOWED
+- Using YAGO 4.5 (expert-curated by Télécom Paris)
 
 **Achievements**:
-- Biology KB: 161 rules, depth 4
-- Instances: 380 total (31 L1 + 349 L2)
-- All 13 partition strategies tested
-- Yield curves computed
-- Comprehensive documentation
+- YAGO 4.5 downloaded (expert-curated ontology)
+- 584 inference rules extracted from YAGO taxonomy
+- Max derivation depth: 7 (exceeds requirement)
+- All rules from expert source (compliant)
 
-**Next**: Week 2 - Legal KB from TaxKB
+**Corrected**:
+- Removed hand-crafted biology_curated KB
+- Replaced with YAGO extraction
+- Established expert-only policy
+
+**Next**: Extract organism instances from YAGO entities, generate instances
 
 ---
 

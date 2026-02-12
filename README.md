@@ -101,13 +101,13 @@ kb_asp.load(theory)
 **Timeline**: 14 weeks (Feb 2026 - May 2026)  
 **Target**: Complete DeFAb benchmark for NeurIPS 2025 submission
 
-✅ **Week 1: Biology KB (Complete - 2026-02-12)**
-- Biology curated KB: 161 rules, depth 4
-- All 13 partition strategies tested
-- 380 instances generated (31 L1 + 349 L2)
-- Yield curves computed and validated
+⏳ **Week 1: Biology KB (In Progress - 2026-02-12)**
+- **POLICY ESTABLISHED**: Expert-curated KBs only (see KNOWLEDGE_BASE_POLICY.md)
+- YAGO 4.5 expert KB: 584 rules extracted, depth 7
+- Source: Télécom Paris expert-curated ontology
+- All 13 partition strategies ready
 - Tests: 208/208 passing
-- See: `docs/session_reports/WEEK1_COMPLETE.md`
+- Next: Extract organism instances, generate benchmark
 
 ⏳ **Week 2: Legal KB (In Progress)**
 - Extract from TaxKB
