@@ -11,9 +11,9 @@ Date: 2026-02-12
 import pytest
 from blanc.core.theory import Theory, Rule, RuleType
 from blanc.generation.distractor import (
-    generate_syntactic_distractors,
-    generate_random_distractors,
-    generate_adversarial_distractors,
+    sample_syntactic_distractors,
+    sample_random_distractors,
+    sample_adversarial_distractors,
 )
 
 
@@ -30,7 +30,7 @@ class TestSyntacticDistractors:
         
         target_element = "bird(robin)"
         
-        distractors = generate_syntactic_distractors(
+        distractors = sample_syntactic_distractors(
             target_element,
             theory,
             k=3
@@ -60,7 +60,7 @@ class TestSyntacticDistractors:
             label="r2"
         ))
         
-        distractors = generate_syntactic_distractors(
+        distractors = sample_syntactic_distractors(
             target_rule,
             theory,
             k=2
@@ -88,7 +88,7 @@ class TestSyntacticDistractors:
         """Test syntactic distractors with empty theory."""
         theory = Theory()
         
-        distractors = generate_syntactic_distractors(
+        distractors = sample_syntactic_distractors(
             "nonexistent(x)",
             theory,
             k=3
@@ -109,7 +109,7 @@ class TestRandomDistractors:
         
         target = "fact0(x)"
         
-        distractors = generate_random_distractors(
+        distractors = sample_random_distractors(
             target,
             theory,
             k=5
@@ -132,7 +132,7 @@ class TestRandomDistractors:
         
         target_rule = theory.rules[0]
         
-        distractors = generate_random_distractors(
+        distractors = sample_random_distractors(
             target_rule,
             theory,
             k=3
@@ -175,7 +175,7 @@ class TestAdversarialDistractors:
         )
         
         # Adversarial distractors should be "almost correct"
-        distractors = generate_adversarial_distractors(
+        distractors = sample_adversarial_distractors(
             target_rule,
             theory,
             k=2
@@ -197,7 +197,7 @@ class TestAdversarialDistractors:
         )
         
         # Can't make adversarial from single antecedent (nothing to remove)
-        distractors = generate_adversarial_distractors(
+        distractors = sample_adversarial_distractors(
             target_rule,
             theory,
             k=2
@@ -212,7 +212,7 @@ class TestAdversarialDistractors:
         theory.add_fact("bird(robin)")
         
         # Facts don't have antecedents, so adversarial may not apply
-        distractors = generate_adversarial_distractors(
+        distractors = sample_adversarial_distractors(
             "bird(robin)",
             theory,
             k=2
@@ -246,7 +246,7 @@ class TestDistractorValidation:
             theory.add_fact(f"fact{i}(x)")
         
         target = "fact0(x)"
-        distractors = generate_random_distractors(target, theory, k=5)
+        distractors = sample_random_distractors(target, theory, k=5)
         
         # Should be unique
         assert len(distractors) == len(set(str(d) for d in distractors))
