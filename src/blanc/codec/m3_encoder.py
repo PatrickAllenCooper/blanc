@@ -10,7 +10,7 @@ Date: 2026-02-12
 
 from typing import Union
 from blanc.core.theory import Rule, RuleType
-from .encoder import encode_m4_element
+from .encoder import PureFormalEncoder
 from .nl_mapping import get_nl_mapping
 
 
@@ -40,7 +40,14 @@ def encode_m3(element: Union[str, Rule], nl_mapping=None, domain='biology') -> s
         nl_mapping = get_nl_mapping(domain)
     
     # Get formal encoding (M4)
-    formal = encode_m4_element(element)
+    m4_encoder = PureFormalEncoder()
+    if isinstance(element, Rule):
+        formal = m4_encoder.encode_rule(element)
+    else:
+        formal = m4_encoder.encode_fact(element)
+    
+    # Remove trailing period for cleaner annotation
+    formal = formal.rstrip('.')
     
     # Generate natural language comment
     comment = generate_comment(element, nl_mapping)
