@@ -172,20 +172,33 @@ def main():
     # Generate with all partitions
     instances, results = generate_with_all_partitions(kb, max_instances_per_partition=20)
     
-    # Save results
-    output = {
-        "metadata": {
-            "kb": "biology_curated",
-            "partition_strategies": 13,
-            "total_instances": len(instances),
-        },
-        "partition_results": results,
+    # Save instances
+    if instances:
+        output = {
+            "metadata": {
+                "kb": "biology_curated",
+                "partition_strategies": len(strategies),
+                "total_instances": len(instances),
+                "kb_stats": get_biology_stats(kb),
+            },
+            "partition_results": results,
+            "instances": [inst.to_dict() for inst in instances],
+        }
+        
+        with open("biology_instances.json", 'w') as f:
+            json.dump(output, f, indent=2)
+        
+        print(f"\nSaved {len(instances)} instances to: biology_instances.json")
+    
+    # Save analysis
+    analysis = {
+        "partition_strategies": results,
     }
     
     with open("biology_partition_analysis.json", 'w') as f:
-        json.dump(output, f, indent=2)
+        json.dump(analysis, f, indent=2)
     
-    print(f"\nSaved analysis to: biology_partition_analysis.json")
+    print(f"Saved analysis to: biology_partition_analysis.json")
     
     return 0
 
