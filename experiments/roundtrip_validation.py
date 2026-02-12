@@ -11,11 +11,11 @@ import json
 from pathlib import Path
 from collections import defaultdict
 
-from blanc.codec import PureFormalEncoder
+from blanc.codec.encoder import PureFormalEncoder
 from blanc.codec.m1_encoder import encode_m1
 from blanc.codec.m2_encoder import encode_m2
 from blanc.codec.m3_encoder import encode_m3
-from blanc.codec import decode_d2
+from blanc.codec.d2_decoder import decode_d2
 from blanc.codec.d3_decoder import decode_d3
 from blanc.codec.cascading_decoder import CascadingDecoder
 from blanc.core.theory import Rule, RuleType
