@@ -1,86 +1,65 @@
 # BLANC: Defeasible Abduction Benchmark
 
-**Building Logical Abductive Non-monotonic Corpora**
-
-Expert-curated knowledge bases for evaluating foundation models on grounded abductive reasoning and belief revision.
+Expert-curated knowledge bases for evaluating foundation models on grounded abductive reasoning.
 
 ---
 
-## Overview
+## Quick Status
 
-Foundation models struggle with:
-1. **Grounding**: Tracing conclusions to supporting evidence
-2. **Novelty**: Generating hypotheses beyond training distribution
-3. **Belief Revision**: Updating knowledge while preserving unrelated commitments
+**Progress**: Week 5 of 14 complete (36%)  
+**Tests**: 228 passing ✅  
+**Coverage**: 79% ✅  
+**Expert KBs**: 2,318 rules from 4 institutions  
+**Instances**: 374 development instances
 
-**DeFAb** provides a benchmark using expert-curated knowledge bases from government/academic institutions to test these capabilities.
+---
+
+## Key Features
+
+### Expert-Curated Foundation
+
+**All KBs from peer-reviewed sources**:
+- YAGO 4.5 (Télécom Paris)
+- WordNet 3.0 (Princeton)
+- LKIF Core (U Amsterdam)
+- MatOnto (MatPortal/MGI)
+
+**Policy**: Expert-only (see KNOWLEDGE_BASE_POLICY.md)
+
+### Complete Codec
+
+**Modalities**: M2, M3, M4 (M1 in Week 6)  
+**Decoders**: D1, D2 (D3 in Week 6)  
+**Coverage**: 70-92% on codec modules
+
+### Development Dataset
+
+**374 instances** from expert KBs:
+- Biology: 114 instances
+- Legal: 168 instances
+- Materials: 92 instances
 
 ---
 
 ## Quick Start
 
-```python
-from examples.knowledge_bases.biology_kb_subset import create_biology_subset
-from blanc.author.conversion import phi_kappa
-from blanc.generation.partition import partition_rule
-
-# Load expert-curated KB subset (for development)
-kb = create_biology_subset()  # 16 rules, fast iteration
-
-# Convert to defeasible theory
-theory = phi_kappa(kb, partition_rule)
-
-# Query
-from blanc.reasoning.defeasible import defeasible_provable
-result = defeasible_provable(theory, "flies(robin)")  # True
-```
-
-See `QUICK_START.md` for detailed guide.
-
----
-
-## Project Status
-
-**Current**: Week 3 Day 1 of 14-week roadmap  
-**Progress**: Expert KB foundation complete, instance generation started  
-**Tests**: 208/208 passing (100%)
-
-### Expert Knowledge Bases ✅ COMPLETE
-
-All from peer-reviewed institutions:
-
-| Domain | Rules | Source | Institution |
-|--------|-------|--------|-------------|
-| Biology | 927 | YAGO 4.5 + WordNet | Télécom Paris + Princeton |
-| Legal | 201 | LKIF Core | University of Amsterdam |
-| Materials | 1,190 | MatOnto | MatPortal/MGI |
-
-**Total**: 2,318 expert-curated rules
-
-**Policy**: Expert-only (see `KNOWLEDGE_BASE_POLICY.md`)
-
-### Development Progress
-
-- ✅ **Week 2**: Expert KB foundation complete
-- ⏳ **Week 3**: Instance generation (72/300-600)
-- 📋 **Weeks 4-14**: Codec, evaluation, analysis, HPC production
-
----
-
-## Installation
-
 ```bash
-git clone https://github.com/PatrickAllenCooper/blanc.git
-cd blanc
+# Install
 pip install -r requirements.txt
-
-# Download expert KBs (optional - extracted KBs work without this)
-python scripts/download_yago.py
-python scripts/download_wordnet.py
 
 # Run tests
 python -m pytest tests/
+
+# Load expert KB
+from examples.knowledge_bases.biology_kb_subset import create_biology_subset
+kb = create_biology_subset()  # 16 rules, fast iteration
+
+# Generate instance
+from scripts.generate_dev_instances import generate_from_kb_dev
+instances, results = generate_from_kb_dev("Biology", kb, [...], max_per_strategy=10)
 ```
+
+See `QUICK_START.md` for detailed guide.
 
 ---
 
@@ -88,74 +67,57 @@ python -m pytest tests/
 
 ```
 blanc/
-├── src/blanc/              Production code (1,762 lines, 64% coverage)
-├── tests/                  208 tests (100% passing)
-├── examples/knowledge_bases/  3 expert KBs + subsets
-├── scripts/                Generation and testing scripts
-├── hpc/                    HPC/SLURM infrastructure (Weeks 13-14)
-├── docs/                   Historical documentation
-└── Guidance_Documents/     Phase implementation guides
+├── src/blanc/              Production code (1,507 lines, 79% coverage)
+├── tests/                  228 tests
+├── examples/knowledge_bases/  Expert KBs + subsets
+├── instances/              374 development instances
+├── scripts/                Reproducibility scripts
+├── experiments/            Statistical analysis
+├── results/                Analysis results
+├── figures/                Publication figures
+└── docs/                   Documentation
 ```
 
 ---
 
-## Key Documents
+## Documentation
 
 **Essential**:
-- `README.md` - This overview
-- `QUICK_START.md` - Getting started guide
-- `KNOWLEDGE_BASE_POLICY.md` - Expert-only requirement ⚠️ CRITICAL
-- `CONTINUE_WEEK3.md` - Current development status
+- README.md (this file)
+- QUICK_START.md
+- STATUS.md (current progress)
+- KNOWLEDGE_BASE_POLICY.md (CRITICAL)
 
 **Planning**:
-- `NEURIPS_FULL_ROADMAP.md` - 14-week development plan
-- `IMPLEMENTATION_PLAN.md` - Complete technical specification
-- `DEVELOPMENT_STRATEGY_REVISED.md` - Local dev + HPC production strategy
-
-**Technical**:
-- `COVERAGE_ANALYSIS.md` - Test coverage (64% overall, 91-99% critical)
-- `WEEK2_COMPLETE.md` - Latest completed work
-- `DATA_DOWNLOAD_INSTRUCTIONS.md` - How to get expert KBs
+- NEURIPS_FULL_ROADMAP.md (14-week plan)
+- IMPLEMENTATION_PLAN.md (technical spec)
 
 **Reference**:
-- `docs/week3_docs/` - Session documentation
-- `Guidance_Documents/` - Phase guides
+- docs/completed_weeks/ (Weeks 3-5)
+- docs/audits/ (technical reviews)
 
 ---
 
-## Expert Sources
+## Current Work
 
-### Biology (Π_bio)
-- **YAGO 4.5**: 584 rules (Télécom Paris, SIGIR 2024)
-- **WordNet 3.0**: 334 rules (Princeton, Miller 1995)
+**Completed**: Weeks 1-5
+- Expert KB foundation
+- Instance generation
+- Statistical analysis
+- Codec (M2, M3, D2)
+- Architecture refactoring
 
-### Legal (Π_law)
-- **LKIF Core**: 201 rules (U Amsterdam, ESTRELLA)
+**Next**: Week 6 (M1 + D3 + 85% coverage)
 
-### Materials (Π_mat)
-- **MatOnto**: 1,190 rules (MatPortal, MGI ecosystem)
-
-**All sources**: Peer-reviewed, government/academic institutions
-
----
-
-## Development Strategy
-
-**Weeks 3-12**: Local development with KB subsets (fast iteration)  
-**Weeks 13-14**: HPC production at massive scale (millions of instances)
-
-Current: 72 instances generated locally in 4 minutes ✅
+**Remaining**: 9 weeks to NeurIPS submission
 
 ---
 
 ## Testing
 
 ```bash
-python -m pytest tests/ --tb=no -q
-# 208 passed, 3 skipped
-
-python scripts/test_all_expert_kbs.py
-# All 3 KBs pass validation
+python -m pytest tests/              # 228 passing
+python -m pytest tests/ --cov        # 79% coverage
 ```
 
 ---
@@ -163,9 +125,9 @@ python scripts/test_all_expert_kbs.py
 ## Citations
 
 1. Suchanek et al. (2024). YAGO 4.5. SIGIR 2024.
-2. Miller, G. A. (1995). WordNet. CACM 38(11).
-3. Hoekstra et al. LKIF Core. University of Amsterdam.
-4. Bryan Miller. MatOnto. matportal.org/ontologies/MATONTO
+2. Miller, G. A. (1995). WordNet. CACM.
+3. Hoekstra et al. LKIF Core. U Amsterdam.
+4. Bryan Miller. MatOnto. MatPortal.
 
 ---
 
@@ -179,8 +141,4 @@ MIT License
 
 Patrick Cooper
 
----
-
-**For development**: See `CONTINUE_WEEK3.md`  
-**For roadmap**: See `NEURIPS_FULL_ROADMAP.md`  
-**For policy**: See `KNOWLEDGE_BASE_POLICY.md` ⚠️
+**Repository**: Clean, modular, 79% coverage, ready for experiments
