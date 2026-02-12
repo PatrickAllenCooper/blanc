@@ -189,27 +189,27 @@ See `NEURIPS_ROADMAP.md` for complete plan from MVP to full implementation.
 
 ---
 
-## Week 1 Update (2026-02-12)
+## Week 2-3 Update (2026-02-12)
 
-**Status**: ⏳ Week 1 In Progress - Correcting Approach
+**Status**: ✅ Week 2 Complete, Week 3 In Progress
 
-**CRITICAL POLICY ESTABLISHED**:
-- **ALL KBs MUST BE EXPERT-CURATED** (see KNOWLEDGE_BASE_POLICY.md)
-- Hand-crafted KBs are NOT ALLOWED
-- Using YAGO 4.5 (expert-curated by Télécom Paris)
+**EXPERT KB FOUNDATION COMPLETE**:
+- **ALL 3 DOMAINS** from expert sources (YAGO, WordNet, LKIF, MatOnto)
+- **2,318 expert-curated rules** from 4 institutions
+- **Policy**: Expert-only (see KNOWLEDGE_BASE_POLICY.md)
 
 **Achievements**:
-- YAGO 4.5 downloaded (expert-curated ontology)
-- 584 inference rules extracted from YAGO taxonomy
-- Max derivation depth: 7 (exceeds requirement)
-- All rules from expert source (compliant)
+- Biology KB: 927 rules (YAGO + WordNet), depth 7
+- Legal KB: 201 rules (LKIF Core), depth 7
+- Materials KB: 1,190 rules (MatOnto), depth 10
+- Local development subsets created (16-201 rules)
+- 72 instances generated locally in 4 minutes
 
-**Corrected**:
-- Removed hand-crafted biology_curated KB
-- Replaced with YAGO extraction
-- Established expert-only policy
+**Strategy**:
+- Weeks 3-12: Local development with subsets (fast iteration)
+- Weeks 13-14: HPC production at massive scale
 
-**Next**: Extract organism instances from YAGO entities, generate instances
+**Next**: Generate 300-600 development instances, begin statistical analysis
 
 ---
 
