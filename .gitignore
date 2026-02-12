@@ -62,3 +62,4 @@ dmypy.json
 *.tmp
 *.bak
 *.orig
+.coverage
