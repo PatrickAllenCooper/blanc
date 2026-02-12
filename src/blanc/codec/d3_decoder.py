@@ -189,15 +189,24 @@ def normalize_for_parsing(text: str) -> str:
     """Normalize text for parsing."""
     import re
     
+    # Handle M1 narrative format
+    # "Birds typically can fly" -> extract pattern
+    
     # Convert natural language markers to symbols
-    text = text.replace('typically', '=>')
-    text = text.replace('usually', '=>')
-    text = text.replace('generally', '=>')
-    text = text.replace('always', '->')
+    text = text.replace(' typically ', ' => ')
+    text = text.replace(' usually ', ' => ')
+    text = text.replace(' generally ', ' => ')
+    text = text.replace(' always ', ' -> ')
+    
+    # Try to extract formal structure from narrative
+    # Pattern: "{subjects} {hedging} {predicate}" -> try to map to logic
     
     # Normalize arrows
     text = text.replace('⇒', '=>')
     text = text.replace('→', '->')
+    
+    # Remove periods
+    text = text.rstrip('.')
     
     return text
 
