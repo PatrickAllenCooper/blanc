@@ -148,7 +148,11 @@ def decode_d3(text: str, candidates: List[Union[str, Rule]]) -> Optional[Union[s
         return result
     
     except Exception as e:
-        # Parsing failed, return None
+        # Parsing failed, try fallback to D2-style matching
+        if candidates:
+            # Use template extraction as fallback
+            from .d2_decoder import decode_d2
+            return decode_d2(text, candidates, threshold=20)
         return None
 
 
