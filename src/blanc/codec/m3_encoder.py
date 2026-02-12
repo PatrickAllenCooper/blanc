@@ -39,15 +39,12 @@ def encode_m3(element: Union[str, Rule], nl_mapping=None, domain='biology') -> s
     if nl_mapping is None:
         nl_mapping = get_nl_mapping(domain)
     
-    # Get formal encoding (M4)
-    m4_encoder = PureFormalEncoder()
+    # Get formal encoding (for M3, use arrow notation not Prolog)
     if isinstance(element, Rule):
-        formal = m4_encoder.encode_rule(element)
+        formal = encode_rule_arrow_notation(element)
     else:
-        formal = m4_encoder.encode_fact(element)
-    
-    # Remove trailing period for cleaner annotation
-    formal = formal.rstrip('.')
+        # For facts, just use the fact itself
+        formal = element
     
     # Generate natural language comment
     comment = generate_comment(element, nl_mapping)
@@ -138,6 +135,35 @@ def extract_constant(fact: str) -> str:
         end = fact.index(')')
         return fact[start:end]
     return ""
+
+
+def encode_rule_arrow_notation(rule: Rule) -> str:
+    """
+    Encode rule using arrow notation (not Prolog syntax).
+    
+    For M3 annotated formal, use mathematical arrow notation:
+    - Strict: bird(X) -> animal(X)
+    - Defeasible: bird(X) => flies(X)
+    """
+    # Build body
+    if len(rule.body) == 1:
+        body_str = rule.body[0]
+    else:
+        body_str = ", ".join(rule.body)
+    
+    # Choose arrow based on rule type
+    if rule.rule_type == RuleType.DEFEASIBLE:
+        arrow = "=>"
+    elif rule.rule_type == RuleType.DEFEATER:
+        arrow = "~>"
+    else:
+        arrow = "->"
+    
+    # Add label if present
+    if rule.label:
+        return f"{rule.label}: {body_str} {arrow} {rule.head}"
+    else:
+        return f"{body_str} {arrow} {rule.head}"
 
 
 def encode_m3_theory(theory, domain='biology') -> str:
