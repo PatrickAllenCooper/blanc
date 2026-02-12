@@ -1,0 +1,70 @@
+"""
+Materials Science Knowledge Base - Expert-Curated from MatOnto
+
+Expert-curated materials science ontology based on BFO (Basic Formal Ontology).
+All rules extracted from MatOnto (MatPortal community).
+
+Source:
+- MatOnto (MatPortal community, Bryan Miller) - 1,190 materials rules, depth 10
+
+Total: 1,190 inference rules from expert materials scientists
+
+Citation:
+- Bryan Miller (contact). MatOnto: Materials Science Ontology.
+  MatPortal. https://matportal.org/ontologies/MATONTO
+
+REQUIRES DOMAIN EXPERT VALIDATION (per paper Section 4.1)
+
+Author: Extracted and organized by Patrick Cooper
+Date: 2026-02-12
+"""
+
+from blanc.core.theory import Theory
+from .matonto_materials_extracted import create_matonto_materials
+
+
+def create_materials_kb() -> Theory:
+    """
+    Create materials science KB from expert sources.
+    
+    Uses:
+    - MatOnto: 1,190 materials science rules covering:
+      - Material classes (alloys, crystals, polymers, compounds)
+      - Chemical elements and groups
+      - Material properties (band_gap, elastic_modulus, etc.)
+      - Chemical reactions (addition, acid-base, etc.)
+      - Structural concepts
+    
+    Total: 1,190 expert-curated inference rules
+    
+    NOTE: Requires domain expert validation per paper requirements.
+    
+    Returns:
+        Theory with materials science knowledge
+    """
+    # MatOnto is primary (and only) source
+    theory = create_matonto_materials()
+    
+    return theory
+
+
+def get_materials_stats(theory=None):
+    """Get statistics for materials KB."""
+    if theory is None:
+        theory = create_materials_kb()
+    
+    from blanc.generation.partition import compute_dependency_depths
+    
+    depths = compute_dependency_depths(theory)
+    max_depth = max(depths.values()) if depths else 0
+    
+    return {
+        'sources': ['MatOnto'],
+        'rules': len(theory.rules),
+        'facts': len(theory.facts),
+        'max_depth': max_depth,
+        'predicates': len(set(r.head.split('(')[0] for r in theory.rules)),
+        'materials_concepts': ['alloy', 'crystal', 'polymer', 'elastic_modulus', 'band_gap'],
+        'expert_validation_required': True,
+        'expert_contact': 'Bryan Miller, bryan.miller@nist.gov',
+    }
