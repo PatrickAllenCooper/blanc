@@ -1,0 +1,15 @@
+{
+  "volume_balance": {
+    "total_instances": 374,
+    "by_domain": {
+      "biology": 114,
+      "legal": 168,
+      "materials": 92
+    },
+    "by_level": {
+      "2": 374
+    },
+    "chi_square": {
+      "statistic": 24.534759358288767,
+      "p_value": 4.7026720987868226e-06,
+      "balanced": 
