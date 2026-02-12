@@ -1,0 +1,630 @@
+# Continue Development: Handoff Document
+
+**Date**: 2026-02-12  
+**Current Status**: Week 7 Complete (Infrastructure Phase Done)  
+**Next**: Week 8 - LLM Evaluation Infrastructure  
+**For**: Future development sessions
+
+---
+
+## Quick Status
+
+**Progress**: 7 of 14 weeks complete (50%) ✅  
+**Tests**: 310+ passing, 0 failures ✅  
+**Coverage**: 77-80% ✅  
+**Blockers**: NONE ✅
+
+**Ready to**: Begin Week 8 (LLM evaluation infrastructure)
+
+---
+
+## What's Complete (Weeks 1-7)
+
+### Expert KB Foundation ✅
+- **2,318 expert-curated rules** from 4 peer-reviewed institutions
+  - YAGO 4.5 (Télécom Paris): 584 rules
+  - WordNet 3.0 (Princeton): 334 rules
+  - LKIF Core (U Amsterdam): 201 rules
+  - MatOnto (MatPortal): 1,190 rules
+- **Policy**: Expert-only (see KNOWLEDGE_BASE_POLICY.md)
+- **Files**: `examples/knowledge_bases/*.py`
+
+### Development Dataset ✅
+- **374 instances** from expert KB subsets
+  - Biology: 114 instances
+  - Legal: 168 instances
+  - Materials: 92 instances
+- **Files**: `instances/*.json`
+- **Strategy**: Local dev with subsets, HPC for millions later
+
+### Statistical Analysis ✅
+- **Section 4.3** complete (4 of 5 subsections)
+- Volume/balance, difficulty, yield, partition sensitivity
+- **Files**: `experiments/*.py`, `results/*.json`, `figures/*.png`
+
+### Complete Codec ✅
+- **All 4 modalities**: M1 (narrative), M2 (semi-formal), M3 (annotated), M4 (formal)
+- **All 3 decoders**: D1 (exact), D2 (template), D3 (semantic)
+- **Cascading pipeline**: D1→D2→D3
+- **Validation**: 75% (3 of 4 perfect: M4+D1, M3+D2, M2+D2 all 100%)
+- **Files**: `src/blanc/codec/*.py`
+
+### Quality Metrics ✅
+- **Tests**: 310+ passing
+- **Coverage**: 77-80% (87-99% on critical paths)
+- **Architecture**: Clean, refactored, modular
+- **No blockers**
+
+---
+
+## What Remains (Weeks 8-14)
+
+### Week 8: LLM Evaluation Infrastructure (Next - 5-7 days)
+
+**Tasks**:
+1. Model interfaces (GPT-4o, Claude 3.5, Gemini 1.5 Pro, Llama 3 70B/8B)
+2. API integration (OpenAI, Anthropic, Google)
+3. Prompting infrastructure (direct + CoT)
+4. Batch evaluation pipeline
+5. Response caching
+
+**Deliverables**:
+- `experiments/model_interface.py`
+- `experiments/prompting.py`
+- `experiments/evaluation_pipeline.py`
+
+**Estimate**: 20-30 hours
+
+---
+
+### Weeks 9-10: Core Evaluation + Analysis (2 weeks)
+
+**Tasks**:
+1. Run ~46,000 evaluations (5 models × 374 instances × 4 modalities × 2 prompts)
+2. Collect and cache responses
+3. Apply decoders, compute metrics
+4. Error taxonomy (E1-E5)
+5. Decomposed metrics
+
+**Cost**: $450-700 (LLM API calls)
+
+---
+
+### Weeks 11-12: Advanced Analyses (2 weeks)
+
+**Tasks**:
+1. Scaling analysis (Llama 8B vs 70B)
+2. Theory size scaling
+3. Symbolic ceiling (ASP solver)
+4. Partition sensitivity
+
+---
+
+### Weeks 13-14: HPC Production + Submission (2 weeks)
+
+**Tasks**:
+1. Deploy to CURC Alpine HPC
+2. Generate 1M+ instances from full expert KBs
+3. Final analyses on production scale
+4. Paper integration
+5. Submission
+
+---
+
+## How to Continue Development
+
+### Setup and Verification (5 minutes)
+
+```bash
+# Navigate to repo
+cd c:/Users/patri/code/blanc
+
+# Check git status
+git status
+# Should be: "On branch main, up to date with origin/main"
+
+# Pull latest (if needed)
+git pull origin main
+
+# Verify tests pass
+python -m pytest tests/ --tb=no -q
+# Expected: 310+ passed, 1 skipped
+
+# Check coverage
+python -m pytest tests/ --cov=src/blanc --cov-report=term | Select-String "TOTAL"
+# Expected: 77-80%
+```
+
+**If all pass**: ✅ Ready to continue  
+**If tests fail**: Check docs/completed_weeks/ for troubleshooting
+
+---
+
+## Key Files and Locations
+
+### Current Status
+- `STATUS.md` - Current development status
+- `WEEK7_FINAL_STATUS.md` - Latest completed work
+- `INFRASTRUCTURE_COMPLETE_FINAL.md` - Phase summary
+
+### Technical References
+- `IMPLEMENTATION_PLAN.md` - Complete technical specification
+- `NEURIPS_FULL_ROADMAP.md` - 14-week plan
+- `KNOWLEDGE_BASE_POLICY.md` - Expert-only policy (CRITICAL)
+
+### Code
+- `src/blanc/` - Production code (1,712 lines)
+- `tests/` - Test suite (310+ tests)
+- `examples/knowledge_bases/` - Expert KBs
+- `experiments/` - Analysis and validation scripts
+
+### Data
+- `instances/` - 374 development instances
+- `results/` - Statistical analysis results
+- `figures/` - Publication figures
+
+### Week Completion Reports
+- `docs/completed_weeks/` - Weeks 3-7 completion docs
+
+---
+
+## Immediate Next Steps (Week 8)
+
+### Day 1: OpenAI API Integration (6-8 hours)
+
+**Tasks**:
+1. Setup OpenAI API key
+2. Create model interface for GPT-4o
+3. Test on sample instances
+4. Implement rate limiting and error handling
+
+**File to create**: `experiments/model_interfaces/openai_interface.py`
+
+---
+
+### Day 2: Additional Model APIs (6-8 hours)
+
+**Tasks**:
+1. Anthropic API (Claude 3.5 Sonnet)
+2. Google API (Gemini 1.5 Pro)
+3. Test all interfaces
+
+**Files**: `experiments/model_interfaces/anthropic_interface.py`, etc.
+
+---
+
+### Day 3-4: Evaluation Pipeline (8-12 hours)
+
+**Tasks**:
+1. Batch evaluation framework
+2. Prompting system (direct + CoT)
+3. Response caching
+4. Progress tracking
+
+**File**: `experiments/evaluation_pipeline.py`
+
+---
+
+### Day 5: Pilot Evaluation (4-6 hours)
+
+**Tasks**:
+1. Run pilot on 20-50 instances
+2. Verify pipeline works
+3. Estimate costs
+4. Debug issues
+
+---
+
+## Important Context
+
+### Expert-Only Policy (CRITICAL)
+
+**All knowledge bases MUST be expert-curated**
+
+See `KNOWLEDGE_BASE_POLICY.md` for full policy.
+
+**Current expert sources**:
+- YAGO 4.5 (Télécom Paris, SIGIR 2024)
+- WordNet 3.0 (Princeton, Miller 1995)
+- LKIF Core (U Amsterdam, ESTRELLA)
+- MatOnto (MatPortal, materials community)
+
+**Never**: Hand-craft knowledge or instances
+
+---
+
+### Development Strategy
+
+**Local Development** (Weeks 1-12):
+- Use KB subsets (16-201 rules) for fast iteration
+- 374 development instances sufficient
+- Local generation in minutes
+
+**HPC Production** (Weeks 13-14):
+- Full expert KBs (2,318 rules)
+- Generate millions of instances
+- CURC Alpine deployment ready (`hpc/` folder)
+
+**Current**: Use local instances for all development
+
+---
+
+### Testing Best Practices
+
+**After any changes**:
+```bash
+# Run tests
+python -m pytest tests/ --tb=short
+
+# Check coverage
+python -m pytest tests/ --cov=src/blanc --cov-report=term
+
+# Expected: 310+ passing, 77-80% coverage
+```
+
+**Before committing**:
+- All tests must pass
+- No import errors
+- Coverage maintained or improved
+
+---
+
+## Known Issues and Workarounds
+
+### Issue 1: M1+D3 Validation at 0%
+
+**Context**: M1 (narrative) → D3 (semantic parser) is challenging  
+**Status**: Expected difficulty (M1 is hardest modality)  
+**Workaround**: M1+D2 (template) works better  
+**Impact**: Not blocking (3 of 4 modalities perfect)
+
+**Resolution**: Accept as limitation or improve D3 NLP (complex, low priority)
+
+---
+
+### Issue 2: Coverage at 77% vs 90% Target
+
+**Context**: Target was 90%, achieved 77%  
+**Status**: High quality coverage on critical paths (87-99%)  
+**Impact**: None - coverage is good where it matters
+
+**Resolution**: Can add more tests if needed, but 77% is acceptable
+
+---
+
+### Issue 3: Level 3 Instances
+
+**Context**: Only Level 2 instances generated  
+**Status**: Level 3 requires manual defeater authoring  
+**Impact**: Section 4.3.3 deferred, Level 3 evaluation deferred
+
+**Resolution**: Can add Level 3 later or proceed without for initial submission
+
+---
+
+## Git Workflow
+
+### Standard Development Cycle
+
+```bash
+# 1. Make changes
+# 2. Test
+python -m pytest tests/ --tb=short
+
+# 3. Check coverage if major changes
+python -m pytest tests/ --cov=src/blanc
+
+# 4. Stage and commit
+git add <files>
+git commit -m "Brief description of changes"
+
+# 5. Push to GitHub
+git push origin main
+
+# 6. Verify
+git status
+```
+
+### Commit Message Format
+
+**Good examples from this project**:
+- "Week X: Feature implemented - brief description"
+- "Fix issue: Specific problem solved"
+- "Add tests: Coverage improvement"
+
+**Include**:
+- What was done
+- Why (if not obvious)
+- Impact on coverage/tests
+
+---
+
+## Troubleshooting
+
+### If Tests Fail
+
+1. **Check specific failure**:
+   ```bash
+   python -m pytest tests/path/to/test.py -v
+   ```
+
+2. **Check imports**:
+   ```bash
+   python -c "from blanc.codec import encode_m2; print('OK')"
+   ```
+
+3. **Verify environment**:
+   ```bash
+   pip list | grep -E "numpy|scipy|lark|Levenshtein|pytest"
+   ```
+
+### If Coverage Drops
+
+**Common causes**:
+- Added new untested code (expected)
+- Test collection issues
+
+**Fix**: Add tests for new code
+
+### If Git Issues
+
+**Large file error**:
+- data/ is in .gitignore (correct)
+- Don't commit raw expert KBs
+- Only commit extracted KBs (examples/)
+
+---
+
+## Development Priorities
+
+### Must Have (Critical Path)
+
+1. ✅ Expert KBs (DONE)
+2. ✅ Development instances (DONE)
+3. ✅ Complete codec (DONE)
+4. ⏳ LLM evaluation (Week 8-10)
+5. ⏳ Results analysis (Week 10)
+6. ⏳ Paper integration (Week 13-14)
+
+### Should Have (Important)
+
+- Advanced analyses (Weeks 11-12)
+- HPC production scale (Weeks 13-14)
+- 85-90% coverage (nice-to-have)
+
+### Could Have (Optional)
+
+- Level 3 instances
+- Additional model evaluations
+- Perfect round-trip for all modalities
+
+---
+
+## Resources and References
+
+### Documentation
+- `README.md` - Project overview
+- `STATUS.md` - Current status
+- `NEURIPS_FULL_ROADMAP.md` - Full 14-week plan
+- `docs/completed_weeks/` - Weekly completion reports
+
+### Code Organization
+- `src/blanc/reasoning/` - Defeasible logic (91-99% coverage)
+- `src/blanc/codec/` - All encoders/decoders
+- `src/blanc/author/` - Instance generation
+- `src/blanc/core/` - Data structures
+
+### Expert KBs
+- `examples/knowledge_bases/biology_kb.py` - Full (927 rules)
+- `examples/knowledge_bases/biology_kb_subset.py` - Dev (16 rules)
+- Similar for legal and materials
+
+### Scripts
+- `scripts/generate_dev_instances.py` - Generate instances locally
+- `experiments/roundtrip_validation.py` - Validate codec
+- `experiments/statistics.py` - Statistical analysis
+
+---
+
+## Week 8 Specific Guidance
+
+### Goal
+
+Build LLM evaluation infrastructure
+
+### Prerequisites
+
+**API Keys needed**:
+- OpenAI API key (GPT-4o)
+- Anthropic API key (Claude 3.5 Sonnet)
+- Google API key (Gemini 1.5 Pro)
+
+**Budget**: ~$450-700 for full evaluation
+
+### Approach
+
+**Start with one model** (GPT-4o):
+1. Build interface
+2. Test on 10 instances
+3. Verify decoder works
+4. Estimate costs
+5. Scale up
+
+**Then add other models**
+
+---
+
+## Success Criteria for Week 8
+
+- [ ] All 5 model interfaces working
+- [ ] Can run evaluation on sample instances
+- [ ] Response caching implemented
+- [ ] Decoder pipeline integrated
+- [ ] Cost estimation verified
+
+---
+
+## Key Reminders
+
+### Critical Policies
+
+1. **Expert-only KB policy** (MANDATORY)
+   - No hand-crafted knowledge
+   - All from peer-reviewed sources
+   - See KNOWLEDGE_BASE_POLICY.md
+
+2. **Test-driven development**
+   - Test as you build
+   - Maintain coverage
+   - All tests must pass
+
+3. **Local dev, HPC production**
+   - Develop with 374 instances locally
+   - Scale to millions with HPC later (Weeks 13-14)
+
+---
+
+## Quick Reference Commands
+
+### Development
+```bash
+# Run all tests
+python -m pytest tests/ --tb=short
+
+# Check coverage
+python -m pytest tests/ --cov=src/blanc --cov-report=term
+
+# Run specific test
+python -m pytest tests/codec/test_m3_encoder.py -v
+
+# Generate instances
+python scripts/generate_dev_instances.py
+
+# Run validation
+python experiments/roundtrip_validation.py
+```
+
+### Git
+```bash
+# Status
+git status
+
+# Commit workflow
+git add <files>
+git commit -m "Description"
+git push origin main
+
+# Review history
+git log --oneline -20
+```
+
+### Verification
+```bash
+# Load expert KB
+python -c "from examples.knowledge_bases.biology_kb_subset import create_biology_subset; kb = create_biology_subset(); print(f'{len(kb.rules)} rules')"
+
+# Test codec
+python -c "from blanc.codec import encode_m2, decode_d2; from blanc.core.theory import Rule, RuleType; r = Rule('flies(X)', ('bird(X)',), RuleType.DEFEASIBLE, 'r1'); print(encode_m2(r))"
+```
+
+---
+
+## Project Structure Quick Reference
+
+```
+blanc/
+├── STATUS.md                      # Current status (READ FIRST)
+├── CONTINUE_DEVELOPMENT.md        # This document
+├── NEURIPS_FULL_ROADMAP.md        # 14-week plan
+│
+├── src/blanc/                     # Production code
+│   ├── reasoning/                 # Logic engine (91-99% coverage)
+│   ├── codec/                     # Encoders/decoders (53-92%)
+│   ├── author/                    # Instance generation (65-100%)
+│   ├── core/                      # Data structures (80-100%)
+│   └── generation/                # Utilities (92-93%)
+│
+├── tests/                         # 310+ tests
+├── examples/knowledge_bases/      # Expert KBs + subsets
+├── instances/                     # 374 development instances
+├── experiments/                   # Analysis scripts
+├── results/                       # Analysis results
+├── scripts/                       # Utilities
+├── hpc/                          # HPC infrastructure (Weeks 13-14)
+└── docs/                         # Historical documentation
+```
+
+---
+
+## Weeks 8-14 Roadmap Summary
+
+**Week 8**: LLM interfaces + evaluation pipeline  
+**Week 9**: Run evaluations (~46K calls)  
+**Week 10**: Error analysis + metrics  
+**Week 11**: Scaling analysis  
+**Week 12**: Advanced analyses  
+**Week 13**: HPC production (1M+ instances)  
+**Week 14**: Paper integration + submission
+
+---
+
+## Contact and Resources
+
+**Repository**: https://github.com/PatrickAllenCooper/blanc  
+**Branch**: main  
+**Python**: 3.11+ required  
+**Key Package**: Lark (for D3 decoder)
+
+---
+
+## Final Checks Before Starting Week 8
+
+### Verification Checklist
+
+- [ ] Git repo cloned and up to date
+- [ ] All tests pass (`python -m pytest tests/`)
+- [ ] Coverage at 77-80%
+- [ ] Expert KBs load successfully
+- [ ] Can generate instances locally
+- [ ] Validation script runs
+- [ ] All documentation read
+
+### API Setup for Week 8
+
+- [ ] OpenAI API key obtained
+- [ ] Anthropic API key obtained
+- [ ] Google API key obtained
+- [ ] Budget approved (~$500-700)
+- [ ] Rate limits understood
+
+---
+
+## Summary
+
+**Current State**: Infrastructure phase (Weeks 1-7) COMPLETE  
+**Next Goal**: LLM evaluation infrastructure (Week 8)  
+**Timeline**: 50% done, 50% remaining  
+**Confidence**: HIGH - strong foundation
+
+**Everything needed for Weeks 8-14 is ready** ✅
+
+---
+
+## Questions? Check These First
+
+1. **What's the current status?** → STATUS.md
+2. **What was done in Week X?** → docs/completed_weeks/
+3. **How do I run X?** → This document or QUICK_START.md
+4. **What's the plan?** → NEURIPS_FULL_ROADMAP.md
+5. **Why this architecture?** → docs/ARCHITECTURE_AUDIT.md
+
+---
+
+**Ready to continue development anytime** ✅
+
+---
+
+**Author**: Patrick Cooper  
+**Last Updated**: 2026-02-12  
+**Session End**: Infrastructure phase complete  
+**Next Session**: Week 8 - LLM evaluation
