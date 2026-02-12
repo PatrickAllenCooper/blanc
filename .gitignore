@@ -63,3 +63,4 @@ dmypy.json
 *.bak
 *.orig
 .coverage
+data/
