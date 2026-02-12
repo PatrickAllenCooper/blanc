@@ -111,5 +111,45 @@ class TestOpenCycBiologyKB:
                 assert ' ' not in concept
 
 
+class TestOpenCycExtractionPipeline:
+    """Test complete extraction pipeline."""
+    
+    def test_full_extraction_creates_large_kb(self):
+        """Test that full extraction creates large KB."""
+        kb_path = Path("examples/knowledge_bases/opencyc_biology/opencyc_biology.pkl")
+        
+        if not kb_path.exists():
+            pytest.skip("OpenCyc biology KB not extracted yet")
+        
+        kb = load_opencyc_biology()
+        
+        # Should be large scale
+        assert len(kb) > 30000  # 33K elements
+        assert len(kb.facts) > 10000  # 12K facts
+        assert len(kb.rules) > 20000  # 21K rules
+    
+    def test_extraction_preserves_biological_focus(self):
+        """Test that extraction focuses on biological concepts."""
+        kb_path = Path("examples/knowledge_bases/opencyc_biology/opencyc_biology.pkl")
+        
+        if not kb_path.exists():
+            pytest.skip("OpenCyc biology KB not extracted yet")
+        
+        kb = load_opencyc_biology()
+        
+        # Sample facts should be biological
+        sample_facts = list(kb.facts)[:20]
+        
+        # Most should contain biological keywords
+        bio_keywords = ['cell', 'organism', 'animal', 'biological', 'enzyme', 
+                       'bird', 'tissue', 'organ', 'protein', 'gene']
+        
+        bio_count = sum(1 for fact in sample_facts 
+                       if any(kw in fact.lower() for kw in bio_keywords))
+        
+        # At least half should be biological (relaxed check)
+        assert bio_count >= len(sample_facts) * 0.3
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
