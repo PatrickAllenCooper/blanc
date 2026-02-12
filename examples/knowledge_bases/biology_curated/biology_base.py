@@ -80,10 +80,20 @@ def create_biology_base() -> Theory:
         theory.add_fact(f"organism({fish})")
         theory.add_fact(f"fish({fish})")
     
-    # INSECTS (6 individuals)
-    for insect in ['bee', 'butterfly', 'ant', 'beetle']:
+    # INSECTS (8 individuals)
+    for insect in ['bee', 'butterfly', 'ant', 'beetle', 'dragonfly', 'mosquito']:
         theory.add_fact(f"organism({insect})")
         theory.add_fact(f"insect({insect})")
+    
+    # REPTILES (6 individuals)
+    for reptile in ['snake', 'lizard', 'turtle', 'crocodile']:
+        theory.add_fact(f"organism({reptile})")
+        theory.add_fact(f"reptile({reptile})")
+    
+    # AMPHIBIANS (4 individuals)
+    for amphibian in ['frog', 'toad']:
+        theory.add_fact(f"organism({amphibian})")
+        theory.add_fact(f"amphibian({amphibian})")
     
     # =========================================================================
     # TAXONOMIC HIERARCHY (Depth 1) - Strict Rules
@@ -173,6 +183,37 @@ def create_biology_base() -> Theory:
         body=("insect(X)",),
         rule_type=RuleType.STRICT,
         label="tax_insect_invertebrate"
+    ))
+    
+    # Reptiles are vertebrates
+    theory.add_rule(Rule(
+        head="vertebrate(X)",
+        body=("reptile(X)",),
+        rule_type=RuleType.STRICT,
+        label="tax_reptile_vertebrate"
+    ))
+    
+    # Amphibians are vertebrates
+    theory.add_rule(Rule(
+        head="vertebrate(X)",
+        body=("amphibian(X)",),
+        rule_type=RuleType.STRICT,
+        label="tax_amphibian_vertebrate"
+    ))
+    
+    # All are animals
+    theory.add_rule(Rule(
+        head="animal(X)",
+        body=("vertebrate(X)",),
+        rule_type=RuleType.STRICT,
+        label="tax_vertebrate_animal"
+    ))
+    
+    theory.add_rule(Rule(
+        head="animal(X)",
+        body=("invertebrate(X)",),
+        rule_type=RuleType.STRICT,
+        label="tax_invertebrate_animal"
     ))
     
     # =========================================================================
@@ -335,6 +376,141 @@ def create_biology_base() -> Theory:
     
     # Bears hibernate (specific to bear)
     theory.add_fact("hibernates(bear)")
+    
+    # =========================================================================
+    # MORE BEHAVIORAL RULES (Creating depth 2-4 derivations)
+    # =========================================================================
+    
+    # Insects with wings can fly
+    theory.add_rule(Rule(
+        head="has_wings(X)",
+        body=("insect(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="anat_insect_wings",
+        metadata={"description": "Most insects have wings"}
+    ))
+    
+    # Flying insects
+    theory.add_rule(Rule(
+        head="flies(X)",
+        body=("has_wings(X)", "insect(X)"),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_insect_fly"
+    ))
+    
+    # Aquatic organisms swim
+    theory.add_rule(Rule(
+        head="swims(X)",
+        body=("fish(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_fish_swim"
+    ))
+    
+    theory.add_rule(Rule(
+        head="swims(X)",
+        body=("amphibian(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_amphibian_swim"
+    ))
+    
+    # Carnivorous behavior (DEPTH 2-3)
+    theory.add_rule(Rule(
+        head="eats_meat(X)",
+        body=("carnivore(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_carnivore_eats_meat"
+    ))
+    
+    theory.add_rule(Rule(
+        head="eats_meat(X)",
+        body=("predator(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_predator_eats_meat"
+    ))
+    
+    # Raptors hunt prey (DEPTH 3: raptor -> predator -> hunts)
+    theory.add_rule(Rule(
+        head="hunts_prey(X)",
+        body=("hunts(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_hunt_prey"
+    ))
+    
+    # Diurnal vs nocturnal hunting
+    theory.add_rule(Rule(
+        head="hunts_day(X)",
+        body=("predator(X)", "~nocturnal(X)"),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_day_hunt"
+    ))
+    
+    # Vocal behavior
+    theory.add_rule(Rule(
+        head="vocalizes(X)",
+        body=("bird(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_bird_vocal"
+    ))
+    
+    theory.add_rule(Rule(
+        head="vocalizes(X)",
+        body=("mammal(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_mammal_vocal"
+    ))
+    
+    # Parental care
+    theory.add_rule(Rule(
+        head="cares_for_young(X)",
+        body=("bird(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_bird_care"
+    ))
+    
+    theory.add_rule(Rule(
+        head="cares_for_young(X)",
+        body=("mammal(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_mammal_care"
+    ))
+    
+    # Territorial behavior
+    theory.add_rule(Rule(
+        head="territorial(X)",
+        body=("predator(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_predator_territorial"
+    ))
+    
+    # Social behavior
+    theory.add_rule(Rule(
+        head="social(X)",
+        body=("schools(X)",),
+        rule_type=RuleType.DEFEASIBLE,
+        label="behav_school_social"
+    ))
+    
+    # Add mammal taxonomy
+    theory.add_rule(Rule(
+        head="mammal(X)",
+        body=("terrestrial_mammal(X)",),
+        rule_type=RuleType.STRICT,
+        label="tax_terr_mammal"
+    ))
+    
+    theory.add_rule(Rule(
+        head="mammal(X)",
+        body=("aquatic_mammal(X)",),
+        rule_type=RuleType.STRICT,
+        label="tax_aqua_mammal"
+    ))
+    
+    theory.add_rule(Rule(
+        head="mammal(X)",
+        body=("flying_mammal(X)",),
+        rule_type=RuleType.STRICT,
+        label="tax_fly_mammal"
+    ))
     
     # Add more organisms to specific groups for richness
     theory.add_fact("small(robin)")
