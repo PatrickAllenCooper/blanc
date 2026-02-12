@@ -1,8 +1,8 @@
 # HANDOFF DOCUMENT: Start Here for Next Session
 
-**Date**: 2026-02-11 (End of Day 1)  
+**Date**: 2026-02-12 (End of Week 1)  
 **For**: Next development session  
-**Status**: ✅ Day 1 complete, all systems operational  
+**Status**: ✅ Week 1 complete, ready for Week 2  
 **Tests**: **208/208 passing** (100%)
 
 ---
@@ -31,26 +31,29 @@ python -c "from examples.knowledge_bases.biology_curated import create_biology_b
 
 ## 🎯 **WHERE WE ARE (Current State)**
 
-### Day 1: ✅ **COMPLETE** (All objectives achieved)
+### Week 1: ✅ **COMPLETE** (All objectives achieved)
 
 **What we built**:
 - ✅ MVP validated (paper merit: STRONG)
-- ✅ Repository cleaned (docs/ organized, 9 root files)
-- ✅ Biology KB created (161 rules, **depth 4** - critical!)
+- ✅ Repository cleaned (docs/ organized)
+- ✅ Biology KB created (161 rules, **depth 4**)
 - ✅ All 13 partition strategies tested
-- ✅ 49 instances generated successfully
-- ✅ Yield curves computed (Proposition 3 validated)
-- ✅ 208 tests passing, 94% coverage
+- ✅ 380 instances generated (31 L1 + 349 L2)
+- ✅ Yield curves computed and plotted
+- ✅ Comprehensive documentation
+- ✅ 208 tests passing, 64% coverage
 
-**Critical success**: Biology KB has **depth 4 derivations** (paper needs >= 2)
+**Critical success**: Biology KB depth 4, 380 instances across all partitions
 
-### Week 1: ⏳ **50% complete** (Day 1 of 5 done)
+### Week 2: ⏳ **0% complete** (Ready to start)
 
-**What's next**: Expand instances, complete yield analysis
+**What's next**: Legal KB extraction from TaxKB, 400 instances, parallel distractors
 
-### Full Project: ⏳ **20% complete** (82% remaining, 13 weeks)
+### Full Project: ⏳ **25% complete** (75% remaining, 13 weeks)
 
-**See**: docs/audits/PROJECT_AUDIT_CURRENT_STATE.md for detailed breakdown
+**Progress**: MVP + Week 1 complete
+
+**See**: docs/session_reports/WEEK1_COMPLETE.md for detailed breakdown
 
 ---
 
@@ -113,9 +116,9 @@ kb = create_biology_base()  # 161 rules, depth 4
 
 ### Instances Generated
 - **MVP**: 15 instances (L1-L3, validated)
-- **Today**: 49 instances (from 13 partition strategies)
-- **Total**: 64 instances
-- **Target**: 900-1200 for full benchmark
+- **Week 1**: 380 instances (31 L1 + 349 L2, all 13 partitions)
+- **Total**: 395 instances
+- **Target**: 1500-2000 for full benchmark
 
 ### Testing
 - **207 tests** (MVP core: reasoning, author, codec)
@@ -131,7 +134,20 @@ kb = create_biology_base()  # 161 rules, depth 4
 
 ---
 
-## 🚀 **IMMEDIATE NEXT STEPS (Specific Commands)**
+## 🚀 **IMMEDIATE NEXT STEPS (Week 2)**
+
+### Overview
+
+**Goal**: Legal KB from TaxKB with 400 instances
+
+**Timeline**: 5 days (Week 2 of 14-week plan)
+
+**Key Tasks**:
+1. Extract legal knowledge from TaxKB
+2. Curate to 80-120 rules with depth >= 2
+3. Generate 400 instances (all 13 partitions)
+4. Implement parallel distractor strategies
+5. Document legal KB
 
 ### Step 1: Verify Setup (5 minutes)
 
@@ -153,49 +169,60 @@ python scripts/test_biology_curated.py
 
 **If any fail**: Review docs/session_reports/SESSION_COMPLETE.md
 
-### Step 2: Continue Instance Generation (2-3 hours)
+### Step 2: Start Legal KB Extraction (Week 2 Day 1)
 
-**Current**: 49 instances from 13 partition strategies  
-**Target**: 200-300 instances total from biology KB
+**Goal**: Extract and curate legal knowledge base
 
-**Option A - Expand current script**:
-```bash
-# Edit: scripts/generate_biology_instances.py
-# Increase: max_instances_per_partition from 20 to 30-40
-# Add: More target organisms and behaviors
-# Run: python scripts/generate_biology_instances.py
-```
+**Tasks**:
+1. Explore TaxKB structure
+   - Statutory rules
+   - Case precedents
+   - Jurisdictional hierarchies
+   
+2. Design for depth >= 2
+   - statute -> interpretation -> application
+   - precedent -> reasoning -> holding
+   
+3. Curate 80-120 rules
+   - Select coherent legal domain
+   - Ensure defeasible defaults
+   - Include natural exceptions
 
-**Option B - Generate from Avian Biology** (easier, proven):
-```bash
-# The MVP Avian Biology is validated and works
-# Can generate 50-100 more instances from it
-# File: examples/knowledge_bases/avian_biology/avian_biology_base.py
-# Already has: generate_mvp_dataset.py script that works
-```
+**Deliverable**: legal_reasoning KB with depth >= 2
 
-**Recommendation**: Use both (Biology curated + Avian Biology) for diversity
+### Step 3: Generate Legal Instances (Week 2 Days 2-3)
 
-### Step 3: Complete Yield Curves (1-2 hours)
+**Goal**: 400 instances from legal KB
 
-```bash
-# Run yield computation (fix unicode issues first)
-python scripts/compute_yield_curves.py
+**Tasks**:
+1. Adapt generate_biology_instances.py for legal domain
+2. Run all 13 partition strategies
+3. Generate Level 1 and Level 2
+4. Target: 30 instances per partition
 
-# Should generate: notebooks/yield_curves_biology.png
-# Validates: Proposition 3 (yield monotonicity)
-```
+**Deliverable**: legal_instances.json (400 instances)
 
-**Fix if needed**: Replace Greek letters with ASCII in print statements
+### Step 4: Parallel Distractor Generation (Week 2 Day 4)
 
-### Step 4: Document (1 hour)
+**Goal**: Implement all 3 distractor strategies
+
+**NEW REQUIREMENT**:
+- Random distractors (baseline)
+- Syntactic distractors (current)
+- Adversarial distractors (challenging)
+
+**Create**: 3× instance variants for comparison
+
+**Deliverable**: Instances with all distractor strategies
+
+### Step 5: Document and Commit (Week 2 Day 5)
 
 **Create**:
-- Biology KB documentation
-- Week 1 completion report
-- Update README with Week 1 status
+- Legal KB README.md
+- Week 2 completion report
+- Update HANDOFF document
 
-**Template**: Use docs/session_reports/SESSION_COMPLETE.md as model
+**Git**: Commit all Week 2 work
 
 ---
 
