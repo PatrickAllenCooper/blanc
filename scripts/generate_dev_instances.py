@@ -22,7 +22,7 @@ from blanc.author.conversion import phi_kappa
 from blanc.author.support import full_theory_criticality
 from blanc.author.generation import generate_level2_instance, generate_level1_instance
 from blanc.generation.partition import (
-    partition_rule, partition_random, compute_dependency_depths, partition_depth
+    partition_leaf, partition_rule, partition_random, compute_dependency_depths, partition_depth
 )
 from blanc.core.theory import RuleType
 from blanc.reasoning.defeasible import defeasible_provable
@@ -105,12 +105,19 @@ def main():
     print(f"Purpose: Fast local development iteration")
     print()
     
-    # Define partition strategies for development
+    # Define all 13 partition strategies for development
     strategies = [
+        ("leaf", partition_leaf),
         ("rule", partition_rule),
+        ("rand_0.1", partition_random(0.1, seed=42)),
+        ("rand_0.2", partition_random(0.2, seed=42)),
         ("rand_0.3", partition_random(0.3, seed=42)),
+        ("rand_0.4", partition_random(0.4, seed=42)),
         ("rand_0.5", partition_random(0.5, seed=42)),
+        ("rand_0.6", partition_random(0.6, seed=42)),
         ("rand_0.7", partition_random(0.7, seed=42)),
+        ("rand_0.8", partition_random(0.8, seed=42)),
+        ("rand_0.9", partition_random(0.9, seed=42)),
     ]
     
     all_results = {}
@@ -133,7 +140,7 @@ def main():
         "Biology Subset",
         bio_subset,
         bio_strategies,
-        max_per_strategy=10
+        max_per_strategy=20  # Increased for more instances
     )
     
     all_results['biology'] = {
@@ -162,7 +169,7 @@ def main():
         "Legal KB",
         legal_kb,
         legal_strategies,
-        max_per_strategy=10
+        max_per_strategy=20  # Increased for more instances
     )
     
     all_results['legal'] = {
@@ -191,7 +198,7 @@ def main():
         "Materials Subset",
         materials_subset,
         materials_strategies,
-        max_per_strategy=10
+        max_per_strategy=20  # Increased for more instances
     )
     
     all_results['materials'] = {
