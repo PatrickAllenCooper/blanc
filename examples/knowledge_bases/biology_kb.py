@@ -24,6 +24,7 @@ from blanc.core.theory import Theory
 from .yago_biology_extracted import create_yago_biology
 from .wordnet_biology_extracted import create_wordnet_biology
 from .biology_instances import add_biology_instances
+from .biology_behavioral_rules import add_behavioral_rules
 
 
 def create_biology_kb(include_instances=True) -> Theory:
@@ -50,6 +51,9 @@ def create_biology_kb(include_instances=True) -> Theory:
     # Add organism instances
     if include_instances:
         theory = add_biology_instances(theory)
+    
+    # Add defeasible behavioral rules
+    theory = add_behavioral_rules(theory)
     
     return theory
 
