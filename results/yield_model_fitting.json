@@ -1,0 +1,80 @@
+{
+  "biology": {
+    "linear": {
+      "slope": 0.09999999999999948,
+      "intercept": 4.2700000000000005,
+      "r_squared": 0.0014044943820224573,
+      "p_value": 0.9522945026635831,
+      "model": "Y = 0.10*delta + 4.27"
+    },
+    "logistic": {
+      "L": 4.501175819545051,
+      "k": 11.97137763263786,
+      "x0": -0.026833070685795605,
+      "r_squared": 0.17420474789662455,
+      "model": "Logistic(L=4.50, k=11.97, x0=-0.03)"
+    },
+    "power_law": {
+      "a": 4.5351292200661515,
+      "b": 0.052948246709587456,
+      "r_squared": 0.058420586865139734,
+      "model": "Y = 4.54 * delta^0.05"
+    },
+    "monotonicity": {
+      "is_monotonic": false,
+      "direction": "decreasing",
+      "start": 3.7,
+      "end": 3.3
+    }
+  },
+  "legal": {
+    "linear": {
+      "slope": 1.4999999999999996,
+      "intercept": 7.709999999999999,
+      "r_squared": 0.8720930232558137,
+      "p_value": 0.020215369747493103,
+      "model": "Y = 1.50*delta + 7.71"
+    },
+    "logistic": null,
+    "power_law": {
+      "a": 8.936551401073272,
+      "b": 0.05995195034351038,
+      "r_squared": 0.711436344213322,
+      "model": "Y = 8.94 * delta^0.06"
+    },
+    "monotonicity": {
+      "is_monotonic": true,
+      "direction": "increasing",
+      "start": 8.0,
+      "end": 9.0
+    }
+  },
+  "materials": {
+    "linear": {
+      "slope": -0.2999999999999997,
+      "intercept": 5.409999999999999,
+      "r_squared": 0.04787234042553183,
+      "p_value": 0.723657353067019,
+      "model": "Y = -0.30*delta + 5.41"
+    },
+    "logistic": {
+      "L": 5.368311448424943,
+      "k": -6.972083677886587,
+      "x0": 1.2608110665534848,
+      "r_squared": 0.15062648643269783,
+      "model": "Logistic(L=5.37, k=-6.97, x0=1.26)"
+    },
+    "power_law": {
+      "a": 5.20812843747551,
+      "b": -0.010593708160481897,
+      "r_squared": 0.012775452077447902,
+      "model": "Y = 5.21 * delta^-0.01"
+    },
+    "monotonicity": {
+      "is_monotonic": false,
+      "direction": "decreasing",
+      "start": 5.3,
+      "end": 5.0
+    }
+  }
+}
