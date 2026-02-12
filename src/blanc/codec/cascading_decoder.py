@@ -10,7 +10,7 @@ Date: 2026-02-12
 
 from typing import List, Union, Optional, Tuple
 from blanc.core.theory import Rule
-from .decoder import PureFormalDecoder
+from .decoder import ExactMatchDecoder
 from .d2_decoder import decode_d2
 from .d3_decoder import decode_d3
 
@@ -25,7 +25,7 @@ class CascadingDecoder:
     
     def __init__(self):
         """Initialize cascading decoder."""
-        self.d1_decoder = PureFormalDecoder()
+        self.d1_decoder = ExactMatchDecoder()
     
     def decode(self, text: str, candidates: List[Union[str, Rule]]) -> Tuple[Optional[Union[str, Rule]], Optional[str]]:
         """
