@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from examples.knowledge_bases.biology_kb_subset import create_biology_subset
 from examples.knowledge_bases.legal_kb import create_legal_kb  # Full KB is manageable
+from examples.knowledge_bases.materials_kb_subset import create_materials_subset
 from blanc.author.conversion import phi_kappa
 from blanc.author.support import full_theory_criticality
 from blanc.author.generation import generate_level2_instance, generate_level1_instance
@@ -174,8 +175,37 @@ def main():
         }
     }
     
+    # === MATERIALS SUBSET ===
+    print("\n" + "#" * 70)
+    print("# MATERIALS SUBSET (Metals/Alloys)")
+    print("#" * 70)
+    
+    materials_subset = create_materials_subset()
+    
+    materials_depths = compute_dependency_depths(materials_subset)
+    materials_strategies = strategies + [
+        ("depth_1", partition_depth(1, materials_depths)),
+    ]
+    
+    materials_instances, materials_results = generate_from_kb_dev(
+        "Materials Subset",
+        materials_subset,
+        materials_strategies,
+        max_per_strategy=10
+    )
+    
+    all_results['materials'] = {
+        'instances': materials_instances,
+        'partition_results': materials_results,
+        'kb_stats': {
+            'rules': len(materials_subset.rules),
+            'facts': len(materials_subset.facts),
+            'subset': 'metals_alloys',
+        }
+    }
+    
     # === SUMMARY ===
-    total_instances = len(bio_instances) + len(legal_instances)
+    total_instances = len(bio_instances) + len(legal_instances) + len(materials_instances)
     
     print("\n" + "=" * 70)
     print("DEVELOPMENT GENERATION COMPLETE")
@@ -183,6 +213,7 @@ def main():
     print(f"Total instances: {total_instances}")
     print(f"  Biology subset: {len(bio_instances)}")
     print(f"  Legal full: {len(legal_instances)}")
+    print(f"  Materials subset: {len(materials_instances)}")
     
     # Save results
     for domain, results in all_results.items():

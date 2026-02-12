@@ -1,0 +1,437 @@
+{
+  "metadata": {
+    "domain": "materials",
+    "purpose": "local development",
+    "kb_stats": {
+      "rules": 12,
+      "facts": 32,
+      "subset": "metals_alloys"
+    },
+    "total_instances": 16,
+    "generation_date": "2026-02-12T06:50:01.250762"
+  },
+  "partition_results": {
+    "rule": {
+      "instances": 0,
+      "defeasible_rules": 12
+    },
+    "rand_0.3": {
+      "instances": 3,
+      "defeasible_rules": 13
+    },
+    "rand_0.5": {
+      "instances": 6,
+      "defeasible_rules": 21
+    },
+    "rand_0.7": {
+      "instances": 7,
+      "defeasible_rules": 26
+    },
+    "depth_1": {
+      "instances": 0,
+      "defeasible_rules": 0
+    }
+  },
+  "instances": [
+    {
+      "target": "metal(iron)",
+      "level": 2,
+      "candidates": [
+        "df_metal(iron):  => metal(iron)",
+        "df_metal(zinc):  => metal(zinc)",
+        "df_material(diamond):  => material(diamond)",
+        "df_material(brass):  => material(brass)",
+        "df_material(quartz):  => material(quartz)",
+        "df_metal(aluminum):  => metal(aluminum)"
+      ],
+      "gold": [
+        "df_metal(iron):  => metal(iron)"
+      ],
+      "metadata": {
+        "ablated_element": "df_metal(iron)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "alloy(steel)",
+      "level": 2,
+      "candidates": [
+        "df_alloy(steel):  => alloy(steel)",
+        "df_metal(iron):  => metal(iron)",
+        "df_material(brass):  => material(brass)",
+        "df_metal(zinc):  => metal(zinc)",
+        "df_material(aluminum):  => material(aluminum)",
+        "df_metal(aluminum):  => metal(aluminum)"
+      ],
+      "gold": [
+        "df_alloy(steel):  => alloy(steel)"
+      ],
+      "metadata": {
+        "ablated_element": "df_alloy(steel)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "metal(zinc)",
+      "level": 2,
+      "candidates": [
+        "df_metal(zinc):  => metal(zinc)",
+        "df_material(quartz):  => material(quartz)",
+        "df_material(diamond):  => material(diamond)",
+        "df_metal(iron):  => metal(iron)",
+        "df_material(brass):  => material(brass)",
+        "df_metal(aluminum):  => metal(aluminum)"
+      ],
+      "gold": [
+        "df_metal(zinc):  => metal(zinc)"
+      ],
+      "metadata": {
+        "ablated_element": "df_metal(zinc)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "metal(gold)",
+      "level": 2,
+      "candidates": [
+        "df_metal(gold):  => metal(gold)",
+        "df_material(quartz):  => material(quartz)",
+        "df_crystal(quartz):  => crystal(quartz)",
+        "df_metal(aluminum):  => metal(aluminum)",
+        "df_material(iron):  => material(iron)",
+        "df_material(brass):  => material(brass)"
+      ],
+      "gold": [
+        "df_metal(gold):  => metal(gold)"
+      ],
+      "metadata": {
+        "ablated_element": "df_metal(gold)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "crystal(quartz)",
+      "level": 2,
+      "candidates": [
+        "df_crystal(quartz):  => crystal(quartz)",
+        "df_metal(zinc):  => metal(zinc)",
+        "df_material(titanium):  => material(titanium)",
+        "df_metal(iron):  => metal(iron)",
+        "df_metal(gold):  => metal(gold)",
+        "df_material(iron):  => material(iron)"
+      ],
+      "gold": [
+        "df_crystal(quartz):  => crystal(quartz)"
+      ],
+      "metadata": {
+        "ablated_element": "df_crystal(quartz)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "metal(iron)",
+      "level": 2,
+      "candidates": [
+        "df_metal(iron):  => metal(iron)",
+        "df_metal(aluminum):  => metal(aluminum)",
+        "df_metal(zinc):  => metal(zinc)",
+        "df_crystal(diamond):  => crystal(diamond)",
+        "df_material(teflon):  => material(teflon)",
+        "df_material(titanium):  => material(titanium)"
+      ],
+      "gold": [
+        "df_metal(iron):  => metal(iron)"
+      ],
+      "metadata": {
+        "ablated_element": "df_metal(iron)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "alloy(steel)",
+      "level": 2,
+      "candidates": [
+        "df_alloy(steel):  => alloy(steel)",
+        "df_crystal(quartz):  => crystal(quartz)",
+        "df_metal(zinc):  => metal(zinc)",
+        "df_material(diamond):  => material(diamond)",
+        "df_crystal(diamond):  => crystal(diamond)",
+        "df_material(aluminum):  => material(aluminum)"
+      ],
+      "gold": [
+        "df_alloy(steel):  => alloy(steel)"
+      ],
+      "metadata": {
+        "ablated_element": "df_alloy(steel)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "crystal(diamond)",
+      "level": 2,
+      "candidates": [
+        "df_crystal(diamond):  => crystal(diamond)",
+        "df_alloy(steel):  => alloy(steel)",
+        "df_metal(zinc):  => metal(zinc)",
+        "df_metal(gold):  => metal(gold)",
+        "df_material(quartz):  => material(quartz)",
+        "df_material(teflon):  => material(teflon)"
+      ],
+      "gold": [
+        "df_crystal(diamond):  => crystal(diamond)"
+      ],
+      "metadata": {
+        "ablated_element": "df_crystal(diamond)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "metal(zinc)",
+      "level": 2,
+      "candidates": [
+        "df_metal(zinc):  => metal(zinc)",
+        "df_material(brass):  => material(brass)",
+        "df_metal(aluminum):  => metal(aluminum)",
+        "df_metal(iron):  => metal(iron)",
+        "df_crystal(diamond):  => crystal(diamond)",
+        "df_material(iron):  => material(iron)"
+      ],
+      "gold": [
+        "df_metal(zinc):  => metal(zinc)"
+      ],
+      "metadata": {
+        "ablated_element": "df_metal(zinc)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "metal(gold)",
+      "level": 2,
+      "candidates": [
+        "df_metal(gold):  => metal(gold)",
+        "df_material(titanium):  => material(titanium)",
+        "df_material(teflon):  => material(teflon)",
+        "df_metal(aluminum):  => metal(aluminum)",
+        "df_alloy(brass):  => alloy(brass)",
+        "df_metal(iron):  => metal(iron)"
+      ],
+      "gold": [
+        "df_metal(gold):  => metal(gold)"
+      ],
+      "metadata": {
+        "ablated_element": "df_metal(gold)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "crystal(quartz)",
+      "level": 2,
+      "candidates": [
+        "df_crystal(quartz):  => crystal(quartz)",
+        "df_metal(gold):  => metal(gold)",
+        "df_material(teflon):  => material(teflon)",
+        "df_metal(zinc):  => metal(zinc)",
+        "df_metal(aluminum):  => metal(aluminum)",
+        "df_alloy(steel):  => alloy(steel)"
+      ],
+      "gold": [
+        "df_crystal(quartz):  => crystal(quartz)"
+      ],
+      "metadata": {
+        "ablated_element": "df_crystal(quartz)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "metal(iron)",
+      "level": 2,
+      "candidates": [
+        "df_metal(iron):  => metal(iron)",
+        "df_alloy(brass):  => alloy(brass)",
+        "df_material(zinc):  => material(zinc)",
+        "df_material(titanium):  => material(titanium)",
+        "df_metal(zinc):  => metal(zinc)",
+        "df_material(quartz):  => material(quartz)"
+      ],
+      "gold": [
+        "df_metal(iron):  => metal(iron)"
+      ],
+      "metadata": {
+        "ablated_element": "df_metal(iron)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "alloy(steel)",
+      "level": 2,
+      "candidates": [
+        "df_alloy(steel):  => alloy(steel)",
+        "df_material(brass):  => material(brass)",
+        "df_metal(gold):  => metal(gold)",
+        "df_material(titanium):  => material(titanium)",
+        "df_material(teflon):  => material(teflon)",
+        "df_material(iron):  => material(iron)"
+      ],
+      "gold": [
+        "df_alloy(steel):  => alloy(steel)"
+      ],
+      "metadata": {
+        "ablated_element": "df_alloy(steel)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "crystal(diamond)",
+      "level": 2,
+      "candidates": [
+        "df_crystal(diamond):  => crystal(diamond)",
+        "df_metal(aluminum):  => metal(aluminum)",
+        "df_material(iron):  => material(iron)",
+        "df_alloy(brass):  => alloy(brass)",
+        "df_material(zinc):  => material(zinc)",
+        "df_metal(iron):  => metal(iron)"
+      ],
+      "gold": [
+        "df_crystal(diamond):  => crystal(diamond)"
+      ],
+      "metadata": {
+        "ablated_element": "df_crystal(diamond)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "metal(zinc)",
+      "level": 2,
+      "candidates": [
+        "df_metal(zinc):  => metal(zinc)",
+        "df_material(diamond):  => material(diamond)",
+        "df_material(teflon):  => material(teflon)",
+        "df_crystal(quartz):  => crystal(quartz)",
+        "df_material(titanium):  => material(titanium)",
+        "df_metal(aluminum):  => metal(aluminum)"
+      ],
+      "gold": [
+        "df_metal(zinc):  => metal(zinc)"
+      ],
+      "metadata": {
+        "ablated_element": "df_metal(zinc)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "alloy(brass)",
+      "level": 2,
+      "candidates": [
+        "df_alloy(brass):  => alloy(brass)",
+        "df_material(aluminum):  => material(aluminum)",
+        "df_crystal(quartz):  => crystal(quartz)",
+        "df_material(brass):  => material(brass)",
+        "df_metal(gold):  => metal(gold)",
+        "df_alloy(steel):  => alloy(steel)"
+      ],
+      "gold": [
+        "df_alloy(brass):  => alloy(brass)"
+      ],
+      "metadata": {
+        "ablated_element": "df_alloy(brass)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 43,
+      "num_candidates": 6,
+      "num_gold": 1
+    }
+  ]
+}
