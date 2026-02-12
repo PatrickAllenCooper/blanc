@@ -142,9 +142,9 @@ def validate_roundtrip_all_modalities(instances_file, domain='biology'):
     
     # Check >95% threshold
     if overall_accuracy >= 0.95:
-        print("\n✅ PASS: Overall recovery >=95%")
+        print("\nPASS: Overall recovery >=95%")
     else:
-        print(f"\n⚠️  Below 95% threshold ({overall_accuracy:.1%})")
+        print(f"\nBelow 95% threshold ({overall_accuracy:.1%})")
     
     return accuracies
 
