@@ -68,6 +68,54 @@ def generate_with_all_partitions(base_theory, max_instances_per_partition=30):
     print(f"\nTotal partition strategies: {len(strategies)}")
     print()
     
+    # Expanded target organisms covering all taxonomic groups
+    target_organisms = [
+        # Birds (passerines)
+        'robin', 'sparrow', 'finch', 'crow', 'cardinal',
+        # Birds (raptors)
+        'eagle', 'hawk', 'falcon', 'owl',
+        # Birds (waterfowl)
+        'duck', 'goose', 'swan',
+        # Birds (flightless)
+        'penguin', 'ostrich',
+        # Birds (parrots)
+        'parrot', 'macaw',
+        # Mammals (terrestrial)
+        'dog', 'cat', 'lion', 'tiger', 'bear', 'deer',
+        # Mammals (aquatic)
+        'dolphin', 'whale', 'seal', 'otter',
+        # Mammals (flying)
+        'bat',
+        # Fish
+        'salmon', 'trout', 'shark', 'tuna',
+        # Insects
+        'bee', 'butterfly', 'ant', 'dragonfly',
+        # Reptiles
+        'snake', 'lizard', 'turtle', 'crocodile',
+        # Amphibians
+        'frog', 'toad'
+    ]
+    
+    # Expanded behaviors covering all major types
+    behaviors = [
+        # Locomotion
+        'flies', 'swims', 'walks', 'runs', 'climbs',
+        # Biological behaviors
+        'migrates', 'hibernates', 'molts',
+        # Feeding behaviors
+        'hunts', 'grazes', 'scavenges', 'filter_feeds',
+        # Social behaviors
+        'territorial', 'social', 'solitary',
+        # Communication
+        'sings', 'vocalizes', 'silent',
+        # Reproduction
+        'lays_eggs', 'live_birth',
+        # Thermoregulation
+        'warm_blooded', 'cold_blooded',
+        # Predator/prey
+        'predator', 'prey', 'apex_predator'
+    ]
+    
     # Generate from each strategy
     for i, (strat_name, partition_fn) in enumerate(strategies, 1):
         print(f"\nStrategy {i}/13: {strat_name}")
@@ -89,16 +137,12 @@ def generate_with_all_partitions(base_theory, max_instances_per_partition=30):
         targets_tried = 0
         instances_generated = 0
         
-        # Select targets with critical rules
-        # For each defeasible rule, try to find instances
-        target_organisms = ['robin', 'eagle', 'dolphin', 'salmon', 'bee']
-        
+        # Generate Level 2 instances systematically
         for organism in target_organisms:
             if instances_generated >= max_instances_per_partition:
                 break
             
-            # Try to generate Level 2 instance for common behaviors
-            for behavior in ['flies', 'swims', 'hunts', 'migrates', 'sings']:
+            for behavior in behaviors:
                 if instances_generated >= max_instances_per_partition:
                     break
                 
@@ -122,7 +166,7 @@ def generate_with_all_partitions(base_theory, max_instances_per_partition=30):
                             converted,
                             target,
                             critical_rules[0],
-                            k_distractors=3,
+                            k_distractors=5,  # Increased from 3 to 5 per paper
                             distractor_strategy="syntactic"
                         )
                         
@@ -170,14 +214,15 @@ def main():
     print()
     
     # Generate with all partitions
-    instances, results = generate_with_all_partitions(kb, max_instances_per_partition=20)
+    # Increased from 20 to 30 to reach 200-300 total instances
+    instances, results = generate_with_all_partitions(kb, max_instances_per_partition=30)
     
     # Save instances
     if instances:
         output = {
             "metadata": {
                 "kb": "biology_curated",
-                "partition_strategies": len(strategies),
+                "partition_strategies": 13,
                 "total_instances": len(instances),
                 "kb_stats": get_biology_stats(kb),
             },

@@ -1,0 +1,718 @@
+{
+  "metadata": {
+    "kb": "biology_curated",
+    "level": 1,
+    "total_instances": 31,
+    "kb_stats": {
+      "constants": 48,
+      "predicates": 45,
+      "clauses": 161,
+      "max_depth": 4,
+      "herbrand_base_approx": 2160
+    }
+  },
+  "instances": [
+    {
+      "target": "flies(robin)",
+      "level": 1,
+      "candidates": [
+        "passerine(robin)",
+        "passerine(crow)",
+        "passerine(cardinal)",
+        "passerine(jay)",
+        "passerine(sparrow)",
+        "passerine(finch)"
+      ],
+      "gold": [
+        "passerine(robin)"
+      ],
+      "metadata": {
+        "ablated_element": "passerine(robin)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "warm_blooded(robin)",
+      "level": 1,
+      "candidates": [
+        "passerine(robin)",
+        "passerine(crow)",
+        "passerine(sparrow)",
+        "passerine(jay)",
+        "passerine(finch)",
+        "passerine(cardinal)"
+      ],
+      "gold": [
+        "passerine(robin)"
+      ],
+      "metadata": {
+        "ablated_element": "passerine(robin)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "migrates(robin)",
+      "level": 1,
+      "candidates": [
+        "passerine(robin)",
+        "passerine(jay)",
+        "passerine(crow)",
+        "passerine(sparrow)",
+        "passerine(cardinal)",
+        "passerine(finch)"
+      ],
+      "gold": [
+        "passerine(robin)"
+      ],
+      "metadata": {
+        "ablated_element": "passerine(robin)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(sparrow)",
+      "level": 1,
+      "candidates": [
+        "passerine(sparrow)",
+        "passerine(finch)",
+        "passerine(jay)",
+        "passerine(cardinal)",
+        "passerine(crow)",
+        "passerine(robin)"
+      ],
+      "gold": [
+        "passerine(sparrow)"
+      ],
+      "metadata": {
+        "ablated_element": "passerine(sparrow)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "warm_blooded(sparrow)",
+      "level": 1,
+      "candidates": [
+        "passerine(sparrow)",
+        "passerine(robin)",
+        "passerine(finch)",
+        "passerine(crow)",
+        "passerine(cardinal)",
+        "passerine(jay)"
+      ],
+      "gold": [
+        "passerine(sparrow)"
+      ],
+      "metadata": {
+        "ablated_element": "passerine(sparrow)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "migrates(sparrow)",
+      "level": 1,
+      "candidates": [
+        "passerine(sparrow)",
+        "passerine(jay)",
+        "passerine(crow)",
+        "passerine(cardinal)",
+        "passerine(finch)",
+        "passerine(robin)"
+      ],
+      "gold": [
+        "passerine(sparrow)"
+      ],
+      "metadata": {
+        "ablated_element": "passerine(sparrow)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(eagle)",
+      "level": 1,
+      "candidates": [
+        "organism(eagle)",
+        "organism(whale)",
+        "organism(frog)",
+        "organism(swan)",
+        "organism(sparrow)",
+        "organism(goose)"
+      ],
+      "gold": [
+        "organism(eagle)"
+      ],
+      "metadata": {
+        "ablated_element": "organism(eagle)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "warm_blooded(eagle)",
+      "level": 1,
+      "candidates": [
+        "raptor(eagle)",
+        "raptor(owl)",
+        "raptor(falcon)",
+        "raptor(hawk)"
+      ],
+      "gold": [
+        "raptor(eagle)"
+      ],
+      "metadata": {
+        "ablated_element": "raptor(eagle)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "migrates(eagle)",
+      "level": 1,
+      "candidates": [
+        "organism(eagle)",
+        "organism(shark)",
+        "organism(whale)",
+        "organism(crocodile)",
+        "organism(trout)",
+        "organism(jay)"
+      ],
+      "gold": [
+        "organism(eagle)"
+      ],
+      "metadata": {
+        "ablated_element": "organism(eagle)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(hawk)",
+      "level": 1,
+      "candidates": [
+        "raptor(hawk)",
+        "raptor(falcon)",
+        "raptor(eagle)",
+        "raptor(owl)"
+      ],
+      "gold": [
+        "raptor(hawk)"
+      ],
+      "metadata": {
+        "ablated_element": "raptor(hawk)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "warm_blooded(hawk)",
+      "level": 1,
+      "candidates": [
+        "raptor(hawk)",
+        "raptor(eagle)",
+        "raptor(falcon)",
+        "raptor(owl)"
+      ],
+      "gold": [
+        "raptor(hawk)"
+      ],
+      "metadata": {
+        "ablated_element": "raptor(hawk)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "migrates(hawk)",
+      "level": 1,
+      "candidates": [
+        "raptor(hawk)",
+        "raptor(eagle)",
+        "raptor(falcon)",
+        "raptor(owl)"
+      ],
+      "gold": [
+        "raptor(hawk)"
+      ],
+      "metadata": {
+        "ablated_element": "raptor(hawk)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(duck)",
+      "level": 1,
+      "candidates": [
+        "waterfowl(duck)",
+        "waterfowl(swan)",
+        "waterfowl(pelican)",
+        "waterfowl(goose)"
+      ],
+      "gold": [
+        "waterfowl(duck)"
+      ],
+      "metadata": {
+        "ablated_element": "waterfowl(duck)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "swims(duck)",
+      "level": 1,
+      "candidates": [
+        "waterfowl(duck)",
+        "waterfowl(goose)",
+        "waterfowl(swan)",
+        "waterfowl(pelican)"
+      ],
+      "gold": [
+        "waterfowl(duck)"
+      ],
+      "metadata": {
+        "ablated_element": "waterfowl(duck)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "warm_blooded(duck)",
+      "level": 1,
+      "candidates": [
+        "waterfowl(duck)",
+        "waterfowl(goose)",
+        "waterfowl(swan)",
+        "waterfowl(pelican)"
+      ],
+      "gold": [
+        "waterfowl(duck)"
+      ],
+      "metadata": {
+        "ablated_element": "waterfowl(duck)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "migrates(duck)",
+      "level": 1,
+      "candidates": [
+        "waterfowl(duck)",
+        "waterfowl(goose)",
+        "waterfowl(swan)",
+        "waterfowl(pelican)"
+      ],
+      "gold": [
+        "waterfowl(duck)"
+      ],
+      "metadata": {
+        "ablated_element": "waterfowl(duck)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(penguin)",
+      "level": 1,
+      "candidates": [
+        "organism(penguin)",
+        "organism(tuna)",
+        "organism(hawk)",
+        "organism(ant)",
+        "organism(bee)",
+        "organism(cat)"
+      ],
+      "gold": [
+        "organism(penguin)"
+      ],
+      "metadata": {
+        "ablated_element": "organism(penguin)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "warm_blooded(penguin)",
+      "level": 1,
+      "candidates": [
+        "flightless_bird(penguin)",
+        "flightless_bird(emu)",
+        "flightless_bird(ostrich)",
+        "flightless_bird(kiwi)"
+      ],
+      "gold": [
+        "flightless_bird(penguin)"
+      ],
+      "metadata": {
+        "ablated_element": "flightless_bird(penguin)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "migrates(penguin)",
+      "level": 1,
+      "candidates": [
+        "organism(penguin)",
+        "organism(bee)",
+        "organism(owl)",
+        "organism(seal)",
+        "organism(bat)",
+        "organism(emu)"
+      ],
+      "gold": [
+        "organism(penguin)"
+      ],
+      "metadata": {
+        "ablated_element": "organism(penguin)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(parrot)",
+      "level": 1,
+      "candidates": [
+        "parrot(parrot)",
+        "parrot(macaw)"
+      ],
+      "gold": [
+        "parrot(parrot)"
+      ],
+      "metadata": {
+        "ablated_element": "parrot(parrot)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 2,
+      "num_gold": 1
+    },
+    {
+      "target": "warm_blooded(parrot)",
+      "level": 1,
+      "candidates": [
+        "parrot(parrot)",
+        "parrot(macaw)"
+      ],
+      "gold": [
+        "parrot(parrot)"
+      ],
+      "metadata": {
+        "ablated_element": "parrot(parrot)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 2,
+      "num_gold": 1
+    },
+    {
+      "target": "migrates(parrot)",
+      "level": 1,
+      "candidates": [
+        "parrot(parrot)",
+        "parrot(macaw)"
+      ],
+      "gold": [
+        "parrot(parrot)"
+      ],
+      "metadata": {
+        "ablated_element": "parrot(parrot)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 2,
+      "num_gold": 1
+    },
+    {
+      "target": "swims(dolphin)",
+      "level": 1,
+      "candidates": [
+        "aquatic_mammal(dolphin)",
+        "aquatic_mammal(seal)",
+        "aquatic_mammal(whale)",
+        "aquatic_mammal(otter)"
+      ],
+      "gold": [
+        "aquatic_mammal(dolphin)"
+      ],
+      "metadata": {
+        "ablated_element": "aquatic_mammal(dolphin)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "swims(whale)",
+      "level": 1,
+      "candidates": [
+        "aquatic_mammal(whale)",
+        "aquatic_mammal(seal)",
+        "aquatic_mammal(dolphin)",
+        "aquatic_mammal(otter)"
+      ],
+      "gold": [
+        "aquatic_mammal(whale)"
+      ],
+      "metadata": {
+        "ablated_element": "aquatic_mammal(whale)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "target": "swims(salmon)",
+      "level": 1,
+      "candidates": [
+        "fish(salmon)",
+        "fish(tuna)",
+        "fish(shark)",
+        "fish(goldfish)",
+        "fish(trout)"
+      ],
+      "gold": [
+        "fish(salmon)"
+      ],
+      "metadata": {
+        "ablated_element": "fish(salmon)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 5,
+      "num_gold": 1
+    },
+    {
+      "target": "social(salmon)",
+      "level": 1,
+      "candidates": [
+        "fish(salmon)",
+        "fish(goldfish)",
+        "fish(shark)",
+        "fish(trout)",
+        "fish(tuna)"
+      ],
+      "gold": [
+        "fish(salmon)"
+      ],
+      "metadata": {
+        "ablated_element": "fish(salmon)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 5,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(bee)",
+      "level": 1,
+      "candidates": [
+        "insect(bee)",
+        "insect(beetle)",
+        "insect(ant)",
+        "insect(dragonfly)",
+        "insect(butterfly)",
+        "insect(mosquito)"
+      ],
+      "gold": [
+        "insect(bee)"
+      ],
+      "metadata": {
+        "ablated_element": "insect(bee)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "flies(butterfly)",
+      "level": 1,
+      "candidates": [
+        "insect(butterfly)",
+        "insect(bee)",
+        "insect(beetle)",
+        "insect(ant)",
+        "insect(dragonfly)",
+        "insect(mosquito)"
+      ],
+      "gold": [
+        "insect(butterfly)"
+      ],
+      "metadata": {
+        "ablated_element": "insect(butterfly)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "target": "swims(frog)",
+      "level": 1,
+      "candidates": [
+        "amphibian(frog)",
+        "amphibian(toad)"
+      ],
+      "gold": [
+        "amphibian(frog)"
+      ],
+      "metadata": {
+        "ablated_element": "amphibian(frog)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 2,
+      "num_gold": 1
+    },
+    {
+      "target": "predator(lion)",
+      "level": 1,
+      "candidates": [
+        "carnivore(lion)",
+        "carnivore(eagle)",
+        "carnivore(shark)",
+        "carnivore(tiger)",
+        "carnivore(hawk)"
+      ],
+      "gold": [
+        "carnivore(lion)"
+      ],
+      "metadata": {
+        "ablated_element": "carnivore(lion)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 5,
+      "num_gold": 1
+    },
+    {
+      "target": "territorial(lion)",
+      "level": 1,
+      "candidates": [
+        "carnivore(lion)",
+        "carnivore(tiger)",
+        "carnivore(eagle)",
+        "carnivore(shark)",
+        "carnivore(hawk)"
+      ],
+      "gold": [
+        "carnivore(lion)"
+      ],
+      "metadata": {
+        "ablated_element": "carnivore(lion)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 160,
+      "num_candidates": 5,
+      "num_gold": 1
+    }
+  ]
+}

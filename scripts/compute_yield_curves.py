@@ -70,7 +70,7 @@ def compute_yield_curves():
     
     # Linear
     slope, intercept, r_linear, p_value, stderr = stats.linregress(deltas, yields_avg)
-    print(f"  Linear: Y = {slope:.2f}δ + {intercept:.2f}, R² = {r_linear**2:.3f}")
+    print(f"  Linear: Y = {slope:.2f}*delta + {intercept:.2f}, R^2 = {r_linear**2:.3f}")
     
     # Plot
     plt.figure(figsize=(10, 6))

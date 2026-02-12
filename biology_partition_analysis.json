@@ -1,77 +1,72 @@
 {
-  "metadata": {
-    "kb": "biology_curated",
-    "partition_strategies": 13,
-    "total_instances": 50
-  },
-  "partition_results": {
+  "partition_strategies": {
     "leaf": {
-      "instances": 0,
+      "instances": 1,
       "facts": 0,
       "defeasible_rules": 110
     },
     "rule": {
-      "instances": 7,
+      "instances": 30,
       "facts": 110,
       "defeasible_rules": 51
     },
     "depth_1": {
-      "instances": 6,
+      "instances": 30,
       "facts": 110,
       "defeasible_rules": 36
     },
     "depth_2": {
-      "instances": 4,
+      "instances": 30,
       "facts": 110,
       "defeasible_rules": 6
     },
     "depth_3": {
-      "instances": 2,
+      "instances": 16,
       "facts": 110,
       "defeasible_rules": 1
     },
     "rand_0.1": {
-      "instances": 2,
+      "instances": 16,
       "facts": 96,
       "defeasible_rules": 20
     },
     "rand_0.2": {
-      "instances": 2,
+      "instances": 19,
       "facts": 89,
       "defeasible_rules": 31
     },
     "rand_0.3": {
-      "instances": 1,
+      "instances": 27,
       "facts": 71,
       "defeasible_rules": 57
     },
     "rand_0.4": {
-      "instances": 2,
+      "instances": 30,
       "facts": 60,
       "defeasible_rules": 72
     },
     "rand_0.5": {
-      "instances": 5,
+      "instances": 30,
       "facts": 55,
       "defeasible_rules": 81
     },
     "rand_0.6": {
-      "instances": 4,
+      "instances": 30,
       "facts": 43,
       "defeasible_rules": 100
     },
     "rand_0.7": {
-      "instances": 4,
+      "instances": 30,
       "facts": 28,
       "defeasible_rules": 118
     },
     "rand_0.8": {
-      "instances": 4,
+      "instances": 30,
       "facts": 21,
       "defeasible_rules": 130
     },
     "rand_0.9": {
-      "instances": 7,
+      "instances": 30,
       "facts": 10,
       "defeasible_rules": 147
     }
