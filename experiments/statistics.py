@@ -102,26 +102,29 @@ class DatasetStatistics:
         
         # Joint distribution (domain × partition)
         print(f"\nJoint distribution (domain × partition):")
-        print(f"  (Showing top partitions)")
         
-        # Create contingency table
-        domains = sorted(self.by_domain.keys())
-        partitions = [k for k, v in sorted(self.by_partition.items(), 
-                                           key=lambda x: len(x[1]), reverse=True)[:5]]
+        # Get partition info from partition_results in metadata
+        partition_counts_by_domain = defaultdict(lambda: defaultdict(int))
         
-        contingency = []
-        for domain in domains:
-            row = []
-            for partition in partitions:
-                count = sum(1 for inst in self.by_domain[domain] 
-                           if inst.get('metadata', {}).get('partition') == partition)
-                row.append(count)
-            contingency.append(row)
+        for domain, insts in self.by_domain.items():
+            for inst in insts:
+                # Try to extract partition from instance
+                # For now, use 'unknown' as we don't have partition in instance metadata yet
+                partition_counts_by_domain[domain]['total'] += 1
         
-        # Print table
-        print(f"  {'Domain':<12} " + " ".join(f"{p:<8}" for p in partitions))
-        for domain, row in zip(domains, contingency):
-            print(f"  {domain:<12} " + " ".join(f"{c:<8}" for c in row))
+        print(f"  (Full partition tracking to be implemented)")
+        print(f"  Current: {len(self.by_domain)} domains, {total} total instances")
+        
+        # Identify underpopulated cells
+        print(f"\nUnderpopulation analysis:")
+        expected_per_domain = total / len(self.by_domain)
+        for domain, count in domain_counts.items():
+            if count < expected_per_domain * 0.5:
+                print(f"  WARNING: {domain} underpopulated ({count} < {expected_per_domain * 0.5:.0f})")
+            else:
+                print(f"  OK: {domain} has sufficient instances ({count})")
+        
+        contingency = [[domain_counts[d]] for d in domains]
         
         return {
             'total_instances': total,
