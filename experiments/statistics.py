@@ -92,7 +92,7 @@ class DatasetStatistics:
         chi2_stat, p_value = stats.chisquare(observed, expected)
         
         print(f"\nChi-square test for domain balance:")
-        print(f"  χ² = {chi2_stat:.2f}")
+        print(f"  Chi-square = {chi2_stat:.2f}")
         print(f"  p-value = {p_value:.4f}")
         
         if p_value > 0.05:
