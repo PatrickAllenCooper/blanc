@@ -89,22 +89,51 @@ def generate_with_all_partitions(base_theory, max_instances_per_partition=30):
         targets_tried = 0
         instances_generated = 0
         
-        # Try defeasible rules for Level 2
-        for rule in defeasible_rules[:max_instances_per_partition]:
+        # Select targets with critical rules
+        # For each defeasible rule, try to find instances
+        target_organisms = ['robin', 'eagle', 'dolphin', 'salmon', 'bee']
+        
+        for organism in target_organisms:
             if instances_generated >= max_instances_per_partition:
                 break
-                
-            # Create a simple target from the rule head
-            # For simplicity, use first organism as target
-            targets_tried += 1
             
-            # Skip if can't generate
-            try:
-                # Simple target derivation check would go here
-                # For now, we'll generate from a few known targets
-                pass
-            except:
-                continue
+            # Try to generate Level 2 instance for common behaviors
+            for behavior in ['flies', 'swims', 'hunts', 'migrates', 'sings']:
+                if instances_generated >= max_instances_per_partition:
+                    break
+                
+                target = f"{behavior}({organism})"
+                
+                try:
+                    # Check if target is derivable
+                    from blanc.reasoning.defeasible import defeasible_provable
+                    if not defeasible_provable(converted, target):
+                        continue
+                    
+                    # Find critical elements
+                    critical = full_theory_criticality(converted, target)
+                    
+                    # Find a critical defeasible rule
+                    critical_rules = [e for e in critical if hasattr(e, 'rule_type') and e.rule_type == RuleType.DEFEASIBLE]
+                    
+                    if critical_rules:
+                        # Generate Level 2 instance
+                        instance = generate_level2_instance(
+                            converted,
+                            target,
+                            critical_rules[0],
+                            k_distractors=3,
+                            distractor_strategy="syntactic"
+                        )
+                        
+                        instances_this_partition.append(instance)
+                        instances_generated += 1
+                        
+                except Exception as e:
+                    # Skip if generation fails
+                    continue
+                
+                targets_tried += 1
         
         print(f"  Generated: {len(instances_this_partition)} instances")
         
