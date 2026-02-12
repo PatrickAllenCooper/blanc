@@ -23,9 +23,10 @@ Date: 2026-02-12
 from blanc.core.theory import Theory
 from .yago_biology_extracted import create_yago_biology
 from .wordnet_biology_extracted import create_wordnet_biology
+from .biology_instances import add_biology_instances
 
 
-def create_biology_kb() -> Theory:
+def create_biology_kb(include_instances=True) -> Theory:
     """
     Create unified biology KB from expert sources.
     
@@ -45,6 +46,10 @@ def create_biology_kb() -> Theory:
     wordnet_theory = create_wordnet_biology()
     for rule in wordnet_theory.rules:
         theory.add_rule(rule)
+    
+    # Add organism instances
+    if include_instances:
+        theory = add_biology_instances(theory)
     
     return theory
 

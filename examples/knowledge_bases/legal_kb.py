@@ -20,9 +20,10 @@ Date: 2026-02-12
 
 from blanc.core.theory import Theory
 from .lkif_legal_extracted import create_lkif_legal
+from .legal_instances import add_legal_instances
 
 
-def create_legal_kb() -> Theory:
+def create_legal_kb(include_instances=True) -> Theory:
     """
     Create legal reasoning KB from expert sources.
     
@@ -45,6 +46,10 @@ def create_legal_kb() -> Theory:
     # dapreco_theory = create_dapreco_legal()
     # for rule in dapreco_theory.rules:
     #     theory.add_rule(rule)
+    
+    # Add legal entity instances
+    if include_instances:
+        theory = add_legal_instances(theory)
     
     return theory
 

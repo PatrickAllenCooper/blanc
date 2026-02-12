@@ -21,9 +21,10 @@ Date: 2026-02-12
 
 from blanc.core.theory import Theory
 from .matonto_materials_extracted import create_matonto_materials
+from .materials_instances import add_materials_instances
 
 
-def create_materials_kb() -> Theory:
+def create_materials_kb(include_instances=True) -> Theory:
     """
     Create materials science KB from expert sources.
     
@@ -44,6 +45,10 @@ def create_materials_kb() -> Theory:
     """
     # MatOnto is primary (and only) source
     theory = create_matonto_materials()
+    
+    # Add material instances
+    if include_instances:
+        theory = add_materials_instances(theory)
     
     return theory
 
