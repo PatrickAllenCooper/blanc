@@ -1,0 +1,14 @@
+{
+  "total_instances": 374,
+  "by_domain": {
+    "biology": 114,
+    "legal": 168,
+    "materials": 92
+  },
+  "by_level": {
+    "2": 374
+  },
+  "by_partition": {
+    "unknown": 374
+  }
+}
