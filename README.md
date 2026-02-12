@@ -1,31 +1,31 @@
 # BLANC: Defeasible Abduction Benchmark
 
-**B**uilding **L**ogical **A**bductive **N**on-monotonic **C**orpora
+**Building Logical Abductive Non-monotonic Corpora**
 
-A framework for evaluating foundation models on grounded abductive reasoning and belief revision using expert-curated knowledge bases.
+Expert-curated knowledge bases for evaluating foundation models on grounded abductive reasoning and belief revision.
 
 ---
 
 ## Overview
 
-Foundation models struggle with abductive reasoning and belief revision. We provide a benchmark that tests:
+Foundation models struggle with:
 1. **Grounding**: Tracing conclusions to supporting evidence
 2. **Novelty**: Generating hypotheses beyond training distribution
 3. **Belief Revision**: Updating knowledge while preserving unrelated commitments
 
-**The Innovation**: Convert expert-curated ontologies into defeasible theories, enabling systematic evaluation of rational reasoning.
+**DeFAb** provides a benchmark using expert-curated knowledge bases from government/academic institutions to test these capabilities.
 
 ---
 
 ## Quick Start
 
 ```python
-from examples.knowledge_bases.biology_kb import create_biology_kb
+from examples.knowledge_bases.biology_kb_subset import create_biology_subset
 from blanc.author.conversion import phi_kappa
 from blanc.generation.partition import partition_rule
 
-# Load expert-curated biology KB
-kb = create_biology_kb()  # 927 rules, 255 facts, depth 7
+# Load expert-curated KB subset (for development)
+kb = create_biology_subset()  # 16 rules, fast iteration
 
 # Convert to defeasible theory
 theory = phi_kappa(kb, partition_rule)
@@ -41,65 +41,45 @@ See `QUICK_START.md` for detailed guide.
 
 ## Project Status
 
-**Current**: Week 2 Complete - Expert KB Foundation Established  
-**Tests**: 208/208 passing (100%)  
-**Coverage**: 64% overall, 91-99% critical paths
+**Current**: Week 3 Day 1 of 14-week roadmap  
+**Progress**: Expert KB foundation complete, instance generation started  
+**Tests**: 208/208 passing (100%)
 
 ### Expert Knowledge Bases ✅ COMPLETE
 
-All 3 required domains with expert-curated sources:
+All from peer-reviewed institutions:
 
-| Domain | Rules | Source | Expert Institution |
-|--------|-------|--------|-------------------|
+| Domain | Rules | Source | Institution |
+|--------|-------|--------|-------------|
 | Biology | 927 | YAGO 4.5 + WordNet | Télécom Paris + Princeton |
 | Legal | 201 | LKIF Core | University of Amsterdam |
-| Materials | 1,190 | MatOnto | MatPortal Community |
+| Materials | 1,190 | MatOnto | MatPortal/MGI |
 
-**Total**: 2,318 expert-curated rules from 4 peer-reviewed institutions
+**Total**: 2,318 expert-curated rules
 
-### Development Timeline
+**Policy**: Expert-only (see `KNOWLEDGE_BASE_POLICY.md`)
 
-- ✅ MVP Complete (Feb 2026)
-- ✅ Expert KB Foundation (Week 2, Feb 2026)
-- ⏳ Full Benchmark (Weeks 3-14, Feb-May 2026)
-- 📅 NeurIPS Submission (May 2026)
+### Development Progress
 
----
-
-## Key Features
-
-### Expert-Curated Foundation
-
-**All knowledge bases from expert sources** (see `KNOWLEDGE_BASE_POLICY.md`):
-- YAGO 4.5 (Télécom Paris, SIGIR 2024)
-- WordNet 3.0 (Princeton University, Miller 1995)
-- LKIF Core (University of Amsterdam, ESTRELLA project)
-- MatOnto (MatPortal materials science community)
-
-**Policy**: NO hand-crafted knowledge bases allowed
-
-### Three Evaluation Levels
-
-1. **Level 1**: Fact completion (basic grounding)
-2. **Level 2**: Rule abduction (hypothesis generation)
-3. **Level 3**: Defeater abduction (rational belief revision)
-
-### Proven Correctness
-
-- Defeasible reasoning engine (91% coverage)
-- Criticality computation (94% coverage)
-- Instance generation (87% coverage)
-- Round-trip codec (92% coverage)
+- ✅ **Week 2**: Expert KB foundation complete
+- ⏳ **Week 3**: Instance generation (72/300-600)
+- 📋 **Weeks 4-14**: Codec, evaluation, analysis, HPC production
 
 ---
 
 ## Installation
 
 ```bash
-git clone https://github.com/username/blanc.git
+git clone https://github.com/PatrickAllenCooper/blanc.git
 cd blanc
 pip install -r requirements.txt
-python -m pytest tests/  # Verify installation
+
+# Download expert KBs (optional - extracted KBs work without this)
+python scripts/download_yago.py
+python scripts/download_wordnet.py
+
+# Run tests
+python -m pytest tests/
 ```
 
 ---
@@ -108,92 +88,90 @@ python -m pytest tests/  # Verify installation
 
 ```
 blanc/
-├── src/blanc/                  Production code
-│   ├── reasoning/              Defeasible engine
-│   ├── author/                 Instance generation
-│   ├── codec/                  Encoding/decoding
-│   └── generation/             Partition strategies
-│
-├── tests/                      Test suite (208 tests)
-├── examples/knowledge_bases/   Expert KBs (3 domains)
-├── scripts/                    Utilities (17 scripts)
-├── paper/                      LaTeX paper + slides
-│
-├── docs/                       Historical documentation
-├── Guidance_Documents/         Phase summaries
-└── archive/                    Deprecated files
+├── src/blanc/              Production code (1,762 lines, 64% coverage)
+├── tests/                  208 tests (100% passing)
+├── examples/knowledge_bases/  3 expert KBs + subsets
+├── scripts/                Generation and testing scripts
+├── hpc/                    HPC/SLURM infrastructure (Weeks 13-14)
+├── docs/                   Historical documentation
+└── Guidance_Documents/     Phase implementation guides
 ```
 
 ---
 
 ## Key Documents
 
-**Start Here**:
+**Essential**:
 - `README.md` - This overview
-- `QUICK_START.md` - 5-minute getting started guide
-- `PROJECT_STATUS.md` - Current development status
-
-**Critical Policy**:
-- `KNOWLEDGE_BASE_POLICY.md` - Expert-only requirement (MANDATORY)
+- `QUICK_START.md` - Getting started guide
+- `KNOWLEDGE_BASE_POLICY.md` - Expert-only requirement ⚠️ CRITICAL
+- `CONTINUE_WEEK3.md` - Current development status
 
 **Planning**:
 - `NEURIPS_FULL_ROADMAP.md` - 14-week development plan
 - `IMPLEMENTATION_PLAN.md` - Complete technical specification
+- `DEVELOPMENT_STRATEGY_REVISED.md` - Local dev + HPC production strategy
 
-**Current Work**:
-- `WEEK2_COMPLETE.md` - Latest achievements
-- `EXPERT_KB_COMPLETE.md` - KB foundation details
+**Technical**:
+- `COVERAGE_ANALYSIS.md` - Test coverage (64% overall, 91-99% critical)
+- `WEEK2_COMPLETE.md` - Latest completed work
+- `DATA_DOWNLOAD_INSTRUCTIONS.md` - How to get expert KBs
+
+**Reference**:
+- `docs/week3_docs/` - Session documentation
+- `Guidance_Documents/` - Phase guides
 
 ---
 
-## Expert Knowledge Base Sources
+## Expert Sources
 
 ### Biology (Π_bio)
-- **YAGO 4.5**: Taxonomic hierarchy (584 rules, depth 7)
-- **WordNet 3.0**: Linguistic taxonomy (334 rules)
-- **Citation**: Suchanek et al. (2024) SIGIR; Miller (1995) CACM
+- **YAGO 4.5**: 584 rules (Télécom Paris, SIGIR 2024)
+- **WordNet 3.0**: 334 rules (Princeton, Miller 1995)
 
 ### Legal (Π_law)
-- **LKIF Core**: Legal norms and actions (201 rules, depth 7)
-- **Citation**: Hoekstra et al., U Amsterdam, ESTRELLA project
+- **LKIF Core**: 201 rules (U Amsterdam, ESTRELLA)
 
 ### Materials (Π_mat)
-- **MatOnto**: Materials science ontology (1,190 rules, depth 10)
-- **Citation**: Bryan Miller, MatPortal community
+- **MatOnto**: 1,190 rules (MatPortal, MGI ecosystem)
 
-**All sources peer-reviewed and citeable**
+**All sources**: Peer-reviewed, government/academic institutions
+
+---
+
+## Development Strategy
+
+**Weeks 3-12**: Local development with KB subsets (fast iteration)  
+**Weeks 13-14**: HPC production at massive scale (millions of instances)
+
+Current: 72 instances generated locally in 4 minutes ✅
 
 ---
 
 ## Testing
 
 ```bash
-# Run all tests
 python -m pytest tests/ --tb=no -q
+# 208 passed, 3 skipped
 
-# Test expert KBs
 python scripts/test_all_expert_kbs.py
-
-# Test instance generation
-python scripts/generate_minimal_test.py
+# All 3 KBs pass validation
 ```
-
-**Status**: 208/208 passing, 0 bugs
 
 ---
 
 ## Citations
 
-1. Suchanek et al. (2024). YAGO 4.5: A Large and Clean Knowledge Base with a Rich Taxonomy. SIGIR 2024.
-2. Miller, G. A. (1995). WordNet: A lexical database for English. CACM 38(11): 39-41.
-3. Hoekstra, R., Boer, A., van den Berg, K. LKIF Core: Legal Knowledge Interchange Format.
-4. Bryan Miller. MatOnto: Materials Science Ontology. matportal.org/ontologies/MATONTO
+1. Suchanek et al. (2024). YAGO 4.5. SIGIR 2024.
+2. Miller, G. A. (1995). WordNet. CACM 38(11).
+3. Hoekstra et al. LKIF Core. University of Amsterdam.
+4. Bryan Miller. MatOnto. matportal.org/ontologies/MATONTO
 
 ---
 
 ## License
 
-MIT License - See LICENSE file
+MIT License
 
 ---
 
@@ -203,6 +181,6 @@ Patrick Cooper
 
 ---
 
-**For detailed technical information**: See `IMPLEMENTATION_PLAN.md`  
-**For development roadmap**: See `NEURIPS_FULL_ROADMAP.md`  
-**For current status**: See `PROJECT_STATUS.md`
+**For development**: See `CONTINUE_WEEK3.md`  
+**For roadmap**: See `NEURIPS_FULL_ROADMAP.md`  
+**For policy**: See `KNOWLEDGE_BASE_POLICY.md` ⚠️
