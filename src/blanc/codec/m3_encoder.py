@@ -50,6 +50,8 @@ def encode_m3(element: Union[str, Rule], nl_mapping=None, domain='biology') -> s
     comment = generate_comment(element, nl_mapping)
     
     # Combine: formal syntax + comment
+    # Remove any trailing periods before adding comment
+    formal = formal.rstrip('.')
     return f"{formal}  # {comment}"
 
 

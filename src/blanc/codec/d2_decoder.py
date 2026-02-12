@@ -78,6 +78,10 @@ def normalize_text(text: str) -> str:
     """
     import re
     
+    # Remove comments (for M3 format)
+    if '#' in text:
+        text = text.split('#')[0]
+    
     # Convert to lowercase
     text = text.lower()
     
@@ -90,6 +94,9 @@ def normalize_text(text: str) -> str:
     # Remove extra whitespace
     text = re.sub(r'\s+', ' ', text)
     text = text.strip()
+    
+    # Remove trailing periods
+    text = text.rstrip('.')
     
     return text
 
