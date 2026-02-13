@@ -64,3 +64,8 @@ dmypy.json
 *.orig
 .coverage
 data/
+
+# Week 8: Evaluation infrastructure
+.env
+cache/
+results/evaluations/*.json
