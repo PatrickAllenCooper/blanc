@@ -11,5 +11,3076 @@
     },
     "chi_square": {
       "statistic": 24.534759358288767,
-      "p_value": 4.7026720987868226e-06,
-      "balanced": 
+      "p_value": 4.702672098786821e-06,
+      "balanced": false
+    },
+    "contingency_table": {
+      "domains": [
+        "biology",
+        "legal",
+        "materials"
+      ],
+      "partitions": [
+        "total"
+      ],
+      "counts": [
+        [
+          114
+        ],
+        [
+          168
+        ],
+        [
+          92
+        ]
+      ]
+    }
+  },
+  "difficulty": {
+    "difficulty_tuples": [
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 5
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 5
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 5
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 5
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 1
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 5
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 5
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 5
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 5
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      },
+      {
+        "level": 2,
+        "support_size": 0,
+        "gold_count": 1,
+        "min_h_size": 1,
+        "novelty": 0.0,
+        "candidates": 6
+      }
+    ],
+    "marginals": {
+      "level": {
+        "mean": 2.0,
+        "std": 0.0
+      },
+      "gold_count": {
+        "mean": 1.0,
+        "std": 0.0
+      },
+      "candidates": {
+        "mean": 5.96524064171123,
+        "std": 0.29500352731620005
+      }
+    }
+  },
+  "yield": {
+    "status": "curves_computed",
+    "models_to_fit": [
+      "linear",
+      "logistic",
+      "power_law"
+    ],
+    "file": "notebooks/yield_curves_dev.png"
+  },
+  "partition_sensitivity": {
+    "partition_families": {
+      "structured": [
+        "rule",
+        "leaf"
+      ],
+      "depth": [
+        "depth_1",
+        "depth_2",
+        "depth_3"
+      ],
+      "random": [
+        "rand_0.1",
+        "rand_0.2",
+        "rand_0.3",
+        "rand_0.4",
+        "rand_0.5",
+        "rand_0.6",
+        "rand_0.7",
+        "rand_0.8",
+        "rand_0.9"
+      ]
+    },
+    "tests_to_implement": [
+      "kolmogorov_smirnov",
+      "mann_whitney"
+    ]
+  }
+}
