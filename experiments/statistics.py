@@ -124,21 +124,22 @@ class DatasetStatistics:
             else:
                 print(f"  OK: {domain} has sufficient instances ({count})")
         
-        contingency = [[domain_counts[d]] for d in domains]
+        domains_list = list(domain_counts.keys())
+        contingency = [[domain_counts[d]] for d in domains_list]
         
         return {
             'total_instances': total,
             'by_domain': domain_counts,
             'by_level': level_counts,
             'chi_square': {
-                'statistic': chi2_stat,
-                'p_value': p_value,
-                'balanced': p_value > 0.05
+                'statistic': float(chi2_stat),
+                'p_value': float(p_value),
+                'balanced': bool(p_value > 0.05)
             },
             'contingency_table': {
-                'domains': domains,
-                'partitions': partitions,
-                'counts': contingency
+                'domains': domains_list,
+                'partitions': ['total'],  # Placeholder until partition tracking is implemented
+                'counts': [[int(c) for c in row] for row in contingency]
             }
         }
     
