@@ -311,14 +311,17 @@ Using OpenCyc (239K terms, 2M triples) + ConceptNet (34M edges)
 **Rules Generated**: 352,000-850,000 (total across all domains)
 
 **Scenarios**:
+- Level 1 (fact completion): 80,000-250,000
 - Level 2 (rule abduction): 57,500-126,800
 - Level 3 (defeater abduction): 5,150-16,700
-- **Total: 62,650-143,500**
+- **Total: 142,650-393,500**
 
 **Multiplier vs Current**:
-- Current: 374 scenarios
-- Conservative: 62,650 scenarios = **167x**
-- Optimistic: 143,500 scenarios = **383x**
+- Current: 374 scenarios (all Level 2)
+- Conservative: 142,650 scenarios = **381x**
+- Optimistic: 393,500 scenarios = **1,052x**
+
+**Note**: Level 1 (fact completion) typically yields most scenarios due to large number of ground facts in theories
 
 ---
 
@@ -327,12 +330,20 @@ Using OpenCyc (239K terms, 2M triples) + ConceptNet (34M edges)
 ### For NeurIPS Submission (Week 14)
 
 **Focus on 3 core domains** (as planned):
-- Biology: 18,000-37,000
-- Legal: 2,700-7,200
-- Materials: 5,500-14,500
-- **Total: 26,200-58,700 scenarios**
+- Biology: 18,000-37,000 (Level 2+3 only)
+- Legal: 2,700-7,200 (Level 2+3 only)
+- Materials: 5,500-14,500 (Level 2+3 only)
+- **Subtotal Level 2+3: 26,200-58,700**
 
-**For paper**: "We generate 26,000-59,000 evaluation instances across three expert domains"
+**Add Level 1** (fact completion):
+- Biology facts: ~12,000-25,000 scenarios
+- Legal facts: ~3,000-8,000 scenarios
+- Materials facts: ~5,000-12,000 scenarios
+- **Subtotal Level 1: 20,000-45,000**
+
+**TOTAL FOR NEURIPS: 46,200-103,700 scenarios**
+
+**For paper**: "We generate 46,000-104,000 evaluation instances across all three difficulty levels and three expert domains"
 
 ### For Follow-Up Work
 
@@ -342,7 +353,7 @@ Using OpenCyc (239K terms, 2M triples) + ConceptNet (34M edges)
 - Geography: 4,400-11,000
 - **Additional: 20,200-47,600 scenarios**
 
-**Total benchmark**: 46,400-106,300 scenarios
+**Total benchmark**: ~100,000-200,000 scenarios (with Level 1)
 
 ---
 
