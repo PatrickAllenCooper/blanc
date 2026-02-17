@@ -32,25 +32,34 @@
 
 ---
 
-## Next: Week 8.5 (CRITICAL)
+## Next: Week 8.5 (CRITICAL - REVISED)
 
-**Goal**: Level 3 Instance Generation - Test Novelty & Belief Revision
+**Goal**: Cross-Ontology Scale Validation + Level 3 Instance Generation
 
-**Why Critical**:
-- Paper claims to test "Grounding, Novelty, and Belief Revision"
-- Current dataset: 100% Level 2 (grounding only)
-- Need Level 3 (defeater abduction) to test novelty & belief revision
-- See OBJECTIVE_ACCOUNTING.md and REVISED_IMPLEMENTATION_PLAN.md
+**Major Update**: User identified 10-100x scale opportunity!
+- OpenCyc (300K concepts) + ConceptNet (21M assertions)
+- Can generate 100K-350K rules (vs current 2,318)
+- ConceptNet NotCapableOf = automatic defeaters for Level 3!
+- See SCALE_OPPORTUNITY.md and CROSS_ONTOLOGY_PLAN.md
 
-**Tasks**:
-1. Generate 35-50 Level 3 (defeater abduction) instances
-2. Biology defeaters: 15-20 instances (penguin-style exceptions)
-3. Legal defeaters: 10-15 instances (statutory exceptions)
-4. Materials defeaters: 10-15 instances (property exceptions)
-5. Validate conservativity for all instances
-6. Ensure some instances have Nov > 0 (novel predicates)
+**Phased Approach**:
 
-**Estimate**: 3-5 days (concentrated work)
+**Day 8.5a** (1 day): Cross-Ontology Proof-of-Concept
+1. Run validation script (sample: 1K concepts, 100K assertions)
+2. Measure: rules generated, defeaters, quality
+3. Project to full scale
+4. **Decision**: Proceed with full extraction (Week 8.6) or not?
+
+**Week 8.5b** (3-5 days, parallel): Manual Level 3 (if proof fails)
+- Same as original plan: 35-50 instances manually
+
+**Week 8.6** (1 week, conditional): Full Cross-Ontology Extraction
+- Only if proof succeeds
+- Extract 100K-350K rules
+- Generate 1,000-5,000 Level 3 instances automatically
+- 10-100x scale improvement
+
+**Estimate**: 1 day (proof) + 3-5 days (manual) OR 1 day (proof) + 1 week (auto)
 
 ---
 

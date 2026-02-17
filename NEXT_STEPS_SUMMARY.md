@@ -1,12 +1,13 @@
-# Next Steps: Executive Summary
+# Next Steps: Executive Summary (UPDATED)
 
-**Date**: February 13, 2026  
+**Date**: February 13, 2026 (REVISED for cross-ontology opportunity)  
 **Current Status**: Week 8 Complete (Evaluation Infrastructure)  
-**Critical Next Step**: Week 8.5 - Level 3 Instance Generation
+**Critical Next Step**: Day 8.5a - Cross-Ontology Proof-of-Concept (1 day)  
+**Major Opportunity**: 10-100x scale expansion identified!
 
 ---
 
-## The Situation
+## The Situation (UPDATED)
 
 ### What We Have ✅
 
@@ -15,12 +16,12 @@
 - ✅ Complete evaluation pipeline
 - ✅ All metrics implemented (novelty, conservativity, revision distance)
 
-**Dataset** (374 instances):
+**Dataset** (374 instances from 2,318 rules):
 - ✅ 114 biology instances (Level 2)
 - ✅ 168 legal instances (Level 2)
 - ✅ 92 materials instances (Level 2)
 
-### The Problem ❌
+### Problem 1: Three Objectives Gap ❌
 
 **Paper claims** (title): "Grounding, Novelty, and Belief Revision"
 
@@ -29,17 +30,59 @@
 - ❌ Novelty: 0% coverage (need Level 3)
 - ❌ Belief Revision: 0% coverage (need Level 3)
 
-**Gap**: Cannot claim to test all three objectives without Level 3 instances
+**Solution**: Generate Level 3 instances (manual or automated)
+
+### Problem 2: Scale Underutilization ❌
+
+**Paper claims**: "Cyc's million-axiom ontology... remain underutilized" (line 217)
+
+**Current reality**:
+- Using only 2,318 rules (we ARE underutilizing!)
+- OpenCyc (300K concepts) available but unused
+- ConceptNet (21M assertions) available but unused
+
+**Opportunity**: 10-100x scale via cross-ontology extraction!
 
 ---
 
-## The Solution
+## The Solution (REVISED)
 
-### Add Week 8.5: Level 3 Instance Generation
+### Two-Phase Approach
 
-**Timeline**: 3-5 days  
-**Goal**: Generate 35-50 defeater abduction instances  
-**Impact**: Enables testing of all three objectives
+### Phase 1: Day 8.5a - Cross-Ontology Proof (1 day) ← DO FIRST!
+
+**Goal**: Validate 10-100x scale potential
+
+**Method**: Combine OpenCyc taxonomy + ConceptNet properties
+- OpenCyc: 300,000 concepts (canonical taxonomy)
+- ConceptNet: 21,000,000 assertions (behavioral properties)
+- Generate defeasible rules via property inheritance
+
+**Expected**: 5,000-15,000 rules from sample → projects to 50,000-150,000 full
+
+**Bonus**: ConceptNet NotCapableOf = automatic defeaters for Level 3!
+
+**Timeline**: 4-8 hours  
+**Risk**: Very low (just validation)
+
+**Decision point**:
+- ✅ If >= 10x scale → Proceed to Week 8.6 (full extraction)
+- ❌ If < 10x scale → Fallback to manual Level 3
+
+### Phase 2A: Week 8.6 - Full Extraction (1 week) ← IF PROOF SUCCEEDS
+
+**Goal**: Generate 100K-350K rules, 1,000-5,000 Level 3 instances
+
+**Impact**: 
+- 10-100x benchmark scale
+- Automatic Level 3 generation
+- Actually leverages legacy KBs
+
+### Phase 2B: Week 8.5b - Manual Level 3 (3-5 days) ← IF PROOF FAILS
+
+**Goal**: Generate 35-50 defeater instances manually (original plan)
+
+**Impact**: Enables testing three objectives (smaller scale)
 
 ### What to Build
 

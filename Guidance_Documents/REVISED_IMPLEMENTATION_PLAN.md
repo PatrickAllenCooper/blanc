@@ -77,11 +77,22 @@ Week 13-14: HPC Production + Submission         (2 weeks)
 
 ---
 
-## Week 8.5: Level 3 Instance Generation (NEW)
+## Week 8.5: Cross-Ontology Extraction + Level 3 (REVISED)
 
-**Duration**: 3-5 days  
-**Priority**: CRITICAL for paper claims  
-**Goal**: Generate 20-50 Level 3 (defeater abduction) instances
+**Duration**: 4-9 days total (phased approach)  
+**Priority**: CRITICAL for scale AND paper claims  
+**Goal**: 
+  1. Validate 10-100x scale via cross-ontology extraction (1 day)
+  2. Generate Level 3 instances (manual OR automated based on #1)
+
+### Why This Changed
+
+**User insight**: OpenCyc (300K concepts) + ConceptNet (21M assertions) can 10-100x our ruleset!
+
+**Current**: 2,318 rules → 374 instances  
+**Potential**: 100K-350K rules → 16K-56K instances
+
+**Bonus**: ConceptNet NotCapableOf relations = automatic defeaters for Level 3!
 
 ### Why This is Essential
 
@@ -94,7 +105,98 @@ Without Level 3 instances:
 - Cannot claim to address "all three objectives"
 - Paper title is not supported by experiments
 
-### Phase 1: Biology Defeaters (Day 1-2, 1-2 days)
+### Phase 1: Cross-Ontology Proof-of-Concept (Day 8.5a, 1 day) ← NEW!
+
+**Goal**: Validate we can 10-100x our ruleset
+
+**Critical Decision Point**: Determines whether to pursue large-scale extraction
+
+**Tasks**:
+
+**Morning** (2-4 hours):
+```bash
+# Run validation script
+python scripts/validate_cross_ontology_scale.py
+
+# Tests:
+#   1. Load 1K OpenCyc concepts (sample)
+#   2. Load 100K ConceptNet assertions (sample)
+#   3. Combine to generate rules
+#   4. Measure: rules, defeaters, quality
+#   5. Project to full scale
+```
+
+**Afternoon** (2-4 hours):
+```bash
+# Method comparison
+python scripts/method_comparison_experiments.py
+
+# Compares 5 approaches:
+#   1. Cross-ontology (OpenCyc + ConceptNet)
+#   2. Property templates
+#   3. Closed world assumption
+#   4. YAGO full extraction
+#   5. ConceptNet standalone
+
+# Output: Best method + recommendation
+```
+
+**Decision Criteria**:
+- ✅ If >= 5x scale → PROCEED to Week 8.6 (full extraction)
+- ❌ If < 5x scale → SKIP to manual Level 3 generation
+
+**Deliverable**: Go/No-Go decision with data
+
+---
+
+### Phase 2A: Full Cross-Ontology Extraction (Week 8.6, 1 week) ← CONDITIONAL
+
+**Only if**: Proof-of-concept achieves >= 5x scale
+
+**Goal**: Generate 100K-350K rules from OpenCyc + ConceptNet
+
+**Day 1-2**: Enhance extractors
+- Modify `opencyc_extractor.py` for full taxonomy extraction
+- Modify `conceptnet_extractor.py` for all behavioral relations
+- Create `cross_ontology.py` for combination logic
+
+**Day 3-4**: Biology extraction
+- Extract 50K concepts from OpenCyc
+- Extract 500K bio assertions from ConceptNet
+- Generate 100K-200K defeasible rules
+- Validate on sample
+
+**Day 5**: Legal + Materials
+- Legal: 10K concepts, 50K assertions → 10K-50K rules
+- Materials: 30K concepts, 100K assertions → 50K-100K rules
+
+**Day 6**: Automatic Level 3 Generation
+- Extract all defeaters (NotCapableOf relations)
+- Generate Level 3 instances automatically
+- **Yield**: 1,000-5,000 defeater instances!
+
+**Day 7**: Validation
+- Quality check (sample 100 rules)
+- Test instance generation
+- Run all tests
+- Documentation
+
+**Deliverable**: 
+- 100K-350K rules
+- 1,000-5,000 Level 3 instances (automatic!)
+- 10,000-50,000 Level 2 instances
+
+---
+
+### Phase 2B: Manual Level 3 (3-5 days) ← FALLBACK
+
+**Only if**: Cross-ontology proof fails
+
+**This is the original plan**: Manual defeater generation
+
+**Goal**: 35-50 Level 3 instances
+
+### Phase 1 (ORIGINAL): Biology Defeaters (Day 1-2, 1-2 days)
 
 **Goal**: 15-20 biology instances with defeater abduction
 

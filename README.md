@@ -15,9 +15,10 @@ Expert-curated knowledge bases for evaluating foundation models on grounded abdu
 **Tests**: 343 passing ✅  
 **Coverage**: 80% ✅
 
-**Current**: Starting Week 8.5 - Level 3 instance generation (critical)  
-**Why Critical**: Tests novelty & belief revision (currently 0% coverage)  
-**See**: [OBJECTIVE_ACCOUNTING.md](OBJECTIVE_ACCOUNTING.md) for gap analysis
+**Current**: Week 8.5a - Cross-ontology scale validation (1 day)  
+**Major Opportunity**: 10-100x scale via OpenCyc + ConceptNet  
+**Then**: Level 3 generation (manual or automated based on validation)  
+**See**: [SCALE_OPPORTUNITY.md](SCALE_OPPORTUNITY.md) and [CROSS_ONTOLOGY_PLAN.md](Guidance_Documents/CROSS_ONTOLOGY_PLAN.md)
 
 ---
 
