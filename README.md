@@ -17,8 +17,7 @@ Expert-curated knowledge bases for evaluating foundation models on grounded abdu
 
 **Current**: Week 8.5a - Cross-ontology scale validation (1 day)  
 **Major Opportunity**: 10-100x scale via OpenCyc + ConceptNet  
-**Then**: Level 3 generation (manual or automated based on validation)  
-**See**: [SCALE_OPPORTUNITY.md](SCALE_OPPORTUNITY.md) and [CROSS_ONTOLOGY_PLAN.md](Guidance_Documents/CROSS_ONTOLOGY_PLAN.md)
+**See**: [Guidance_Documents/CURRENT_STATUS_AND_PLAN.md](Guidance_Documents/CURRENT_STATUS_AND_PLAN.md)
 
 ---
 
@@ -69,25 +68,21 @@ python experiments/run_pilot_evaluation.py
 
 ## Documentation
 
-### Essential Reading (Start Here)
-1. **[NEXT_STEPS_SUMMARY.md](NEXT_STEPS_SUMMARY.md)** - What to do next (Week 8.5)
-2. **[INTUITIVE_GUIDE.md](INTUITIVE_GUIDE.md)** - Explains the benchmark to non-experts
-3. **[OBJECTIVE_ACCOUNTING.md](OBJECTIVE_ACCOUNTING.md)** - Gap analysis (why Level 3 is critical)
-4. **[PI_REPORT_2026-02-13.md](PI_REPORT_2026-02-13.md)** - Current status report
+### Start Here
+- **[Guidance_Documents/CURRENT_STATUS_AND_PLAN.md](Guidance_Documents/CURRENT_STATUS_AND_PLAN.md)** - ⭐ Current status and next steps
+- **[Guidance_Documents/INTUITIVE_GUIDE.md](Guidance_Documents/INTUITIVE_GUIDE.md)** - What BLANC tests (with examples)
 
-### Implementation & Planning
-- **[REVISED_IMPLEMENTATION_PLAN.md](Guidance_Documents/REVISED_IMPLEMENTATION_PLAN.md)** - ⭐ Current plan (Weeks 8.5-14)
-- **[STATUS.md](Guidance_Documents/STATUS.md)** - Progress tracker
-- **[CONTINUE_DEVELOPMENT.md](Guidance_Documents/CONTINUE_DEVELOPMENT.md)** - Development handoff
+### Implementation
+- **[Guidance_Documents/REVISED_IMPLEMENTATION_PLAN.md](Guidance_Documents/REVISED_IMPLEMENTATION_PLAN.md)** - Complete roadmap (Weeks 8.5-14)
+- **[Guidance_Documents/CROSS_ONTOLOGY_PLAN.md](Guidance_Documents/CROSS_ONTOLOGY_PLAN.md)** - 10-100x scale expansion plan
+- **[Guidance_Documents/CONTINUE_DEVELOPMENT.md](Guidance_Documents/CONTINUE_DEVELOPMENT.md)** - Development procedures
 
-### Policies & Standards
-- **[KNOWLEDGE_BASE_POLICY.md](Guidance_Documents/KNOWLEDGE_BASE_POLICY.md)** - Expert-only policy (CRITICAL)
+### Policies
+- **[Guidance_Documents/KNOWLEDGE_BASE_POLICY.md](Guidance_Documents/KNOWLEDGE_BASE_POLICY.md)** - Expert-only KB policy (mandatory)
 
-### Complete Index
-- **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Navigation to all docs
-
-### Historical (Archived)
-- `docs/` - Completed weeks, audits, session reports
+### Archives
+- `docs/session_reports/` - Session summaries and PI reports
+- `docs/completed_weeks/` - Weekly completion reports
 
 ---
 
@@ -175,9 +170,6 @@ MIT
 - Dataset coverage: Grounding (100%), Novelty (0%), Belief Revision (0%)
 - Solution: Add Level 3 instances
 
-**See detailed plan**: [REVISED_IMPLEMENTATION_PLAN.md](Guidance_Documents/REVISED_IMPLEMENTATION_PLAN.md)
-
 ---
 
-**For continuing development**: See `Guidance_Documents/Continue_Development.md`  
-**For Week 8 details**: See `Guidance_Documents/Week8_Complete.md`
+**All details**: See [Guidance_Documents/CURRENT_STATUS_AND_PLAN.md](Guidance_Documents/CURRENT_STATUS_AND_PLAN.md)
