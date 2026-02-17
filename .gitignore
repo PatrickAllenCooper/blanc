@@ -62,8 +62,11 @@ dmypy.json
 *.tmp
 *.bak
 *.orig
-.coverage
+.coverage*
+htmlcov/
 data/
+cache/
+*.json
 
 # Week 8: Evaluation infrastructure
 .env
