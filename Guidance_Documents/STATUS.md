@@ -32,18 +32,25 @@
 
 ---
 
-## Next Week (Week 8)
+## Next: Week 8.5 (CRITICAL)
 
-**Goal**: LLM Evaluation Infrastructure
+**Goal**: Level 3 Instance Generation - Test Novelty & Belief Revision
+
+**Why Critical**:
+- Paper claims to test "Grounding, Novelty, and Belief Revision"
+- Current dataset: 100% Level 2 (grounding only)
+- Need Level 3 (defeater abduction) to test novelty & belief revision
+- See OBJECTIVE_ACCOUNTING.md and REVISED_IMPLEMENTATION_PLAN.md
 
 **Tasks**:
-1. Model interfaces (GPT-4o, Claude 3.5, Gemini 1.5, Llama 3)
-2. API integration (OpenAI, Anthropic, Google)
-3. Prompting infrastructure (direct + CoT)
-4. Batch evaluation pipeline
-5. Response caching
+1. Generate 35-50 Level 3 (defeater abduction) instances
+2. Biology defeaters: 15-20 instances (penguin-style exceptions)
+3. Legal defeaters: 10-15 instances (statutory exceptions)
+4. Materials defeaters: 10-15 instances (property exceptions)
+5. Validate conservativity for all instances
+6. Ensure some instances have Nov > 0 (novel predicates)
 
-**Estimate**: 5-7 days (20-30 hours)
+**Estimate**: 3-5 days (concentrated work)
 
 ---
 
