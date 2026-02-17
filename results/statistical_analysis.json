@@ -11,7 +11,7 @@
     },
     "chi_square": {
       "statistic": 24.534759358288767,
-      "p_value": 4.702672098786821e-06,
+      "p_value": 4.7026720987868226e-06,
       "balanced": false
     },
     "contingency_table": {
