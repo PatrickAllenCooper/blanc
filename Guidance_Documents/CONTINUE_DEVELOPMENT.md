@@ -1,20 +1,30 @@
 # Continue Development: Handoff Document
 
-**Date**: 2026-02-13  
+**Date**: 2026-02-13 (UPDATED)  
 **Current Status**: Week 8 Complete (Evaluation Infrastructure Done)  
-**Next**: Pilot Evaluation → Week 9 Full Evaluation  
+**Critical Next**: Week 8.5 - Level 3 Instance Generation (3-5 days)  
+**Why Critical**: Paper claims all 3 objectives, dataset only tests 1  
 **For**: Future development sessions
+
+**⚠️ IMPORTANT**: Read [OBJECTIVE_ACCOUNTING.md](../OBJECTIVE_ACCOUNTING.md) first to understand the gap
 
 ---
 
 ## Quick Status
 
-**Progress**: 8 of 14 weeks complete (57%) ✅  
+**Progress**: 8 of 14.5 weeks complete (55%) ✅  
 **Tests**: 343 passing, 0 failures ✅  
 **Coverage**: 80% ✅  
-**Blockers**: NONE (just need API keys) ✅
+**Blockers**: Level 3 instances needed (critical for paper claims) ⚠️
 
-**Ready to**: Run pilot evaluation → Week 9 full evaluation
+**Must do next**: Generate Level 3 (defeater abduction) instances  
+**Then**: Run pilot evaluation → Week 9 full evaluation
+
+**THE GAP**:
+- Paper title: "Grounding, Novelty, and Belief Revision"
+- Current dataset: Tests grounding only (0% novelty, 0% belief revision)
+- Solution: Week 8.5 (3-5 days) to generate Level 3 instances
+- See: [OBJECTIVE_ACCOUNTING.md](../OBJECTIVE_ACCOUNTING.md)
 
 ---
 
@@ -182,7 +192,168 @@ python -m pytest tests/ --cov=src/blanc --cov-report=term | Select-String "TOTAL
 
 ---
 
-## Immediate Next Steps (Week 8)
+## Critical: Week 8.5 First (NEW - 3-5 days)
+
+**Before Week 9 pilot, we MUST generate Level 3 instances**
+
+### Why This is Essential
+
+From paper.tex (line 192):
+> "Level 3 (defeater abduction) asks models to construct novel exception rules satisfying the conservativity constraint, performing rational belief revision in the defeasible setting."
+
+**Current state**:
+- 374 instances (100% Level 2 - rule abduction)
+- Tests: Grounding ✅
+- Tests: Novelty ❌ (0% coverage)
+- Tests: Belief Revision ❌ (0% coverage)
+
+**Paper claims**: All three objectives  
+**Dataset delivers**: One objective
+
+**Solution**: Generate 35-50 Level 3 instances
+
+### Week 8.5 Breakdown
+
+**Day 1-2: Biology Defeaters** (15-20 instances)
+```python
+# Examples to create:
+- Penguin: "~flies(X) :- penguin(X)"  # Classic exception
+- Ostrich: "~flies(X) :- ostrich(X)"
+- Whale: "~walks(X) :- whale(X)"
+- Bat: "flies(X) :- bat(X)" + superiority over mammal rule
+- Dolphin: "~walks(X) :- dolphin(X)"
+
+# For each:
+1. Define anomaly (what theory predicts but is false)
+2. Create defeater rule
+3. Validate conservativity (preserves other expectations)
+4. Compute Nov(r, D) and d_rev
+5. Generate 5 distractors
+```
+
+**Day 3: Legal Defeaters** (10-15 instances)
+```python
+# Examples:
+- Emancipated minors: "can_sign_contract(X) :- emancipated_minor(X)"
+- Jurisdictional exceptions
+- Statute of limitations
+- Good faith exceptions
+- Qualified immunity
+
+# Some with novel predicates → Nov > 0
+```
+
+**Day 4: Materials Defeaters** (10-15 instances)
+```python
+# Examples:
+- Metallic glass: "~brittle(X) :- amorphous_metal(X)"
+- Shape-memory alloys: "recovers_shape(X) :- shape_memory_alloy(X)"
+- Graphene: transparency exception
+- Aerogels: density exception
+- Superconductors: resistance exception
+
+# Target Nov > 0 for several instances
+```
+
+**Day 5: Validation & Testing**
+```bash
+# Checklist:
+- [ ] All instances validate conservativity
+- [ ] Compute Nov(gold, D) for each
+- [ ] Compute d_rev for each
+- [ ] Generate distractors (5 per instance)
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+- [ ] Documentation complete
+```
+
+### Implementation Checklist
+
+**Setup**:
+- [ ] Review `scripts/generate_level3_instances.py` (3 working examples)
+- [ ] Review `author.py` lines 594-667 (conservativity, novelty, revision distance)
+- [ ] Create `instances/biology_level3_instances.json`
+- [ ] Create `instances/legal_level3_instances.json`
+- [ ] Create `instances/materials_level3_instances.json`
+
+**For Each Instance**:
+```python
+# Template
+instance = {
+    'level': 3,
+    'domain': 'biology',  # or legal, materials
+    'anomaly': 'flies(penguin)',  # What theory predicts wrongly
+    'challenge_theory': D_minus,  # Theory without defeater
+    'gold_resolution': {
+        'rule': "~flies(X) :- penguin(X)",
+        'superiority': [],  # If needed
+        'Nov': 0.0,  # Compute with predicate_novelty()
+        'd_rev': 1,  # Compute with revision_distance()
+        'conservative': True  # Verify with is_conservative_resolution()
+    },
+    'candidates': [
+        # 1 gold + 5 distractors
+    ],
+    'metadata': {
+        'exception_type': 'weak_blocking',  # or strong, restructuring
+        'source': 'textbook_biology',
+        'validation_date': '2026-02-13'
+    }
+}
+```
+
+**Validation**:
+```python
+# For each instance, verify:
+from blanc.author import is_conservative_resolution, predicate_novelty, revision_distance
+
+# 1. Anomaly is defeasible
+assert defeasible_provable(D_minus, negate(anomaly))
+assert not strictly_provable(D_minus, negate(anomaly))
+
+# 2. Gold resolves anomaly
+D_with_gold = D_minus.copy()
+D_with_gold.add_rule(gold_rule)
+assert not defeasible_provable(D_with_gold, negate(anomaly))
+
+# 3. Gold is conservative
+expectations = compute_expectations(D_minus)
+assert is_conservative_resolution(D_minus, {gold_rule}, anomaly, expectations)
+
+# 4. Metrics correct
+assert predicate_novelty(gold_rule, D_minus) == instance['gold_resolution']['Nov']
+assert revision_distance(D_minus, D_with_gold) == instance['gold_resolution']['d_rev']
+```
+
+### Success Criteria
+
+**Minimum (20-30 instances)**:
+- [ ] 10 biology, 10 legal, 10 materials
+- [ ] All validated for conservativity
+- [ ] At least 5 with Nov > 0
+- [ ] Ready for pilot
+
+**Target (35-50 instances)**:
+- [ ] 15-20 biology, 10-15 legal, 10-15 materials
+- [ ] 10-15 with Nov > 0
+- [ ] Mix of weak/strong/restructuring
+- [ ] Statistical power for analysis
+
+### Resources
+
+**Code**:
+- `scripts/generate_level3_instances.py` - Working examples
+- `src/blanc/author/` - Generation framework
+- `experiments/evaluation_pipeline.py` - Ready for Level 3
+
+**Documentation**:
+- [REVISED_IMPLEMENTATION_PLAN.md](REVISED_IMPLEMENTATION_PLAN.md) - Week 8.5 details
+- [OBJECTIVE_ACCOUNTING.md](../OBJECTIVE_ACCOUNTING.md) - Why this matters
+- [NEXT_STEPS_SUMMARY.md](../NEXT_STEPS_SUMMARY.md) - Executive summary
+
+---
+
+## Then: Week 9 Pilot (Original Plan)
 
 ### Day 1: OpenAI API Integration (6-8 hours)
 

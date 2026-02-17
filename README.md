@@ -10,12 +10,14 @@ Expert-curated knowledge bases for evaluating foundation models on grounded abdu
 
 ## Status
 
-**Progress**: Week 8 of 14 complete (57%) ✅  
-**Phase**: Evaluation infrastructure complete, ready for pilot  
+**Progress**: Week 8 of 14.5 complete (55%) ✅  
+**Phase**: Evaluation infrastructure complete  
 **Tests**: 343 passing ✅  
 **Coverage**: 80% ✅
 
-**Next**: Pilot evaluation (needs API keys) → Week 9 full evaluation
+**Current**: Starting Week 8.5 - Level 3 instance generation (critical)  
+**Why Critical**: Tests novelty & belief revision (currently 0% coverage)  
+**See**: [OBJECTIVE_ACCOUNTING.md](OBJECTIVE_ACCOUNTING.md) for gap analysis
 
 ---
 
@@ -66,17 +68,25 @@ python experiments/run_pilot_evaluation.py
 
 ## Documentation
 
-**Essential**:
-- `README.md` - This file
-- `Guidance_Documents/` - All planning and status docs
-  - `Continue_Development.md` - Handoff for next session
-  - `STATUS.md` - Current progress
-  - `Knowledge_Base_Policy.md` - Expert-only policy (CRITICAL)
-  - `Week8_Complete.md` - Latest work (evaluation infrastructure)
-  - Phase summaries and implementation plans
+### Essential Reading (Start Here)
+1. **[NEXT_STEPS_SUMMARY.md](NEXT_STEPS_SUMMARY.md)** - What to do next (Week 8.5)
+2. **[INTUITIVE_GUIDE.md](INTUITIVE_GUIDE.md)** - Explains the benchmark to non-experts
+3. **[OBJECTIVE_ACCOUNTING.md](OBJECTIVE_ACCOUNTING.md)** - Gap analysis (why Level 3 is critical)
+4. **[PI_REPORT_2026-02-13.md](PI_REPORT_2026-02-13.md)** - Current status report
 
-**Reference**:
-- `docs/` - Historical documentation (archived)
+### Implementation & Planning
+- **[REVISED_IMPLEMENTATION_PLAN.md](Guidance_Documents/REVISED_IMPLEMENTATION_PLAN.md)** - ⭐ Current plan (Weeks 8.5-14)
+- **[STATUS.md](Guidance_Documents/STATUS.md)** - Progress tracker
+- **[CONTINUE_DEVELOPMENT.md](Guidance_Documents/CONTINUE_DEVELOPMENT.md)** - Development handoff
+
+### Policies & Standards
+- **[KNOWLEDGE_BASE_POLICY.md](Guidance_Documents/KNOWLEDGE_BASE_POLICY.md)** - Expert-only policy (CRITICAL)
+
+### Complete Index
+- **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** - Navigation to all docs
+
+### Historical (Archived)
+- `docs/` - Completed weeks, audits, session reports
 
 ---
 
@@ -106,22 +116,27 @@ hpc/                # HPC infrastructure (Weeks 13-14)
 ## Progress
 
 **Complete** (Weeks 1-8):
-- Expert KBs (2,318 rules from 4 institutions)
-- Complete codec (M1-M4 encoders, D1-D3 decoders)
-- Statistical analysis framework (Section 4.3)
-- Validation (75% round-trip, 3 of 4 modalities perfect)
-- **LLM evaluation infrastructure** (5 models, prompting, caching, pipeline)
-- 343 tests, 80% coverage
+- ✅ Expert KBs (2,318 rules from 4 peer-reviewed institutions)
+- ✅ Development dataset (374 Level 2 instances - grounding)
+- ✅ Complete codec (M1-M4 encoders, D1-D3 decoders, 75% validation)
+- ✅ Statistical analysis (Section 4.3 complete)
+- ✅ LLM evaluation infrastructure (5 models, 2 strategies, 4 modalities, caching)
+- ✅ All metrics implemented (novelty, conservativity, revision distance)
+- ✅ 343 tests passing, 80% coverage
 
-**Current** (Week 8):
-- Pilot evaluation ready (awaiting API keys)
+**Current** (Week 8.5 - CRITICAL):
+- ⏳ Level 3 instance generation (3-5 days)
+- Why: Tests novelty & belief revision (currently 0% dataset coverage)
+- Goal: 35-50 defeater abduction instances
+- See: [OBJECTIVE_ACCOUNTING.md](OBJECTIVE_ACCOUNTING.md)
 
-**Remaining** (Weeks 9-14):
-- Full LLM evaluation (2 weeks)
-- Advanced analyses (2 weeks)
-- HPC production + submission (2 weeks)
+**Remaining** (Weeks 9-14.5):
+- Week 9: Pilot evaluation (all 3 levels)
+- Week 10: Full evaluation (grounding + novelty + belief revision)
+- Week 11-12: Advanced analyses
+- Week 13-14: HPC production + NeurIPS submission
 
-**Timeline**: ON TRACK for NeurIPS submission
+**Timeline**: ON TRACK (added 3-5 days for Level 3)
 
 ---
 
@@ -140,16 +155,26 @@ MIT
 
 ---
 
-## Week 8: Evaluation Infrastructure (Current)
+## Current Focus: Level 3 Instance Generation
 
-Built complete infrastructure for evaluating foundation models:
-- Model interfaces: GPT-4o, Claude 3.5, Gemini 1.5, Llama 3
-- Prompting: Direct + Chain-of-Thought for all modalities
-- Caching: Persistent response storage
-- Pipeline: End-to-end evaluation with progress tracking
-- Testing: 50 new tests, all passing
+### Week 8: Evaluation Infrastructure ✅ COMPLETE
+- 5 model interfaces (GPT-4o, Claude 3.5, Gemini 1.5, Llama 3)
+- Complete prompting (Direct + CoT for all 4 modalities)
+- Response caching and evaluation pipeline
+- 50 new tests, all passing
 
-**Ready for pilot**: Just need API keys
+### Week 8.5: Level 3 Instances ⏳ IN PROGRESS (Critical)
+**What**: Generate defeater abduction instances  
+**Why**: Test novelty and belief revision (paper's core claims)  
+**Goal**: 35-50 instances across 3 domains  
+**Timeline**: 3-5 days
+
+**Current gap**: 
+- Paper claims: "Grounding, Novelty, and Belief Revision"
+- Dataset coverage: Grounding (100%), Novelty (0%), Belief Revision (0%)
+- Solution: Add Level 3 instances
+
+**See detailed plan**: [REVISED_IMPLEMENTATION_PLAN.md](Guidance_Documents/REVISED_IMPLEMENTATION_PLAN.md)
 
 ---
 
