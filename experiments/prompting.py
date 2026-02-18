@@ -46,14 +46,12 @@ Your task: Select or generate the hypothesis that, when added to the theory, ena
 Output only the hypothesis that restores derivability. Do not include explanations or additional text."""
 
 
-COT_PROMPT_TEMPLATE = """You are an expert in logical reasoning and abductive inference. Think step-by-step.
+COT_PROMPT_TEMPLATE = """You are an expert in defeasible logical reasoning and abductive inference. Think step-by-step.
 
 You will be given:
 1. A theory (knowledge base) with some elements removed
-2. A target query that should be derivable
+2. A target query that should be derivable from the complete theory
 3. A set of candidate hypotheses
-
-Analyze this carefully:
 
 {theory_section}
 
@@ -61,13 +59,15 @@ Analyze this carefully:
 
 {candidates_section}
 
-Think through this step-by-step:
-1. What does the target query require to be derivable?
-2. What is currently missing or blocked in the theory?
-3. Which candidate hypothesis fills this gap?
-4. Why does this candidate enable the derivation?
+Reason through this in three steps:
 
-After your analysis, provide your final answer:
+Step 1 - Identify support and attackers: Which rules in the theory could derive the target query (or its negation)? Trace which rule(s) would support the target and which, if any, would block or attack it.
+
+Step 2 - Identify the gap: What element is missing or what is blocking derivation of the target? Is a required rule absent, or is a defeater suppressing the conclusion without justification?
+
+Step 3 - Select the hypothesis: Which candidate, when added to the theory, restores derivability of the target while leaving all other conclusions intact?
+
+After your analysis, output only the selected hypothesis on the final line:
 FINAL ANSWER: [the hypothesis that restores derivability]"""
 
 

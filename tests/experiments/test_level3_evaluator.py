@@ -19,6 +19,15 @@ from level3_evaluator import (
     parse_rule_from_text,
     _deep_copy_theory,
     _add_rule_with_superiority,
+    EC_CORRECT,
+    EC_DECODER_FAILURE,
+    EC_DERIVATION_FAILURE,
+    EC_MINIMALITY_VIOLATION,
+    EC_CONSERVATIVITY_VIOLATION,
+    EC_STRENGTH_SHORTFALL,
+    SCORE_FULL,
+    SCORE_PARTIAL,
+    SCORE_NONE,
 )
 
 
@@ -113,7 +122,8 @@ class TestLevel3Evaluator:
         assert result.parse_success is True
         assert result.resolves_anomaly is True
         assert result.is_conservative is True
-        assert result.error_class == "E1_correct"
+        assert result.error_class == EC_CORRECT
+        assert result.graded_score == SCORE_FULL
 
     def test_non_conservative_too_broad(self, evaluator, penguin_instance):
         broad = "d_broad: bird(X) ~> ~flies(X)"
@@ -121,21 +131,24 @@ class TestLevel3Evaluator:
         assert result.correct is False
         assert result.resolves_anomaly is True
         assert result.is_conservative is False
-        assert result.error_class == "E2_non_conservative"
+        assert result.error_class == EC_CONSERVATIVITY_VIOLATION  # E4 in paper taxonomy
+        assert result.graded_score == SCORE_PARTIAL               # 0.5
 
     def test_wrong_head_no_resolve(self, evaluator, penguin_instance):
         wrong = "d_wrong: penguin(X) ~> ~has_feathers(X)"
         result = evaluator.evaluate(penguin_instance, wrong, wrong)
         assert result.correct is False
         assert result.resolves_anomaly is False
-        assert result.error_class == "E3_no_resolve"
+        assert result.error_class == EC_DERIVATION_FAILURE         # E2 in paper taxonomy
+        assert result.graded_score == SCORE_NONE
 
     def test_parse_failure(self, evaluator, penguin_instance):
         prose = "Penguins are flightless birds so they cannot fly."
         result = evaluator.evaluate(penguin_instance, prose, None)
         assert result.correct is False
         assert result.parse_success is False
-        assert result.error_class == "E4_parse_failure"
+        assert result.error_class == EC_DECODER_FAILURE            # E1 in paper taxonomy
+        assert result.graded_score == SCORE_NONE
 
     def test_novelty_zero_for_existing_predicate(self, evaluator, penguin_instance):
         gold = "d_penguin: penguin(X) ~> ~flies(X)"
@@ -148,9 +161,29 @@ class TestLevel3Evaluator:
         gold = "d_penguin: penguin(X) ~> ~flies(X)"
         result = evaluator.evaluate(penguin_instance, gold, gold)
         d = result.to_dict()
-        for key in ("instance_id", "correct", "parse_success",
-                    "resolves_anomaly", "is_conservative", "nov", "d_rev", "error_class"):
+        for key in ("instance_id", "correct", "parse_success", "resolves_anomaly",
+                    "is_conservative", "nov", "d_rev", "error_class",
+                    "graded_score", "resolution_strength", "is_minimal"):
             assert key in d
+
+    def test_graded_score_correct_is_full(self, evaluator, penguin_instance):
+        gold = "d_penguin: penguin(X) ~> ~flies(X)"
+        result = evaluator.evaluate(penguin_instance, gold, gold)
+        assert result.graded_score == SCORE_FULL
+
+    def test_graded_score_parse_failure_is_zero(self, evaluator, penguin_instance):
+        result = evaluator.evaluate(penguin_instance, "nonsense text here", None)
+        assert result.graded_score == SCORE_NONE
+
+    def test_resolution_strength_present_for_valid_response(self, evaluator, penguin_instance):
+        gold = "d_penguin: penguin(X) ~> ~flies(X)"
+        result = evaluator.evaluate(penguin_instance, gold, gold)
+        assert result.resolution_strength is not None
+
+    def test_is_minimal_present_for_valid_response(self, evaluator, penguin_instance):
+        gold = "d_penguin: penguin(X) ~> ~flies(X)"
+        result = evaluator.evaluate(penguin_instance, gold, gold)
+        assert result.is_minimal is not None
 
 
 # ---------------------------------------------------------------------------

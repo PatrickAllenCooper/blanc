@@ -54,7 +54,10 @@ class EvaluationMetrics:
     conservativity: Optional[bool] = None     # is_conservative
     resolves_anomaly: Optional[bool] = None   # predicted rule resolves the anomaly
     revision_distance: Optional[int] = None   # d_rev
-    error_class: Optional[str] = None         # E1-E5 taxonomy
+    graded_score: Optional[float] = None      # 0 / 0.25 / 0.5 / 0.75 / 1.0 (Section 4.6)
+    resolution_strength: Optional[str] = None # weak / strong / restructuring
+    is_minimal: Optional[bool] = None         # no proper sub-hypothesis also resolves
+    error_class: Optional[str] = None         # E1-E5 taxonomy (Section 4.8)
     parse_success: Optional[bool] = None      # rule parse succeeded
     
     # Metadata
@@ -322,6 +325,9 @@ class EvaluationPipeline:
             conservativity=l3_result.is_conservative if l3_result else None,
             resolves_anomaly=l3_result.resolves_anomaly if l3_result else None,
             revision_distance=l3_result.d_rev if l3_result else None,
+            graded_score=l3_result.graded_score if l3_result else None,
+            resolution_strength=l3_result.resolution_strength if l3_result else None,
+            is_minimal=l3_result.is_minimal if l3_result else None,
             error_class=l3_result.error_class if l3_result else None,
             parse_success=l3_result.parse_success if l3_result else None,
         )

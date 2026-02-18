@@ -25,12 +25,18 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "experiments"))
 
 ERROR_LABELS = {
-    "E1_correct":               "E1 Correct",
-    "E2_non_conservative":      "E2 Non-conservative (too broad)",
-    "E3_no_resolve":            "E3 Does not resolve anomaly",
-    "E4_parse_failure":         "E4 Parse failure",
-    "E5_wrong_but_conservative":"E5 Wrong but conservative",
-    "unknown":                  "Unknown",
+    # Paper Section 4.8 taxonomy (all codes are errors; 'correct' = no error)
+    "correct":                      "Correct",
+    "E1_decoder_failure":           "E1 Decoder failure (unparseable output)",
+    "E2_derivation_failure":        "E2 Derivation failure (anomaly persists)",
+    "E3_minimality_violation":      "E3 Minimality violation (over-specified)",
+    "E4_conservativity_violation":  "E4 Conservativity violation (breaks expectations)",
+    "E5_strength_shortfall":        "E5 Strength shortfall (weaker than gold)",
+    # Level 2 simplified codes
+    "E1_correct":                   "Correct (Level 2)",
+    "E3_no_resolve":                "E2/E3 Does not restore derivability (Level 2)",
+    "E4_parse_failure":             "E1 Decoder failure (Level 2)",
+    "unknown":                      "Unknown",
 }
 
 
@@ -40,15 +46,21 @@ def _is_level3(ev: dict) -> bool:
 
 
 def _classify_level2(ev: dict) -> str:
-    """Simplified error classification for Level 2 (no formal metrics available)."""
+    """
+    Simplified error classification for Level 2 (no formal metrics available).
+
+    Uses paper E1-E5 labels:
+      E1_decoder_failure  -- decoder completely failed (FAILED stage)
+      E2_derivation_failure -- decoded hypothesis does not restore derivability
+      correct             -- correct response
+    """
     m = ev.get("metrics", {})
     if m.get("correct", False):
-        return "E1_correct"
+        return "correct"
     stage = m.get("decoder_stage", "FAILED")
     if stage == "FAILED":
-        return "E4_parse_failure"
-    # Decoded something but wrong
-    return "E3_no_resolve"
+        return "E1_decoder_failure"
+    return "E2_derivation_failure"
 
 
 def build_error_taxonomy(evaluations: list[dict]) -> dict:

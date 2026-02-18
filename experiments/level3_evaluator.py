@@ -4,14 +4,19 @@ Level 3 (Defeater Abduction) Response Evaluator.
 For each model response on a Level 3 instance this module:
   1. Parses the free-form response text into a Rule object.
   2. Checks whether the predicted defeater resolves the anomaly.
-  3. Checks conservativity (Definition 13, paper.tex).
-  4. Computes predicate novelty Nov(h, D^-) (Definition 14).
-  5. Computes revision distance d_rev (Definition 15).
-
-Parsing is intentionally lenient: the pipeline extracts the first
-candidate-like structure from the response, trying the same sequence of
-normalisation steps as the D1→D2 cascade so that the richer metrics are
-available even when the decoded hypothesis came from a fallback stage.
+  3. Classifies resolution strength (weak / strong / restructuring).
+  4. Checks conservativity (Definition 13, paper.tex).
+  5. Checks minimality (no proper sub-hypothesis also resolves the anomaly).
+  6. Computes predicate novelty Nov(h, D^-) (Definition 14).
+  7. Computes revision distance d_rev (Definition 15).
+  8. Computes the graded partial credit score Score(h, D, alpha) in {0, 0.25, 0.5, 0.75, 1.0}
+     (Section 4.6, paper.tex).
+  9. Assigns error class E1-E5 matching the paper's taxonomy (Section 4.8):
+       E1  Decoder failure         -- response cannot be parsed
+       E2  Derivation failure      -- decoded rule does not restore derivability
+       E3  Minimality violation    -- correct but non-minimal (proper sub-hypothesis works)
+       E4  Conservativity violation-- resolves anomaly but breaks other expectations
+       E5  Strength shortfall      -- conservative but weaker strength than gold
 
 Author: Patrick Cooper
 Date: 2026-02-18
@@ -19,9 +24,10 @@ Date: 2026-02-18
 
 from __future__ import annotations
 
+import copy
 import re
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
@@ -39,6 +45,31 @@ from blanc.reasoning.defeasible import defeasible_provable
 
 
 # ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+# Resolution strength values
+STRENGTH_WEAK         = "weak"
+STRENGTH_STRONG       = "strong"
+STRENGTH_RESTRUCTURING = "restructuring"
+
+# Partial credit tiers (Section 4.6)
+SCORE_NONE        = 0.00   # decoder failure or anomaly unresolved
+SCORE_MINIMAL     = 0.25   # resolves but not well-formed under language bias
+SCORE_PARTIAL     = 0.50   # resolves, well-formed, but non-conservative
+SCORE_SUBSTANTIAL = 0.75   # conservative weak resolution, or non-conservative strong
+SCORE_FULL        = 1.00   # conservative resolution (any strength)
+
+# Error class labels matching paper Section 4.8 exactly
+EC_DECODER_FAILURE      = "E1_decoder_failure"
+EC_DERIVATION_FAILURE   = "E2_derivation_failure"
+EC_MINIMALITY_VIOLATION = "E3_minimality_violation"
+EC_CONSERVATIVITY_VIOLATION = "E4_conservativity_violation"
+EC_STRENGTH_SHORTFALL   = "E5_strength_shortfall"
+EC_CORRECT              = "correct"  # not an error class; kept for bookkeeping
+
+
+# ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
 
@@ -48,23 +79,28 @@ class Level3EvalResult:
 
     instance_id: str
     raw_response: str
-    decoded_hypothesis: Optional[str]  # string form of the candidate picked by decoder
+    decoded_hypothesis: Optional[str]
 
     # Parsed rule (None if parsing fails)
     parsed_rule: Optional[Rule]
     parse_success: bool
 
-    # Formal metrics (all None if parse fails)
+    # Formal metrics
     resolves_anomaly: Optional[bool] = None
+    resolution_strength: Optional[str] = None   # weak / strong / restructuring
+    is_minimal: Optional[bool] = None           # no proper sub-hypothesis also resolves
     is_conservative: Optional[bool] = None
-    nov: Optional[float] = None            # Nov(predicted, D^-)
-    d_rev: Optional[int] = None            # revision distance
+    nov: Optional[float] = None                 # Nov(predicted, D^-)
+    d_rev: Optional[int] = None
+
+    # Scoring
+    graded_score: float = 0.0                   # 0 / 0.25 / 0.5 / 0.75 / 1.0
 
     # Gold comparison
-    correct: bool = False                  # exact match to any gold string
+    correct: bool = False
 
-    # Error classification
-    error_class: Optional[str] = None      # E1-E5 (see error_taxonomy.py)
+    # Error classification (paper Section 4.8)
+    error_class: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
@@ -77,9 +113,12 @@ class Level3EvalResult:
             "parsed_rule_body": list(self.parsed_rule.body) if self.parsed_rule else None,
             "parsed_rule_type": self.parsed_rule.rule_type.value if self.parsed_rule else None,
             "resolves_anomaly": self.resolves_anomaly,
+            "resolution_strength": self.resolution_strength,
+            "is_minimal": self.is_minimal,
             "is_conservative": self.is_conservative,
             "nov": self.nov,
             "d_rev": self.d_rev,
+            "graded_score": self.graded_score,
             "correct": self.correct,
             "error_class": self.error_class,
         }
@@ -89,19 +128,11 @@ class Level3EvalResult:
 # Rule parser
 # ---------------------------------------------------------------------------
 
-# Regex patterns for formal rule syntax variants.
-# We support:
-#   label: body1(X), body2(X) ~> ~head(X)      (M4 defeater with label)
-#   body1(X) ~> ~head(X)                         (M4 defeater without label)
-#   label: body1(X), body2(X) => head(X)        (defeasible)
-#   ~head(X) :- body1(X), body2(X). % defeater  (Prolog-style)
-#   head(X) :- body1(X). % defeasible
-
 _TILDE_ARROW_RE = re.compile(
-    r"(?:(?P<label>[a-zA-Z_][a-zA-Z0-9_]*):\s*)?"   # optional label
-    r"(?P<body>[^~>]+?)"                              # body literals
-    r"\s*~>\s*"                                       # defeater arrow
-    r"(?P<head>~?[a-zA-Z_][a-zA-Z0-9_(),._ X]*)",   # head literal
+    r"(?:(?P<label>[a-zA-Z_][a-zA-Z0-9_]*):\s*)?"
+    r"(?P<body>[^~>]+?)"
+    r"\s*~>\s*"
+    r"(?P<head>~?[a-zA-Z_][a-zA-Z0-9_(),._ X]*)",
     re.IGNORECASE,
 )
 
@@ -126,11 +157,10 @@ def parse_rule_from_text(text: str) -> Optional[Rule]:
     """
     Best-effort parse of a rule string into a Rule object.
 
-    Tries four patterns in order:
-      1. Tilde-arrow defeater:   body ~> head
-      2. Fat-arrow defeasible:   body => head
-      3. Prolog-style:           head :- body. % type
-      4. Atom-only (no body):    head  (strict fact)
+    Tries patterns in order:
+      1. Tilde-arrow defeater   body ~> head
+      2. Fat-arrow defeasible   body => head
+      3. Prolog-style           head :- body. % type
 
     Returns None if no pattern matches.
     """
@@ -138,217 +168,39 @@ def parse_rule_from_text(text: str) -> Optional[Rule]:
     if not text:
         return None
 
-    # --- Pattern 1: defeater with ~> ---
     m = _TILDE_ARROW_RE.search(text)
     if m:
-        return _build_rule(
-            label=m.group("label"),
-            head_str=m.group("head").strip(),
-            body_str=m.group("body").strip(),
-            rule_type=RuleType.DEFEATER,
-        )
+        return _build_rule(m.group("label"), m.group("head").strip(),
+                           m.group("body").strip(), RuleType.DEFEATER)
 
-    # --- Pattern 2: defeasible with => ---
     m = _FAT_ARROW_RE.search(text)
     if m:
-        return _build_rule(
-            label=m.group("label"),
-            head_str=m.group("head").strip(),
-            body_str=m.group("body").strip(),
-            rule_type=RuleType.DEFEASIBLE,
-        )
+        return _build_rule(m.group("label"), m.group("head").strip(),
+                           m.group("body").strip(), RuleType.DEFEASIBLE)
 
-    # --- Pattern 3: Prolog-style head :- body. % type ---
     m = _PROLOG_RE.search(text)
     if m:
         type_str = m.group("type").lower()
-        rule_type = (
-            RuleType.DEFEATER if type_str == "defeater"
-            else RuleType.DEFEASIBLE if type_str == "defeasible"
-            else RuleType.STRICT
-        )
-        return _build_rule(
-            label=None,
-            head_str=m.group("head").strip(),
-            body_str=m.group("body").strip(),
-            rule_type=rule_type,
-        )
+        rt = (RuleType.DEFEATER if type_str == "defeater"
+              else RuleType.DEFEASIBLE if type_str == "defeasible"
+              else RuleType.STRICT)
+        return _build_rule(None, m.group("head").strip(),
+                           m.group("body").strip(), rt)
 
     return None
 
 
-def _build_rule(
-    label: Optional[str],
-    head_str: str,
-    body_str: str,
-    rule_type: RuleType,
-) -> Optional[Rule]:
-    """Construct a Rule from parsed components; return None on failure."""
+def _build_rule(label, head_str, body_str, rule_type) -> Optional[Rule]:
     head_str = head_str.strip().rstrip(".")
     if not head_str:
         return None
-
-    # Split body on comma, filter empty
-    body_atoms = tuple(
-        b.strip().rstrip(".")
-        for b in body_str.split(",")
-        if b.strip()
-    )
-
+    body_atoms = tuple(b.strip().rstrip(".") for b in body_str.split(",") if b.strip())
     return Rule(head=head_str, body=body_atoms, rule_type=rule_type, label=label)
 
 
 # ---------------------------------------------------------------------------
-# Core evaluator
+# Theory utilities
 # ---------------------------------------------------------------------------
-
-class Level3Evaluator:
-    """
-    Evaluate a model's Level 3 response against a DeFAb instance.
-
-    Usage::
-
-        evaluator = Level3Evaluator()
-        result = evaluator.evaluate(instance, response_text, decoded_hypothesis)
-    """
-
-    def evaluate(
-        self,
-        instance: AbductiveInstance,
-        response_text: str,
-        decoded_hypothesis: Optional[str],
-    ) -> Level3EvalResult:
-        """
-        Evaluate one Level 3 (instance, response) pair.
-
-        Args:
-            instance:           The AbductiveInstance (level must be 3).
-            response_text:      Raw text returned by the model.
-            decoded_hypothesis: The candidate string selected by the decoder
-                                cascade (may be None if all stages failed).
-
-        Returns:
-            Level3EvalResult with all metrics populated.
-        """
-        instance_id = getattr(instance, "id", "unknown")
-
-        # --- Exact-match correctness (already computed by pipeline; recompute here) ---
-        correct = (
-            decoded_hypothesis is not None
-            and decoded_hypothesis.strip() in [g.strip() for g in instance.gold]
-        )
-
-        # --- Parse text into Rule ---
-        # Prefer the decoded hypothesis (already normalised) over raw response.
-        parse_source = decoded_hypothesis or response_text
-        parsed_rule = parse_rule_from_text(parse_source)
-        parse_success = parsed_rule is not None
-
-        if not parse_success:
-            return Level3EvalResult(
-                instance_id=instance_id,
-                raw_response=response_text,
-                decoded_hypothesis=decoded_hypothesis,
-                parsed_rule=None,
-                parse_success=False,
-                correct=correct,
-                error_class="E4_parse_failure",
-            )
-
-        # --- Resolve anomaly? ---
-        D_minus = instance.D_minus
-        anomaly = instance.target
-        preserved = instance.metadata.get("preserved_expectations", [])
-
-        try:
-            D_predicted = _add_rule_with_superiority(D_minus, parsed_rule, anomaly)
-            resolves = not defeasible_provable(D_predicted, anomaly)
-        except Exception:
-            resolves = None
-
-        # --- Conservativity ---
-        if resolves and preserved:
-            try:
-                conservative, _ = check_conservativity(
-                    _deep_copy_theory(D_minus), D_predicted, anomaly, preserved
-                )
-            except Exception:
-                conservative = None
-        else:
-            conservative = None if resolves is None else False
-
-        # --- Novelty ---
-        try:
-            nov = predicate_novelty(parsed_rule, D_minus)
-        except Exception:
-            nov = None
-
-        # --- Revision distance ---
-        if resolves and preserved:
-            try:
-                d_rev = revision_distance(D_minus, D_predicted, anomaly, preserved)
-            except Exception:
-                d_rev = None
-        else:
-            d_rev = None
-
-        # --- Error classification ---
-        error_class = _classify_error(
-            correct=correct,
-            resolves=resolves,
-            conservative=conservative,
-        )
-
-        return Level3EvalResult(
-            instance_id=instance_id,
-            raw_response=response_text,
-            decoded_hypothesis=decoded_hypothesis,
-            parsed_rule=parsed_rule,
-            parse_success=True,
-            resolves_anomaly=resolves,
-            is_conservative=conservative,
-            nov=nov,
-            d_rev=d_rev,
-            correct=correct,
-            error_class=error_class,
-        )
-
-
-def _add_rule_with_superiority(D: Theory, rule: Rule, anomaly: str) -> Theory:
-    """
-    Return a copy of D with `rule` added, with the rule made superior to any
-    defeasible rule in D that could derive the anomaly.
-
-    This is the evaluation-lenient interpretation: the model's defeater is
-    assumed to beat whichever existing rules conflict with it, so the formal
-    check is whether the *structure* of the rule is right, not whether the
-    model also stated the superiority relation explicitly.
-    """
-    D2 = _deep_copy_theory(D)
-    D2.add_rule(rule)
-
-    if rule.rule_type != RuleType.DEFEATER:
-        return D2
-
-    anomaly_pred = anomaly.split("(")[0].lstrip("~")
-    defeater_head_pred = rule.head.split("(")[0].lstrip("~")
-
-    label = rule.label or "d_predicted"
-    # Assign a label to the rule if it doesn't have one so superiority works
-    if not rule.label:
-        for r in D2.rules:
-            if r.head == rule.head and r.body == rule.body:
-                r.label = label  # type: ignore[attr-defined]
-
-    for existing in D.rules:
-        if existing.rule_type == RuleType.DEFEASIBLE and existing.label:
-            existing_head_pred = existing.head.split("(")[0].lstrip("~")
-            if (existing_head_pred == defeater_head_pred
-                    or existing_head_pred == anomaly_pred):
-                D2.add_superiority(label, existing.label)
-
-    return D2
-
 
 def _deep_copy_theory(D: Theory) -> Theory:
     """Deep-copy a Theory, always normalizing superiority to a dict."""
@@ -361,7 +213,6 @@ def _deep_copy_theory(D: Theory) -> Theory:
             rule_type=r.rule_type, label=r.label,
             metadata=dict(r.metadata) if r.metadata else {},
         ))
-    # Normalize superiority to dict regardless of source type
     if isinstance(D.superiority, dict):
         for sup, infs in D.superiority.items():
             for inf in infs:
@@ -373,44 +224,343 @@ def _deep_copy_theory(D: Theory) -> Theory:
     return D2
 
 
-def _classify_error(
-    correct: bool,
+def _add_rule_with_superiority(D: Theory, rule: Rule, anomaly: str) -> Theory:
+    """
+    Return a copy of D with `rule` added and made superior to any defeasible rule
+    in D whose head predicate matches the anomaly or the defeater's head predicate.
+
+    Evaluation-lenient: we grant the predicted defeater superiority over conflicting
+    rules so the formal check evaluates structural correctness, not explicit
+    superiority declarations (which the model was not asked to produce).
+    """
+    D2 = _deep_copy_theory(D)
+    D2.add_rule(rule)
+
+    if rule.rule_type != RuleType.DEFEATER:
+        return D2
+
+    anomaly_pred = anomaly.split("(")[0].lstrip("~")
+    defeater_head_pred = rule.head.split("(")[0].lstrip("~")
+    label = rule.label or "d_predicted"
+
+    if not rule.label:
+        for r in D2.rules:
+            if r.head == rule.head and tuple(r.body) == tuple(rule.body):
+                r.label = label  # type: ignore[attr-defined]
+
+    for existing in D.rules:
+        if existing.rule_type == RuleType.DEFEASIBLE and existing.label:
+            ep = existing.head.split("(")[0].lstrip("~")
+            if ep == defeater_head_pred or ep == anomaly_pred:
+                D2.add_superiority(label, existing.label)
+
+    return D2
+
+
+# ---------------------------------------------------------------------------
+# Resolution strength (Definition def:resstrength, paper.tex)
+# ---------------------------------------------------------------------------
+
+def classify_resolution_strength(
+    D_minus: Theory,
+    D_predicted: Theory,
+    anomaly: str,
+    rule: Rule,
+) -> str:
+    """
+    Classify rule as weak / strong / restructuring per Definition def:resstrength.
+
+    Let D' = D_predicted (= D^- ∪ {rule} ∪ superiority).
+
+      - Restructuring: D' derives alpha AND preserves all q in Exp(D^-) \ {~alpha}
+      - Strong: rule is a defeater with non-empty superiority AND D' derives alpha
+      - Weak: D' does not derive ~alpha but also doesn't derive alpha
+
+    We test D' ⊢∂ alpha (positive derivation of the anomaly itself) to distinguish
+    strong/restructuring from weak.
+    """
+    try:
+        derives_anomaly_positive = defeasible_provable(D_predicted, anomaly)
+    except Exception:
+        return STRENGTH_WEAK
+
+    if not derives_anomaly_positive:
+        return STRENGTH_WEAK
+
+    # Now check whether it's restructuring (derives alpha AND all preserved expectations hold)
+    preserved = []
+    # We check against the anomaly literal -- for restructuring D' must derive alpha itself
+    # (same as strong, but we require conservative preservation is already checked separately)
+    has_superiority = (
+        rule.label is not None
+        and isinstance(D_predicted.superiority, dict)
+        and rule.label in D_predicted.superiority
+        and len(D_predicted.superiority[rule.label]) > 0
+    )
+
+    if has_superiority:
+        # Potentially strong or restructuring; conservativity test (done in evaluate()) tells us
+        # restructuring requires ALL expectations preserved -- we flag as restructuring if
+        # is_conservative is True (already computed by caller).
+        # We return STRONG here; the caller upgrades to RESTRUCTURING if also conservative.
+        return STRENGTH_STRONG
+
+    return STRENGTH_WEAK
+
+
+# ---------------------------------------------------------------------------
+# Minimality check (paper Section 4.8, error E3)
+# ---------------------------------------------------------------------------
+
+def is_minimal_hypothesis(
+    D_minus: Theory,
+    rule: Rule,
+    anomaly: str,
+) -> bool:
+    """
+    Return True if no proper sub-hypothesis (strict subset of body atoms) also
+    resolves the anomaly.
+
+    A non-minimal rule over-specifies: it has redundant antecedent atoms.
+    """
+    body = list(rule.body)
+    if len(body) <= 1:
+        return True  # single-atom body is necessarily minimal
+
+    for i in range(len(body)):
+        # Try removing body atom i
+        sub_body = tuple(b for j, b in enumerate(body) if j != i)
+        sub_rule = Rule(
+            head=rule.head,
+            body=sub_body,
+            rule_type=rule.rule_type,
+            label=rule.label,
+        )
+        try:
+            D_sub = _add_rule_with_superiority(D_minus, sub_rule, anomaly)
+            if not defeasible_provable(D_sub, anomaly):
+                return False  # sub-hypothesis also resolves → not minimal
+        except Exception:
+            continue
+
+    return True
+
+
+# ---------------------------------------------------------------------------
+# Partial credit scoring (Section 4.6, paper.tex)
+# ---------------------------------------------------------------------------
+
+def partial_credit_score(
     resolves: Optional[bool],
-    conservative: Optional[bool],
-) -> Optional[str]:
+    is_well_formed: bool,
+    is_conservative: Optional[bool],
+    resolution_strength: Optional[str],
+) -> float:
     """
-    Classify why the prediction is wrong (if it is).
+    Compute Score(h, D, alpha) in {0, 0.25, 0.5, 0.75, 1.0} per Section 4.6.
 
-    Error classes (from paper Section 5):
-      E1 - Correct (no error)
-      E2 - Resolves anomaly but non-conservative (too broad)
-      E3 - Does not resolve anomaly (wrong head/condition)
-      E4 - Parse failure (response is unparseable)
-      E5 - Wrong but conservative (odd distractor picked)
+    (i)   0.00 -- decoder failure or anomaly unresolved
+    (ii)  0.25 -- resolves but not well-formed under language bias
+    (iii) 0.50 -- resolves + well-formed + non-conservative
+    (iv)  0.75 -- conservative weak, OR non-conservative strong
+    (v)   1.00 -- conservative (any strength)
     """
-    if correct:
-        return "E1_correct"
-    if resolves is None:
-        return "E4_parse_failure"
-    if resolves and conservative is False:
-        return "E2_non_conservative"
     if not resolves:
-        return "E3_no_resolve"
-    if resolves and conservative:
-        return "E5_wrong_but_conservative"
-    return "E5_wrong_but_conservative"
+        return SCORE_NONE
+    if not is_well_formed:
+        return SCORE_MINIMAL
+    if is_conservative is True:
+        return SCORE_FULL
+    # Not conservative
+    if resolution_strength in (STRENGTH_STRONG, STRENGTH_RESTRUCTURING):
+        return SCORE_SUBSTANTIAL  # non-conservative strong = 0.75
+    return SCORE_PARTIAL  # non-conservative weak = 0.5
 
 
 # ---------------------------------------------------------------------------
-# Batch helper
+# Error classification (paper Section 4.8 taxonomy exactly)
 # ---------------------------------------------------------------------------
+
+def classify_error(
+    parse_success: bool,
+    resolves: Optional[bool],
+    is_minimal: Optional[bool],
+    is_conservative: Optional[bool],
+    resolution_strength: Optional[str],
+    gold_strength: Optional[str],
+) -> str:
+    """
+    Assign error class E1-E5 per paper Section 4.8.
+
+      E1  Decoder failure           -- parse_success is False
+      E2  Derivation failure        -- parsed but anomaly persists
+      E3  Minimality violation      -- resolves but non-minimal body
+      E4  Conservativity violation  -- resolves, minimal, but non-conservative
+      E5  Strength shortfall        -- conservative but weaker than gold
+      (correct if none apply)
+    """
+    if not parse_success:
+        return EC_DECODER_FAILURE
+    if not resolves:
+        return EC_DERIVATION_FAILURE
+    if is_minimal is False:
+        return EC_MINIMALITY_VIOLATION
+    if is_conservative is False:
+        return EC_CONSERVATIVITY_VIOLATION
+    if (gold_strength in (STRENGTH_STRONG, STRENGTH_RESTRUCTURING)
+            and resolution_strength == STRENGTH_WEAK):
+        return EC_STRENGTH_SHORTFALL
+    return EC_CORRECT
+
+
+# ---------------------------------------------------------------------------
+# Core evaluator
+# ---------------------------------------------------------------------------
+
+class Level3Evaluator:
+    """Evaluate a model's Level 3 response against a DeFAb instance."""
+
+    def evaluate(
+        self,
+        instance: AbductiveInstance,
+        response_text: str,
+        decoded_hypothesis: Optional[str],
+    ) -> Level3EvalResult:
+        instance_id = getattr(instance, "id", "unknown")
+
+        correct = (
+            decoded_hypothesis is not None
+            and decoded_hypothesis.strip() in [g.strip() for g in instance.gold]
+        )
+
+        # --- Parse ---
+        parse_source = decoded_hypothesis or response_text
+        parsed_rule = parse_rule_from_text(parse_source)
+        parse_success = parsed_rule is not None
+
+        if not parse_success:
+            return Level3EvalResult(
+                instance_id=instance_id,
+                raw_response=response_text,
+                decoded_hypothesis=decoded_hypothesis,
+                parsed_rule=None,
+                parse_success=False,
+                graded_score=SCORE_NONE,
+                correct=correct,
+                error_class=EC_DECODER_FAILURE,
+            )
+
+        D_minus = instance.D_minus
+        anomaly = instance.target
+        preserved = instance.metadata.get("preserved_expectations", [])
+        gold_str = (instance.gold[0] if isinstance(instance.gold, list) else instance.gold) or ""
+        gold_rule = parse_rule_from_text(gold_str)
+        gold_strength = (
+            classify_resolution_strength(D_minus, _add_rule_with_superiority(D_minus, gold_rule, anomaly), anomaly, gold_rule)
+            if gold_rule else None
+        )
+
+        # --- Resolve anomaly ---
+        try:
+            D_predicted = _add_rule_with_superiority(D_minus, parsed_rule, anomaly)
+            resolves = not defeasible_provable(D_predicted, anomaly)
+        except Exception:
+            resolves = None
+
+        # --- Resolution strength ---
+        strength = None
+        if resolves:
+            try:
+                strength = classify_resolution_strength(D_minus, D_predicted, anomaly, parsed_rule)
+            except Exception:
+                strength = STRENGTH_WEAK
+
+        # --- Conservativity ---
+        conservative = None
+        if resolves and preserved:
+            try:
+                conservative, _ = check_conservativity(
+                    _deep_copy_theory(D_minus), D_predicted, anomaly, preserved
+                )
+                # Upgrade strength to restructuring if conservative + derives anomaly positively
+                if conservative and strength == STRENGTH_STRONG:
+                    try:
+                        if defeasible_provable(D_predicted, anomaly):
+                            strength = STRENGTH_RESTRUCTURING
+                    except Exception:
+                        pass
+            except Exception:
+                conservative = None
+        elif resolves is not None:
+            conservative = None if resolves is None else (True if not preserved else None)
+
+        # --- Minimality ---
+        minimal = None
+        if resolves:
+            try:
+                minimal = is_minimal_hypothesis(D_minus, parsed_rule, anomaly)
+            except Exception:
+                minimal = None
+
+        # --- Novelty ---
+        try:
+            nov = predicate_novelty(parsed_rule, D_minus)
+        except Exception:
+            nov = None
+
+        # --- Revision distance ---
+        d_rev = None
+        if resolves and preserved:
+            try:
+                d_rev = revision_distance(D_minus, D_predicted, anomaly, preserved)
+            except Exception:
+                pass
+
+        # --- Well-formed check (language bias) ---
+        # A rule is well-formed if it parsed successfully and its head/body atoms
+        # are syntactically valid. We treat parse_success as sufficient for this.
+        is_well_formed = parse_success
+
+        # --- Graded score ---
+        score = partial_credit_score(resolves, is_well_formed, conservative, strength)
+
+        # --- Error class ---
+        error_class = classify_error(
+            parse_success=parse_success,
+            resolves=resolves,
+            is_minimal=minimal,
+            is_conservative=conservative,
+            resolution_strength=strength,
+            gold_strength=gold_strength,
+        )
+
+        # Reconcile correct: exact match OR (resolves + conservative)
+        if resolves and conservative:
+            correct = True
+
+        return Level3EvalResult(
+            instance_id=instance_id,
+            raw_response=response_text,
+            decoded_hypothesis=decoded_hypothesis,
+            parsed_rule=parsed_rule,
+            parse_success=parse_success,
+            resolves_anomaly=resolves,
+            resolution_strength=strength,
+            is_minimal=minimal,
+            is_conservative=conservative,
+            nov=nov,
+            d_rev=d_rev,
+            graded_score=score,
+            correct=correct,
+            error_class=error_class,
+        )
+
 
 def evaluate_level3_batch(
-    instances: list[AbductiveInstance],
+    instances: list,
     responses: list[str],
-    decoded_hypotheses: list[Optional[str]],
+    decoded_hypotheses: list,
 ) -> list[Level3EvalResult]:
-    """Evaluate a batch of Level 3 responses."""
     evaluator = Level3Evaluator()
     return [
         evaluator.evaluate(inst, resp, dec)
@@ -423,48 +573,49 @@ def evaluate_level3_batch(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    import sys
-
-    sys.path.insert(0, str(ROOT / "src"))
-    from blanc.core.theory import Theory, Rule, RuleType
-    from blanc.author.generation import AbductiveInstance
-
-    # Build a minimal penguin-style Level 3 instance
     r1 = Rule(head="flies(X)", body=("bird(X)",), rule_type=RuleType.DEFEASIBLE, label="r_flies")
     r2 = Rule(head="has_feathers(X)", body=("bird(X)",), rule_type=RuleType.DEFEASIBLE, label="r_feathers")
-    D = Theory(facts=["bird(opus)", "bird(tweety)", "penguin(opus)"], rules=[r1, r2], superiority=[])
+    D = Theory(facts=["bird(opus)", "bird(tweety)", "penguin(opus)"], rules=[r1, r2], superiority={})
 
+    from blanc.author.generation import AbductiveInstance
     inst = AbductiveInstance(
-        D_minus=D,
-        target="flies(opus)",
-        candidates=[
-            "d_penguin: penguin(X) ~> ~flies(X)",
-            "d_broad: bird(X) ~> ~flies(X)",
-        ],
+        D_minus=D, target="flies(opus)",
+        candidates=["d_penguin: penguin(X) ~> ~flies(X)", "d_broad: bird(X) ~> ~flies(X)"],
         gold=["d_penguin: penguin(X) ~> ~flies(X)"],
         level=3,
         metadata={"preserved_expectations": ["flies(tweety)", "has_feathers(tweety)"]},
     )
     inst.id = "test-penguin"
-
     ev = Level3Evaluator()
 
-    print("Test 1: correct gold response")
+    print("Test 1: correct gold")
     r = ev.evaluate(inst, "d_penguin: penguin(X) ~> ~flies(X)", "d_penguin: penguin(X) ~> ~flies(X)")
-    print(f"  correct={r.correct}, resolves={r.resolves_anomaly}, "
-          f"conservative={r.is_conservative}, nov={r.nov}, error={r.error_class}")
+    assert r.correct, f"Expected correct, got error={r.error_class}"
+    assert r.graded_score == SCORE_FULL, f"Expected 1.0, got {r.graded_score}"
+    assert r.error_class == EC_CORRECT, r.error_class
+    print(f"  PASS  score={r.graded_score}  error={r.error_class}")
 
-    print("\nTest 2: too-broad defeater (non-conservative)")
-    r2 = ev.evaluate(inst, "d_broad: bird(X) ~> ~flies(X)", "d_broad: bird(X) ~> ~flies(X)")
-    print(f"  correct={r2.correct}, resolves={r2.resolves_anomaly}, "
-          f"conservative={r2.is_conservative}, nov={r2.nov}, error={r2.error_class}")
+    print("Test 2: too-broad defeater (E4 conservativity violation)")
+    r2_ = ev.evaluate(inst, "d_broad: bird(X) ~> ~flies(X)", "d_broad: bird(X) ~> ~flies(X)")
+    assert not r2_.correct
+    assert r2_.resolves_anomaly
+    assert r2_.is_conservative is False
+    assert r2_.error_class == EC_CONSERVATIVITY_VIOLATION, r2_.error_class
+    assert r2_.graded_score == SCORE_PARTIAL, r2_.graded_score
+    print(f"  PASS  score={r2_.graded_score}  error={r2_.error_class}")
 
-    print("\nTest 3: unparseable response")
-    r3 = ev.evaluate(inst, "Penguins cannot fly because they are flightless birds.", None)
-    print(f"  correct={r3.correct}, parse_success={r3.parse_success}, error={r3.error_class}")
+    print("Test 3: unparseable (E1 decoder failure)")
+    r3 = ev.evaluate(inst, "Penguins cannot fly.", None)
+    assert not r3.correct
+    assert r3.error_class == EC_DECODER_FAILURE, r3.error_class
+    assert r3.graded_score == SCORE_NONE
+    print(f"  PASS  score={r3.graded_score}  error={r3.error_class}")
 
-    print("\nTest 4: wrong head (does not resolve)")
+    print("Test 4: wrong head (E2 derivation failure)")
     r4 = ev.evaluate(inst, "d_wrong: penguin(X) ~> ~has_feathers(X)", "d_wrong: penguin(X) ~> ~has_feathers(X)")
-    print(f"  correct={r4.correct}, resolves={r4.resolves_anomaly}, error={r4.error_class}")
+    assert not r4.correct
+    assert r4.error_class == EC_DERIVATION_FAILURE, r4.error_class
+    assert r4.graded_score == SCORE_NONE
+    print(f"  PASS  score={r4.graded_score}  error={r4.error_class}")
 
-    print("\nAll Level3Evaluator tests passed.")
+    print("\nAll self-tests passed.")

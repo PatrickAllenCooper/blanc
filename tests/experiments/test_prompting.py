@@ -72,7 +72,7 @@ class TestRenderPrompt:
         
         assert rendered.strategy == 'cot'
         assert "step-by-step" in rendered.prompt.lower()
-        assert "analyze" in rendered.prompt.lower()
+        assert "step 1" in rendered.prompt.lower() or "final answer" in rendered.prompt.lower()
     
     def test_render_m2_direct(self, simple_instance):
         """Test rendering M2 semi-formal."""

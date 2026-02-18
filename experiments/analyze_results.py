@@ -116,6 +116,123 @@ def decoder_distribution(evaluations: list[dict]) -> dict:
     return dict(counts)
 
 
+def rendering_robust_accuracy(evaluations: list[dict]) -> dict:
+    """
+    Compute rendering-robust accuracy (Definition def:robustacc, paper.tex):
+        Acc_robust(M) = (1/N) sum_i min_j Pr_M[h in H*_i | rho^(j)_enc(I_i)]
+
+    In practice (with one run per modality): for each (model, instance), take the
+    minimum accuracy across the four modalities and average over instances.
+
+    Returns per-model robust accuracy.
+    """
+    from collections import defaultdict
+
+    # Group evaluations by (model, instance_id, modality)
+    # For each (model, instance_id) we need accuracy per modality.
+    by_model_inst_mod: dict = defaultdict(lambda: defaultdict(dict))
+    for ev in evaluations:
+        model = ev.get("model", "unknown")
+        iid = ev.get("instance_id", "")
+        modality = ev.get("modality", "unknown")
+        correct = int(ev.get("metrics", {}).get("correct", False))
+        by_model_inst_mod[model][iid][modality] = correct
+
+    modalities = {"M1", "M2", "M3", "M4"}
+    result = {}
+    for model, instances in by_model_inst_mod.items():
+        per_instance_min = []
+        for iid, mod_scores in instances.items():
+            available = {m: mod_scores[m] for m in modalities if m in mod_scores}
+            if not available:
+                continue
+            per_instance_min.append(min(available.values()))
+        if per_instance_min:
+            result[model] = {
+                "robust_accuracy": sum(per_instance_min) / len(per_instance_min),
+                "n_instances": len(per_instance_min),
+                "n_modalities_avg": sum(
+                    len(mod_scores) for mod_scores in instances.values()
+                ) / len(instances),
+            }
+    return result
+
+
+def cot_lift(evaluations: list[dict]) -> dict:
+    """
+    Compute delta_CoT = Acc_CoT - Acc_direct per (model, level).
+
+    Requires evaluations with strategy='direct' and strategy='cot'.
+    """
+    from collections import defaultdict
+
+    by_model_level_strategy: dict = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    for ev in evaluations:
+        model = ev.get("model", "unknown")
+        level = _extract(ev, "level")
+        strategy = ev.get("strategy", "direct")
+        correct = int(ev.get("metrics", {}).get("correct", False))
+        by_model_level_strategy[model][level][strategy].append(correct)
+
+    result = {}
+    for model, levels in by_model_level_strategy.items():
+        result[model] = {}
+        for level, strategies in levels.items():
+            direct = strategies.get("direct", [])
+            cot = strategies.get("cot", [])
+            if not direct or not cot:
+                continue
+            acc_direct = sum(direct) / len(direct)
+            acc_cot = sum(cot) / len(cot)
+            result[model][level] = {
+                "acc_direct": acc_direct,
+                "acc_cot": acc_cot,
+                "delta_cot": acc_cot - acc_direct,
+                "n_direct": len(direct),
+                "n_cot": len(cot),
+            }
+    return result
+
+
+def graded_score_summary(evaluations: list[dict]) -> dict:
+    """
+    Aggregate graded partial credit scores (Section 4.6) for Level 3 evaluations.
+
+    Returns mean graded score per model and overall distribution.
+    """
+    from collections import defaultdict
+
+    l3 = [ev for ev in evaluations
+          if ev.get("metrics", {}).get("graded_score") is not None]
+    if not l3:
+        return {}
+
+    by_model: dict = defaultdict(list)
+    for ev in l3:
+        score = ev["metrics"]["graded_score"]
+        model = ev.get("model", "unknown")
+        by_model[model].append(score)
+
+    all_scores = [ev["metrics"]["graded_score"] for ev in l3]
+    distribution: dict = {0.0: 0, 0.25: 0, 0.5: 0, 0.75: 0, 1.0: 0}
+    for s in all_scores:
+        if s in distribution:
+            distribution[s] += 1
+
+    return {
+        "n": len(l3),
+        "mean_graded_score": sum(all_scores) / len(all_scores),
+        "score_distribution": distribution,
+        "by_model": {
+            model: {
+                "mean": sum(scores) / len(scores),
+                "n": len(scores),
+            }
+            for model, scores in by_model.items()
+        },
+    }
+
+
 def level3_metrics_summary(evaluations: list[dict]) -> dict:
     """
     Aggregate Level 3 formal metrics across all evaluations.
@@ -199,6 +316,35 @@ def print_summary(evaluations: list[dict]) -> None:
         print(f"  {stage:<8} {count:>6}  ({count/total:.1%})")
     print()
 
+    # Rendering-robust accuracy (headline metric, Definition robustacc)
+    robust = rendering_robust_accuracy(evaluations)
+    if robust:
+        print("Rendering-Robust Accuracy (worst-case over modalities -- headline metric):")
+        for model, d in sorted(robust.items()):
+            print(f"  {model:<30} {d['robust_accuracy']:.1%}  (n_inst={d['n_instances']}, "
+                  f"avg modalities={d['n_modalities_avg']:.1f})")
+        print()
+
+    # Graded score (Level 3)
+    graded = graded_score_summary(evaluations)
+    if graded:
+        print(f"Level 3 Graded Scores (Section 4.6, n={graded['n']}):")
+        print(f"  Mean graded score: {graded['mean_graded_score']:.3f}")
+        print("  Score distribution:")
+        for score, count in sorted(graded["score_distribution"].items()):
+            print(f"    {score:.2f}: {count:>5}  ({count/graded['n']:.1%})")
+        print()
+
+    # CoT lift
+    cot = cot_lift(evaluations)
+    if cot:
+        print("CoT Lift (delta_CoT = Acc_CoT - Acc_direct):")
+        for model, levels in sorted(cot.items()):
+            for level, d in sorted(levels.items()):
+                print(f"  {model:<30} Level {level}: direct={d['acc_direct']:.1%}  "
+                      f"CoT={d['acc_cot']:.1%}  delta={d['delta_cot']:+.1%}")
+        print()
+
     # Level 3 formal metrics
     l3_summary = level3_metrics_summary(evaluations)
     if l3_summary:
@@ -258,7 +404,10 @@ def main() -> int:
             "by_model_modality": accuracy_by(evaluations, "model", "modality"),
             "by_model_level":    accuracy_by(evaluations, "model", "level"),
             "decoder_distribution": decoder_distribution(evaluations),
-            "level3_metrics":  level3_metrics_summary(evaluations),
+            "rendering_robust_accuracy": rendering_robust_accuracy(evaluations),
+            "cot_lift": cot_lift(evaluations),
+            "graded_score_summary": graded_score_summary(evaluations),
+            "level3_metrics": level3_metrics_summary(evaluations),
         }
         # Convert tuple keys to strings for JSON serialization
         def _fix_keys(d: dict) -> dict:
