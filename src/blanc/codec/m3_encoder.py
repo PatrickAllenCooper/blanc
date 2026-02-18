@@ -8,8 +8,9 @@ Author: Patrick Cooper
 Date: 2026-02-12
 """
 
-from typing import Union
+from typing import Optional, Union
 from blanc.core.theory import Rule, RuleType
+from blanc.utils.predicates import extract_constant, extract_predicate
 from .encoder import PureFormalEncoder
 from .nl_mapping import get_nl_mapping
 
@@ -121,22 +122,6 @@ def generate_fact_comment(fact: str, nl_mapping) -> str:
     return comment
 
 
-def extract_predicate(atom: str) -> str:
-    """Extract predicate from atom."""
-    # atom format: "predicate(args)"
-    if '(' in atom:
-        return atom.split('(')[0]
-    return atom
-
-
-def extract_constant(fact: str) -> str:
-    """Extract constant from ground fact."""
-    # fact format: "predicate(constant)"
-    if '(' in fact and ')' in fact:
-        start = fact.index('(') + 1
-        end = fact.index(')')
-        return fact[start:end]
-    return ""
 
 
 def encode_rule_arrow_notation(rule: Rule) -> str:

@@ -20,6 +20,7 @@ Date: 2026-02-13
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 import time
@@ -27,6 +28,8 @@ import hashlib
 import json
 from pathlib import Path
 from tenacity import retry, stop_after_attempt, wait_exponential
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -283,7 +286,7 @@ class OpenAIInterface(ModelInterface):
             return result
             
         except Exception as e:
-            print(f"OpenAI API error: {e}")
+            logger.warning("OpenAI API error: %s", e)
             raise
     
     @property
@@ -424,7 +427,7 @@ class AzureOpenAIInterface(ModelInterface):
             return result
 
         except Exception as e:
-            print(f"Azure OpenAI API error: {e}")
+            logger.warning("Azure OpenAI API error: %s", e)
             raise
 
     @property
@@ -510,7 +513,7 @@ class AnthropicInterface(ModelInterface):
             return result
             
         except Exception as e:
-            print(f"Anthropic API error: {e}")
+            logger.warning("Anthropic API error: %s", e)
             raise
     
     @property
@@ -608,7 +611,7 @@ class GoogleInterface(ModelInterface):
             return result
             
         except Exception as e:
-            print(f"Google AI API error: {e}")
+            logger.warning("Google AI API error: %s", e)
             raise
     
     @property
@@ -716,9 +719,9 @@ class OllamaInterface(ModelInterface):
             return response_obj
             
         except subprocess.TimeoutExpired:
-            raise RuntimeError(f"Ollama query timed out after 120s")
+            raise RuntimeError("Ollama query timed out after 120s")
         except Exception as e:
-            print(f"Ollama error: {e}")
+            logger.warning("Ollama error: %s", e)
             raise
     
     @property

@@ -8,8 +8,9 @@ Author: Patrick Cooper
 Date: 2026-02-12
 """
 
-from typing import Union
+from typing import Optional, Union
 from blanc.core.theory import Rule, RuleType
+from blanc.utils.predicates import capitalize, extract_constant, extract_predicate
 from .nl_mapping import get_nl_mapping
 
 
@@ -96,29 +97,6 @@ def encode_m1_fact(fact: str, nl_mapping) -> str:
     narrative = f"{constant_cap} {pred_nl}."
     
     return narrative
-
-
-def extract_predicate(atom: str) -> str:
-    """Extract predicate from atom."""
-    if '(' in atom:
-        return atom.split('(')[0]
-    return atom
-
-
-def extract_constant(fact: str) -> str:
-    """Extract constant from ground fact."""
-    if '(' in fact and ')' in fact:
-        start = fact.index('(') + 1
-        end = fact.index(')')
-        return fact[start:end]
-    return ""
-
-
-def capitalize(text: str) -> str:
-    """Capitalize first letter."""
-    if not text:
-        return text
-    return text[0].upper() + text[1:]
 
 
 def pluralize_predicate(predicate_nl: str) -> str:

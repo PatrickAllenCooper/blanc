@@ -202,28 +202,6 @@ def _build_rule(label, head_str, body_str, rule_type) -> Optional[Rule]:
 # Theory utilities
 # ---------------------------------------------------------------------------
 
-def _deep_copy_theory(D: Theory) -> Theory:
-    """Deep-copy a Theory, always normalizing superiority to a dict."""
-    D2 = Theory()
-    for f in D.facts:
-        D2.add_fact(f)
-    for r in D.rules:
-        D2.add_rule(Rule(
-            head=r.head, body=tuple(r.body),
-            rule_type=r.rule_type, label=r.label,
-            metadata=dict(r.metadata) if r.metadata else {},
-        ))
-    if isinstance(D.superiority, dict):
-        for sup, infs in D.superiority.items():
-            for inf in infs:
-                D2.add_superiority(sup, inf)
-    elif isinstance(D.superiority, (list, tuple)):
-        for pair in D.superiority:
-            if isinstance(pair, (list, tuple)) and len(pair) == 2:
-                D2.add_superiority(pair[0], pair[1])
-    return D2
-
-
 def _add_rule_with_superiority(D: Theory, rule: Rule, anomaly: str) -> Theory:
     """
     Return a copy of D with `rule` added and made superior to any defeasible rule
@@ -233,7 +211,7 @@ def _add_rule_with_superiority(D: Theory, rule: Rule, anomaly: str) -> Theory:
     rules so the formal check evaluates structural correctness, not explicit
     superiority declarations (which the model was not asked to produce).
     """
-    D2 = _deep_copy_theory(D)
+    D2 = D.copy()
     D2.add_rule(rule)
 
     if rule.rule_type != RuleType.DEFEATER:
@@ -272,7 +250,7 @@ def classify_resolution_strength(
 
     Let D' = D_predicted (= D^- ∪ {rule} ∪ superiority).
 
-      - Restructuring: D' derives alpha AND preserves all q in Exp(D^-) \ {~alpha}
+      - Restructuring: D' derives alpha AND preserves all q in Exp(D^-) \\ {~alpha}
       - Strong: rule is a defeater with non-empty superiority AND D' derives alpha
       - Weak: D' does not derive ~alpha but also doesn't derive alpha
 
@@ -420,6 +398,132 @@ def classify_error(
 class Level3Evaluator:
     """Evaluate a model's Level 3 response against a DeFAb instance."""
 
+    # ------------------------------------------------------------------
+    # Private helpers — each isolates one analysis step
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _gold_strength(D_minus: Theory, anomaly: str, gold: list) -> Optional[str]:
+        """Return the resolution strength of the gold defeater, or None."""
+        gold_str = (gold[0] if isinstance(gold, list) else gold) or ""
+        gold_rule = parse_rule_from_text(gold_str)
+        if gold_rule is None:
+            return None
+        try:
+            D_gold = _add_rule_with_superiority(D_minus, gold_rule, anomaly)
+            return classify_resolution_strength(D_minus, D_gold, anomaly, gold_rule)
+        except Exception:
+            return None
+
+    @staticmethod
+    def _check_resolves(
+        D_minus: Theory, parsed_rule: Rule, anomaly: str
+    ) -> tuple[Optional[bool], Optional[Theory]]:
+        """
+        Return (resolves, D_predicted).
+
+        resolves is True if the anomaly is no longer defeasibly provable after
+        adding the predicted rule; None on error.
+        """
+        try:
+            D_predicted = _add_rule_with_superiority(D_minus, parsed_rule, anomaly)
+            resolves = not defeasible_provable(D_predicted, anomaly)
+            return resolves, D_predicted
+        except Exception:
+            return None, None
+
+    @staticmethod
+    def _check_strength(
+        D_minus: Theory,
+        D_predicted: Optional[Theory],
+        anomaly: str,
+        parsed_rule: Rule,
+        resolves: Optional[bool],
+    ) -> Optional[str]:
+        if not resolves or D_predicted is None:
+            return None
+        try:
+            return classify_resolution_strength(D_minus, D_predicted, anomaly, parsed_rule)
+        except Exception:
+            return STRENGTH_WEAK
+
+    @staticmethod
+    def _check_conservativity(
+        D_minus: Theory,
+        D_predicted: Optional[Theory],
+        anomaly: str,
+        preserved: list,
+        resolves: Optional[bool],
+        strength: Optional[str],
+    ) -> tuple[Optional[bool], Optional[str]]:
+        """
+        Return (is_conservative, updated_strength).
+
+        Upgrades strength to RESTRUCTURING when the rule is conservative and
+        defeasibly proves the (positive) anomaly literal.
+        """
+        if not resolves or D_predicted is None:
+            updated_strength = strength
+            conservative = None if not preserved else None
+            return conservative, updated_strength
+
+        if preserved:
+            try:
+                conservative, _ = check_conservativity(
+                    D_minus.copy(), D_predicted, anomaly, preserved
+                )
+                updated_strength = strength
+                if conservative and strength == STRENGTH_STRONG:
+                    try:
+                        if defeasible_provable(D_predicted, anomaly):
+                            updated_strength = STRENGTH_RESTRUCTURING
+                    except Exception:
+                        pass
+                return conservative, updated_strength
+            except Exception:
+                return None, strength
+        else:
+            return True, strength
+
+    @staticmethod
+    def _check_minimality(
+        D_minus: Theory, parsed_rule: Rule, anomaly: str, resolves: Optional[bool]
+    ) -> Optional[bool]:
+        if not resolves:
+            return None
+        try:
+            return is_minimal_hypothesis(D_minus, parsed_rule, anomaly)
+        except Exception:
+            return None
+
+    @staticmethod
+    def _compute_metrics(
+        D_minus: Theory,
+        D_predicted: Optional[Theory],
+        parsed_rule: Rule,
+        anomaly: str,
+        preserved: list,
+        resolves: Optional[bool],
+    ) -> tuple[Optional[float], Optional[int]]:
+        """Return (predicate_novelty_score, revision_distance)."""
+        try:
+            nov = predicate_novelty(parsed_rule, D_minus)
+        except Exception:
+            nov = None
+
+        d_rev = None
+        if resolves and preserved and D_predicted is not None:
+            try:
+                d_rev = revision_distance(D_minus, D_predicted, anomaly, preserved)
+            except Exception:
+                pass
+
+        return nov, d_rev
+
+    # ------------------------------------------------------------------
+    # Public interface
+    # ------------------------------------------------------------------
+
     def evaluate(
         self,
         instance: AbductiveInstance,
@@ -433,12 +537,10 @@ class Level3Evaluator:
             and decoded_hypothesis.strip() in [g.strip() for g in instance.gold]
         )
 
-        # --- Parse ---
         parse_source = decoded_hypothesis or response_text
         parsed_rule = parse_rule_from_text(parse_source)
-        parse_success = parsed_rule is not None
 
-        if not parse_success:
+        if parsed_rule is None:
             return Level3EvalResult(
                 instance_id=instance_id,
                 raw_response=response_text,
@@ -450,83 +552,24 @@ class Level3Evaluator:
                 error_class=EC_DECODER_FAILURE,
             )
 
-        D_minus = instance.D_minus
-        anomaly = instance.target
+        D_minus  = instance.D_minus
+        anomaly  = instance.target
         preserved = instance.metadata.get("preserved_expectations", [])
-        gold_str = (instance.gold[0] if isinstance(instance.gold, list) else instance.gold) or ""
-        gold_rule = parse_rule_from_text(gold_str)
-        gold_strength = (
-            classify_resolution_strength(D_minus, _add_rule_with_superiority(D_minus, gold_rule, anomaly), anomaly, gold_rule)
-            if gold_rule else None
+
+        gold_strength = self._gold_strength(D_minus, anomaly, instance.gold)
+        resolves, D_predicted = self._check_resolves(D_minus, parsed_rule, anomaly)
+        strength = self._check_strength(D_minus, D_predicted, anomaly, parsed_rule, resolves)
+        conservative, strength = self._check_conservativity(
+            D_minus, D_predicted, anomaly, preserved, resolves, strength
+        )
+        minimal = self._check_minimality(D_minus, parsed_rule, anomaly, resolves)
+        nov, d_rev = self._compute_metrics(
+            D_minus, D_predicted, parsed_rule, anomaly, preserved, resolves
         )
 
-        # --- Resolve anomaly ---
-        try:
-            D_predicted = _add_rule_with_superiority(D_minus, parsed_rule, anomaly)
-            resolves = not defeasible_provable(D_predicted, anomaly)
-        except Exception:
-            resolves = None
-
-        # --- Resolution strength ---
-        strength = None
-        if resolves:
-            try:
-                strength = classify_resolution_strength(D_minus, D_predicted, anomaly, parsed_rule)
-            except Exception:
-                strength = STRENGTH_WEAK
-
-        # --- Conservativity ---
-        conservative = None
-        if resolves and preserved:
-            try:
-                conservative, _ = check_conservativity(
-                    _deep_copy_theory(D_minus), D_predicted, anomaly, preserved
-                )
-                # Upgrade strength to restructuring if conservative + derives anomaly positively
-                if conservative and strength == STRENGTH_STRONG:
-                    try:
-                        if defeasible_provable(D_predicted, anomaly):
-                            strength = STRENGTH_RESTRUCTURING
-                    except Exception:
-                        pass
-            except Exception:
-                conservative = None
-        elif resolves is not None:
-            conservative = None if resolves is None else (True if not preserved else None)
-
-        # --- Minimality ---
-        minimal = None
-        if resolves:
-            try:
-                minimal = is_minimal_hypothesis(D_minus, parsed_rule, anomaly)
-            except Exception:
-                minimal = None
-
-        # --- Novelty ---
-        try:
-            nov = predicate_novelty(parsed_rule, D_minus)
-        except Exception:
-            nov = None
-
-        # --- Revision distance ---
-        d_rev = None
-        if resolves and preserved:
-            try:
-                d_rev = revision_distance(D_minus, D_predicted, anomaly, preserved)
-            except Exception:
-                pass
-
-        # --- Well-formed check (language bias) ---
-        # A rule is well-formed if it parsed successfully and its head/body atoms
-        # are syntactically valid. We treat parse_success as sufficient for this.
-        is_well_formed = parse_success
-
-        # --- Graded score ---
-        score = partial_credit_score(resolves, is_well_formed, conservative, strength)
-
-        # --- Error class ---
+        score = partial_credit_score(resolves, True, conservative, strength)
         error_class = classify_error(
-            parse_success=parse_success,
+            parse_success=True,
             resolves=resolves,
             is_minimal=minimal,
             is_conservative=conservative,
@@ -534,7 +577,6 @@ class Level3Evaluator:
             gold_strength=gold_strength,
         )
 
-        # Reconcile correct: exact match OR (resolves + conservative)
         if resolves and conservative:
             correct = True
 
@@ -543,7 +585,7 @@ class Level3Evaluator:
             raw_response=response_text,
             decoded_hypothesis=decoded_hypothesis,
             parsed_rule=parsed_rule,
-            parse_success=parse_success,
+            parse_success=True,
             resolves_anomaly=resolves,
             resolution_strength=strength,
             is_minimal=minimal,

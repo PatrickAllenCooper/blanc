@@ -8,9 +8,10 @@ Author: Patrick Cooper
 Date: 2026-02-12
 """
 
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 from Levenshtein import distance as levenshtein_distance
 from blanc.core.theory import Rule
+from blanc.utils.predicates import extract_predicate  # noqa: F401 (re-exported for callers)
 
 
 def decode_d2(text: str, candidates: List[Union[str, Rule]], threshold: int = 10) -> Optional[Union[str, Rule]]:
@@ -129,8 +130,3 @@ def decode_d2_with_scores(text: str, candidates: List[Union[str, Rule]]) -> List
     return scores
 
 
-def extract_predicate(atom: str) -> str:
-    """Extract predicate from atom."""
-    if '(' in atom:
-        return atom.split('(')[0]
-    return atom

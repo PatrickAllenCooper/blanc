@@ -8,8 +8,9 @@ Author: Patrick Cooper
 Date: 2026-02-12
 """
 
-from typing import Union
+from typing import Optional, Union
 from blanc.core.theory import Rule, RuleType
+from blanc.utils.predicates import extract_predicate
 from .nl_mapping import get_nl_mapping
 
 
@@ -96,13 +97,6 @@ def encode_m2_fact(fact: str, nl_mapping) -> str:
     fact_nl = fact.replace(pred, nl_pred)
     
     return fact_nl
-
-
-def extract_predicate(atom: str) -> str:
-    """Extract predicate from atom."""
-    if '(' in atom:
-        return atom.split('(')[0]
-    return atom
 
 
 def extract_variables(rule: Rule) -> set:

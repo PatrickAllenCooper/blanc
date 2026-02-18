@@ -17,7 +17,6 @@ from blanc.author.generation import AbductiveInstance
 from level3_evaluator import (
     Level3Evaluator,
     parse_rule_from_text,
-    _deep_copy_theory,
     _add_rule_with_superiority,
     EC_CORRECT,
     EC_DECODER_FAILURE,
@@ -187,30 +186,29 @@ class TestLevel3Evaluator:
 
 
 # ---------------------------------------------------------------------------
-# _deep_copy_theory
+# Theory.copy  (canonical deep-copy now lives on the dataclass)
 # ---------------------------------------------------------------------------
 
-class TestDeepCopyTheory:
+class TestTheoryCopy:
     def test_preserves_facts(self):
         D = Theory(facts=["bird(opus)"], rules=[], superiority={})
-        D2 = _deep_copy_theory(D)
+        D2 = D.copy()
         assert "bird(opus)" in D2.facts
 
     def test_normalizes_list_superiority(self):
         D = Theory(facts=[], rules=[], superiority=[["r1", "r2"]])
-        D2 = _deep_copy_theory(D)
-        # Should be a dict now
+        D2 = D.copy()
         assert isinstance(D2.superiority, dict)
         assert "r2" in D2.superiority.get("r1", set())
 
     def test_preserves_dict_superiority(self):
         D = Theory(facts=[], rules=[], superiority={"r1": {"r2"}})
-        D2 = _deep_copy_theory(D)
+        D2 = D.copy()
         assert isinstance(D2.superiority, dict)
         assert "r2" in D2.superiority.get("r1", set())
 
     def test_independence(self):
         D = Theory(facts=["bird(X)"], rules=[], superiority={})
-        D2 = _deep_copy_theory(D)
+        D2 = D.copy()
         D2.add_fact("penguin(X)")
         assert "penguin(X)" not in D.facts

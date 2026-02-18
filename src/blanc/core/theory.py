@@ -136,6 +136,37 @@ class Theory:
             self.superiority[superior] = set()
         self.superiority[superior].add(inferior)
 
+    def copy(self) -> "Theory":
+        """
+        Return a deep copy of this Theory.
+
+        Handles the case where ``superiority`` has been (incorrectly) stored as
+        a list of pairs instead of a dict, normalising the copy to dict form.
+        This is the single canonical place for Theory duplication; callers
+        should use this instead of rolling their own copy logic.
+        """
+        dup = Theory()
+        for fact in self.facts:
+            dup.add_fact(fact)
+        for rule in self.rules:
+            dup.add_rule(Rule(
+                head=rule.head,
+                body=tuple(rule.body),
+                rule_type=rule.rule_type,
+                label=rule.label,
+                priority=rule.priority,
+                metadata=dict(rule.metadata) if rule.metadata else {},
+            ))
+        if isinstance(self.superiority, dict):
+            for sup, infs in self.superiority.items():
+                for inf in infs:
+                    dup.add_superiority(sup, inf)
+        elif isinstance(self.superiority, (list, tuple)):
+            for pair in self.superiority:
+                if isinstance(pair, (list, tuple)) and len(pair) == 2:
+                    dup.add_superiority(pair[0], pair[1])
+        return dup
+
     def get_rules_by_type(self, rule_type: RuleType) -> List[Rule]:
         """Get all rules of a specific type."""
         return [r for r in self.rules if r.rule_type == rule_type]
