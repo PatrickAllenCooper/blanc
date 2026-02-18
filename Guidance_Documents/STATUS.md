@@ -1,21 +1,21 @@
 # Project Status
 
 **Last Updated**: 2026-02-18  
-**Current**: Phase 2B Complete - 33 Level 3 instances generated and validated  
-**Progress**: 9 of 14.5 weeks (62%)  
+**Current**: Week 8.5 Complete - all pre-evaluation preparation done  
+**Progress**: 9.5 of 14.5 weeks (65%)  
 **Timeline**: ON TRACK ✅
 
 ---
 
 ## Quick Summary
 
-**Weeks Complete**: 9 of 14.5  
-**Tests**: 333 passing ✅  
-**Coverage**: 80% ✅  
+**Weeks Complete**: 9.5 of 14.5  
+**Tests**: 418 passing ✅  
+**Coverage**: 85% ✅  
 **Expert KBs**: 2,318 rules ✅  
 **Instances**: 374 Level 2 + 33 Level 3 (all validated)  
 **Codec**: ALL 4 modalities + 3 decoders ✅  
-**Cross-Ontology Proof**: FAILED 2026-02-18 (see CROSS_ONTOLOGY_PLAN.md)  
+**Pipeline**: dry run passing with MockModelInterface ✅  
 **Level 3 Generation**: COMPLETE - 33 instances, 9 with Nov > 0
 
 ---
@@ -29,10 +29,19 @@
 - **Week 6**: M1, D3, Cascading decoder
 - **Week 7**: Validation + testing infrastructure
 - **Week 8**: Cross-ontology proof-of-concept (failed; documented)
-- **Week 8.5**: Phase 2B - Manual Level 3 generation (COMPLETE)
+- **Week 8.5a**: Phase 2B - Manual Level 3 generation (33 instances)
+- **Week 8.5b**: Pre-evaluation preparation
+  - AzureOpenAIInterface added to `experiments/model_interface.py`
+  - Full pipeline dry run (`scripts/dry_run_pipeline.py`) passing
+  - SLURM evaluation scripts: `hpc/slurm_evaluate_azure.sh`, `hpc/slurm_evaluate_llama.sh`
+  - `experiments/run_evaluation.py` CLI with all provider support
+  - Related Work (Section 2) expanded: LLM-ASPIC+ (ECAI 2025), LogiDynamics (EMNLP 2025)
+  - Pipeline bug fixed: `EvaluationPipeline` now routes through `CascadingDecoder` (D1→D2→D3)
+  - Prompting bug fixed: M4 candidate encoding no longer attempts to re-encode formal strings
 
 **ALL INFRASTRUCTURE COMPLETE** ✅  
-**LEVEL 3 INSTANCES COMPLETE** ✅
+**LEVEL 3 INSTANCES COMPLETE** ✅  
+**EVALUATION PIPELINE READY** ✅
 
 ---
 
@@ -66,11 +75,10 @@ species/type appear in D^-, where only one has the novel property (in the gold
 
 **Immediate blockers**: Azure API credentials, CURC provisioning (in progress)
 
-**Work available locally**:
-1. AzureOpenAIInterface class in `experiments/model_interface.py`
-2. Full pipeline dry run with MockModelInterface
-3. CURC SLURM job scripts in `hpc/`
-4. Related Work section (Section 2) of `paper/paper.tex`
+**Pipeline is ready to run**:
+- Submit `sbatch hpc/slurm_evaluate_azure.sh` once Azure credentials are provisioned
+- Submit `sbatch hpc/slurm_evaluate_llama.sh` once CURC allocation is active
+- Or run locally: `python experiments/run_evaluation.py --provider openai ...`
 
 ---
 

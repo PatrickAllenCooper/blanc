@@ -290,6 +290,145 @@ class OpenAIInterface(ModelInterface):
         return 0.01  # $10 per 1M tokens = $0.01 per 1K
 
 
+class AzureOpenAIInterface(ModelInterface):
+    """Azure OpenAI Service interface.
+
+    Wraps the OpenAI SDK's AzureOpenAI client, which shares the same wire
+    protocol as the direct OpenAI API but authenticates via an Azure endpoint,
+    an API version, and a deployment name rather than a model string.
+
+    Required environment / constructor arguments:
+        endpoint:        https://<resource>.openai.azure.com
+        api_key:         Azure resource key (or AAD token)
+        api_version:     e.g. "2024-08-01-preview"
+        deployment_name: the name given when deploying the model in Azure AI Studio
+    """
+
+    # Default Azure OpenAI pricing mirrors OpenAI pricing (USD per 1 K tokens).
+    # Update when Microsoft revises its rate card.
+    _PRICING: Dict[str, Dict[str, float]] = {
+        "gpt-4o":       {"input": 0.0025, "output": 0.01},
+        "gpt-4o-mini":  {"input": 0.00015, "output": 0.0006},
+        "gpt-4":        {"input": 0.03,   "output": 0.06},
+        "gpt-35-turbo": {"input": 0.0005, "output": 0.0015},
+    }
+    _DEFAULT_PRICING = {"input": 0.0025, "output": 0.01}  # Fallback: gpt-4o rates
+
+    def __init__(
+        self,
+        endpoint: str,
+        api_key: str,
+        deployment_name: str,
+        api_version: str = "2024-08-01-preview",
+        model: Optional[str] = None,
+        rpm: int = 240,
+        tpm: int = 40000,
+    ):
+        """
+        Initialize Azure OpenAI interface.
+
+        Args:
+            endpoint:        Azure OpenAI resource endpoint URL.
+            api_key:         Azure OpenAI API key.
+            deployment_name: Name of the deployed model in Azure AI Studio.
+            api_version:     Azure OpenAI REST API version string.
+            model:           Human-readable model name used for cost lookup and
+                             statistics.  Defaults to deployment_name.
+            rpm:             Requests per minute limit (Azure Standard S0 default).
+            tpm:             Tokens per minute limit (Azure Standard S0 default).
+        """
+        super().__init__(model or deployment_name)
+
+        try:
+            from openai import AzureOpenAI
+        except ImportError:
+            raise ImportError("openai package not installed. Run: pip install openai>=1.0")
+
+        self.deployment_name = deployment_name
+        self.api_version = api_version
+        self.endpoint = endpoint
+
+        self.client = AzureOpenAI(
+            azure_endpoint=endpoint,
+            api_key=api_key,
+            api_version=api_version,
+        )
+        self.rate_limiter = RateLimiter(rpm=rpm, tpm=tpm)
+
+        # Resolve pricing: try exact name, then any key that is a prefix of model_name.
+        pricing = self._PRICING.get(self.model_name)
+        if pricing is None:
+            for key, val in self._PRICING.items():
+                if key in self.model_name.lower():
+                    pricing = val
+                    break
+        self._pricing = pricing or self._DEFAULT_PRICING
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
+    def query(
+        self,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        """Query an Azure-hosted model with exponential backoff retry."""
+
+        self.rate_limiter.wait_if_needed(estimated_tokens=len(prompt) // 4 + max_tokens)
+
+        start_time = time.time()
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.deployment_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs,
+            )
+
+            latency = time.time() - start_time
+
+            text = response.choices[0].message.content
+            tokens_input = response.usage.prompt_tokens
+            tokens_output = response.usage.completion_tokens
+            cost = self.calculate_cost(tokens_input, tokens_output)
+
+            result = ModelResponse(
+                text=text,
+                model=self.model_name,
+                tokens_input=tokens_input,
+                tokens_output=tokens_output,
+                cost=cost,
+                latency=latency,
+                metadata={
+                    "finish_reason": response.choices[0].finish_reason,
+                    "deployment": self.deployment_name,
+                    "api_version": self.api_version,
+                    "endpoint": self.endpoint,
+                },
+            )
+
+            self.update_stats(result)
+            return result
+
+        except Exception as e:
+            print(f"Azure OpenAI API error: {e}")
+            raise
+
+    @property
+    def cost_per_1k_input(self) -> float:
+        return self._pricing["input"]
+
+    @property
+    def cost_per_1k_output(self) -> float:
+        return self._pricing["output"]
+
+
 class AnthropicInterface(ModelInterface):
     """Anthropic API interface for Claude 3.5 Sonnet."""
     
@@ -646,46 +785,68 @@ def create_model_interface(
 ) -> ModelInterface:
     """
     Factory function to create model interfaces.
-    
+
     Args:
-        provider: One of 'openai', 'anthropic', 'google', 'ollama', 'mock'
+        provider: One of 'openai', 'azure', 'anthropic', 'google', 'ollama', 'mock'
         api_key: API key (if required)
         model: Specific model name (optional)
-        **kwargs: Additional arguments
-        
+        **kwargs: Additional provider-specific arguments.
+            For 'azure': endpoint (str, required), deployment_name (str, required),
+                         api_version (str, optional), rpm (int), tpm (int).
+
     Returns:
         ModelInterface instance
     """
     provider = provider.lower()
-    
+
     if provider == 'openai':
         if not api_key:
             raise ValueError("OpenAI requires api_key")
         model = model or "gpt-4o"
         return OpenAIInterface(api_key=api_key, model=model)
-    
+
+    elif provider == 'azure':
+        endpoint = kwargs.pop('endpoint', None)
+        deployment_name = kwargs.pop('deployment_name', None)
+        if not api_key:
+            raise ValueError("Azure OpenAI requires api_key")
+        if not endpoint:
+            raise ValueError("Azure OpenAI requires endpoint")
+        if not deployment_name:
+            raise ValueError("Azure OpenAI requires deployment_name")
+        return AzureOpenAIInterface(
+            endpoint=endpoint,
+            api_key=api_key,
+            deployment_name=deployment_name,
+            model=model,
+            **kwargs,
+        )
+
     elif provider == 'anthropic':
         if not api_key:
             raise ValueError("Anthropic requires api_key")
         model = model or "claude-3-5-sonnet-20241022"
         return AnthropicInterface(api_key=api_key, model=model)
-    
+
     elif provider == 'google':
         if not api_key:
             raise ValueError("Google requires api_key")
         model = model or "gemini-1.5-pro"
         return GoogleInterface(api_key=api_key, model=model)
-    
+
     elif provider == 'ollama':
         model = model or "llama3:8b"  # Default to smaller model
         return OllamaInterface(model=model)
-    
+
     elif provider == 'mock':
         model = model or "mock-model"
         return MockModelInterface(model_name=model)
-    
+
     else:
-        raise ValueError(f"Unknown provider: {provider}. Available: openai, anthropic, google, ollama, mock")
+        raise ValueError(
+            f"Unknown provider: {provider}. "
+            "Available: openai, azure, anthropic, google, ollama, mock"
+        )
 
 
 if __name__ == "__main__":

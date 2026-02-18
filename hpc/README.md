@@ -237,28 +237,60 @@ Can generate all 13 partition strategies simultaneously!
 
 ## Files
 
-- `generate_instances_parallel.py` - Parallel generation script
-- `slurm_generate_instances.sh` - SLURM batch script
-- `README.md` - This documentation
+- `slurm_generate_instances.sh`  - Instance generation batch job (64 CPU cores)
+- `slurm_evaluate_azure.sh`      - LLM evaluation via Azure OpenAI (4 CPU cores, API-bound)
+- `slurm_evaluate_llama.sh`      - Llama 3 evaluation via Ollama (1 GPU, aa100 partition)
+- `README.md`                    - This documentation
 
 ---
 
+## LLM Evaluation (Week 9+)
+
+### Azure OpenAI (GPT-4o)
+
+```bash
+# Set credentials (or export in ~/.bashrc)
+export AZURE_OPENAI_ENDPOINT=https://<resource>.openai.azure.com
+export AZURE_OPENAI_API_KEY=<key>
+export AZURE_DEPLOYMENT_NAME=gpt-4o
+
+# Submit job
+sbatch hpc/slurm_evaluate_azure.sh
+
+# Monitor
+tail -f logs/eval_azure_*.out
+seff <jobid>
+```
+
+### Llama 3 70B / 8B (CURC GPU)
+
+```bash
+# Default: Llama 3 70B (A100 80GB)
+sbatch hpc/slurm_evaluate_llama.sh
+
+# Override to 8B (smaller GPU budget)
+sbatch --export=ALL,LLAMA_MODEL=llama3:8b hpc/slurm_evaluate_llama.sh
+
+# Monitor
+tail -f logs/eval_llama_*.out
+```
+
+### Retrieve Results
+
+```bash
+# Copy results from Alpine
+scp username@login.rc.colorado.edu:/projects/$USER/blanc/experiments/results/ ./results/
+
+# Or sync entire results directory
+rsync -avz username@login.rc.colorado.edu:/projects/$USER/blanc/experiments/ ./experiments/
+```
+
 ## Next Steps
 
-1. **Test local parallel** (TODAY)
-   - Run generate_instances_parallel.py
-   - Measure speedup
-   - Verify results
-
-2. **Deploy to HPC if needed** (THIS WEEK)
-   - Setup on Alpine
-   - Submit batch job
-   - Monitor progress
-
-3. **Scale to full benchmark** (WEEK 3-4)
-   - Generate ~1,200 instances
-   - All 3 expert KBs
-   - All 13 partition strategies
+1. **Provision Azure resource** - Create Azure OpenAI deployment for GPT-4o
+2. **Submit Azure eval job** - Run `sbatch hpc/slurm_evaluate_azure.sh`
+3. **Submit Llama eval job** - Run `sbatch hpc/slurm_evaluate_llama.sh`
+4. **Scale to full benchmark** - Increase `--instance-limit` for production run
 
 ---
 

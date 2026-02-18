@@ -222,8 +222,8 @@ def _encode_element(element: str, modality: str, domain: str) -> str:
         from blanc.codec.m3_encoder import encode_m3
         return encode_m3(element, domain=domain)
     else:  # M4
-        encoder = PureFormalEncoder()
-        return encoder.encode_fact(element) if '(' in element and '<-' not in element else encoder.encode_rule(element)
+        # Candidates in M4 are already in pure formal notation; no re-encoding needed.
+        return element
 
 
 def _encode_candidates(candidates: List[str], modality: str, domain: str) -> str:

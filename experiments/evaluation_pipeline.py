@@ -28,7 +28,7 @@ from prompting import render_prompt, RenderedPrompt
 from response_cache import ResponseCache
 
 from blanc.author.generation import AbductiveInstance
-from blanc.codec.cascading_decoder import decode_batch
+from blanc.codec.cascading_decoder import CascadingDecoder, decode_batch
 from blanc.codec.d2_decoder import decode_d2
 from blanc.codec.decoder import decode_response
 
@@ -157,7 +157,8 @@ class EvaluationPipeline:
         self.cache = ResponseCache(cache_dir)
         self.results_dir = Path(results_dir)
         self.results_dir.mkdir(parents=True, exist_ok=True)
-        
+
+        self._cascade_decoder = CascadingDecoder()
         self.evaluations: List[SingleEvaluation] = []
     
     def run(
@@ -287,24 +288,20 @@ class EvaluationPipeline:
             # Cache response
             self.cache.set(cache_key, response)
         
-        # Decode response using D1→D2→D3 cascade
-        decoded_hypothesis = self._decode_response(response.text, instance, modality)
-        
+        # Decode response using D1→D2→D3 cascade (single pass)
+        decoded_hypothesis, decoder_stage = self._decode_response(response.text, instance)
+
         # Check correctness
         correct = self._check_correctness(decoded_hypothesis, instance)
         
-        # Determine which decoder succeeded
-        decoder_stage = self._determine_decoder_stage(response.text, instance, modality)
-        
-        # Create metrics
         metrics = EvaluationMetrics(
             correct=correct,
-            decoder_stage=decoder_stage,
+            decoder_stage=decoder_stage or "FAILED",
             latency=response.latency,
             tokens_used=response.tokens_input + response.tokens_output,
             cost=response.cost,
             predicted_hypothesis=decoded_hypothesis,
-            gold_hypothesis=instance.gold[0] if instance.gold else None
+            gold_hypothesis=instance.gold[0] if instance.gold else None,
         )
         
         return SingleEvaluation(
@@ -322,37 +319,17 @@ class EvaluationPipeline:
         self,
         response_text: str,
         instance: AbductiveInstance,
-        modality: str
-    ) -> Optional[str]:
+    ) -> tuple[Optional[str], Optional[str]]:
         """
-        Apply decoder cascade to extract hypothesis.
-        
-        Args:
-            response_text: Raw model response
-            instance: Instance for context
-            modality: Modality
-            
+        Apply D1→D2→D3 cascade decoder and return (hypothesis, stage_name).
+
         Returns:
-            Decoded hypothesis or None
+            (decoded_hypothesis, stage) where stage is 'D1', 'D2', 'D3', or
+            None when all stages fail.
         """
-        # Try D1 (exact match) - would need to implement exact matching
-        # Try D2 (template match)
-        try:
-            from blanc.codec.d2_decoder import decode_d2
-            result = decode_d2(response_text, instance.candidates)
-            if result:
-                return result
-        except:
-            pass
-        
-        # Try D3 (semantic parsing) - would need full implementation
-        # For now, just return first candidate if it appears in response
-        for candidate in instance.candidates:
-            if candidate.lower() in response_text.lower():
-                return candidate
-        
-        return None
-    
+        decoded, stage = self._cascade_decoder.decode(response_text, instance.candidates)
+        return decoded, stage
+
     def _check_correctness(
         self,
         predicted: Optional[str],
@@ -364,19 +341,6 @@ class EvaluationPipeline:
         
         # Simple string matching (could be more sophisticated)
         return predicted.strip() in [g.strip() for g in instance.gold]
-    
-    def _determine_decoder_stage(
-        self,
-        response_text: str,
-        instance: AbductiveInstance,
-        modality: str
-    ) -> str:
-        """Determine which decoder stage succeeded."""
-        # Simplified - just check if we got an answer
-        decoded = self._decode_response(response_text, instance, modality)
-        if decoded:
-            return "D2"  # Assume D2 for now
-        return "FAILED"
     
     def _compute_summary(self) -> dict:
         """Compute summary statistics across all evaluations."""
