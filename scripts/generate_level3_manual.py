@@ -615,6 +615,47 @@ def _bio_instances() -> List[dict]:
         distractors=distractors_sea,
     ))
 
+    # ── Tardigrade: survives desiccation (Nov = 0) ────────────────────────────
+    # Tardigrades (water bears) can enter cryptobiosis -- a near-complete
+    # suspension of metabolic activity -- surviving desiccation that is lethal
+    # to all other animals. The predicate `tardigrade` is already in D^-.
+    D = Theory()
+    D.add_fact("animal(tardigrade_specimen)")
+    D.add_fact("animal(rabbit_specimen)")
+    D.add_fact("tardigrade(tardigrade_specimen)")
+    D.add_rule(Rule(head="requires_water(X)", body=("animal(X)",),
+                    rule_type=RuleType.DEFEASIBLE, label="r_water"))
+    D.add_rule(Rule(head="requires_oxygen(X)", body=("animal(X)",),
+                    rule_type=RuleType.DEFEASIBLE, label="r_oxygen"))
+    D.add_rule(Rule(head="temperature_sensitive(X)", body=("animal(X)",),
+                    rule_type=RuleType.DEFEASIBLE, label="r_temp"))
+    gold_tard = Rule(head="~requires_water(X)", body=("tardigrade(X)",),
+                     rule_type=RuleType.DEFEATER, label="d_tardigrade")
+    distractors_tard = [
+        Rule(head="~requires_water(X)", body=("animal(X)",),
+             rule_type=RuleType.DEFEATER, label="d_tard_broad"),
+        Rule(head="~requires_oxygen(X)", body=("tardigrade(X)",),
+             rule_type=RuleType.DEFEATER, label="d_tard_wrong_head"),
+        Rule(head="~temperature_sensitive(X)", body=("tardigrade(X)",),
+             rule_type=RuleType.DEFEATER, label="d_tard_wrong_prop"),
+        Rule(head="survives_desiccation(X)", body=("tardigrade(X)",),
+             rule_type=RuleType.DEFEASIBLE, label="d_tard_positive"),
+        Rule(head="~requires_water(X)", body=("microscopic(X)",),
+             rule_type=RuleType.DEFEATER, label="d_tard_wrong_cond"),
+    ]
+    instances.append(_make_instance(
+        name="tardigrade", domain="biology",
+        D_minus=D, anomaly="requires_water(tardigrade_specimen)",
+        gold=gold_tard, beaten_labels=["r_water"],
+        distractors=distractors_tard,
+        preserved=["requires_water(rabbit_specimen)", "requires_oxygen(rabbit_specimen)",
+                   "temperature_sensitive(rabbit_specimen)"],
+        defeater_type="weak",
+        description="Tardigrades (water bears) can enter cryptobiosis, surviving complete "
+                    "desiccation that is lethal to all other animals. They are the exception "
+                    "to the rule that animals require continuous access to water.",
+    ))
+
     return instances
 
 
@@ -940,6 +981,47 @@ def _legal_instances() -> List[dict]:
         defeater_type="weak",
         description="An ultra vires act—one beyond a corporation's legal authority—is "
                     "void, defeating the default that corporate acts are legally valid.",
+    ))
+
+    # ── Laches: equitable defence for unreasonable delay (Nov > 0) ───────────
+    # Laches bars an equity claim when the claimant has waited an unreasonably
+    # long time and the delay prejudiced the defendant. The predicate
+    # `laches_applies` is novel -- it does not appear in D^-.
+    # Two-entity pattern: mansion_case has laches_applies (novel fact, D^full
+    # only); park_case does not, so it retains valid_claim and remedy_available.
+    D = Theory()
+    D.add_fact("equity_claim(mansion_case)")
+    D.add_fact("equity_claim(park_case)")
+    D.add_rule(Rule(head="valid_claim(X)", body=("equity_claim(X)",),
+                    rule_type=RuleType.DEFEASIBLE, label="r_eq_valid"))
+    D.add_rule(Rule(head="remedy_available(X)", body=("equity_claim(X)",),
+                    rule_type=RuleType.DEFEASIBLE, label="r_remedy"))
+    gold_laches = Rule(head="~valid_claim(X)", body=("laches_applies(X)",),
+                       rule_type=RuleType.DEFEATER, label="d_laches")
+    distractors_laches = [
+        Rule(head="~valid_claim(X)", body=("equity_claim(X)",),
+             rule_type=RuleType.DEFEATER, label="d_laches_broad"),
+        Rule(head="~remedy_available(X)", body=("laches_applies(X)",),
+             rule_type=RuleType.DEFEATER, label="d_laches_wrong_head"),
+        Rule(head="claim_dismissed(X)", body=("laches_applies(X)",),
+             rule_type=RuleType.DEFEASIBLE, label="d_laches_positive"),
+        Rule(head="~valid_claim(X)", body=("stale_claim(X)",),
+             rule_type=RuleType.DEFEATER, label="d_laches_wrong_cond"),
+        Rule(head="~valid_claim(X)", body=("unreasonable_delay(X)",),
+             rule_type=RuleType.DEFEATER, label="d_laches_near_gold"),
+    ]
+    instances.append(_make_instance(
+        name="laches", domain="legal",
+        D_minus=D, anomaly="valid_claim(mansion_case)",
+        gold=gold_laches, beaten_labels=["r_eq_valid"],
+        distractors=distractors_laches,
+        preserved=["valid_claim(park_case)", "remedy_available(park_case)"],
+        defeater_type="weak",
+        description="The equitable doctrine of laches bars a claim when the plaintiff "
+                    "unreasonably delayed asserting it and the delay prejudiced the defendant, "
+                    "defeating the equity court's default presumption that claims are valid.",
+        novel_predicates=["laches_applies"],
+        novel_facts=["laches_applies(mansion_case)"],
     ))
 
     return instances

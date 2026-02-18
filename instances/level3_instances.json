@@ -2,12 +2,12 @@
   "metadata": {
     "name": "DeFAb Level 3 Instances v1.0",
     "generated": "2026-02-18",
-    "total": 33,
-    "valid": 33,
-    "nov_positive": 9,
+    "total": 35,
+    "valid": 35,
+    "nov_positive": 10,
     "domains": {
-      "biology": 15,
-      "legal": 9,
+      "biology": 16,
+      "legal": 10,
       "materials": 9
     }
   },
@@ -835,6 +835,58 @@
       ]
     },
     {
+      "name": "tardigrade",
+      "domain": "biology",
+      "level": 3,
+      "anomaly": "requires_water(tardigrade_specimen)",
+      "gold": "d_tardigrade: tardigrade(X) ~> ~requires_water(X)",
+      "gold_label": "d_tardigrade",
+      "beaten_rules": [
+        "r_water"
+      ],
+      "distractors": [
+        "d_tard_broad: animal(X) ~> ~requires_water(X)",
+        "d_tard_wrong_head: tardigrade(X) ~> ~requires_oxygen(X)",
+        "d_tard_wrong_prop: tardigrade(X) ~> ~temperature_sensitive(X)",
+        "d_tard_positive: tardigrade(X) => survives_desiccation(X)",
+        "d_tard_wrong_cond: microscopic(X) ~> ~requires_water(X)"
+      ],
+      "candidates": [
+        "d_tardigrade: tardigrade(X) ~> ~requires_water(X)",
+        "d_tard_broad: animal(X) ~> ~requires_water(X)",
+        "d_tard_wrong_head: tardigrade(X) ~> ~requires_oxygen(X)",
+        "d_tard_wrong_prop: tardigrade(X) ~> ~temperature_sensitive(X)",
+        "d_tard_positive: tardigrade(X) => survives_desiccation(X)",
+        "d_tard_wrong_cond: microscopic(X) ~> ~requires_water(X)"
+      ],
+      "preserved_expectations": [
+        "requires_water(rabbit_specimen)",
+        "requires_oxygen(rabbit_specimen)",
+        "temperature_sensitive(rabbit_specimen)"
+      ],
+      "defeater_type": "weak",
+      "description": "Tardigrades (water bears) can enter cryptobiosis, surviving complete desiccation that is lethal to all other animals. They are the exception to the rule that animals require continuous access to water.",
+      "novel_predicates": [],
+      "novel_facts_for_gold": [],
+      "nov": 0.0,
+      "d_rev": 1,
+      "conservative": true,
+      "lost_expectations": [],
+      "valid": true,
+      "errors": [],
+      "theory_size": 6,
+      "theory_facts": [
+        "animal(rabbit_specimen)",
+        "animal(tardigrade_specimen)",
+        "tardigrade(tardigrade_specimen)"
+      ],
+      "theory_rules": [
+        "r_water: animal(X) => requires_water(X)",
+        "r_oxygen: animal(X) => requires_oxygen(X)",
+        "r_temp: animal(X) => temperature_sensitive(X)"
+      ]
+    },
+    {
       "name": "emancipated_minor",
       "domain": "legal",
       "level": 3,
@@ -1289,6 +1341,59 @@
       "theory_rules": [
         "r_valid: corporate_act(X) => legally_valid(X)",
         "r_binding_c: corporate_act(X) => binding_on_corporation(X)"
+      ]
+    },
+    {
+      "name": "laches",
+      "domain": "legal",
+      "level": 3,
+      "anomaly": "valid_claim(mansion_case)",
+      "gold": "d_laches: laches_applies(X) ~> ~valid_claim(X)",
+      "gold_label": "d_laches",
+      "beaten_rules": [
+        "r_eq_valid"
+      ],
+      "distractors": [
+        "d_laches_broad: equity_claim(X) ~> ~valid_claim(X)",
+        "d_laches_wrong_head: laches_applies(X) ~> ~remedy_available(X)",
+        "d_laches_positive: laches_applies(X) => claim_dismissed(X)",
+        "d_laches_wrong_cond: stale_claim(X) ~> ~valid_claim(X)",
+        "d_laches_near_gold: unreasonable_delay(X) ~> ~valid_claim(X)"
+      ],
+      "candidates": [
+        "d_laches: laches_applies(X) ~> ~valid_claim(X)",
+        "d_laches_broad: equity_claim(X) ~> ~valid_claim(X)",
+        "d_laches_wrong_head: laches_applies(X) ~> ~remedy_available(X)",
+        "d_laches_positive: laches_applies(X) => claim_dismissed(X)",
+        "d_laches_wrong_cond: stale_claim(X) ~> ~valid_claim(X)",
+        "d_laches_near_gold: unreasonable_delay(X) ~> ~valid_claim(X)"
+      ],
+      "preserved_expectations": [
+        "valid_claim(park_case)",
+        "remedy_available(park_case)"
+      ],
+      "defeater_type": "weak",
+      "description": "The equitable doctrine of laches bars a claim when the plaintiff unreasonably delayed asserting it and the delay prejudiced the defendant, defeating the equity court's default presumption that claims are valid.",
+      "novel_predicates": [
+        "laches_applies"
+      ],
+      "novel_facts_for_gold": [
+        "laches_applies(mansion_case)"
+      ],
+      "nov": 0.5,
+      "d_rev": 1,
+      "conservative": true,
+      "lost_expectations": [],
+      "valid": true,
+      "errors": [],
+      "theory_size": 4,
+      "theory_facts": [
+        "equity_claim(mansion_case)",
+        "equity_claim(park_case)"
+      ],
+      "theory_rules": [
+        "r_eq_valid: equity_claim(X) => valid_claim(X)",
+        "r_remedy: equity_claim(X) => remedy_available(X)"
       ]
     },
     {

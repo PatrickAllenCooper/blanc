@@ -13,10 +13,10 @@
 **Tests**: 418 passing ✅  
 **Coverage**: 85% ✅  
 **Expert KBs**: 2,318 rules ✅  
-**Instances**: 374 Level 2 + 33 Level 3 (all validated)  
+**Instances**: 374 Level 2 + 35 Level 3 (all validated)  
 **Codec**: ALL 4 modalities + 3 decoders ✅  
 **Pipeline**: dry run passing with MockModelInterface ✅  
-**Level 3 Generation**: COMPLETE - 33 instances, 9 with Nov > 0
+**Level 3 Generation**: COMPLETE - 35 instances, 10 with Nov > 0
 
 ---
 
@@ -52,10 +52,10 @@
 
 | Domain | Instances | Nov > 0 | Valid |
 |--------|-----------|---------|-------|
-| Biology | 15 | 4 | 15/15 |
-| Legal | 9 | 1 | 9/9 |
+| Biology | 16 | 4 | 16/16 |
+| Legal | 10 | 2 | 10/10 |
 | Materials | 9 | 4 | 9/9 |
-| **Total** | **33** | **9** | **33/33** |
+| **Total** | **35** | **10** | **35/35** |
 
 **Verified properties for each instance**:
 - D^- ⊢∂ anomaly (anomaly is defeasibly provable in challenge theory)
