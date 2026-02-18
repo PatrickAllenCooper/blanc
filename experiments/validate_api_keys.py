@@ -114,6 +114,34 @@ def test_azure(endpoint: str, api_key: str, deployment: str, api_version: str) -
         return False
 
 
+def test_curc(base_url: str, model: str) -> bool:
+    """
+    Test CURC LLM Hoster vLLM endpoint (OpenAI-compatible API).
+
+    The server must already be running (launched via the CURC LLM Hoster
+    project) and the SSH tunnel must be open if accessing from a local machine.
+    """
+    print(f"\nTesting CURC vLLM ({base_url}, model: {model})...")
+
+    try:
+        interface = create_model_interface("curc", base_url=base_url, model=model)
+        response = interface.query("Say 'test'", max_tokens=10)
+
+        print(f"  OK Model: {response.model}")
+        print(f"  OK Response: {response.text[:50]}")
+        print(f"  OK Tokens: {response.tokens_input} in, {response.tokens_output} out")
+        print(f"  OK Latency: {response.latency:.2f}s")
+        print(f"  OK Cost: $0.00 (cluster compute)")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAIL Error: {e}")
+        print(f"  INFO Ensure the vLLM server is running on Alpine and the")
+        print(f"       SSH tunnel is open. See CURC LLM Hoster QUICKSTART.md.")
+        return False
+
+
 def test_ollama() -> bool:
     """Test Ollama (local)."""
     print("\nTesting Ollama (optional - local models)...")
@@ -171,6 +199,10 @@ def main():
     azure_deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT', 'gpt-4o')
     azure_version    = os.getenv('AZURE_OPENAI_API_VERSION', '2024-08-01-preview')
 
+    # CURC vLLM credentials
+    curc_base_url = os.getenv('CURC_VLLM_BASE_URL', 'http://localhost:8000')
+    curc_model    = os.getenv('CURC_VLLM_MODEL', 'Qwen/Qwen2.5-72B-Instruct-AWQ')
+
     # Track results
     results = {}
     
@@ -195,12 +227,15 @@ def main():
         print("\n⚠️  Google API key not set in .env (optional)")
         results['google'] = False
     
-    # Test Azure OpenAI (optional -- prefer over direct OpenAI on CURC)
-    if azure_endpoint and azure_key and azure_endpoint != 'https://...':
+    # Test Azure OpenAI
+    if azure_endpoint and azure_key and azure_endpoint not in ('https://your-resource.openai.azure.com/', ''):
         results['azure'] = test_azure(azure_endpoint, azure_key, azure_deployment, azure_version)
     else:
         print("\nINFO  Azure OpenAI credentials not set in .env (optional)")
         results['azure'] = False
+
+    # Test CURC vLLM (optional -- requires vLLM server running + SSH tunnel)
+    results['curc'] = test_curc(curc_base_url, curc_model)
 
     # Test Ollama (optional)
     results['ollama'] = test_ollama()
@@ -211,21 +246,23 @@ def main():
     print("=" * 70)
     
     for service, success in results.items():
-        status = "✓" if success else "✗"
-        print(f"  {status} {service.title()}")
+        status = "OK" if success else "FAIL"
+        print(f"  {status}  {service.title()}")
     
     required_working = (
         results.get('openai', False)
         or results.get('azure', False)
         or results.get('anthropic', False)
+        or results.get('curc', False)
     )
 
     if required_working:
         print("\nREADY FOR PILOT EVALUATION")
-        print("   Run: python experiments/run_evaluation.py --level 3 --instances instances/level3_instances.json")
+        print("   CURC run: sbatch hpc/slurm_evaluate_curc_vllm.sh")
+        print("   Local run: python experiments/run_evaluation.py --provider azure --provider mock")
     else:
         print("\nREQUIRED APIs not working")
-        print("   Need at least one of: OpenAI, Azure OpenAI, or Anthropic")
+        print("   Need at least one of: OpenAI, Azure OpenAI, Anthropic, or CURC vLLM")
         print("   Optional: Google, Ollama")
     
     print("\n" + "=" * 70)

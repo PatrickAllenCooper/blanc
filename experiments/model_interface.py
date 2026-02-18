@@ -3,9 +3,16 @@ Model interface layer for LLM evaluation.
 
 Provides unified interface for querying multiple foundation models:
 - OpenAI GPT-4o
+- Azure OpenAI (GPT-4o via managed endpoint)
 - Anthropic Claude 3.5 Sonnet
 - Google Gemini 1.5 Pro
-- Meta Llama 3 (70B and 8B via Ollama)
+- CURC vLLM server (Qwen 2.5 72B, Llama 3.3 70B, etc. via OpenAI-compatible API)
+- Meta Llama 3 (via Ollama, legacy)
+- Mock (for testing)
+
+The CURC provider uses the CURC LLM Hoster project (Patrick Cooper, 2026)
+which exposes an OpenAI-compatible REST API via vLLM on Alpine's A100 GPUs.
+The endpoint is typically reached via SSH tunnel: http://localhost:8000/v1
 
 Author: Patrick Cooper
 Date: 2026-02-13
@@ -725,6 +732,110 @@ class OllamaInterface(ModelInterface):
         return 0.0
 
 
+class CURCInterface(ModelInterface):
+    """
+    Interface for CURC-hosted open-source models via vLLM.
+
+    The CURC LLM Hoster (Patrick Cooper, 2026) runs a vLLM inference server
+    on Alpine's A100 GPU nodes and exposes an OpenAI-compatible REST API.
+    Access is via SSH tunnel (local) or directly from within the cluster:
+
+        http://localhost:8000/v1   (via SSH tunnel on local machine)
+        http://<compute-node>:8000/v1  (from within the cluster)
+
+    Recommended models (February 2026 rankings):
+        Qwen/Qwen2.5-72B-Instruct-AWQ          (~36 GB VRAM, top open-source)
+        hugging-quants/Meta-Llama-3.3-70B-Instruct-AWQ-INT4  (~35 GB)
+        Qwen/Qwen2.5-32B-Instruct-AWQ          (~16 GB, fastest)
+        hugging-quants/Meta-Llama-3.1-70B-Instruct-AWQ-INT4  (~35 GB)
+    """
+
+    def __init__(
+        self,
+        base_url: str,
+        model: str = "Qwen/Qwen2.5-72B-Instruct-AWQ",
+        api_key: str = "not-needed",
+        rpm: int = 600,
+        timeout: int = 120,
+    ):
+        """
+        Initialize CURC vLLM interface.
+
+        Args:
+            base_url:  Base URL of the vLLM server (e.g. http://localhost:8000).
+                       The /v1 suffix is appended automatically.
+            model:     Hugging Face model ID served by the vLLM instance.
+            api_key:   vLLM accepts any non-empty key; defaults to 'not-needed'.
+            rpm:       Maximum requests per minute (server-side limit varies by
+                       model and node count; 600 is safe for single-user runs).
+            timeout:   Per-request timeout in seconds.
+        """
+        super().__init__(model)
+        self._base_url = base_url.rstrip("/")
+        self._api_key = api_key
+        self._timeout = timeout
+        self._rate_limiter = RateLimiter(rpm=rpm, tpm=10_000_000)  # tokens unlimited locally
+
+    def _get_client(self):
+        """Return an OpenAI client pointed at the vLLM server."""
+        import openai
+        return openai.OpenAI(
+            base_url=f"{self._base_url}/v1",
+            api_key=self._api_key,
+            timeout=self._timeout,
+        )
+
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_exponential(multiplier=2, min=5, max=60),
+           reraise=True)
+    def query(
+        self,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        """Query the CURC vLLM server via the OpenAI chat completions API."""
+        self._rate_limiter.wait_if_needed(estimated_tokens=len(prompt) // 4 + max_tokens)
+        start = time.time()
+
+        client = self._get_client()
+        completion = client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+
+        latency = time.time() - start
+        text = completion.choices[0].message.content or ""
+        usage = completion.usage
+
+        response = ModelResponse(
+            text=text,
+            model=self.model_name,
+            tokens_input=usage.prompt_tokens if usage else len(prompt) // 4,
+            tokens_output=usage.completion_tokens if usage else len(text) // 4,
+            cost=0.0,  # Cluster compute; no API billing
+            latency=latency,
+            metadata={
+                "provider": "curc_vllm",
+                "base_url": self._base_url,
+                "finish_reason": completion.choices[0].finish_reason,
+            },
+        )
+        self.update_stats(response)
+        return response
+
+    @property
+    def cost_per_1k_input(self) -> float:
+        return 0.0  # Cluster compute, no API cost
+
+    @property
+    def cost_per_1k_output(self) -> float:
+        return 0.0
+
+
 class MockModelInterface(ModelInterface):
     """Mock model for testing without API calls."""
     
@@ -834,8 +945,13 @@ def create_model_interface(
         model = model or "gemini-1.5-pro"
         return GoogleInterface(api_key=api_key, model=model)
 
+    elif provider == 'curc':
+        base_url = kwargs.pop('base_url', None) or 'http://localhost:8000'
+        model = model or "Qwen/Qwen2.5-72B-Instruct-AWQ"
+        return CURCInterface(base_url=base_url, model=model, **kwargs)
+
     elif provider == 'ollama':
-        model = model or "llama3:8b"  # Default to smaller model
+        model = model or "llama3:8b"
         return OllamaInterface(model=model)
 
     elif provider == 'mock':
@@ -845,7 +961,7 @@ def create_model_interface(
     else:
         raise ValueError(
             f"Unknown provider: {provider}. "
-            "Available: openai, azure, anthropic, google, ollama, mock"
+            "Available: openai, azure, curc, anthropic, google, ollama, mock"
         )
 
 

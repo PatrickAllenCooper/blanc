@@ -16,7 +16,17 @@ Usage examples:
         --strategies direct cot \\
         --include-level3
 
-    # Ollama (local Llama 3)
+    # CURC vLLM (Qwen 2.5 72B or Llama 3.3 70B via CURC LLM Hoster)
+    # Assumes vLLM server running; access via SSH tunnel on port 8000
+    python experiments/run_evaluation.py \\
+        --provider curc \\
+        --model Qwen/Qwen2.5-72B-Instruct-AWQ \\
+        --curc-base-url http://localhost:8000 \\
+        --modalities M4 M2 \\
+        --strategies direct cot \\
+        --include-level3
+
+    # Ollama (local Llama 3, legacy)
     python experiments/run_evaluation.py \\
         --provider ollama \\
         --model llama3:70b \\
@@ -173,9 +183,9 @@ def parse_args() -> argparse.Namespace:
 
     # Provider / credentials
     p.add_argument("--provider", required=True,
-                   choices=["openai", "azure", "anthropic", "google", "ollama", "mock"],
+                   choices=["openai", "azure", "curc", "anthropic", "google", "ollama", "mock"],
                    help="Model provider.")
-    p.add_argument("--api-key", default=None, help="API key (not required for ollama/mock).")
+    p.add_argument("--api-key", default=None, help="API key (not required for curc/ollama/mock).")
     p.add_argument("--model", default=None, help="Model or deployment name.")
     p.add_argument("--endpoint", default=None, help="Azure: resource endpoint URL.")
     p.add_argument("--deployment", default=None, help="Azure: deployment name in AI Studio.")
@@ -183,6 +193,8 @@ def parse_args() -> argparse.Namespace:
                    help="Azure: REST API version.")
     p.add_argument("--ollama-host", default="http://localhost:11434",
                    help="Ollama: server URL.")
+    p.add_argument("--curc-base-url", default="http://localhost:8000",
+                   help="CURC vLLM server base URL (default via SSH tunnel: http://localhost:8000).")
 
     # Evaluation config
     p.add_argument("--modalities", nargs="+", default=["M4"],
@@ -236,6 +248,9 @@ def main() -> int:
         if not all([args.api_key, args.endpoint, args.deployment]):
             print("ERROR: Azure requires --api-key, --endpoint, and --deployment.")
             return 1
+    elif args.provider == "curc":
+        kwargs["base_url"] = args.curc_base_url
+        print(f"CURC vLLM URL : {args.curc_base_url}")
     elif args.provider == "ollama":
         kwargs["host"] = args.ollama_host
 

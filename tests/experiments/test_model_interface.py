@@ -6,6 +6,7 @@ Tests:
 - RateLimiter
 - ModelInterface base class
 - MockModelInterface
+- CURCInterface (mocked OpenAI client)
 - Factory function
 
 Author: Patrick Cooper
@@ -16,6 +17,7 @@ import pytest
 import time
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 # Add experiments to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "experiments"))
@@ -25,6 +27,7 @@ from model_interface import (
     RateLimiter,
     ModelInterface,
     MockModelInterface,
+    CURCInterface,
     create_model_interface
 )
 
@@ -179,6 +182,125 @@ class TestMockModelInterface:
         assert mock.cost_per_1k_output == 0.0
 
 
+def _make_curc_completion(text: str = "test response", prompt_tokens: int = 5, completion_tokens: int = 2):
+    """Build a minimal mock openai.ChatCompletion response for CURCInterface."""
+    choice = MagicMock()
+    choice.message.content = text
+    choice.finish_reason = "stop"
+
+    usage = MagicMock()
+    usage.prompt_tokens = prompt_tokens
+    usage.completion_tokens = completion_tokens
+
+    completion = MagicMock()
+    completion.choices = [choice]
+    completion.usage = usage
+    return completion
+
+
+class TestCURCInterface:
+    """Test CURCInterface against a mocked vLLM / OpenAI-compatible server."""
+
+    def _make_interface(self, model: str = "Qwen/Qwen2.5-72B-Instruct-AWQ") -> CURCInterface:
+        return CURCInterface(
+            base_url="http://localhost:8000",
+            model=model,
+            rpm=6000,  # no rate-limiting delay in tests
+        )
+
+    def test_init_defaults(self):
+        iface = self._make_interface()
+        assert iface.model_name == "Qwen/Qwen2.5-72B-Instruct-AWQ"
+        assert iface._base_url == "http://localhost:8000"
+        assert iface._api_key == "not-needed"
+
+    def test_init_trailing_slash_stripped(self):
+        iface = CURCInterface(base_url="http://localhost:8000/", model="some/model")
+        assert iface._base_url == "http://localhost:8000"
+
+    def test_cost_properties_are_zero(self):
+        iface = self._make_interface()
+        assert iface.cost_per_1k_input == 0.0
+        assert iface.cost_per_1k_output == 0.0
+
+    @patch("model_interface.CURCInterface._get_client")
+    def test_query_returns_model_response(self, mock_get_client):
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+        mock_client.chat.completions.create.return_value = _make_curc_completion(
+            text="test output", prompt_tokens=10, completion_tokens=3
+        )
+
+        iface = self._make_interface()
+        resp = iface.query("Say 'test'", max_tokens=20)
+
+        assert isinstance(resp, ModelResponse)
+        assert resp.text == "test output"
+        assert resp.model == "Qwen/Qwen2.5-72B-Instruct-AWQ"
+        assert resp.tokens_input == 10
+        assert resp.tokens_output == 3
+        assert resp.cost == 0.0
+        assert resp.latency >= 0.0
+        assert resp.metadata["provider"] == "curc_vllm"
+
+    @patch("model_interface.CURCInterface._get_client")
+    def test_query_updates_statistics(self, mock_get_client):
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+        mock_client.chat.completions.create.return_value = _make_curc_completion()
+
+        iface = self._make_interface()
+        iface.query("prompt 1")
+        iface.query("prompt 2")
+
+        stats = iface.statistics
+        assert stats["total_queries"] == 2
+        assert stats["total_cost"] == 0.0
+
+    @patch("model_interface.CURCInterface._get_client")
+    def test_query_passes_temperature_and_max_tokens(self, mock_get_client):
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+        mock_client.chat.completions.create.return_value = _make_curc_completion()
+
+        iface = self._make_interface()
+        iface.query("prompt", temperature=0.7, max_tokens=128)
+
+        call_kwargs = mock_client.chat.completions.create.call_args.kwargs
+        assert call_kwargs["temperature"] == 0.7
+        assert call_kwargs["max_tokens"] == 128
+
+    @patch("model_interface.CURCInterface._get_client")
+    def test_query_serialises_to_dict(self, mock_get_client):
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+        mock_client.chat.completions.create.return_value = _make_curc_completion(text="hello")
+
+        iface = self._make_interface()
+        resp = iface.query("hi")
+        d = resp.to_dict()
+
+        assert d["text"] == "hello"
+        assert d["cost"] == 0.0
+        assert "provider" in d["metadata"]
+
+    @patch("model_interface.CURCInterface._get_client")
+    def test_query_propagates_server_error(self, mock_get_client):
+        """If the vLLM server returns an error, CURCInterface should propagate it."""
+        mock_client = MagicMock()
+        mock_get_client.return_value = mock_client
+        mock_client.chat.completions.create.side_effect = RuntimeError("connection refused")
+
+        iface = CURCInterface(
+            base_url="http://localhost:8000",
+            model="some/model",
+            rpm=6000,
+        )
+        # tenacity will retry 5 times; patch stop condition to fail fast
+        with pytest.raises(RuntimeError, match="connection refused"):
+            iface.query("prompt")
+
+
 class TestCreateModelInterface:
     """Test factory function."""
     
@@ -204,6 +326,32 @@ class TestCreateModelInterface:
         with pytest.raises(ValueError, match="Google requires api_key"):
             create_model_interface('google')
     
+    def test_create_curc_interface(self):
+        """Test creating CURCInterface via factory."""
+        iface = create_model_interface(
+            "curc",
+            base_url="http://localhost:8000",
+            model="Qwen/Qwen2.5-72B-Instruct-AWQ",
+        )
+        assert isinstance(iface, CURCInterface)
+        assert iface._base_url == "http://localhost:8000"
+        assert iface.model_name == "Qwen/Qwen2.5-72B-Instruct-AWQ"
+
+    def test_create_curc_interface_default_model(self):
+        """Factory should use the recommended 72B model when none specified."""
+        iface = create_model_interface("curc", base_url="http://localhost:8000")
+        assert isinstance(iface, CURCInterface)
+        assert "Qwen2.5-72B" in iface.model_name
+
+    def test_create_curc_interface_custom_model(self):
+        """Factory should accept alternate CURC models."""
+        iface = create_model_interface(
+            "curc",
+            base_url="http://localhost:9999",
+            model="hugging-quants/Meta-Llama-3.3-70B-Instruct-AWQ-INT4",
+        )
+        assert "Llama-3.3-70B" in iface.model_name
+
     def test_unknown_provider_raises_error(self):
         """Test that unknown provider raises error."""
         with pytest.raises(ValueError, match="Unknown provider"):

@@ -1,16 +1,16 @@
 # Project Status
 
 **Last Updated**: 2026-02-18  
-**Current**: Pre-evaluation analysis infrastructure complete  
+**Current**: CURC LLM Hoster integration complete; ready for live cluster evaluation  
 **Progress**: 9.5 of 14.5 weeks (65%)  
-**Timeline**: ON TRACK ✅
+**Timeline**: ON TRACK
 
 ---
 
 ## Quick Summary
 
 **Weeks Complete**: 9.5 of 14.5  
-**Tests**: 459 passing ✅  
+**Tests**: 474 passing ✅  
 **Coverage**: 85% ✅  
 **Expert KBs**: 2,318 rules ✅  
 **Instances**: 374 Level 2 + 35 Level 3 (all validated)  
@@ -51,11 +51,28 @@
   - `experiments/difficulty_analysis.py`: rewritten with correct sigma(I) extraction
   - `experiments/partition_sensitivity.py`: rewritten with real Mann-Whitney/KW tests
   - Azure OpenAI added to `experiments/validate_api_keys.py` and `.env.template`
+- **CURC LLM Hoster integration** (2026-02-18):
+  - `CURCInterface` added to `experiments/model_interface.py`: OpenAI-compatible client
+    pointed at the vLLM server (Patrick Cooper's CURC LLM Hoster project). Uses
+    `openai.OpenAI(base_url=..., api_key="not-needed")` with retry logic.
+  - Supported models: Qwen 2.5 72B AWQ (recommended), Llama 3.3 70B AWQ-INT4,
+    Qwen 2.5 32B AWQ, Llama 3.1 70B AWQ-INT4.
+  - `--provider curc --curc-base-url http://localhost:8000` added to `run_evaluation.py`.
+  - `hpc/slurm_evaluate_curc_vllm.sh`: replaces Ollama-based SLURM script.
+    Starts the vLLM server (tensor-parallel across all node GPUs), waits for the
+    /health endpoint, runs evaluation, shuts down server. Automatically runs
+    `analyze_results.py` on completion.
+  - `test_curc()` added to `validate_api_keys.py`; CURC counted as a valid
+    provider for pilot readiness.
+  - `.env.template` updated with `CURC_VLLM_BASE_URL` and `CURC_VLLM_MODEL`.
+  - 11 new unit tests for `CURCInterface` in `tests/experiments/test_model_interface.py`
+    using mocked OpenAI client (no network required).
 
-**ALL INFRASTRUCTURE COMPLETE** ✅  
-**LEVEL 3 INSTANCES COMPLETE** ✅  
-**EVALUATION PIPELINE READY** ✅  
-**ANALYSIS INFRASTRUCTURE COMPLETE** ✅
+**ALL INFRASTRUCTURE COMPLETE**  
+**LEVEL 3 INSTANCES COMPLETE**  
+**EVALUATION PIPELINE READY**  
+**ANALYSIS INFRASTRUCTURE COMPLETE**  
+**CURC LLM HOSTER INTEGRATION COMPLETE**
 
 ---
 
