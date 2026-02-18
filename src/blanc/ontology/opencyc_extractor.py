@@ -248,7 +248,7 @@ def extract_biology_from_opencyc(
         >>> print(f"Extracted {len(kb)} rules")
     """
     if opencyc_path is None:
-        opencyc_path = Path(r"D:\datasets\opencyc-kb\opencyc-2012-05-10-readable.owl.gz")
+        opencyc_path = Path(__file__).parent.parent.parent.parent / "data" / "opencyc" / "opencyc-2012-05-10-readable.owl.gz"
     
     extractor = OpenCycExtractor(opencyc_path)
     extractor.load()

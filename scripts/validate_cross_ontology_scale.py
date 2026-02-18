@@ -34,7 +34,7 @@ from blanc.ontology.opencyc_extractor import OpenCycExtractor
 from blanc.ontology.conceptnet_extractor import ConceptNetExtractor
 from blanc.author.conversion import phi_kappa
 from blanc.author.support import full_theory_criticality
-from blanc.generation.partition import partition_rand
+from blanc.generation.partition import partition_random
 
 
 def combine_taxonomy_properties(
@@ -164,7 +164,7 @@ def test_instance_generation(theory: Theory, sample_size: int = 100) -> List[dic
     from blanc.reasoning.defeasible import defeasible_provable
     
     # Convert to defeasible theory
-    converted = phi_kappa(theory, partition_rand(0.5))
+    converted = phi_kappa(theory, partition_random(0.5))
     
     # Find derivable targets at depth >= 2
     # Simple heuristic: try predicates that appear in multiple rules
@@ -204,9 +204,10 @@ def main():
     print("=" * 70)
     print()
     
-    # Configuration
-    OPENCYC_PATH = Path(r"D:\datasets\opencyc-kb\opencyc-2012-05-10-readable.owl.gz")
-    CONCEPTNET_PATH = Path(r"D:\datasets\conceptnet5\conceptnet-assertions-5.7.0.csv.gz")
+    # Configuration - paths relative to project root
+    _project_root = Path(__file__).parent.parent
+    OPENCYC_PATH = _project_root / "data" / "opencyc" / "opencyc-2012-05-10-readable.owl.gz"
+    CONCEPTNET_PATH = _project_root / "data" / "conceptnet" / "conceptnet-assertions-5.7.0.csv.gz"
     
     SAMPLE_CONCEPTS = 1000  # Sample size for proof
     SAMPLE_EDGES = 100000   # Process 100K ConceptNet edges
@@ -338,7 +339,7 @@ def main():
         print(f"  ✅ Found {len(targets)} derivable targets")
         
         # Test criticality on sample
-        converted = phi_kappa(combined_theory, partition_rand(0.5))
+        converted = phi_kappa(combined_theory, partition_random(0.5))
         instance_count = 0
         
         for target in targets[:10]:

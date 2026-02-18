@@ -269,7 +269,7 @@ def extract_biology_from_conceptnet(
         ... )
     """
     if conceptnet_path is None:
-        conceptnet_path = Path("D:/datasets/conceptnet5/conceptnet-assertions-5.7.0.csv.gz")
+        conceptnet_path = Path(__file__).parent.parent.parent.parent / "data" / "conceptnet" / "conceptnet-assertions-5.7.0.csv.gz"
     
     extractor = ConceptNetExtractor(conceptnet_path, weight_threshold)
     extractor.extract_biology(max_edges)

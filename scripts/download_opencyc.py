@@ -30,7 +30,7 @@ def download_opencyc():
         "opencyc-2012-05-10-readable.owl.gz": "OpenCyc 2012 (human-readable IDs)",
     }
     
-    output_dir = Path("data/opencyc")
+    output_dir = Path(__file__).parent.parent / "data" / "opencyc"
     output_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"\nDownload directory: {output_dir}")

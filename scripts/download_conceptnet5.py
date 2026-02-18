@@ -20,7 +20,7 @@ def download_conceptnet5(output_dir: Path = None):
         output_dir: Where to save (default: D:/datasets/conceptnet5/)
     """
     if output_dir is None:
-        output_dir = Path("D:/datasets/conceptnet5")
+        output_dir = Path(__file__).parent.parent / "data" / "conceptnet"
     
     output_dir.mkdir(parents=True, exist_ok=True)
     

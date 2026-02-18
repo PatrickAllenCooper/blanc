@@ -1,9 +1,67 @@
 # Cross-Ontology Extraction Plan: 10-100x Scale Expansion
 
 **Date**: 2026-02-13  
+**Proof-of-Concept Date**: 2026-02-18  
 **Trigger**: User insight - OpenCyc + ConceptNet can massively scale ruleset  
 **Goal**: Leverage large-scale legacy KBs to generate 100K+ defeasible rules  
 **Timeline**: Week 8.5a (proof) + Week 8.6 (full extraction)
+
+---
+
+## PROOF-OF-CONCEPT RESULT: FAIL (2026-02-18)
+
+**Decision**: Proceed to Phase 2B (manual Level 3 instance generation)
+
+### What Was Tested
+
+- OpenCyc: 27MB compressed OWL, loaded 3,131,677 triples, found 12,363 biological concepts
+- ConceptNet: 475MB compressed CSV, 34,074,917 total edges
+- Sample: 1,000 OpenCyc concepts + 100,000 ConceptNet edges
+
+### Why It Failed
+
+**Criterion 1 (FAIL)**: Generated rules = 1,000 (0.4x, need 5x)
+- Root cause: OpenCyc uses CamelCase internal names (`BiologicalLivingObject`, `BirdSpecies`)
+- ConceptNet uses lowercase natural language (`bird`, `penguin`)
+- No concept-name overlap → taxonomic rules don't connect to behavioral properties
+- The cross-ontology combination as designed cannot work without a concept alignment layer
+
+**Criterion 2 (FAIL)**: Defeaters found = 0
+- No CapableOf/NotCapableOf in the 100K edge sample (too early in the file)
+- Full-file scan (34M edges) confirms NotCapableOf exists but is noisy and crowdsourced
+- Sample NotCapableOf bio edges: `animals -> play_instruments`, `apples -> play_poker`
+- Quality is incompatible with expert-only KB policy
+
+### What the Full-File Scan Revealed
+
+| Relation | Count (all languages) |
+|---|---|
+| ExternalURL | 9,744,937 |
+| RelatedTo | 9,130,311 |
+| IsA | 611,423 |
+| CapableOf | ~22,000 (est.) |
+| NotCapableOf | Small, noisy |
+
+ConceptNet is explicitly rated "evaluate for validation only" in KNOWLEDGE_BASE_POLICY.md.
+Its crowdsourced edges (e.g., "apples -> play_poker", "angels -> exist") cannot serve as 
+expert-quality defeasible rules in a NeurIPS benchmark.
+
+### Concept-Alignment Requirement Not Met
+
+To make cross-ontology work, a mapping layer would be needed:
+- OpenCyc `BirdSpecies` → ConceptNet `bird`
+- Requires a separate entity alignment procedure (weeks of work)
+- Not justified given the manual Level 3 fallback is faster and higher quality
+
+### Formal Decision
+
+Per REVISED_IMPLEMENTATION_PLAN.md decision criteria:
+- < 5x scale achieved → SKIP to Phase 2B: Manual Level 3 generation
+- Data quality (crowdsourced ConceptNet) → incompatible with KNOWLEDGE_BASE_POLICY.md
+
+**Next step**: Week 8.5b - Manual Level 3 defeater instance generation
+
+---
 
 ---
 

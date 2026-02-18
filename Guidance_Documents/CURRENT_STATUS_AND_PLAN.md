@@ -1,17 +1,18 @@
 # Current Status and Implementation Plan
 
-**Last Updated**: February 13, 2026  
+**Last Updated**: February 18, 2026  
 **Project**: BLANC - Defeasible Abduction Benchmark  
-**Status**: Week 8 Complete, Starting Cross-Ontology Validation
+**Status**: Week 8 Complete, Cross-Ontology Proof FAILED, Starting Manual Level 3
 
 ---
 
 ## Quick Status
 
-**Progress**: 8 of 14.5 weeks (55%)  
-**Tests**: 343 passing, 80% coverage  
+**Progress**: 8.5 of 14.5 weeks (59%)  
+**Tests**: 333 passing, 80% coverage  
 **Infrastructure**: Complete (evaluation pipeline ready)  
-**Next Critical Action**: Cross-ontology proof-of-concept (1 day)
+**Cross-Ontology Proof**: FAILED (2026-02-18) - see CROSS_ONTOLOGY_PLAN.md  
+**Next Critical Action**: Phase 2B - Manual Level 3 defeater instance generation
 
 ---
 
@@ -43,14 +44,12 @@
 
 **Feasibility**: HIGH - experimental scripts ready
 
-### 3. Automatic Level 3 Generation
+### 3. Automatic Level 3 Generation (RULED OUT)
 
-**Manual approach**: 35-50 defeater instances in 3-5 days  
-**Automated approach**: 1,000-5,000 instances in 1 day
-
-**How**: ConceptNet NotCapableOf relations are defeaters!
-- Extract from ConceptNet automatically
-- 100x efficiency improvement
+**Status**: Cross-ontology proof FAILED (2026-02-18)  
+**Why**: OpenCyc/ConceptNet concept-name mismatch + ConceptNet quality below expert-only policy  
+**Decision**: Manual Level 3 generation (Phase 2B) is the path forward  
+**See**: CROSS_ONTOLOGY_PLAN.md for full proof-of-concept results
 
 ---
 
@@ -77,38 +76,21 @@
 
 ---
 
-## Implementation Plan: Phased Approach
+## Implementation Plan: Phase 2B (Active)
 
-### Day 8.5a: Cross-Ontology Proof (1 day) ← NEXT
+### Day 8.5a: Cross-Ontology Proof ← COMPLETE (FAILED)
 
-**Goal**: Validate 10-100x scale achievable
+**Result**: FAIL - 0.4x scale, 0 defeaters  
+**Decision**: Proceed to Phase 2B  
+**Full results**: CROSS_ONTOLOGY_PLAN.md
 
-**Script**: `python scripts/validate_cross_ontology_scale.py`
+### Week 8.6: Full Extraction ← CANCELLED
 
-**Measures**:
-- Rules generated from sample
-- Defeaters found
-- Quality validation
-- Projected full scale
+Cross-ontology approach ruled out due to:
+1. Concept-name mismatch between OpenCyc and ConceptNet
+2. ConceptNet quality incompatible with expert-only KB policy
 
-**Decision criteria**:
-- ✅ >= 10x scale → Proceed to Week 8.6
-- ❌ < 10x scale → Fallback to manual Level 3
-
-### Week 8.6: Full Extraction (1 week) ← IF PROOF SUCCEEDS
-
-**Goal**: Generate 100K-350K rules
-
-**Tasks**:
-- Day 1-2: Enhance extractors
-- Day 3-4: Biology extraction (100K-200K rules)
-- Day 5: Legal + materials (60K-150K rules)
-- Day 6: Automatic Level 3 generation (1K-5K instances)
-- Day 7: Validation
-
-**Deliverable**: Large-scale benchmark, automatic defeaters
-
-### Week 8.5b: Manual Level 3 (3-5 days) ← IF PROOF FAILS
+### Week 8.5b: Manual Level 3 (3-5 days) ← ACTIVE NOW
 
 **Goal**: 35-50 defeater instances manually
 
@@ -165,18 +147,23 @@
 
 ## Immediate Next Steps
 
-1. **Run cross-ontology proof** (4-8 hours):
-   ```bash
-   python scripts/validate_cross_ontology_scale.py
-   ```
+1. **Begin manual Level 3 generation (biology defeaters, Day 1-2)**:
+   - 15-20 biology instances: birds that don't fly, mammals that don't walk, etc.
+   - Validate each with conservativity checker + novelty metric
+   - Generate 5 distractors per instance
 
-2. **Review results and decide**:
-   - If 10x achieved → Plan Week 8.6 details
-   - If not → Begin manual Level 3 generation
+2. **Legal defeaters (Day 3)**:
+   - 10-15 instances: emancipated minors, good faith exceptions, statutes of limitations
+   - Some should introduce novel predicates (Nov > 0)
 
-3. **Update STATUS.md** with decision
+3. **Materials defeaters (Day 4)**:
+   - 10-15 instances: metallic glass, aerogels, superconductors
+   - Highest novelty target (materials = most opportunity for Nov > 0)
 
-4. **Proceed** based on decision tree
+4. **Validation + testing (Day 5)**:
+   - All instances: conservativity, novelty, revision distance
+   - Integration into evaluation pipeline
+   - Run all tests
 
 ---
 

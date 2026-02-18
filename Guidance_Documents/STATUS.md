@@ -1,21 +1,21 @@
 # Project Status
 
-**Last Updated**: 2026-02-13  
-**Current**: Week 7 Complete, Starting Week 8  
-**Progress**: 7 of 14 weeks (50%)  
+**Last Updated**: 2026-02-18  
+**Current**: Week 8 Complete, Cross-Ontology Proof FAILED, Starting Phase 2B (Manual Level 3)  
+**Progress**: 8.5 of 14.5 weeks (59%)  
 **Timeline**: ON TRACK ✅
 
 ---
 
 ## Quick Summary
 
-**Weeks Complete**: 7 of 14  
-**Tests**: 283 passing ✅  
-**Coverage**: 78% ✅  
+**Weeks Complete**: 8.5 of 14.5  
+**Tests**: 333 passing ✅  
+**Coverage**: 80% ✅  
 **Expert KBs**: 2,318 rules ✅  
-**Instances**: 374 development ✅  
+**Instances**: 374 Level 2, 0 Level 3 (CRITICAL GAP)  
 **Codec**: ALL 4 modalities + 3 decoders ✅  
-**Round-trip**: 75% (3 of 4 modalities perfect) ✅
+**Cross-Ontology Proof**: FAILED 2026-02-18 (see CROSS_ONTOLOGY_PLAN.md)
 
 ---
 
@@ -32,34 +32,36 @@
 
 ---
 
-## Next: Week 8.5 (CRITICAL - REVISED)
+## Current: Phase 2B - Manual Level 3 Generation (ACTIVE)
 
-**Goal**: Cross-Ontology Scale Validation + Level 3 Instance Generation
+**Goal**: Generate 35-50 defeater abduction instances across all three domains
 
-**Major Update**: User identified 10-100x scale opportunity!
-- OpenCyc (300K concepts) + ConceptNet (21M assertions)
-- Can generate 100K-350K rules (vs current 2,318)
-- ConceptNet NotCapableOf = automatic defeaters for Level 3!
-- See SCALE_OPPORTUNITY.md and CROSS_ONTOLOGY_PLAN.md
+**Decision basis**: Cross-ontology proof FAILED 2026-02-18
+- OpenCyc concepts don't align with ConceptNet concept names
+- ConceptNet quality (crowdsourced) incompatible with expert-only KB policy
+- Full results: CROSS_ONTOLOGY_PLAN.md
 
-**Phased Approach**:
+**Phase 2B Plan (3-5 days)**:
 
-**Day 8.5a** (1 day): Cross-Ontology Proof-of-Concept
-1. Run validation script (sample: 1K concepts, 100K assertions)
-2. Measure: rules generated, defeaters, quality
-3. Project to full scale
-4. **Decision**: Proceed with full extraction (Week 8.6) or not?
+**Day 1-2**: Biology defeaters (15-20 instances)
+- Birds that don't fly: penguin, ostrich, emu, kiwi, cassowary
+- Mammals that don't walk: whale, dolphin, bat
+- Exceptional diets and behaviors
 
-**Week 8.5b** (3-5 days, parallel): Manual Level 3 (if proof fails)
-- Same as original plan: 35-50 instances manually
+**Day 3**: Legal defeaters (10-15 instances)
+- Emancipated minor contract exception
+- Statutes of limitations
+- Good faith exceptions, qualified immunity
 
-**Week 8.6** (1 week, conditional): Full Cross-Ontology Extraction
-- Only if proof succeeds
-- Extract 100K-350K rules
-- Generate 1,000-5,000 Level 3 instances automatically
-- 10-100x scale improvement
+**Day 4**: Materials defeaters (10-15 instances)
+- Metallic glass (brittle exception)
+- Aerogels (density exception)
+- Superconductors at low temperature
+- High novelty target (Nov > 0)
 
-**Estimate**: 1 day (proof) + 3-5 days (manual) OR 1 day (proof) + 1 week (auto)
+**Day 5**: Validation + integration
+- Conservativity checks, novelty computation
+- Integration tests, all 333 tests passing
 
 ---
 
