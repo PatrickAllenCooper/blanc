@@ -87,6 +87,33 @@ def test_google(api_key: str) -> bool:
         return False
 
 
+def test_azure(endpoint: str, api_key: str, deployment: str, api_version: str) -> bool:
+    """Test Azure OpenAI endpoint."""
+    print(f"\nTesting Azure OpenAI (deployment: {deployment})...")
+
+    try:
+        interface = create_model_interface(
+            "azure",
+            endpoint=endpoint,
+            api_key=api_key,
+            deployment_name=deployment,
+            api_version=api_version,
+        )
+        response = interface.query("Say 'test'", max_tokens=10)
+
+        print(f"  OK Model: {response.model}")
+        print(f"  OK Response: {response.text[:50]}")
+        print(f"  OK Tokens: {response.tokens_input} in, {response.tokens_output} out")
+        print(f"  OK Cost: ${response.cost:.6f}")
+        print(f"  OK Latency: {response.latency:.2f}s")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAIL Error: {e}")
+        return False
+
+
 def test_ollama() -> bool:
     """Test Ollama (local)."""
     print("\nTesting Ollama (optional - local models)...")
@@ -137,7 +164,13 @@ def main():
     openai_key = os.getenv('OPENAI_API_KEY')
     anthropic_key = os.getenv('ANTHROPIC_API_KEY')
     google_key = os.getenv('GOOGLE_API_KEY')
-    
+
+    # Azure credentials
+    azure_endpoint   = os.getenv('AZURE_OPENAI_ENDPOINT', '')
+    azure_key        = os.getenv('AZURE_OPENAI_API_KEY', '')
+    azure_deployment = os.getenv('AZURE_OPENAI_DEPLOYMENT', 'gpt-4o')
+    azure_version    = os.getenv('AZURE_OPENAI_API_VERSION', '2024-08-01-preview')
+
     # Track results
     results = {}
     
@@ -162,6 +195,13 @@ def main():
         print("\n⚠️  Google API key not set in .env (optional)")
         results['google'] = False
     
+    # Test Azure OpenAI (optional -- prefer over direct OpenAI on CURC)
+    if azure_endpoint and azure_key and azure_endpoint != 'https://...':
+        results['azure'] = test_azure(azure_endpoint, azure_key, azure_deployment, azure_version)
+    else:
+        print("\nINFO  Azure OpenAI credentials not set in .env (optional)")
+        results['azure'] = False
+
     # Test Ollama (optional)
     results['ollama'] = test_ollama()
     
@@ -174,14 +214,18 @@ def main():
         status = "✓" if success else "✗"
         print(f"  {status} {service.title()}")
     
-    required_working = results.get('openai', False) and results.get('anthropic', False)
-    
+    required_working = (
+        results.get('openai', False)
+        or results.get('azure', False)
+        or results.get('anthropic', False)
+    )
+
     if required_working:
-        print("\n✅ READY FOR PILOT EVALUATION")
-        print("   Run: python experiments/run_pilot_evaluation.py")
+        print("\nREADY FOR PILOT EVALUATION")
+        print("   Run: python experiments/run_evaluation.py --level 3 --instances instances/level3_instances.json")
     else:
-        print("\n⚠️  REQUIRED APIs not working")
-        print("   Need: OpenAI and Anthropic keys")
+        print("\nREQUIRED APIs not working")
+        print("   Need at least one of: OpenAI, Azure OpenAI, or Anthropic")
         print("   Optional: Google, Ollama")
     
     print("\n" + "=" * 70)

@@ -31,6 +31,7 @@ from blanc.author.generation import AbductiveInstance
 from blanc.codec.cascading_decoder import CascadingDecoder, decode_batch
 from blanc.codec.d2_decoder import decode_d2
 from blanc.codec.decoder import decode_response
+from level3_evaluator import Level3Evaluator, Level3EvalResult
 
 
 @dataclass
@@ -48,9 +49,13 @@ class EvaluationMetrics:
     tokens_used: int
     cost: float
     
-    # Additional metrics (for Level 2+)
-    novelty: Optional[float] = None
-    conservativity: Optional[bool] = None
+    # Level 3 formal metrics
+    novelty: Optional[float] = None           # Nov(predicted, D^-)
+    conservativity: Optional[bool] = None     # is_conservative
+    resolves_anomaly: Optional[bool] = None   # predicted rule resolves the anomaly
+    revision_distance: Optional[int] = None   # d_rev
+    error_class: Optional[str] = None         # E1-E5 taxonomy
+    parse_success: Optional[bool] = None      # rule parse succeeded
     
     # Metadata
     predicted_hypothesis: Optional[str] = None
@@ -159,6 +164,7 @@ class EvaluationPipeline:
         self.results_dir.mkdir(parents=True, exist_ok=True)
 
         self._cascade_decoder = CascadingDecoder()
+        self._level3_evaluator = Level3Evaluator()
         self.evaluations: List[SingleEvaluation] = []
     
     def run(
@@ -294,6 +300,16 @@ class EvaluationPipeline:
         # Check correctness
         correct = self._check_correctness(decoded_hypothesis, instance)
         
+        # Level 3 formal metrics
+        l3_result: Optional[Level3EvalResult] = None
+        if getattr(instance, 'level', 2) == 3:
+            l3_result = self._level3_evaluator.evaluate(
+                instance, response.text, decoded_hypothesis
+            )
+            # Reconcile correct: use exact match OR (resolves + conservative)
+            if l3_result.resolves_anomaly and l3_result.is_conservative:
+                correct = True
+
         metrics = EvaluationMetrics(
             correct=correct,
             decoder_stage=decoder_stage or "FAILED",
@@ -302,6 +318,12 @@ class EvaluationPipeline:
             cost=response.cost,
             predicted_hypothesis=decoded_hypothesis,
             gold_hypothesis=instance.gold[0] if instance.gold else None,
+            novelty=l3_result.nov if l3_result else None,
+            conservativity=l3_result.is_conservative if l3_result else None,
+            resolves_anomaly=l3_result.resolves_anomaly if l3_result else None,
+            revision_distance=l3_result.d_rev if l3_result else None,
+            error_class=l3_result.error_class if l3_result else None,
+            parse_success=l3_result.parse_success if l3_result else None,
         )
         
         return SingleEvaluation(
