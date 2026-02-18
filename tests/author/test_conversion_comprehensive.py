@@ -24,76 +24,94 @@ from blanc.generation.partition import (
 
 class TestConversionWrappers:
     """Test conversion wrapper functions."""
-    
+
     def test_convert_theory_depth_mode(self):
-        """Test convert_theory_to_defeasible with depth mode."""
+        """Test convert_theory_to_defeasible with depth partition strategy."""
         theory = Theory()
         theory.add_fact("a(x)")
         theory.add_rule(Rule("b(X)", ("a(X)",), RuleType.STRICT, label="r1"))
         theory.add_rule(Rule("c(X)", ("b(X)",), RuleType.STRICT, label="r2"))
         theory.add_rule(Rule("d(X)", ("c(X)",), RuleType.STRICT, label="r3"))
-        
-        # Convert with depth=1
-        converted = convert_theory_to_defeasible(theory, mode='depth', k=1)
-        
+
+        converted = convert_theory_to_defeasible(theory, partition_strategy='depth', k=1)
+
         assert converted is not None
         assert len(converted.rules) > 0
-    
+
     def test_convert_theory_depth_mode_k2(self):
-        """Test depth mode with k=2."""
+        """Test depth partition strategy with k=2."""
         theory = Theory()
         theory.add_fact("a(x)")
         for i in range(3):
             theory.add_rule(Rule(f"h{i}(X)", ("a(X)",), RuleType.STRICT, label=f"r{i}"))
-        
-        converted = convert_theory_to_defeasible(theory, mode='depth', k=2)
-        
+
+        converted = convert_theory_to_defeasible(theory, partition_strategy='depth', k=2)
+
         assert converted is not None
-    
+
     def test_convert_theory_depth_mode_k3(self):
-        """Test depth mode with k=3."""
+        """Test depth partition strategy with k=3."""
         theory = Theory()
         theory.add_fact("a(x)")
         theory.add_rule(Rule("b(X)", ("a(X)",), RuleType.STRICT, label="r1"))
-        
-        converted = convert_theory_to_defeasible(theory, mode='depth', k=3)
-        
+
+        converted = convert_theory_to_defeasible(theory, partition_strategy='depth', k=3)
+
         assert converted is not None
-    
+
     def test_convert_theory_random_mode_low_delta(self):
-        """Test random mode with low delta."""
+        """Test random partition strategy with low delta."""
         theory = Theory()
         for i in range(5):
             theory.add_rule(Rule(f"h{i}(X)", ("a(X)",), RuleType.STRICT, label=f"r{i}"))
-        
-        converted = convert_theory_to_defeasible(theory, mode='random', delta=0.1)
-        
+
+        converted = convert_theory_to_defeasible(theory, partition_strategy='random', delta=0.1)
+
         assert converted is not None
-    
+
     def test_convert_theory_random_mode_high_delta(self):
-        """Test random mode with high delta."""
+        """Test random partition strategy with high delta."""
         theory = Theory()
         for i in range(5):
             theory.add_rule(Rule(f"h{i}(X)", ("a(X)",), RuleType.STRICT, label=f"r{i}"))
-        
-        converted = convert_theory_to_defeasible(theory, mode='random', delta=0.9)
-        
+
+        converted = convert_theory_to_defeasible(theory, partition_strategy='random', delta=0.9)
+
         assert converted is not None
-    
+
     def test_convert_theory_random_mode_mid_delta(self):
-        """Test random mode with mid delta."""
+        """Test random partition strategy with mid delta."""
         theory = Theory()
         for i in range(5):
             theory.add_rule(Rule(f"h{i}(X)", ("a(X)",), RuleType.STRICT, label=f"r{i}"))
-        
-        converted = convert_theory_to_defeasible(theory, mode='random', delta=0.5)
-        
+
+        converted = convert_theory_to_defeasible(theory, partition_strategy='random', delta=0.5)
+
         assert converted is not None
-        
-        # Some rules should be defeasible
-        defeasible_count = sum(1 for r in converted.rules 
-                              if r.rule_type == RuleType.DEFEASIBLE)
-        assert defeasible_count >= 0  # At least possible
+        defeasible_count = sum(
+            1 for r in converted.rules if r.rule_type == RuleType.DEFEASIBLE
+        )
+        assert defeasible_count >= 0
+
+    def test_convert_theory_unknown_strategy_raises(self):
+        """Unknown partition strategy raises ValueError."""
+        theory = Theory()
+        theory.add_fact("a(x)")
+        with pytest.raises(ValueError, match="Unknown partition strategy"):
+            convert_theory_to_defeasible(theory, partition_strategy='nonexistent')
+
+    def test_convert_theory_leaf_strategy(self):
+        """Leaf partition strategy marks facts as defeasible."""
+        theory = Theory()
+        theory.add_fact("bird(tweety)")
+        theory.add_rule(Rule("flies(X)", ("bird(X)",), RuleType.STRICT, label="r1"))
+
+        converted = convert_theory_to_defeasible(theory, partition_strategy='leaf')
+
+        assert converted is not None
+        # Leaf: facts defeasible, rules strict
+        strict_rules = [r for r in converted.rules if r.rule_type == RuleType.STRICT]
+        assert len(strict_rules) >= 1
 
 
 class TestPartitionApplications:

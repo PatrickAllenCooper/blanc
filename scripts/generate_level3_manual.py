@@ -20,6 +20,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from blanc.core.theory import Theory, Rule, RuleType
 from blanc.reasoning.defeasible import defeasible_provable
+from blanc.author.metrics import (
+    predicate_novelty as compute_novelty,
+    check_conservativity,
+)
 
 
 # ─── Infrastructure ──────────────────────────────────────────────────────────
@@ -37,58 +41,6 @@ def _copy(t: Theory) -> Theory:
         ))
     t2.superiority = {k: v.copy() for k, v in t.superiority.items()}
     return t2
-
-
-def _predicates(theory: Theory) -> set:
-    """All predicate symbols in a theory (stripping ~ and arguments)."""
-    preds = set()
-    for f in theory.facts:
-        preds.add(f.split("(")[0].lstrip("~"))
-    for r in theory.rules:
-        for atom in [r.head] + list(r.body):
-            preds.add(atom.split("(")[0].lstrip("~"))
-    return preds
-
-
-def _rule_predicates(rule: Rule) -> set:
-    """All predicate symbols in a single rule."""
-    preds = set()
-    for atom in [rule.head] + list(rule.body):
-        preds.add(atom.split("(")[0].lstrip("~"))
-    return preds
-
-
-def compute_novelty(rule: Rule, D_minus: Theory) -> float:
-    """
-    Predicate novelty Nov(r, D^-): fraction of predicate symbols in r
-    that are absent from D^-.  Definition 14 (paper.tex).
-    """
-    existing = _predicates(D_minus)
-    rule_preds = _rule_predicates(rule)
-    if not rule_preds:
-        return 0.0
-    novel = rule_preds - existing
-    return round(len(novel) / len(rule_preds), 3)
-
-
-def check_conservativity(
-    D_minus: Theory,
-    D_full: Theory,
-    anomaly: str,
-    preserved: List[str],
-) -> Tuple[bool, List[str]]:
-    """
-    Conservativity (Definition 15, paper.tex): D_full preserves every
-    defeasible consequence of D_minus except the anomaly itself.
-    Returns (is_conservative, list_of_lost_expectations).
-    """
-    lost = []
-    for exp in preserved:
-        if exp == anomaly:
-            continue
-        if defeasible_provable(D_minus, exp) and not defeasible_provable(D_full, exp):
-            lost.append(exp)
-    return (len(lost) == 0), lost
 
 
 def _build_full(

@@ -48,8 +48,11 @@ class CascadingDecoder:
             return None, None
         
         # Stage 1: D1 (Exact Match)
+        # ExactMatchDecoder.decode() requires an AbductiveInstance; here we
+        # wrap the candidate list in a minimal stub so it can be called with
+        # the same (text, candidates) API used by the rest of this pipeline.
         try:
-            result = self.d1_decoder.decode_response(text, candidates)
+            result = self._d1_exact_match(text, candidates)
             if result is not None:
                 return result, 'D1'
         except Exception:
@@ -74,6 +77,26 @@ class CascadingDecoder:
         # All stages failed
         return None, None
     
+    def _d1_exact_match(
+        self, text: str, candidates: List[Union[str, Rule]]
+    ) -> Optional[Union[str, Rule]]:
+        """
+        Inline exact-match implementation for the cascading pipeline.
+
+        ExactMatchDecoder.decode() requires an AbductiveInstance; rather than
+        constructing a stub instance, we replicate the normalise-and-compare
+        logic directly here so the cascading decoder remains self-contained.
+        """
+        norm_text = self.d1_decoder._normalize(text)
+        for candidate in candidates:
+            if isinstance(candidate, str):
+                norm_cand = self.d1_decoder._normalize(candidate)
+            else:
+                norm_cand = self.d1_decoder._normalize_rule(candidate)
+            if norm_text == norm_cand:
+                return candidate
+        return None
+
     def decode_with_confidence(self, text: str, candidates: List[Union[str, Rule]]) -> Tuple[Optional[Union[str, Rule]], Optional[str], float]:
         """
         Decode with confidence score.
