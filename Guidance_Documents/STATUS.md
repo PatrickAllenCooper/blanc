@@ -1,7 +1,7 @@
 # Project Status
 
 **Last Updated**: 2026-02-18  
-**Current**: CURC LLM Hoster integration complete; ready for live cluster evaluation  
+**Current**: CURC integration complete; documentation consolidated; ready for live evaluation  
 **Progress**: 9.5 of 14.5 weeks (65%)  
 **Timeline**: ON TRACK
 
@@ -73,6 +73,19 @@
 **EVALUATION PIPELINE READY**  
 **ANALYSIS INFRASTRUCTURE COMPLETE**  
 **CURC LLM HOSTER INTEGRATION COMPLETE**
+
+### Documentation consolidation (2026-02-18)
+
+Reduced from 90+ markdown files across 8 directories to 10 files in
+`Guidance_Documents/` plus directory READMEs. All historical session
+artefacts (Phase_* summaries, CONTINUE_DEVELOPMENT, CROSS_ONTOLOGY_PLAN,
+completed_weeks/, session_reports/, week3_docs/, planning/, audits/,
+and root-level stray files) deleted. Unique content merged:
+
+- Level-objectives quick-reference table added to `INTUITIVE_GUIDE.md`
+- `DATA_DOWNLOAD.md` created from `docs/DATA_DOWNLOAD_INSTRUCTIONS.md`
+- `REPOSITORY_STRUCTURE.md` rewritten from scratch to reflect current state
+- Cross-ontology failure already captured in STATUS.md (Week 8.5a entry)
 
 ---
 

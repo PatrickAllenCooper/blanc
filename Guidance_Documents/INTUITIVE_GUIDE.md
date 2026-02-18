@@ -693,6 +693,28 @@ With API keys, we can run the full evaluation:
 
 ---
 
+---
+
+## Quick Reference: Levels, Objectives, and Dataset Counts
+
+| Level | Task | Grounding | Novelty | Belief Revision | Dataset (Feb 2026) |
+|-------|------|:---------:|:-------:|:---------------:|-------------------|
+| 1 | Fact completion | Yes | No | No | 0 instances (future) |
+| 2 | Rule abduction | Yes | No | No | 374 instances |
+| 3 | Defeater abduction | Yes | Yes | Yes | 35 instances |
+
+**Critical point**: Only Level 3 tests all three objectives simultaneously. The paper's title — "Grounding, Novelty, and Belief Revision" — requires Level 3 instances to be substantiated.
+
+### Domain examples at a glance
+
+| Domain | Default | Exception | Defeater rule | Nov > 0? |
+|--------|---------|-----------|---------------|----------|
+| Biology | Birds fly | Penguins don't | `~flies(X) :- penguin(X)` | No |
+| Legal | Minors cannot sign contracts | Emancipated minors can | `can_sign(X) :- emancipated_minor(X)` | Yes |
+| Materials | Crystals are brittle | Amorphous metals aren't | `~brittle(X) :- amorphous_metal(X)` | Yes |
+
+---
+
 **Author**: Patrick Cooper  
 **Date**: February 13, 2026  
 **Project**: BLANC - Defeasible Abduction Benchmark  
