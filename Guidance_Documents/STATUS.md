@@ -1,7 +1,7 @@
 # Project Status
 
 **Last Updated**: 2026-02-18  
-**Current**: CURC integration complete; documentation consolidated; ready for live evaluation  
+**Current**: CURC integration complete; documentation consolidated; manuscript updated; ready for live evaluation  
 **Progress**: 9.5 of 14.5 weeks (65%)  
 **Timeline**: ON TRACK
 
@@ -72,7 +72,22 @@
 **LEVEL 3 INSTANCES COMPLETE**  
 **EVALUATION PIPELINE READY**  
 **ANALYSIS INFRASTRUCTURE COMPLETE**  
-**CURC LLM HOSTER INTEGRATION COMPLETE**
+**CURC LLM HOSTER INTEGRATION COMPLETE**  
+**MANUSCRIPT UPDATED (2026-02-18)**
+
+### Manuscript updates (2026-02-18)
+
+All additions to `paper/paper.tex`; nothing removed:
+
+- Models paragraph: `Llama 3 70B/8B` replaced by `Qwen 2.5 72B/32B AWQ` (CURC top model);
+  Llama 3.3 70B added as cross-family comparator; TODO removed
+- New paragraph: compute infrastructure (CURC Alpine A100, Azure OpenAI, vLLM REST API)
+- Tier 0 table row: `374` updated to `374 L1/L2 + 35 L3`
+- Scaling analysis: updated to Qwen 2.5 32B vs 72B with Llama cross-family replication
+- Symbolic ceiling TODO resolved: clingo 5, $\Delta$-derivability encoding, 30s timeout
+- Decoder validation TODO resolved: M2-M4 at 100% round-trip over all 409 gold hypotheses
+- Chain-of-thought TODO replaced: full four-step defeasible scaffold described
+- `references.bib`: added 8 new entries (GPT-4o, Claude, Gemini, Qwen 2.5, Llama 3, vLLM, clingo)
 
 ### Documentation consolidation (2026-02-18)
 
