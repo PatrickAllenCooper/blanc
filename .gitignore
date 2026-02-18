@@ -67,6 +67,7 @@ htmlcov/
 data/
 cache/
 *.json
+!instances/**/*.json
 
 # Week 8: Evaluation infrastructure
 .env
