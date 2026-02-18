@@ -1,7 +1,7 @@
 # Project Status
 
 **Last Updated**: 2026-02-18  
-**Current**: Week 8.5 Complete - all pre-evaluation preparation done  
+**Current**: Pre-evaluation analysis infrastructure complete  
 **Progress**: 9.5 of 14.5 weeks (65%)  
 **Timeline**: ON TRACK ✅
 
@@ -10,13 +10,14 @@
 ## Quick Summary
 
 **Weeks Complete**: 9.5 of 14.5  
-**Tests**: 418 passing ✅  
+**Tests**: 459 passing ✅  
 **Coverage**: 85% ✅  
 **Expert KBs**: 2,318 rules ✅  
 **Instances**: 374 Level 2 + 35 Level 3 (all validated)  
-**Codec**: ALL 4 modalities + 3 decoders ✅  
-**Pipeline**: dry run passing with MockModelInterface ✅  
-**Level 3 Generation**: COMPLETE - 35 instances, 10 with Nov > 0
+**Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4) ✅  
+**Pipeline**: dry run passing with MockModelInterface + Level3Evaluator ✅  
+**Level 3 Generation**: COMPLETE - 35 instances, 10 with Nov > 0  
+**Analysis scripts**: COMPLETE - all paper Section 5 analysis ready
 
 ---
 
@@ -38,10 +39,23 @@
   - Related Work (Section 2) expanded: LLM-ASPIC+ (ECAI 2025), LogiDynamics (EMNLP 2025)
   - Pipeline bug fixed: `EvaluationPipeline` now routes through `CascadingDecoder` (D1→D2→D3)
   - Prompting bug fixed: M4 candidate encoding no longer attempts to re-encode formal strings
+- **Week 9 preparation**: All analysis scripts written and tested (no cloud needed)
+  - `experiments/level3_evaluator.py`: parses model responses, computes Nov/conservativity/d_rev
+  - `experiments/validate_decoder_pipeline.py`: confirmed 100% round-trip M2-M4
+  - `experiments/analyze_results.py`: accuracy by model/modality/domain/level
+  - `experiments/novelty_analysis.py`: Nov distribution + accuracy-novelty correlation
+  - `experiments/conservativity_analysis.py`: conservativity rate + d_rev distribution
+  - `experiments/error_taxonomy.py`: E1-E5 error classification
+  - `experiments/generate_paper_tables.py`: LaTeX tables 1-4 for Section 5
+  - `experiments/symbolic_baseline.py`: ASP ceiling evaluation for Levels 2 and 3
+  - `experiments/difficulty_analysis.py`: rewritten with correct sigma(I) extraction
+  - `experiments/partition_sensitivity.py`: rewritten with real Mann-Whitney/KW tests
+  - Azure OpenAI added to `experiments/validate_api_keys.py` and `.env.template`
 
 **ALL INFRASTRUCTURE COMPLETE** ✅  
 **LEVEL 3 INSTANCES COMPLETE** ✅  
-**EVALUATION PIPELINE READY** ✅
+**EVALUATION PIPELINE READY** ✅  
+**ANALYSIS INFRASTRUCTURE COMPLETE** ✅
 
 ---
 
