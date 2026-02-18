@@ -88,7 +88,10 @@ class SingleEvaluation:
     # Metadata
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
     cached: bool = False
-    
+    theory_size: Optional[int] = None     # |D^-| for theory size scaling analysis
+    level: Optional[int] = None           # instance level (2 or 3)
+    domain: Optional[str] = None          # biology / legal / materials
+
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON."""
         return {
@@ -100,7 +103,10 @@ class SingleEvaluation:
             'decoded_hypothesis': self.decoded_hypothesis,
             'metrics': self.metrics.to_dict(),
             'timestamp': self.timestamp,
-            'cached': self.cached
+            'cached': self.cached,
+            'theory_size': self.theory_size,
+            'level': self.level,
+            'domain': self.domain,
         }
 
 
@@ -340,7 +346,13 @@ class EvaluationPipeline:
             raw_response=response.text,
             decoded_hypothesis=decoded_hypothesis,
             metrics=metrics,
-            cached=cached
+            cached=cached,
+            theory_size=(
+                len(instance.D_minus.facts) + len(instance.D_minus.rules)
+                if hasattr(instance, "D_minus") and instance.D_minus else None
+            ),
+            level=getattr(instance, "level", None),
+            domain=instance.metadata.get("domain") if instance.metadata else None,
         )
     
     def _decode_response(
