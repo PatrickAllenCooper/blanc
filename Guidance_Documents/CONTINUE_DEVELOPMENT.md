@@ -1,12 +1,16 @@
 # Continue Development: Handoff Document
 
-**Date**: 2026-02-13 (UPDATED)  
+**Date**: 2026-02-18 (UPDATED)  
 **Current Status**: Week 8 Complete (Evaluation Infrastructure Done)  
-**Critical Next**: Week 8.5 - Level 3 Instance Generation (3-5 days)  
-**Why Critical**: Paper claims all 3 objectives, dataset only tests 1  
+**Critical Next**: Week 8.5 - Cross-Ontology Proof + Level 3 Instance Generation  
+**Why Critical**: Paper claims all 3 objectives; dataset only tests 1. Scale must go from 374 to 30K+ instances.  
 **For**: Future development sessions
 
-**⚠️ IMPORTANT**: Read [OBJECTIVE_ACCOUNTING.md](../OBJECTIVE_ACCOUNTING.md) first to understand the gap
+**IMPORTANT**: Read the following documents in order:
+1. [OBJECTIVE_ACCOUNTING.md](OBJECTIVE_ACCOUNTING.md) — the three-objectives gap
+2. [COMPREHENSIVE_KB_PIPELINE.md](COMPREHENSIVE_KB_PIPELINE.md) — full KB sourcing plan (NEW)
+3. [PAPER_ADDITIONS_PROPOSAL.md](PAPER_ADDITIONS_PROPOSAL.md) — exact paper changes needed (NEW)
+4. [CROSS_ONTOLOGY_PLAN.md](CROSS_ONTOLOGY_PLAN.md) — Tier 1 extraction detail
 
 ---
 
@@ -15,16 +19,25 @@
 **Progress**: 8 of 14.5 weeks complete (55%) ✅  
 **Tests**: 343 passing, 0 failures ✅  
 **Coverage**: 80% ✅  
-**Blockers**: Level 3 instances needed (critical for paper claims) ⚠️
+**Blockers**: Level 3 instances (0 of 374), scale (374 vs target 30K+) ⚠️
 
-**Must do next**: Generate Level 3 (defeater abduction) instances  
-**Then**: Run pilot evaluation → Week 9 full evaluation
+**Must do next** (in order):
+1. Run cross-ontology proof-of-concept (1 day)
+2. If proof passes: full extraction Week 8.6 → 100K-350K rules, 30K-90K instances, 3K-15K Level 3
+3. Update paper.tex using PAPER_ADDITIONS_PROPOSAL.md (parallel with extraction)
 
 **THE GAP**:
 - Paper title: "Grounding, Novelty, and Belief Revision"
 - Current dataset: Tests grounding only (0% novelty, 0% belief revision)
-- Solution: Week 8.5 (3-5 days) to generate Level 3 instances
-- See: [OBJECTIVE_ACCOUNTING.md](../OBJECTIVE_ACCOUNTING.md)
+- Solution: Cross-ontology extraction gives Level 3 automatically via NotCapableOf and Wikidata P2303
+- See: OBJECTIVE_ACCOUNTING.md and COMPREHENSIVE_KB_PIPELINE.md
+
+**NEW FINDING (2026-02-18)**:
+- Wikidata P2303 ("exception to constraint") is a structured defeater source not previously in our plan
+- BabelNet 5.3 is 23M synsets / 1.9B relations / 600 languages (larger than documented in our files)
+- DEFREASING (NAACL 2025) is a competing benchmark — must be cited and differentiated in paper
+- LLM-ORBench (ICLR 2026) is another benchmark to cite
+- Full KB inventory with 5 tiers in COMPREHENSIVE_KB_PIPELINE.md
 
 ---
 
