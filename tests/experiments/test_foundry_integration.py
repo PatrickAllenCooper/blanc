@@ -63,18 +63,19 @@ def _assert_connectivity(resp: ModelResponse, provider_tag: str) -> None:
     """
     Assert that the endpoint responded to a real request.
 
-    We do NOT assert that resp.text is non-empty because GPT-5.2 and
-    Kimi-K2.5 may consume their entire token budget on internal chain-of-
-    thought and produce no visible text when max_tokens is small.  Instead
-    we assert on the measurable round-trip signals.
+    With reasoning_effort controls in place, all three Foundry models should
+    produce a clean 'stop' finish (not 'length') and return non-empty text.
     """
-    assert resp.tokens_input  > 0, f"{provider_tag}: tokens_input == 0 (no request sent?)"
-    assert resp.tokens_output > 0, f"{provider_tag}: tokens_output == 0 (no generation?)"
-    assert resp.latency        > 0, f"{provider_tag}: latency == 0 (no network call?)"
-    assert resp.cost           >= 0, f"{provider_tag}: cost < 0"
+    assert resp.tokens_input  > 0,   f"{provider_tag}: tokens_input == 0 (no request sent?)"
+    assert resp.tokens_output > 0,   f"{provider_tag}: tokens_output == 0 (no generation?)"
+    assert resp.latency        > 0,   f"{provider_tag}: latency == 0 (no network call?)"
+    assert resp.cost           >= 0,  f"{provider_tag}: cost < 0"
     assert isinstance(resp.text, str), f"{provider_tag}: response.text is not a str"
     assert resp.metadata.get("provider") == provider_tag, (
         f"{provider_tag}: wrong provider tag in metadata"
+    )
+    assert "reasoning_effort" in resp.metadata or provider_tag == "foundry-claude", (
+        f"{provider_tag}: reasoning_effort missing from metadata"
     )
     # Must serialise without raising.
     d = resp.to_dict()
@@ -121,6 +122,17 @@ class TestFoundryGPT52Live:
         resp = iface.query(_PING_PROMPT, temperature=0.0, max_tokens=_PING_MAX_TOKENS)
         _assert_connectivity(resp, "foundry-gpt")
 
+    def test_reasoning_effort_none_produces_clean_stop(self):
+        """reasoning_effort='none' should give finish_reason='stop', not 'length'."""
+        iface = create_model_interface("foundry-gpt", api_key=_FOUNDRY_KEY,
+                                       reasoning_effort="none")
+        resp = iface.query(_PING_PROMPT, max_tokens=32)
+        assert resp.metadata.get("finish_reason") == "stop", (
+            f"Expected 'stop' but got '{resp.metadata.get('finish_reason')}' "
+            f"- reasoning may be consuming tokens"
+        )
+        assert resp.metadata.get("reasoning_effort") == "none"
+
     def test_statistics_accumulate(self):
         iface = create_model_interface("foundry-gpt", api_key=_FOUNDRY_KEY)
         iface.query(_PING_PROMPT, max_tokens=64)
@@ -155,6 +167,16 @@ class TestFoundryKimiLive:
     def test_model_name_matches_deployment(self):
         iface = create_model_interface("foundry-kimi", api_key=_FOUNDRY_KEY)
         assert iface.model_name == FoundryKimiInterface.FOUNDRY_DEPLOYMENT
+
+    def test_reasoning_effort_low_produces_clean_stop(self):
+        """reasoning_effort='low' should give finish_reason='stop'."""
+        iface = create_model_interface("foundry-kimi", api_key=_FOUNDRY_KEY,
+                                       reasoning_effort="low")
+        resp = iface.query(_PING_PROMPT, max_tokens=128)
+        assert resp.metadata.get("finish_reason") == "stop", (
+            f"Expected 'stop' but got '{resp.metadata.get('finish_reason')}'"
+        )
+        assert resp.metadata.get("reasoning_effort") == "low"
 
     def test_statistics_accumulate(self):
         iface = create_model_interface("foundry-kimi", api_key=_FOUNDRY_KEY)

@@ -852,16 +852,25 @@ class FoundryGPT52Interface(ModelInterface):
     """
     Azure AI Foundry interface for GPT-5.2-chat.
 
-    Uses the AzureOpenAI SDK against the Foundry-managed endpoint.
-    GPT-5.2 uses max_completion_tokens instead of max_tokens.
+    GPT-5.2 is a hybrid reasoning model.  It supports a reasoning_effort
+    parameter ('none', 'low', 'medium', 'high', 'xhigh').  The default here
+    is 'none', which disables internal chain-of-thought and makes the model
+    behave like a standard chat completion — essential for token-efficient
+    structured-selection tasks in the evaluation pipeline.
+
+    Practical notes (confirmed by live testing 2026-02-19):
+      - temperature is not accepted; the interface silently omits it.
+      - max_tokens maps to max_completion_tokens.
+      - reasoning_effort='none' → clean stop, ~5 tokens for a one-word reply.
+      - reasoning_effort='low'  → mild CoT, still very fast.
 
     Rate limits (Foundry Global Standard, as of 2026-02-19):
         250,000 TPM / 2,500 RPM
     """
 
-    # Pricing is approximate until Microsoft publishes official rates.
-    _COST_PER_1K_INPUT  = 0.005   # USD per 1K prompt tokens (estimate)
-    _COST_PER_1K_OUTPUT = 0.020   # USD per 1K completion tokens (estimate)
+    # Pricing per OpenAI public rate card (USD per 1K tokens).
+    _COST_PER_1K_INPUT  = 0.00175  # $1.75 per 1M input tokens
+    _COST_PER_1K_OUTPUT = 0.014    # $14.00 per 1M output tokens
 
     FOUNDRY_ENDPOINT    = "https://llm-defeasible-foundry.cognitiveservices.azure.com/"
     FOUNDRY_DEPLOYMENT  = "gpt-5.2-chat"
@@ -873,6 +882,7 @@ class FoundryGPT52Interface(ModelInterface):
         endpoint: str = FOUNDRY_ENDPOINT,
         deployment: str = FOUNDRY_DEPLOYMENT,
         api_version: str = FOUNDRY_API_VERSION,
+        reasoning_effort: str = "none",
         rpm: int = 2500,
         tpm: int = 250_000,
     ):
@@ -887,8 +897,9 @@ class FoundryGPT52Interface(ModelInterface):
             api_key=api_key,
             api_version=api_version,
         )
-        self._deployment = deployment
-        self.rate_limiter = RateLimiter(rpm=rpm, tpm=tpm)
+        self._deployment       = deployment
+        self._reasoning_effort = reasoning_effort
+        self.rate_limiter      = RateLimiter(rpm=rpm, tpm=tpm)
 
     @retry(
         stop=stop_after_attempt(3),
@@ -917,6 +928,7 @@ class FoundryGPT52Interface(ModelInterface):
                 model=self._deployment,
                 messages=[{"role": "user", "content": prompt}],
                 max_completion_tokens=max_tokens,
+                reasoning_effort=self._reasoning_effort,
                 # temperature is intentionally omitted: GPT-5.2 rejects it
             )
         except Exception as e:
@@ -938,9 +950,10 @@ class FoundryGPT52Interface(ModelInterface):
             cost=cost,
             latency=latency,
             metadata={
-                "finish_reason": response.choices[0].finish_reason,
-                "deployment": self._deployment,
-                "provider": "foundry-gpt",
+                "finish_reason":     response.choices[0].finish_reason,
+                "deployment":        self._deployment,
+                "provider":          "foundry-gpt",
+                "reasoning_effort":  self._reasoning_effort,
             },
         )
         self.update_stats(result)
@@ -959,16 +972,25 @@ class FoundryKimiInterface(ModelInterface):
     """
     Azure AI Foundry interface for Kimi-K2.5.
 
-    Kimi-K2.5 (Moonshot AI) is served via an OpenAI-compatible endpoint on
-    Azure AI Foundry and accessed using the standard openai.OpenAI client
-    with a custom base_url.
+    Kimi-K2.5 (Moonshot AI) is a hybrid reasoning model served via an
+    OpenAI-compatible endpoint on Azure AI Foundry.  It supports a
+    reasoning_effort parameter passed via extra_body; supported values are
+    'low', 'medium', and 'high' ('none' and 'minimal' are rejected by the
+    endpoint).  The default is 'low', which minimises chain-of-thought
+    while still producing visible text output.
+
+    Practical notes (confirmed by live testing 2026-02-19):
+      - Without reasoning_effort, the model consumes all tokens on internal
+        reasoning and returns None content.
+      - reasoning_effort='low' → clean stop, ~25 tokens for a one-word reply.
+      - temperature IS accepted (unlike GPT-5.2).
 
     Rate limits (Foundry Global Standard, as of 2026-02-19):
         250,000 TPM / 250 RPM
     """
 
-    _COST_PER_1K_INPUT  = 0.0014  # USD per 1K tokens (estimate)
-    _COST_PER_1K_OUTPUT = 0.0028  # USD per 1K tokens (estimate)
+    _COST_PER_1K_INPUT  = 0.0014  # USD per 1K tokens (Moonshot estimate)
+    _COST_PER_1K_OUTPUT = 0.0028
 
     FOUNDRY_BASE_URL   = "https://llm-defeasible-foundry.services.ai.azure.com/openai/v1/"
     FOUNDRY_DEPLOYMENT = "Kimi-K2.5"
@@ -978,6 +1000,7 @@ class FoundryKimiInterface(ModelInterface):
         api_key: str,
         base_url: str = FOUNDRY_BASE_URL,
         model: str = FOUNDRY_DEPLOYMENT,
+        reasoning_effort: str = "low",
         rpm: int = 250,
         tpm: int = 250_000,
     ):
@@ -987,8 +1010,9 @@ class FoundryKimiInterface(ModelInterface):
         except ImportError:
             raise ImportError("openai package not installed. Run: pip install openai>=1.0")
 
-        self._client = OpenAI(base_url=base_url, api_key=api_key)
-        self.rate_limiter = RateLimiter(rpm=rpm, tpm=tpm)
+        self._client           = OpenAI(base_url=base_url, api_key=api_key)
+        self._reasoning_effort = reasoning_effort
+        self.rate_limiter      = RateLimiter(rpm=rpm, tpm=tpm)
 
     @retry(
         stop=stop_after_attempt(3),
@@ -1002,7 +1026,12 @@ class FoundryKimiInterface(ModelInterface):
         max_tokens: int = 512,
         **kwargs,
     ) -> ModelResponse:
-        """Query Kimi-K2.5 with exponential backoff retry."""
+        """Query Kimi-K2.5 with exponential backoff retry.
+
+        reasoning_effort is passed via extra_body (supported: 'low', 'medium',
+        'high').  Without it the model allocates all completion tokens to
+        internal chain-of-thought and returns no visible text.
+        """
         self.rate_limiter.wait_if_needed(len(prompt) // 4 + max_tokens)
         start = time.time()
 
@@ -1012,6 +1041,7 @@ class FoundryKimiInterface(ModelInterface):
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 max_tokens=max_tokens,
+                extra_body={"reasoning_effort": self._reasoning_effort},
             )
         except Exception as e:
             logger.warning("Foundry Kimi API error: %s", e)
@@ -1032,8 +1062,9 @@ class FoundryKimiInterface(ModelInterface):
             cost=cost,
             latency=latency,
             metadata={
-                "finish_reason": completion.choices[0].finish_reason,
-                "provider": "foundry-kimi",
+                "finish_reason":    completion.choices[0].finish_reason,
+                "provider":         "foundry-kimi",
+                "reasoning_effort": self._reasoning_effort,
             },
         )
         self.update_stats(result)
@@ -1267,23 +1298,29 @@ def create_model_interface(
     elif provider == 'foundry-gpt':
         if not api_key:
             raise ValueError("foundry-gpt requires api_key (FOUNDRY_API_KEY)")
-        endpoint = kwargs.pop('endpoint', FoundryGPT52Interface.FOUNDRY_ENDPOINT)
-        deployment = model or kwargs.pop('deployment', FoundryGPT52Interface.FOUNDRY_DEPLOYMENT)
-        api_version = kwargs.pop('api_version', FoundryGPT52Interface.FOUNDRY_API_VERSION)
+        endpoint         = kwargs.pop('endpoint', FoundryGPT52Interface.FOUNDRY_ENDPOINT)
+        deployment       = model or kwargs.pop('deployment', FoundryGPT52Interface.FOUNDRY_DEPLOYMENT)
+        api_version      = kwargs.pop('api_version', FoundryGPT52Interface.FOUNDRY_API_VERSION)
+        reasoning_effort = kwargs.pop('reasoning_effort', 'none')
         return FoundryGPT52Interface(
             api_key=api_key,
             endpoint=endpoint,
             deployment=deployment,
             api_version=api_version,
+            reasoning_effort=reasoning_effort,
             **kwargs,
         )
 
     elif provider == 'foundry-kimi':
         if not api_key:
             raise ValueError("foundry-kimi requires api_key (FOUNDRY_API_KEY)")
-        base_url = kwargs.pop('base_url', FoundryKimiInterface.FOUNDRY_BASE_URL)
-        model = model or FoundryKimiInterface.FOUNDRY_DEPLOYMENT
-        return FoundryKimiInterface(api_key=api_key, base_url=base_url, model=model, **kwargs)
+        base_url         = kwargs.pop('base_url', FoundryKimiInterface.FOUNDRY_BASE_URL)
+        model            = model or FoundryKimiInterface.FOUNDRY_DEPLOYMENT
+        reasoning_effort = kwargs.pop('reasoning_effort', 'low')
+        return FoundryKimiInterface(
+            api_key=api_key, base_url=base_url, model=model,
+            reasoning_effort=reasoning_effort, **kwargs,
+        )
 
     elif provider == 'foundry-claude':
         if not api_key:

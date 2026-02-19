@@ -337,17 +337,18 @@ class TestFoundryGPT52Interface:
 
     FAKE_KEY = "fake-foundry-key"
 
-    def _make_interface(self) -> FoundryGPT52Interface:
+    def _make_interface(self, reasoning_effort: str = "none") -> FoundryGPT52Interface:
         with patch("model_interface.FoundryGPT52Interface.__init__", lambda self, **kw: None):
             iface = FoundryGPT52Interface.__new__(FoundryGPT52Interface)
-            iface.model_name = FoundryGPT52Interface.FOUNDRY_DEPLOYMENT
-            iface._deployment = FoundryGPT52Interface.FOUNDRY_DEPLOYMENT
-            iface._total_cost = 0.0
-            iface._total_tokens_input = 0
+            iface.model_name        = FoundryGPT52Interface.FOUNDRY_DEPLOYMENT
+            iface._deployment       = FoundryGPT52Interface.FOUNDRY_DEPLOYMENT
+            iface._reasoning_effort = reasoning_effort
+            iface._total_cost       = 0.0
+            iface._total_tokens_input  = 0
             iface._total_tokens_output = 0
-            iface._query_count = 0
-            iface.rate_limiter = RateLimiter(rpm=6000, tpm=10_000_000)
-            iface._client = MagicMock()
+            iface._query_count      = 0
+            iface.rate_limiter      = RateLimiter(rpm=6000, tpm=10_000_000)
+            iface._client           = MagicMock()
             return iface
 
     def test_cost_properties(self):
@@ -391,6 +392,24 @@ class TestFoundryGPT52Interface:
             "temperature was forwarded to GPT-5.2 but the model does not accept it"
         )
 
+    def test_query_passes_reasoning_effort(self):
+        """reasoning_effort must be forwarded to suppress internal CoT."""
+        iface = self._make_interface()
+        iface._reasoning_effort = "none"
+        iface._client.chat.completions.create.return_value = _make_openai_completion()
+
+        iface.query("prompt", max_tokens=16)
+        call_kwargs = iface._client.chat.completions.create.call_args.kwargs
+        assert call_kwargs.get("reasoning_effort") == "none"
+
+    def test_reasoning_effort_in_metadata(self):
+        iface = self._make_interface()
+        iface._reasoning_effort = "none"
+        iface._client.chat.completions.create.return_value = _make_openai_completion()
+
+        resp = iface.query("prompt", max_tokens=16)
+        assert resp.metadata["reasoning_effort"] == "none"
+
     def test_factory_creates_foundry_gpt(self):
         with patch("model_interface.FoundryGPT52Interface.__init__", return_value=None):
             iface = create_model_interface("foundry-gpt", api_key="k")
@@ -404,16 +423,17 @@ class TestFoundryGPT52Interface:
 class TestFoundryKimiInterface:
     """Test FoundryKimiInterface against a mocked OpenAI client."""
 
-    def _make_interface(self) -> FoundryKimiInterface:
+    def _make_interface(self, reasoning_effort: str = "low") -> FoundryKimiInterface:
         with patch("model_interface.FoundryKimiInterface.__init__", lambda self, **kw: None):
             iface = FoundryKimiInterface.__new__(FoundryKimiInterface)
-            iface.model_name = FoundryKimiInterface.FOUNDRY_DEPLOYMENT
-            iface._total_cost = 0.0
-            iface._total_tokens_input = 0
+            iface.model_name        = FoundryKimiInterface.FOUNDRY_DEPLOYMENT
+            iface._reasoning_effort = reasoning_effort
+            iface._total_cost       = 0.0
+            iface._total_tokens_input  = 0
             iface._total_tokens_output = 0
-            iface._query_count = 0
-            iface.rate_limiter = RateLimiter(rpm=6000, tpm=10_000_000)
-            iface._client = MagicMock()
+            iface._query_count      = 0
+            iface.rate_limiter      = RateLimiter(rpm=6000, tpm=10_000_000)
+            iface._client           = MagicMock()
             return iface
 
     def test_cost_properties(self):
@@ -440,6 +460,24 @@ class TestFoundryKimiInterface:
         call_kwargs = iface._client.chat.completions.create.call_args.kwargs
         assert "max_tokens" in call_kwargs
         assert call_kwargs["max_tokens"] == 64
+
+    def test_query_passes_reasoning_effort_via_extra_body(self):
+        """Kimi requires reasoning_effort in extra_body to produce visible text."""
+        iface = self._make_interface()
+        iface._reasoning_effort = "low"
+        iface._client.chat.completions.create.return_value = _make_openai_completion()
+
+        iface.query("prompt", max_tokens=64)
+        call_kwargs = iface._client.chat.completions.create.call_args.kwargs
+        assert call_kwargs.get("extra_body") == {"reasoning_effort": "low"}
+
+    def test_reasoning_effort_in_metadata(self):
+        iface = self._make_interface()
+        iface._reasoning_effort = "low"
+        iface._client.chat.completions.create.return_value = _make_openai_completion()
+
+        resp = iface.query("prompt", max_tokens=16)
+        assert resp.metadata["reasoning_effort"] == "low"
 
     def test_factory_creates_foundry_kimi(self):
         with patch("model_interface.FoundryKimiInterface.__init__", return_value=None):
