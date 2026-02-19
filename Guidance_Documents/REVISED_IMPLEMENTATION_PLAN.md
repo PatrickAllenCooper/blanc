@@ -30,26 +30,48 @@
 | Level 2 (rule abduction) | 374 | Biology 114, Legal 116, Materials 144 | Complete |
 | Level 3 (defeater abduction) | 35 | Biology 16, Legal 10, Materials 9 | Complete; 10 with Nov > 0 |
 
-### Evaluation Model Lineup (as of 2026-02-19)
+### Evaluation Model Lineup (finalised 2026-02-19)
 
-All three Foundry models are **confirmed live** via live endpoint testing.
+**Six models total**: 3 closed-source (Foundry, confirmed live) + 3 open-source (CURC).
 
-| Provider | Model | API | RPM | Cost/1M in | Cost/1M out | Reasoning |
-|----------|-------|-----|-----|------------|-------------|-----------|
-| Foundry | gpt-5.2-chat | AzureOpenAI chat/completions | 2,500 | $1.75 | $14.00 | `reasoning_effort='none'` |
-| Foundry | Kimi-K2.5 | OpenAI-compat + `extra_body` | 250 | $1.40 | $2.80 | `reasoning_effort='low'` |
-| Foundry | claude-sonnet-4-6 | AnthropicFoundry | 250 | $3.00 | $15.00 | Standard |
-| CURC | Qwen 2.5 72B AWQ | vLLM OpenAI-compat | — | $0 | $0 | — |
-| CURC | Llama 3.3 70B AWQ-INT4 | vLLM OpenAI-compat | — | $0 | $0 | — |
+#### Closed-source — Azure AI Foundry
 
-**Shared Foundry API key**: `FOUNDRY_API_KEY` in `.env`  
-**Endpoint details**: see `experiments/model_interface.py` class docstrings
+| Model | HF / Deployment | RPM | Cost/1M in | Cost/1M out | Type |
+|-------|-----------------|-----|------------|-------------|------|
+| gpt-5.2-chat | `gpt-5.2-chat` | 2,500 | $1.75 | $14.00 | Reasoning |
+| Kimi-K2.5 | `Kimi-K2.5` | 250 | $1.40 | $2.80 | Reasoning |
+| claude-sonnet-4-6 | `claude-sonnet-4-6` | 250 | $3.00 | $15.00 | Instruction |
 
-**Key implementation notes**:
-- GPT-5.2 rejects `temperature`; interface silently omits it.
-- GPT-5.2 uses `max_completion_tokens` not `max_tokens`.
-- Kimi requires `reasoning_effort` passed via `extra_body`; without it all tokens go to internal CoT and the response text is empty.
-- All three confirmed via `tests/experiments/test_foundry_integration.py` (19 live tests).
+- Shared key: `FOUNDRY_API_KEY` in `.env`
+- GPT-5.2 rejects `temperature`; silently omitted. Uses `max_completion_tokens`.
+- GPT-5.2 `reasoning_effort='none'` (default) disables internal CoT entirely.
+- Kimi `reasoning_effort='low'` via `extra_body` required; without it all tokens go to reasoning and response text is empty.
+- All three confirmed live via 19 integration tests in `tests/experiments/test_foundry_integration.py`.
+
+#### Open-source — CURC Alpine (A100 80 GB, vLLM AWQ)
+
+| Model | HuggingFace ID | VRAM | License | Type |
+|-------|----------------|------|---------|------|
+| DeepSeek-R1-Distill-Llama-70B | `casperhansen/deepseek-r1-distill-llama-70b-awq` | ~35 GB | MIT | Reasoning |
+| Qwen 2.5 72B Instruct | `Qwen/Qwen2.5-72B-Instruct-AWQ` | ~36 GB | Apache 2.0 | Instruction |
+| Qwen 2.5 32B Instruct | `Qwen/Qwen2.5-32B-Instruct-AWQ` | ~16 GB | Apache 2.0 | Scaling |
+
+- DeepSeek-R1-Distill emits `<think>...</think>` blocks; `CURCInterface` strips them before the cascading decoder sees the response. Thinking content is preserved in `metadata["thinking"]` for analysis.
+- All three fit on a single A100 80 GB GPU.
+
+#### Scientific structure and paper narrative
+
+| Tier | Closed-source | Open-source |
+|------|--------------|-------------|
+| Reasoning | GPT-5.2, Kimi-K2.5 | DeepSeek-R1-Distill-70B |
+| Instruction | Claude Sonnet 4.6 | Qwen 2.5 72B |
+| Scaling | — | Qwen 2.5 32B (vs 72B) |
+
+**Key research questions enabled by this design**:
+1. Do reasoning models (GPT-5.2, Kimi, DeepSeek-R1) outperform instruction models on defeasible tasks?
+2. Does the closed-source advantage persist (GPT-5.2 vs DeepSeek-R1, Claude vs Qwen 72B)?
+3. Does scale matter within a family (Qwen 32B vs 72B)?
+4. Does reasoning distillation preserve capability (DeepSeek-R1-Distill vs full reasoning models)?
 
 ---
 
@@ -100,31 +122,39 @@ python experiments/generate_paper_tables.py --results-dir experiments/results/
 Once pilot passes, scale up via SLURM (no rate-limit pressure from local machine):
 
 ```bash
-# All three Foundry models, full instance set (50/domain, all 4 modalities)
+# All three Foundry models (sequentially in one SLURM job)
 sbatch hpc/slurm_evaluate_foundry.sh
 
-# Open-source comparators on CURC Alpine GPUs
-sbatch hpc/slurm_evaluate_curc_vllm.sh
+# All three CURC open-source models (three parallel SLURM jobs)
+bash hpc/slurm_evaluate_curc_all.sh
+
+# Or individual CURC models:
+sbatch hpc/slurm_evaluate_curc_vllm.sh   # default: DeepSeek-R1-Distill-70B
+sbatch --export=ALL,VLLM_MODEL=Qwen/Qwen2.5-72B-Instruct-AWQ \
+       hpc/slurm_evaluate_curc_vllm.sh
+sbatch --export=ALL,VLLM_MODEL=Qwen/Qwen2.5-32B-Instruct-AWQ,INSTANCE_LIMIT=120 \
+       hpc/slurm_evaluate_curc_vllm.sh
 ```
 
-Override for full scale:
-
+Override Foundry for full scale:
 ```bash
 sbatch --export=ALL,INSTANCE_LIMIT=120,LEVEL3_LIMIT=35,MODALITIES="M4 M2 M1 M3" \
        hpc/slurm_evaluate_foundry.sh
 ```
 
-Full evaluation query budget:
-- 374 L2 + 35 L3 = 409 instances × 5 models × 4 modalities × 2 strategies = **16,360 queries**
-- Foundry cost estimate: GPT-5.2 ~$8, Claude ~$12, Kimi ~$4 → **~$24 total**
-- CURC: $0 (cluster allocation)
+Full evaluation query budget (6 models):
+- 374 L2 + 35 L3 = 409 instances × 6 models × 4 modalities × 2 strategies = **19,632 queries**
+- Foundry cost: GPT-5.2 ~$8, Claude ~$12, Kimi ~$4 → **~$24 total**
+- CURC (3 models): $0 (cluster allocation)
 
 **Rate limit bottleneck**: Kimi and Claude are capped at 250 RPM.
 At 409 instances × 4 modalities × 2 strategies = 3,272 queries per model:
-- 3,272 / 250 RPM = ~13 minutes of pure API time per model at cap
-- Real wall time with prompt overhead: expect ~30–60 min per model
+- 3,272 / 250 RPM = ~13 minutes of pure API time at cap
+- Real wall time with overhead: ~30–60 min per Foundry model
 
-The SLURM script handles rate limiting automatically via `RateLimiter` in `model_interface.py`.
+CURC models run on GPU with no rate-limit ceiling — wall time is inference speed only (~2–4 hours per model for the full set).
+
+`RateLimiter` in `model_interface.py` handles Foundry throttling automatically.
 
 ---
 
@@ -210,17 +240,17 @@ sbatch --export=ALL,INSTANCE_LIMIT=120,LEVEL3_LIMIT=35,MODALITIES="M4 M2 M1 M3" 
 
 ## Cost Summary
 
-| Evaluation phase | Est. queries | Est. cost |
-|-----------------|-------------|-----------|
-| Pilot (local, 20 inst/domain) | ~960 | < $1 |
-| Full Foundry evaluation | ~9,816 | ~$24 |
-| CURC open-source models | ~6,544 | $0 |
-| **Total** | **~16,360** | **~$25** |
+| Evaluation phase | Models | Est. queries | Est. cost |
+|-----------------|--------|-------------|-----------|
+| Pilot (local, 20 inst/domain) | 3 Foundry | ~960 | < $1 |
+| Full Foundry evaluation | GPT-5.2, Kimi, Claude | ~9,816 | ~$24 |
+| CURC open-source models | DeepSeek-R1, Qwen 72B, Qwen 32B | ~9,816 | $0 |
+| **Total** | **6 models** | **~19,632** | **~$25** |
 
 This is substantially below the original $150–200 estimate because:
 1. GPT-5.2 with `reasoning_effort='none'` uses far fewer completion tokens than GPT-4o.
 2. Kimi-K2.5 is cost-competitive with GPT-3.5-level pricing.
-3. CURC open-source models have no API cost.
+3. All three CURC models run on cluster allocation — no API cost.
 
 ---
 
@@ -250,7 +280,14 @@ python -m pytest tests/experiments/test_foundry_integration.py -m integration -v
 ```
 
 ```bash
-# CURC / HPC
+# CURC / HPC — Foundry (all 3 models, 1 job)
 sbatch hpc/slurm_evaluate_foundry.sh
-sbatch hpc/slurm_evaluate_curc_vllm.sh
+
+# CURC / HPC — Open-source (all 3 models, 3 parallel jobs)
+bash hpc/slurm_evaluate_curc_all.sh
+
+# CURC / HPC — Single open-source model
+sbatch hpc/slurm_evaluate_curc_vllm.sh   # default: DeepSeek-R1-Distill-70B
+sbatch --export=ALL,VLLM_MODEL=Qwen/Qwen2.5-72B-Instruct-AWQ hpc/slurm_evaluate_curc_vllm.sh
+sbatch --export=ALL,VLLM_MODEL=Qwen/Qwen2.5-32B-Instruct-AWQ hpc/slurm_evaluate_curc_vllm.sh
 ```

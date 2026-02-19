@@ -22,20 +22,34 @@
 # The vLLM server exposes an OpenAI-compatible REST API at:
 #   http://localhost:${VLLM_PORT}/v1
 #
-# Recommended models (single A100 80GB, AWQ quantised):
-#   Qwen/Qwen2.5-72B-Instruct-AWQ         -- top open-source, Feb 2026 (~36 GB)
-#   hugging-quants/Meta-Llama-3.3-70B-Instruct-AWQ-INT4  -- Llama 3.3 (~35 GB)
-#   Qwen/Qwen2.5-32B-Instruct-AWQ         -- fastest option (~16 GB)
+# DeFAb open-source evaluation models (all fit on one A100 80 GB, AWQ 4-bit):
 #
-# Usage:
+#   casperhansen/deepseek-r1-distill-llama-70b-awq   (~35 GB)  [DEFAULT]
+#     DeepSeek-R1 reasoning distilled into Llama 70B. Open-source reasoning
+#     comparator to GPT-5.2-chat and Kimi-K2.5 (Foundry). Emits
+#     <think>...</think> blocks; CURCInterface strips these automatically.
+#     MIT license.
+#
+#   Qwen/Qwen2.5-72B-Instruct-AWQ                    (~36 GB)
+#     Top general-instruction open-source model (Feb 2026). Open-source
+#     comparator to claude-sonnet-4-6 (Foundry). Apache 2.0 license.
+#
+#   Qwen/Qwen2.5-32B-Instruct-AWQ                    (~16 GB)
+#     Within-family scaling comparator (32B vs 72B Qwen). Fastest.
+#     Use INSTANCE_LIMIT=120 for full KB coverage. Apache 2.0 license.
+#
+# Submit all three in one call:
+#   bash hpc/slurm_evaluate_curc_all.sh
+#
+# Submit a single model:
 #   sbatch hpc/slurm_evaluate_curc_vllm.sh
-#
-#   With overrides:
-#   sbatch --export=ALL,VLLM_MODEL=Qwen/Qwen2.5-32B-Instruct-AWQ,INSTANCE_LIMIT=100 \
+#   sbatch --export=ALL,VLLM_MODEL=Qwen/Qwen2.5-72B-Instruct-AWQ \
+#          hpc/slurm_evaluate_curc_vllm.sh
+#   sbatch --export=ALL,VLLM_MODEL=Qwen/Qwen2.5-32B-Instruct-AWQ,INSTANCE_LIMIT=120 \
 #          hpc/slurm_evaluate_curc_vllm.sh
 #
 # Environment variables (all optional):
-#   VLLM_MODEL        Hugging Face model ID (default: Qwen/Qwen2.5-72B-Instruct-AWQ)
+#   VLLM_MODEL        Hugging Face model ID (default: DeepSeek-R1-Distill 70B)
 #   VLLM_PORT         Port for the vLLM server (default: 8100)
 #   CURC_HOSTER_DIR   Path to the curc-LLM-hoster repo (default: ~/curc-LLM-hoster)
 #   HF_HOME           Hugging Face cache directory (default: /scratch/alpine/$USER/.cache/hf)
@@ -62,7 +76,7 @@ echo ""
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-VLLM_MODEL="${VLLM_MODEL:-Qwen/Qwen2.5-72B-Instruct-AWQ}"
+VLLM_MODEL="${VLLM_MODEL:-casperhansen/deepseek-r1-distill-llama-70b-awq}"
 VLLM_PORT="${VLLM_PORT:-8100}"
 CURC_HOSTER_DIR="${CURC_HOSTER_DIR:-$HOME/curc-LLM-hoster}"
 HF_HOME="${HF_HOME:-/scratch/alpine/$USER/.cache/hf}"

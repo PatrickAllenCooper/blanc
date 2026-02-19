@@ -83,6 +83,19 @@
     to confirm all three Foundry endpoints are live, then
     `.\hpc\run_local.ps1 foundry` to begin pilot evaluation locally.
 
+- **Open-source model selection finalised** (2026-02-19):
+  Three open-source models chosen for CURC Alpine A100 80 GB (all in AWQ 4-bit):
+  - `casperhansen/deepseek-r1-distill-llama-70b-awq` (~35 GB) — reasoning comparator
+    to GPT-5.2 and Kimi-K2.5. Emits `<think>...</think>` blocks; stripped in
+    `CURCInterface.query()` before the cascading decoder. MIT license.
+  - `Qwen/Qwen2.5-72B-Instruct-AWQ` (~36 GB) — general-instruction comparator
+    to claude-sonnet-4-6. Apache 2.0.
+  - `Qwen/Qwen2.5-32B-Instruct-AWQ` (~16 GB) — within-family scaling.
+    Apache 2.0.
+  - `hpc/slurm_evaluate_curc_all.sh` added: submits all three as parallel SLURM
+    jobs. `slurm_evaluate_curc_vllm.sh` default changed to DeepSeek-R1-Distill.
+  - `_strip_thinking_tokens()` utility added to `model_interface.py`.
+
 - **CURC LLM Hoster integration** (2026-02-18):
   - `CURCInterface` added to `experiments/model_interface.py`: OpenAI-compatible client
     pointed at the vLLM server (Patrick Cooper's CURC LLM Hoster project). Uses

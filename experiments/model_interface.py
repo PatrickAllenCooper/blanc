@@ -744,6 +744,29 @@ class OllamaInterface(ModelInterface):
         return 0.0
 
 
+def _strip_thinking_tokens(text: str) -> tuple[str, str]:
+    """
+    Strip DeepSeek-R1-style <think>...</think> blocks from a model response.
+
+    Returns (visible_text, thinking_text).  visible_text is what the decoder
+    sees; thinking_text is preserved for analysis / metadata logging.
+
+    DeepSeek-R1-Distill models emit all chain-of-thought inside a
+    <think>...</think> block, then produce the final answer after </think>.
+    Passing the thinking block to the cascading decoder would cause every
+    instance to fall through to the expensive D3 semantic parser and still
+    likely fail, so stripping is necessary before decoding.
+    """
+    import re
+    think_pattern = re.compile(r"<think>(.*?)</think>\s*", re.DOTALL)
+    match = think_pattern.search(text)
+    if match:
+        thinking = match.group(1).strip()
+        visible  = think_pattern.sub("", text).strip()
+        return visible, thinking
+    return text, ""
+
+
 class CURCInterface(ModelInterface):
     """
     Interface for CURC-hosted open-source models via vLLM.
@@ -755,11 +778,30 @@ class CURCInterface(ModelInterface):
         http://localhost:8000/v1   (via SSH tunnel on local machine)
         http://<compute-node>:8000/v1  (from within the cluster)
 
-    Recommended models (February 2026 rankings):
-        Qwen/Qwen2.5-72B-Instruct-AWQ          (~36 GB VRAM, top open-source)
-        hugging-quants/Meta-Llama-3.3-70B-Instruct-AWQ-INT4  (~35 GB)
-        Qwen/Qwen2.5-32B-Instruct-AWQ          (~16 GB, fastest)
-        hugging-quants/Meta-Llama-3.1-70B-Instruct-AWQ-INT4  (~35 GB)
+    Chosen open-source models for this evaluation (all fit on one A100 80 GB,
+    all available in AWQ 4-bit quantisation):
+
+        casperhansen/deepseek-r1-distill-llama-70b-awq  (~35 GB)
+            DeepSeek-R1 reasoning capability distilled into Llama 3 70B.
+            Open-source reasoning comparator to GPT-5.2 and Kimi-K2.5.
+            Emits <think>...</think> blocks; the interface strips these
+            automatically before the response reaches the decoder.
+
+        Qwen/Qwen2.5-72B-Instruct-AWQ                  (~36 GB)
+            Top general-instruction open-source model (February 2026).
+            Open-source comparator to Claude Sonnet 4.6.
+
+        Qwen/Qwen2.5-32B-Instruct-AWQ                  (~16 GB)
+            Within-family scaling comparator (32B vs 72B).
+            Fastest of the three; submit with INSTANCE_LIMIT=120.
+
+    Scientific structure (6 models total, 3 Foundry + 3 CURC):
+
+        Reasoning tier   : GPT-5.2-chat (Foundry) · Kimi-K2.5 (Foundry)
+                           DeepSeek-R1-Distill-70B (CURC)
+        Instruction tier : claude-sonnet-4-6 (Foundry)
+                           Qwen 2.5 72B (CURC)
+        Scaling tier     : Qwen 2.5 32B (CURC, within-family vs 72B)
     """
 
     def __init__(
@@ -820,20 +862,26 @@ class CURCInterface(ModelInterface):
         )
 
         latency = time.time() - start
-        text = completion.choices[0].message.content or ""
-        usage = completion.usage
+        raw_text = completion.choices[0].message.content or ""
+        usage    = completion.usage
+
+        # Strip <think>...</think> blocks emitted by DeepSeek-R1-Distill models.
+        # The thinking content is preserved in metadata for analysis; only the
+        # visible answer reaches the cascading decoder.
+        visible_text, thinking_text = _strip_thinking_tokens(raw_text)
 
         response = ModelResponse(
-            text=text,
+            text=visible_text,
             model=self.model_name,
             tokens_input=usage.prompt_tokens if usage else len(prompt) // 4,
-            tokens_output=usage.completion_tokens if usage else len(text) // 4,
+            tokens_output=usage.completion_tokens if usage else len(raw_text) // 4,
             cost=0.0,  # Cluster compute; no API billing
             latency=latency,
             metadata={
-                "provider": "curc_vllm",
-                "base_url": self._base_url,
+                "provider":      "curc_vllm",
+                "base_url":      self._base_url,
                 "finish_reason": completion.choices[0].finish_reason,
+                "thinking":      thinking_text or None,
             },
         )
         self.update_stats(response)

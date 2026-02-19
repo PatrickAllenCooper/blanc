@@ -90,13 +90,34 @@ All 35 Level 3 instances have:
 
 Cascading decoder: D1 → D2 → D3 (fallthrough on failure).
 
+### Evaluation Model Lineup (6 models, 2026-02-19)
+
+**Closed-source — Azure AI Foundry** (all confirmed live, 19 integration tests)
+
+| Model | Tier | RPM | Notes |
+|-------|------|-----|-------|
+| gpt-5.2-chat | Reasoning | 2,500 | `reasoning_effort='none'`; temperature omitted |
+| Kimi-K2.5 | Reasoning | 250 | `reasoning_effort='low'` via extra_body |
+| claude-sonnet-4-6 | Instruction | 250 | Standard AnthropicFoundry |
+
+**Open-source — CURC Alpine A100 80 GB** (vLLM, AWQ 4-bit)
+
+| Model | HuggingFace ID | VRAM | Tier |
+|-------|----------------|------|------|
+| DeepSeek-R1-Distill-Llama-70B | `casperhansen/deepseek-r1-distill-llama-70b-awq` | ~35 GB | Reasoning |
+| Qwen 2.5 72B Instruct | `Qwen/Qwen2.5-72B-Instruct-AWQ` | ~36 GB | Instruction |
+| Qwen 2.5 32B Instruct | `Qwen/Qwen2.5-32B-Instruct-AWQ` | ~16 GB | Scaling |
+
+DeepSeek-R1 thinking tokens are stripped in `CURCInterface.query()` before the decoder.  
+Submit all three CURC jobs: `bash hpc/slurm_evaluate_curc_all.sh`
+
 ### Evaluation Infrastructure
 
 All of these exist and have been tested via dry run:
 
 ```
-experiments/run_evaluation.py          # main CLI
-experiments/model_interface.py         # GPT-4o, Claude, Gemini, CURC, Azure, Ollama
+experiments/run_evaluation.py          # main CLI (providers: foundry-gpt/kimi/claude, curc, mock, ...)
+experiments/model_interface.py         # 3 Foundry + 3 CURC open-source + legacy providers
 experiments/level3_evaluator.py        # Nov, d_rev, conservativity, resolution strength
 experiments/analyze_results.py         # accuracy by model/modality/domain/level
 experiments/novelty_analysis.py        # Nov distribution + accuracy-novelty correlation
@@ -280,9 +301,9 @@ python experiments/validate_api_keys.py
 python experiments/analyze_results.py --results-dir experiments/results/local_foundry-gpt_<timestamp>
 python experiments/generate_paper_tables.py --results-dir experiments/results/
 
-# 4. If pilot passes, submit full CURC evaluation
-sbatch hpc/slurm_evaluate_foundry.sh
-sbatch hpc/slurm_evaluate_curc_vllm.sh
+# 4. If pilot passes, submit full evaluation (all 6 models)
+sbatch hpc/slurm_evaluate_foundry.sh    # 3 Foundry models (sequential)
+bash hpc/slurm_evaluate_curc_all.sh     # 3 CURC models (parallel jobs)
 ```
 
 If anything is unclear about the model setup, re-run the integration tests:
