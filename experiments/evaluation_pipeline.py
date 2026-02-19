@@ -288,8 +288,10 @@ class EvaluationPipeline:
         cached_response = self.cache.get(cache_key)
         cached = False
         
-        if cached_response:
-            # Use cached response
+        if cached_response and cached_response.text.strip():
+            # Use cached response (only if it contains non-empty text; empty
+            # cached responses indicate a prior failure and should be retried
+            # because the issue may have been insufficient max_tokens).
             response = cached_response
             cached = True
         else:
@@ -372,20 +374,47 @@ class EvaluationPipeline:
         The CoT prompt instructs models to end their response with:
             FINAL ANSWER: <hypothesis text>
 
-        When present, extract only that portion so D1 exact-match succeeds.
-        If the pattern is absent, fall through to the original text so D2/D3
-        still have a chance to recover something useful from the reasoning body.
+        Models may format this with markdown bold, numbered lists, or put the
+        answer on the following line.  We handle all observed variants:
+            FINAL ANSWER: hypothesis
+            **FINAL ANSWER:** hypothesis
+            **FINAL ANSWER:**\\n**1. hypothesis**
+            FINAL ANSWER:\\nhypothesis
+
+        When the pattern is absent, fall through to the original full text
+        so D2/D3 still have a chance to find something.
         """
         import re
-        # Look for "FINAL ANSWER:" (case-insensitive) anywhere in the text.
-        match = re.search(r"FINAL ANSWER:\s*(.+?)(?:\n|$)", text, re.IGNORECASE)
+
+        # Strip markdown bold markers, backticks, and leading list numbers
+        # from a candidate answer string.
+        def _clean(s: str) -> str:
+            s = re.sub(r"\*+", "", s)          # remove ** bold markers
+            s = re.sub(r"`", "", s)             # remove backticks
+            s = re.sub(r"^\s*\d+\.\s*", "", s) # remove leading "1. "
+            return s.strip()
+
+        # Primary pattern: "FINAL ANSWER" (with optional markdown) anywhere
+        # in the text, followed by the answer on the same or the next line.
+        pattern = re.compile(
+            r"FINAL\s*ANSWER\s*[:\*]*\s*\n?\s*(.+)",
+            re.IGNORECASE,
+        )
+        match = pattern.search(text)
         if match:
-            return match.group(1).strip()
-        # Fallback: try last non-empty line — models sometimes drop the prefix
-        # but still put the answer last.
+            answer = _clean(match.group(1))
+            if answer:
+                return answer
+
+        # Fallback: last non-empty, non-heading line — models sometimes omit
+        # the prefix but still put the answer as the final line.
         lines = [ln.strip() for ln in text.strip().splitlines() if ln.strip()]
         if lines:
-            return lines[-1]
+            # Skip lines that look like markdown headings or step labels.
+            for line in reversed(lines):
+                if not re.match(r"^#+\s|^Step\s\d|^---", line):
+                    return _clean(line)
+
         return text
 
     def _decode_response(
