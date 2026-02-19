@@ -1,8 +1,8 @@
 # Project Status
 
-**Last Updated**: 2026-02-18  
-**Current**: CURC integration complete; documentation consolidated; manuscript updated; ready for live evaluation  
-**Progress**: 9.5 of 14.5 weeks (65%)  
+**Last Updated**: 2026-02-19  
+**Current**: Azure AI Foundry integration complete (gpt-5.2-chat, Kimi-K2.5, claude-sonnet-4-6); live evaluation can begin immediately  
+**Progress**: 10 of 14.5 weeks (69%)  
 **Timeline**: ON TRACK
 
 ---
@@ -51,6 +51,38 @@
   - `experiments/difficulty_analysis.py`: rewritten with correct sigma(I) extraction
   - `experiments/partition_sensitivity.py`: rewritten with real Mann-Whitney/KW tests
   - Azure OpenAI added to `experiments/validate_api_keys.py` and `.env.template`
+- **Azure AI Foundry integration** (2026-02-19):
+  - Three closed-source models now live on LLM-Defeasible-Foundry (eastus2, S0),
+    all accessible under a single shared API key (`FOUNDRY_API_KEY`):
+    - `gpt-5.2-chat` — GPT-5.2 (2025-12-11); 250K TPM / 2,500 RPM
+    - `Kimi-K2.5`    — Moonshot AI; 250K TPM / 250 RPM
+    - `claude-sonnet-4-6` — Anthropic Sonnet 4.6; 250K TPM / 250 RPM
+  - `FoundryGPT52Interface`, `FoundryKimiInterface`, `FoundryClaudeInterface`
+    added to `experiments/model_interface.py`. Note: GPT-5.2 uses
+    `max_completion_tokens` (not `max_tokens`); Claude uses `AnthropicFoundry`
+    (anthropic>=0.40 required).
+  - `--provider foundry-gpt / foundry-kimi / foundry-claude` added to
+    `experiments/run_evaluation.py`; `FOUNDRY_API_KEY` env var falls back
+    automatically when `--api-key` is not passed.
+  - `experiments/validate_api_keys.py` — `test_foundry_gpt()`,
+    `test_foundry_kimi()`, `test_foundry_claude()` added; auto-skips when
+    key not set.
+  - `hpc/slurm_evaluate_foundry.sh` — new SLURM script (amilan partition,
+    4 CPUs, no GPU) that runs all three Foundry models sequentially and then
+    calls `analyze_results.py`; individual models skippable via `SKIP_GPT`,
+    `SKIP_KIMI`, `SKIP_CLAUDE` flags.
+  - `hpc/run_local.sh` and `hpc/run_local.ps1` — `foundry-gpt`,
+    `foundry-kimi`, `foundry-claude` added; `foundry` meta-provider runs all
+    three sequentially; `FOUNDRY_API_KEY` is auto-detected during provider
+    selection.
+  - 15 new unit tests (all mocked, no live network) in
+    `tests/experiments/test_model_interface.py`.
+  - `.env.template` updated with `FOUNDRY_API_KEY` documentation; `.env`
+    populated with credentials.
+  - **Immediate unblocked action**: run `python experiments/validate_api_keys.py`
+    to confirm all three Foundry endpoints are live, then
+    `.\hpc\run_local.ps1 foundry` to begin pilot evaluation locally.
+
 - **CURC LLM Hoster integration** (2026-02-18):
   - `CURCInterface` added to `experiments/model_interface.py`: OpenAI-compatible client
     pointed at the vLLM server (Patrick Cooper's CURC LLM Hoster project). Uses
@@ -132,12 +164,27 @@ species/type appear in D^-, where only one has the novel property (in the gold
 
 ## Next: LLM Evaluation (Weeks 9-10)
 
-**Immediate blockers**: Azure API credentials, CURC provisioning (in progress)
+**All blockers cleared**: Foundry credentials are live.
 
-**Pipeline is ready to run**:
-- Submit `sbatch hpc/slurm_evaluate_azure.sh` once Azure credentials are provisioned
-- Submit `sbatch hpc/slurm_evaluate_llama.sh` once CURC allocation is active
-- Or run locally: `python experiments/run_evaluation.py --provider openai ...`
+**To begin immediately (local)**:
+```powershell
+# Validate all three Foundry endpoints
+python experiments/validate_api_keys.py
+
+# Run full evaluation against all three Foundry models
+.\hpc\run_local.ps1 foundry
+
+# Or individual models:
+.\hpc\run_local.ps1 foundry-gpt
+.\hpc\run_local.ps1 foundry-kimi
+.\hpc\run_local.ps1 foundry-claude
+```
+
+**To run on CURC (full scale)**:
+```bash
+sbatch hpc/slurm_evaluate_foundry.sh
+sbatch hpc/slurm_evaluate_curc_vllm.sh   # open-source models
+```
 
 ---
 

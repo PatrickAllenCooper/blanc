@@ -8,11 +8,20 @@ Provides unified interface for querying multiple foundation models:
 - Google Gemini 1.5 Pro
 - CURC vLLM server (Qwen 2.5 72B, Llama 3.3 70B, etc. via OpenAI-compatible API)
 - Meta Llama 3 (via Ollama, legacy)
+- Azure AI Foundry GPT-5.2-chat (via AzureOpenAI, api_version 2024-12-01-preview)
+- Azure AI Foundry Kimi-K2.5 (via OpenAI with custom base_url)
+- Azure AI Foundry Claude Sonnet 4.6 (via AnthropicFoundry)
 - Mock (for testing)
 
 The CURC provider uses the CURC LLM Hoster project (Patrick Cooper, 2026)
 which exposes an OpenAI-compatible REST API via vLLM on Alpine's A100 GPUs.
 The endpoint is typically reached via SSH tunnel: http://localhost:8000/v1
+
+Azure AI Foundry models share a single API key (FOUNDRY_API_KEY) and are
+deployed at:
+  gpt-5.2-chat:      https://llm-defeasible-foundry.cognitiveservices.azure.com/
+  Kimi-K2.5:         https://llm-defeasible-foundry.services.ai.azure.com/openai/v1/
+  claude-sonnet-4-6: https://llm-defeasible-foundry.services.ai.azure.com/anthropic/
 
 Author: Patrick Cooper
 Date: 2026-02-13
@@ -839,6 +848,294 @@ class CURCInterface(ModelInterface):
         return 0.0
 
 
+class FoundryGPT52Interface(ModelInterface):
+    """
+    Azure AI Foundry interface for GPT-5.2-chat.
+
+    Uses the AzureOpenAI SDK against the Foundry-managed endpoint.
+    GPT-5.2 uses max_completion_tokens instead of max_tokens.
+
+    Rate limits (Foundry Global Standard, as of 2026-02-19):
+        250,000 TPM / 2,500 RPM
+    """
+
+    # Pricing is approximate until Microsoft publishes official rates.
+    _COST_PER_1K_INPUT  = 0.005   # USD per 1K prompt tokens (estimate)
+    _COST_PER_1K_OUTPUT = 0.020   # USD per 1K completion tokens (estimate)
+
+    FOUNDRY_ENDPOINT    = "https://llm-defeasible-foundry.cognitiveservices.azure.com/"
+    FOUNDRY_DEPLOYMENT  = "gpt-5.2-chat"
+    FOUNDRY_API_VERSION = "2024-12-01-preview"
+
+    def __init__(
+        self,
+        api_key: str,
+        endpoint: str = FOUNDRY_ENDPOINT,
+        deployment: str = FOUNDRY_DEPLOYMENT,
+        api_version: str = FOUNDRY_API_VERSION,
+        rpm: int = 2500,
+        tpm: int = 250_000,
+    ):
+        super().__init__(deployment)
+        try:
+            from openai import AzureOpenAI
+        except ImportError:
+            raise ImportError("openai package not installed. Run: pip install openai>=1.0")
+
+        self._client = AzureOpenAI(
+            azure_endpoint=endpoint,
+            api_key=api_key,
+            api_version=api_version,
+        )
+        self._deployment = deployment
+        self.rate_limiter = RateLimiter(rpm=rpm, tpm=tpm)
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
+    def query(
+        self,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        """Query GPT-5.2-chat with exponential backoff retry."""
+        self.rate_limiter.wait_if_needed(len(prompt) // 4 + max_tokens)
+        start = time.time()
+
+        try:
+            response = self._client.chat.completions.create(
+                model=self._deployment,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                max_completion_tokens=max_tokens,
+            )
+        except Exception as e:
+            logger.warning("Foundry GPT-5.2 API error: %s", e)
+            raise
+
+        latency = time.time() - start
+        text = response.choices[0].message.content or ""
+        usage = response.usage
+        tokens_in  = usage.prompt_tokens     if usage else len(prompt) // 4
+        tokens_out = usage.completion_tokens if usage else len(text) // 4
+        cost = self.calculate_cost(tokens_in, tokens_out)
+
+        result = ModelResponse(
+            text=text,
+            model=self.model_name,
+            tokens_input=tokens_in,
+            tokens_output=tokens_out,
+            cost=cost,
+            latency=latency,
+            metadata={
+                "finish_reason": response.choices[0].finish_reason,
+                "deployment": self._deployment,
+                "provider": "foundry-gpt",
+            },
+        )
+        self.update_stats(result)
+        return result
+
+    @property
+    def cost_per_1k_input(self) -> float:
+        return self._COST_PER_1K_INPUT
+
+    @property
+    def cost_per_1k_output(self) -> float:
+        return self._COST_PER_1K_OUTPUT
+
+
+class FoundryKimiInterface(ModelInterface):
+    """
+    Azure AI Foundry interface for Kimi-K2.5.
+
+    Kimi-K2.5 (Moonshot AI) is served via an OpenAI-compatible endpoint on
+    Azure AI Foundry and accessed using the standard openai.OpenAI client
+    with a custom base_url.
+
+    Rate limits (Foundry Global Standard, as of 2026-02-19):
+        250,000 TPM / 250 RPM
+    """
+
+    _COST_PER_1K_INPUT  = 0.0014  # USD per 1K tokens (estimate)
+    _COST_PER_1K_OUTPUT = 0.0028  # USD per 1K tokens (estimate)
+
+    FOUNDRY_BASE_URL   = "https://llm-defeasible-foundry.services.ai.azure.com/openai/v1/"
+    FOUNDRY_DEPLOYMENT = "Kimi-K2.5"
+
+    def __init__(
+        self,
+        api_key: str,
+        base_url: str = FOUNDRY_BASE_URL,
+        model: str = FOUNDRY_DEPLOYMENT,
+        rpm: int = 250,
+        tpm: int = 250_000,
+    ):
+        super().__init__(model)
+        try:
+            from openai import OpenAI
+        except ImportError:
+            raise ImportError("openai package not installed. Run: pip install openai>=1.0")
+
+        self._client = OpenAI(base_url=base_url, api_key=api_key)
+        self.rate_limiter = RateLimiter(rpm=rpm, tpm=tpm)
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
+    def query(
+        self,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        """Query Kimi-K2.5 with exponential backoff retry."""
+        self.rate_limiter.wait_if_needed(len(prompt) // 4 + max_tokens)
+        start = time.time()
+
+        try:
+            completion = self._client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        except Exception as e:
+            logger.warning("Foundry Kimi API error: %s", e)
+            raise
+
+        latency = time.time() - start
+        text = completion.choices[0].message.content or ""
+        usage = completion.usage
+        tokens_in  = usage.prompt_tokens     if usage else len(prompt) // 4
+        tokens_out = usage.completion_tokens if usage else len(text) // 4
+        cost = self.calculate_cost(tokens_in, tokens_out)
+
+        result = ModelResponse(
+            text=text,
+            model=self.model_name,
+            tokens_input=tokens_in,
+            tokens_output=tokens_out,
+            cost=cost,
+            latency=latency,
+            metadata={
+                "finish_reason": completion.choices[0].finish_reason,
+                "provider": "foundry-kimi",
+            },
+        )
+        self.update_stats(result)
+        return result
+
+    @property
+    def cost_per_1k_input(self) -> float:
+        return self._COST_PER_1K_INPUT
+
+    @property
+    def cost_per_1k_output(self) -> float:
+        return self._COST_PER_1K_OUTPUT
+
+
+class FoundryClaudeInterface(ModelInterface):
+    """
+    Azure AI Foundry interface for Claude Sonnet 4.6.
+
+    Uses the AnthropicFoundry client (anthropic>=0.40) which wraps the
+    standard Anthropic Messages API against the Foundry-managed endpoint.
+
+    Rate limits (Foundry Global Standard, as of 2026-02-19):
+        250,000 TPM / 250 RPM
+    """
+
+    _COST_PER_1K_INPUT  = 0.003   # Claude Sonnet pricing (USD per 1K)
+    _COST_PER_1K_OUTPUT = 0.015
+
+    FOUNDRY_ENDPOINT   = "https://llm-defeasible-foundry.services.ai.azure.com/anthropic/"
+    FOUNDRY_DEPLOYMENT = "claude-sonnet-4-6"
+
+    def __init__(
+        self,
+        api_key: str,
+        endpoint: str = FOUNDRY_ENDPOINT,
+        model: str = FOUNDRY_DEPLOYMENT,
+        rpm: int = 250,
+        tpm: int = 250_000,
+    ):
+        super().__init__(model)
+        try:
+            from anthropic import AnthropicFoundry
+        except ImportError:
+            raise ImportError(
+                "anthropic package not installed or too old for AnthropicFoundry. "
+                "Run: pip install 'anthropic>=0.40'"
+            )
+
+        self._client = AnthropicFoundry(api_key=api_key, base_url=endpoint)
+        self.rate_limiter = RateLimiter(rpm=rpm, tpm=tpm)
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
+    def query(
+        self,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        """Query claude-sonnet-4-6 via AnthropicFoundry with exponential backoff."""
+        self.rate_limiter.wait_if_needed(len(prompt) // 4 + max_tokens)
+        start = time.time()
+
+        try:
+            response = self._client.messages.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        except Exception as e:
+            logger.warning("Foundry Claude API error: %s", e)
+            raise
+
+        latency = time.time() - start
+        text = response.content[0].text
+        tokens_in  = response.usage.input_tokens
+        tokens_out = response.usage.output_tokens
+        cost = self.calculate_cost(tokens_in, tokens_out)
+
+        result = ModelResponse(
+            text=text,
+            model=self.model_name,
+            tokens_input=tokens_in,
+            tokens_output=tokens_out,
+            cost=cost,
+            latency=latency,
+            metadata={
+                "stop_reason": response.stop_reason,
+                "provider": "foundry-claude",
+            },
+        )
+        self.update_stats(result)
+        return result
+
+    @property
+    def cost_per_1k_input(self) -> float:
+        return self._COST_PER_1K_INPUT
+
+    @property
+    def cost_per_1k_output(self) -> float:
+        return self._COST_PER_1K_OUTPUT
+
+
 class MockModelInterface(ModelInterface):
     """Mock model for testing without API calls."""
     
@@ -901,12 +1198,16 @@ def create_model_interface(
     Factory function to create model interfaces.
 
     Args:
-        provider: One of 'openai', 'azure', 'anthropic', 'google', 'ollama', 'mock'
+        provider: One of 'openai', 'azure', 'anthropic', 'google', 'curc',
+                  'ollama', 'foundry-gpt', 'foundry-kimi', 'foundry-claude', 'mock'
         api_key: API key (if required)
         model: Specific model name (optional)
         **kwargs: Additional provider-specific arguments.
             For 'azure': endpoint (str, required), deployment_name (str, required),
                          api_version (str, optional), rpm (int), tpm (int).
+            For 'foundry-gpt': endpoint (str, optional) - defaults to Foundry endpoint.
+            For 'foundry-kimi': base_url (str, optional) - defaults to Foundry endpoint.
+            For 'foundry-claude': endpoint (str, optional) - defaults to Foundry endpoint.
 
     Returns:
         ModelInterface instance
@@ -957,6 +1258,34 @@ def create_model_interface(
         model = model or "llama3:8b"
         return OllamaInterface(model=model)
 
+    elif provider == 'foundry-gpt':
+        if not api_key:
+            raise ValueError("foundry-gpt requires api_key (FOUNDRY_API_KEY)")
+        endpoint = kwargs.pop('endpoint', FoundryGPT52Interface.FOUNDRY_ENDPOINT)
+        deployment = model or kwargs.pop('deployment', FoundryGPT52Interface.FOUNDRY_DEPLOYMENT)
+        api_version = kwargs.pop('api_version', FoundryGPT52Interface.FOUNDRY_API_VERSION)
+        return FoundryGPT52Interface(
+            api_key=api_key,
+            endpoint=endpoint,
+            deployment=deployment,
+            api_version=api_version,
+            **kwargs,
+        )
+
+    elif provider == 'foundry-kimi':
+        if not api_key:
+            raise ValueError("foundry-kimi requires api_key (FOUNDRY_API_KEY)")
+        base_url = kwargs.pop('base_url', FoundryKimiInterface.FOUNDRY_BASE_URL)
+        model = model or FoundryKimiInterface.FOUNDRY_DEPLOYMENT
+        return FoundryKimiInterface(api_key=api_key, base_url=base_url, model=model, **kwargs)
+
+    elif provider == 'foundry-claude':
+        if not api_key:
+            raise ValueError("foundry-claude requires api_key (FOUNDRY_API_KEY)")
+        endpoint = kwargs.pop('endpoint', FoundryClaudeInterface.FOUNDRY_ENDPOINT)
+        model = model or FoundryClaudeInterface.FOUNDRY_DEPLOYMENT
+        return FoundryClaudeInterface(api_key=api_key, endpoint=endpoint, model=model, **kwargs)
+
     elif provider == 'mock':
         model = model or "mock-model"
         return MockModelInterface(model_name=model)
@@ -964,7 +1293,8 @@ def create_model_interface(
     else:
         raise ValueError(
             f"Unknown provider: {provider}. "
-            "Available: openai, azure, curc, anthropic, google, ollama, mock"
+            "Available: openai, azure, curc, anthropic, google, ollama, "
+            "foundry-gpt, foundry-kimi, foundry-claude, mock"
         )
 
 

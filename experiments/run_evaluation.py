@@ -183,11 +183,17 @@ def parse_args() -> argparse.Namespace:
 
     # Provider / credentials
     p.add_argument("--provider", required=True,
-                   choices=["openai", "azure", "curc", "anthropic", "google", "ollama", "mock"],
+                   choices=[
+                       "openai", "azure", "curc", "anthropic", "google", "ollama",
+                       "foundry-gpt", "foundry-kimi", "foundry-claude",
+                       "mock",
+                   ],
                    help="Model provider.")
-    p.add_argument("--api-key", default=None, help="API key (not required for curc/ollama/mock).")
+    p.add_argument("--api-key", default=None,
+                   help="API key. For Foundry providers, falls back to FOUNDRY_API_KEY env var.")
     p.add_argument("--model", default=None, help="Model or deployment name.")
-    p.add_argument("--endpoint", default=None, help="Azure: resource endpoint URL.")
+    p.add_argument("--endpoint", default=None,
+                   help="Azure / Foundry: resource endpoint URL.")
     p.add_argument("--deployment", default=None, help="Azure: deployment name in AI Studio.")
     p.add_argument("--api-version", default="2024-08-01-preview",
                    help="Azure: REST API version.")
@@ -195,6 +201,8 @@ def parse_args() -> argparse.Namespace:
                    help="Ollama: server URL.")
     p.add_argument("--curc-base-url", default="http://localhost:8000",
                    help="CURC vLLM server base URL (default via SSH tunnel: http://localhost:8000).")
+    p.add_argument("--foundry-base-url", default=None,
+                   help="Foundry-Kimi: override base_url (default: Foundry endpoint).")
 
     # Evaluation config
     p.add_argument("--modalities", nargs="+", default=["M4"],
@@ -240,24 +248,52 @@ def main() -> int:
     # ---------------------------------------------------------------------------
     # Build model interface
     # ---------------------------------------------------------------------------
+    import os
+
     kwargs: dict = {}
+    api_key = args.api_key
+
     if args.provider == "azure":
         kwargs["endpoint"] = args.endpoint
         kwargs["deployment_name"] = args.deployment
         kwargs["api_version"] = args.api_version
-        if not all([args.api_key, args.endpoint, args.deployment]):
+        if not all([api_key, args.endpoint, args.deployment]):
             print("ERROR: Azure requires --api-key, --endpoint, and --deployment.")
             return 1
+
     elif args.provider == "curc":
         kwargs["base_url"] = args.curc_base_url
         print(f"CURC vLLM URL : {args.curc_base_url}")
+
     elif args.provider == "ollama":
         kwargs["host"] = args.ollama_host
+
+    elif args.provider in ("foundry-gpt", "foundry-kimi", "foundry-claude"):
+        # Fall back to FOUNDRY_API_KEY env var when --api-key is not given
+        if not api_key:
+            api_key = os.environ.get("FOUNDRY_API_KEY", "")
+        if not api_key:
+            print("ERROR: Foundry providers require --api-key or FOUNDRY_API_KEY env var.")
+            return 1
+
+        if args.provider == "foundry-gpt":
+            if args.endpoint:
+                kwargs["endpoint"] = args.endpoint
+            if args.api_version != "2024-08-01-preview":
+                kwargs["api_version"] = args.api_version
+        elif args.provider == "foundry-kimi":
+            if args.foundry_base_url:
+                kwargs["base_url"] = args.foundry_base_url
+        elif args.provider == "foundry-claude":
+            if args.endpoint:
+                kwargs["endpoint"] = args.endpoint
+
+        print(f"Foundry provider : {args.provider}")
 
     try:
         interface = create_model_interface(
             provider=args.provider,
-            api_key=args.api_key,
+            api_key=api_key,
             model=args.model,
             **kwargs,
         )

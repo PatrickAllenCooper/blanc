@@ -14,6 +14,7 @@ Author: Patrick Cooper
 Date: 2026-02-13
 """
 
+
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
@@ -21,7 +22,12 @@ import os
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from model_interface import create_model_interface
+from model_interface import (
+    create_model_interface,
+    FoundryGPT52Interface,
+    FoundryKimiInterface,
+    FoundryClaudeInterface,
+)
 
 
 def test_openai(api_key: str) -> bool:
@@ -142,6 +148,69 @@ def test_curc(base_url: str, model: str) -> bool:
         return False
 
 
+def test_foundry_gpt(api_key: str) -> bool:
+    """Test Azure AI Foundry GPT-5.2-chat endpoint."""
+    print(f"\nTesting Foundry GPT-5.2-chat ({FoundryGPT52Interface.FOUNDRY_ENDPOINT})...")
+
+    try:
+        interface = create_model_interface("foundry-gpt", api_key=api_key)
+        response = interface.query("Say 'test'", max_tokens=10)
+
+        print(f"  OK Model: {response.model}")
+        print(f"  OK Response: {response.text[:50]}")
+        print(f"  OK Tokens: {response.tokens_input} in, {response.tokens_output} out")
+        print(f"  OK Cost: ${response.cost:.6f}")
+        print(f"  OK Latency: {response.latency:.2f}s")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAIL Error: {e}")
+        return False
+
+
+def test_foundry_kimi(api_key: str) -> bool:
+    """Test Azure AI Foundry Kimi-K2.5 endpoint."""
+    print(f"\nTesting Foundry Kimi-K2.5 ({FoundryKimiInterface.FOUNDRY_BASE_URL})...")
+
+    try:
+        interface = create_model_interface("foundry-kimi", api_key=api_key)
+        response = interface.query("Say 'test'", max_tokens=10)
+
+        print(f"  OK Model: {response.model}")
+        print(f"  OK Response: {response.text[:50]}")
+        print(f"  OK Tokens: {response.tokens_input} in, {response.tokens_output} out")
+        print(f"  OK Cost: ${response.cost:.6f}")
+        print(f"  OK Latency: {response.latency:.2f}s")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAIL Error: {e}")
+        return False
+
+
+def test_foundry_claude(api_key: str) -> bool:
+    """Test Azure AI Foundry claude-sonnet-4-6 endpoint."""
+    print(f"\nTesting Foundry claude-sonnet-4-6 ({FoundryClaudeInterface.FOUNDRY_ENDPOINT})...")
+
+    try:
+        interface = create_model_interface("foundry-claude", api_key=api_key)
+        response = interface.query("Say 'test'", max_tokens=10)
+
+        print(f"  OK Model: {response.model}")
+        print(f"  OK Response: {response.text[:50]}")
+        print(f"  OK Tokens: {response.tokens_input} in, {response.tokens_output} out")
+        print(f"  OK Cost: ${response.cost:.6f}")
+        print(f"  OK Latency: {response.latency:.2f}s")
+
+        return True
+
+    except Exception as e:
+        print(f"  FAIL Error: {e}")
+        return False
+
+
 def test_ollama() -> bool:
     """Test Ollama (local)."""
     print("\nTesting Ollama (optional - local models)...")
@@ -203,6 +272,9 @@ def main():
     curc_base_url = os.getenv('CURC_VLLM_BASE_URL', 'http://localhost:8000')
     curc_model    = os.getenv('CURC_VLLM_MODEL', 'Qwen/Qwen2.5-72B-Instruct-AWQ')
 
+    # Azure AI Foundry credentials (shared key for all three models)
+    foundry_key = os.getenv('FOUNDRY_API_KEY', '')
+
     # Track results
     results = {}
     
@@ -237,6 +309,17 @@ def main():
     # Test CURC vLLM (optional -- requires vLLM server running + SSH tunnel)
     results['curc'] = test_curc(curc_base_url, curc_model)
 
+    # Test Azure AI Foundry models
+    if foundry_key:
+        results['foundry-gpt']    = test_foundry_gpt(foundry_key)
+        results['foundry-kimi']   = test_foundry_kimi(foundry_key)
+        results['foundry-claude'] = test_foundry_claude(foundry_key)
+    else:
+        print("\nINFO  FOUNDRY_API_KEY not set in .env - skipping Foundry tests")
+        results['foundry-gpt']    = False
+        results['foundry-kimi']   = False
+        results['foundry-claude'] = False
+
     # Test Ollama (optional)
     results['ollama'] = test_ollama()
     
@@ -254,12 +337,18 @@ def main():
         or results.get('azure', False)
         or results.get('anthropic', False)
         or results.get('curc', False)
+        or results.get('foundry-gpt', False)
+        or results.get('foundry-kimi', False)
+        or results.get('foundry-claude', False)
     )
 
     if required_working:
         print("\nREADY FOR PILOT EVALUATION")
-        print("   CURC run: sbatch hpc/slurm_evaluate_curc_vllm.sh")
-        print("   Local run: python experiments/run_evaluation.py --provider azure --provider mock")
+        if any(results.get(p) for p in ('foundry-gpt', 'foundry-kimi', 'foundry-claude')):
+            print("   Foundry run: sbatch hpc/slurm_evaluate_foundry.sh")
+            print("   Local run  : .\\hpc\\run_local.ps1 foundry-gpt")
+        if results.get('curc'):
+            print("   CURC run   : sbatch hpc/slurm_evaluate_curc_vllm.sh")
     else:
         print("\nREQUIRED APIs not working")
         print("   Need at least one of: OpenAI, Azure OpenAI, Anthropic, or CURC vLLM")

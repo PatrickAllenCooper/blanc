@@ -28,7 +28,10 @@ from model_interface import (
     ModelInterface,
     MockModelInterface,
     CURCInterface,
-    create_model_interface
+    FoundryGPT52Interface,
+    FoundryKimiInterface,
+    FoundryClaudeInterface,
+    create_model_interface,
 )
 
 
@@ -299,6 +302,197 @@ class TestCURCInterface:
         # tenacity will retry 5 times; patch stop condition to fail fast
         with pytest.raises(RuntimeError, match="connection refused"):
             iface.query("prompt")
+
+
+def _make_openai_completion(text: str = "test", prompt_tokens: int = 5, completion_tokens: int = 2):
+    """Build a minimal mock openai.ChatCompletion for Foundry GPT/Kimi tests."""
+    choice = MagicMock()
+    choice.message.content = text
+    choice.finish_reason = "stop"
+    usage = MagicMock()
+    usage.prompt_tokens = prompt_tokens
+    usage.completion_tokens = completion_tokens
+    completion = MagicMock()
+    completion.choices = [choice]
+    completion.usage = usage
+    return completion
+
+
+def _make_anthropic_message(text: str = "test", input_tokens: int = 5, output_tokens: int = 2):
+    """Build a minimal mock Anthropic Messages response for Foundry Claude tests."""
+    content_block = MagicMock()
+    content_block.text = text
+    usage = MagicMock()
+    usage.input_tokens = input_tokens
+    usage.output_tokens = output_tokens
+    message = MagicMock()
+    message.content = [content_block]
+    message.usage = usage
+    message.stop_reason = "end_turn"
+    return message
+
+
+class TestFoundryGPT52Interface:
+    """Test FoundryGPT52Interface against a mocked AzureOpenAI client."""
+
+    FAKE_KEY = "fake-foundry-key"
+
+    def _make_interface(self) -> FoundryGPT52Interface:
+        with patch("model_interface.FoundryGPT52Interface.__init__", lambda self, **kw: None):
+            iface = FoundryGPT52Interface.__new__(FoundryGPT52Interface)
+            iface.model_name = FoundryGPT52Interface.FOUNDRY_DEPLOYMENT
+            iface._deployment = FoundryGPT52Interface.FOUNDRY_DEPLOYMENT
+            iface._total_cost = 0.0
+            iface._total_tokens_input = 0
+            iface._total_tokens_output = 0
+            iface._query_count = 0
+            iface.rate_limiter = RateLimiter(rpm=6000, tpm=10_000_000)
+            iface._client = MagicMock()
+            return iface
+
+    def test_cost_properties(self):
+        iface = self._make_interface()
+        assert iface.cost_per_1k_input > 0
+        assert iface.cost_per_1k_output > 0
+
+    def test_query_returns_model_response(self):
+        iface = self._make_interface()
+        iface._client.chat.completions.create.return_value = _make_openai_completion(
+            text="gpt52 answer", prompt_tokens=8, completion_tokens=3
+        )
+        resp = iface.query("Say 'test'", max_tokens=20)
+
+        assert isinstance(resp, ModelResponse)
+        assert resp.text == "gpt52 answer"
+        assert resp.tokens_input == 8
+        assert resp.tokens_output == 3
+        assert resp.cost > 0.0
+        assert resp.metadata["provider"] == "foundry-gpt"
+
+    def test_query_uses_max_completion_tokens(self):
+        """GPT-5.2 requires max_completion_tokens, not max_tokens."""
+        iface = self._make_interface()
+        iface._client.chat.completions.create.return_value = _make_openai_completion()
+
+        iface.query("prompt", max_tokens=128)
+        call_kwargs = iface._client.chat.completions.create.call_args.kwargs
+        assert "max_completion_tokens" in call_kwargs
+        assert call_kwargs["max_completion_tokens"] == 128
+        assert "max_tokens" not in call_kwargs
+
+    def test_factory_creates_foundry_gpt(self):
+        with patch("model_interface.FoundryGPT52Interface.__init__", return_value=None):
+            iface = create_model_interface("foundry-gpt", api_key="k")
+            assert isinstance(iface, FoundryGPT52Interface)
+
+    def test_factory_foundry_gpt_requires_key(self):
+        with pytest.raises(ValueError, match="foundry-gpt requires api_key"):
+            create_model_interface("foundry-gpt")
+
+
+class TestFoundryKimiInterface:
+    """Test FoundryKimiInterface against a mocked OpenAI client."""
+
+    def _make_interface(self) -> FoundryKimiInterface:
+        with patch("model_interface.FoundryKimiInterface.__init__", lambda self, **kw: None):
+            iface = FoundryKimiInterface.__new__(FoundryKimiInterface)
+            iface.model_name = FoundryKimiInterface.FOUNDRY_DEPLOYMENT
+            iface._total_cost = 0.0
+            iface._total_tokens_input = 0
+            iface._total_tokens_output = 0
+            iface._query_count = 0
+            iface.rate_limiter = RateLimiter(rpm=6000, tpm=10_000_000)
+            iface._client = MagicMock()
+            return iface
+
+    def test_cost_properties(self):
+        iface = self._make_interface()
+        assert iface.cost_per_1k_input > 0
+        assert iface.cost_per_1k_output > 0
+
+    def test_query_returns_model_response(self):
+        iface = self._make_interface()
+        iface._client.chat.completions.create.return_value = _make_openai_completion(
+            text="kimi answer", prompt_tokens=6, completion_tokens=2
+        )
+        resp = iface.query("Say 'test'", max_tokens=20)
+
+        assert isinstance(resp, ModelResponse)
+        assert resp.text == "kimi answer"
+        assert resp.metadata["provider"] == "foundry-kimi"
+
+    def test_query_uses_max_tokens_not_max_completion_tokens(self):
+        iface = self._make_interface()
+        iface._client.chat.completions.create.return_value = _make_openai_completion()
+
+        iface.query("prompt", max_tokens=64)
+        call_kwargs = iface._client.chat.completions.create.call_args.kwargs
+        assert "max_tokens" in call_kwargs
+        assert call_kwargs["max_tokens"] == 64
+
+    def test_factory_creates_foundry_kimi(self):
+        with patch("model_interface.FoundryKimiInterface.__init__", return_value=None):
+            iface = create_model_interface("foundry-kimi", api_key="k")
+            assert isinstance(iface, FoundryKimiInterface)
+
+    def test_factory_foundry_kimi_requires_key(self):
+        with pytest.raises(ValueError, match="foundry-kimi requires api_key"):
+            create_model_interface("foundry-kimi")
+
+
+class TestFoundryClaudeInterface:
+    """Test FoundryClaudeInterface against a mocked AnthropicFoundry client."""
+
+    def _make_interface(self) -> FoundryClaudeInterface:
+        with patch("model_interface.FoundryClaudeInterface.__init__", lambda self, **kw: None):
+            iface = FoundryClaudeInterface.__new__(FoundryClaudeInterface)
+            iface.model_name = FoundryClaudeInterface.FOUNDRY_DEPLOYMENT
+            iface._total_cost = 0.0
+            iface._total_tokens_input = 0
+            iface._total_tokens_output = 0
+            iface._query_count = 0
+            iface.rate_limiter = RateLimiter(rpm=6000, tpm=10_000_000)
+            iface._client = MagicMock()
+            return iface
+
+    def test_cost_properties(self):
+        iface = self._make_interface()
+        assert iface.cost_per_1k_input > 0
+        assert iface.cost_per_1k_output > 0
+
+    def test_query_returns_model_response(self):
+        iface = self._make_interface()
+        iface._client.messages.create.return_value = _make_anthropic_message(
+            text="claude answer", input_tokens=7, output_tokens=3
+        )
+        resp = iface.query("Say 'test'", max_tokens=20)
+
+        assert isinstance(resp, ModelResponse)
+        assert resp.text == "claude answer"
+        assert resp.tokens_input == 7
+        assert resp.tokens_output == 3
+        assert resp.cost > 0.0
+        assert resp.metadata["provider"] == "foundry-claude"
+        assert resp.metadata["stop_reason"] == "end_turn"
+
+    def test_query_updates_statistics(self):
+        iface = self._make_interface()
+        iface._client.messages.create.return_value = _make_anthropic_message()
+
+        iface.query("p1")
+        iface.query("p2")
+        stats = iface.statistics
+        assert stats["total_queries"] == 2
+        assert stats["total_cost"] > 0.0
+
+    def test_factory_creates_foundry_claude(self):
+        with patch("model_interface.FoundryClaudeInterface.__init__", return_value=None):
+            iface = create_model_interface("foundry-claude", api_key="k")
+            assert isinstance(iface, FoundryClaudeInterface)
+
+    def test_factory_foundry_claude_requires_key(self):
+        with pytest.raises(ValueError, match="foundry-claude requires api_key"):
+            create_model_interface("foundry-claude")
 
 
 class TestCreateModelInterface:

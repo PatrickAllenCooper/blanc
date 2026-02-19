@@ -237,10 +237,95 @@ Can generate all 13 partition strategies simultaneously!
 
 ## Files
 
+**HPC (SLURM) scripts:**
 - `slurm_generate_instances.sh`  - Instance generation batch job (64 CPU cores)
 - `slurm_evaluate_azure.sh`      - LLM evaluation via Azure OpenAI (4 CPU cores, API-bound)
 - `slurm_evaluate_llama.sh`      - Llama 3 evaluation via Ollama (1 GPU, aa100 partition)
-- `README.md`                    - This documentation
+- `slurm_evaluate_curc_vllm.sh`  - Evaluation via CURC vLLM (Qwen 2.5 / Llama 3.3, 1 GPU)
+
+**Local scripts (no cluster required):**
+- `run_local.sh`   - Bash runner for Linux / macOS / WSL
+- `run_local.ps1`  - PowerShell runner for Windows
+
+- `README.md`      - This documentation
+
+---
+
+## Local Evaluation (No Cluster Required)
+
+The evaluation pipeline runs entirely on your local machine using any API
+provider.  The local scripts read credentials from `.env` at the project root
+(copy `.env.template` and fill in your keys).
+
+### Quick Start
+
+```bash
+# Bash (Linux / macOS / WSL)
+chmod +x hpc/run_local.sh
+./hpc/run_local.sh              # auto-detects provider from .env
+./hpc/run_local.sh openai       # explicit provider
+./hpc/run_local.sh mock --instance-limit 5   # dry run, no credentials
+
+# PowerShell (Windows)
+.\hpc\run_local.ps1             # auto-detects provider from .env
+.\hpc\run_local.ps1 openai      # explicit provider
+.\hpc\run_local.ps1 mock -InstanceLimit 5    # dry run, no credentials
+```
+
+### Supported Providers (Local)
+
+| Provider    | Credential(s) needed          | Notes                                      |
+|-------------|-------------------------------|--------------------------------------------|
+| `openai`    | `OPENAI_API_KEY`              | GPT-4o; API-bound, no GPU needed           |
+| `anthropic` | `ANTHROPIC_API_KEY`           | Claude 3.5 Sonnet; API-bound               |
+| `google`    | `GOOGLE_API_KEY`              | Gemini 1.5 Pro; API-bound                  |
+| `azure`     | `AZURE_OPENAI_*` vars         | GPT-4o via Azure; API-bound                |
+| `ollama`    | Ollama installed + running    | Local model; `llama3:8b` fits ~8 GB RAM    |
+| `curc`      | SSH tunnel to Alpine          | Full-size open-source models via vLLM      |
+| `mock`      | None                          | Deterministic fake responses for testing   |
+
+### Configuration (Local)
+
+All defaults are lower than the HPC scripts to keep local runs fast:
+
+| Variable        | Default        | Override example                |
+|-----------------|----------------|---------------------------------|
+| `INSTANCE_LIMIT`| 20 per domain  | `INSTANCE_LIMIT=50 ./run_local.sh` |
+| `MODALITIES`    | `M4 M2`        | `MODALITIES="M4 M2 M1 M3"`     |
+| `STRATEGIES`    | `direct cot`   | `STRATEGIES="direct"`           |
+| `INCLUDE_LEVEL3`| `true`         | `INCLUDE_LEVEL3=false`          |
+| `LEVEL3_LIMIT`  | 20             | `LEVEL3_LIMIT=33`               |
+
+### Ollama (Fully Offline)
+
+```bash
+# Install Ollama from https://ollama.com, then:
+ollama pull llama3:8b      # ~5 GB download, runs on most laptops
+./hpc/run_local.sh ollama  # uses llama3:8b by default
+```
+
+For larger models on workstations with >=16 GB VRAM:
+
+```bash
+ollama pull llama3:70b
+OLLAMA_MODEL=llama3:70b ./hpc/run_local.sh ollama
+```
+
+### CURC vLLM via SSH Tunnel
+
+If you have access to CURC Alpine, you can run a 72B model locally as a
+client without needing a local GPU:
+
+```bash
+# 1. Launch vLLM on Alpine (see curc-LLM-hoster project)
+sbatch ~/curc-LLM-hoster/scripts/launch_vllm.slurm
+
+# 2. Create SSH tunnel on your local machine
+~/curc-LLM-hoster/scripts/create_tunnel.sh <job_id>
+
+# 3. Run evaluation (tunnel forwards localhost:8000 to the compute node)
+./hpc/run_local.sh curc
+```
 
 ---
 
