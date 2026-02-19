@@ -60,6 +60,9 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--cov=src/blanc --cov-report=term-missing --cov-report=html"
+markers = [
+    "integration: live network tests against real API endpoints (deselected by default)",
+]
 
 [tool.coverage.run]
 source = ["src/blanc"]

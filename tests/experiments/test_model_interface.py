@@ -380,6 +380,17 @@ class TestFoundryGPT52Interface:
         assert call_kwargs["max_completion_tokens"] == 128
         assert "max_tokens" not in call_kwargs
 
+    def test_query_does_not_pass_temperature(self):
+        """GPT-5.2 rejects temperature; the interface must omit it."""
+        iface = self._make_interface()
+        iface._client.chat.completions.create.return_value = _make_openai_completion()
+
+        iface.query("prompt", temperature=0.0, max_tokens=16)
+        call_kwargs = iface._client.chat.completions.create.call_args.kwargs
+        assert "temperature" not in call_kwargs, (
+            "temperature was forwarded to GPT-5.2 but the model does not accept it"
+        )
+
     def test_factory_creates_foundry_gpt(self):
         with patch("model_interface.FoundryGPT52Interface.__init__", return_value=None):
             iface = create_model_interface("foundry-gpt", api_key="k")

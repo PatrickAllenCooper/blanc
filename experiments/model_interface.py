@@ -902,7 +902,13 @@ class FoundryGPT52Interface(ModelInterface):
         max_tokens: int = 512,
         **kwargs,
     ) -> ModelResponse:
-        """Query GPT-5.2-chat with exponential backoff retry."""
+        """Query GPT-5.2-chat with exponential backoff retry.
+
+        Note: GPT-5.2 is a reasoning model that does not accept a temperature
+        parameter (only the API default of 1 is supported).  The temperature
+        argument is accepted here for interface compatibility but is not
+        forwarded to the API.
+        """
         self.rate_limiter.wait_if_needed(len(prompt) // 4 + max_tokens)
         start = time.time()
 
@@ -910,8 +916,8 @@ class FoundryGPT52Interface(ModelInterface):
             response = self._client.chat.completions.create(
                 model=self._deployment,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=temperature,
                 max_completion_tokens=max_tokens,
+                # temperature is intentionally omitted: GPT-5.2 rejects it
             )
         except Exception as e:
             logger.warning("Foundry GPT-5.2 API error: %s", e)
