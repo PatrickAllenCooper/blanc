@@ -42,12 +42,21 @@ Date: 2026-02-18
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "experiments"))
+
+# Load .env from the project root so FOUNDRY_API_KEY and other credentials
+# are available when the script is invoked directly (not via the local runners).
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / ".env")
+except ImportError:
+    pass  # python-dotenv not installed; rely on environment variables
 
 from blanc.core.theory import Theory, Rule, RuleType
 from blanc.author.generation import AbductiveInstance
@@ -248,8 +257,6 @@ def main() -> int:
     # ---------------------------------------------------------------------------
     # Build model interface
     # ---------------------------------------------------------------------------
-    import os
-
     kwargs: dict = {}
     api_key = args.api_key
 

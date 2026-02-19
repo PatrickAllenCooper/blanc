@@ -293,11 +293,20 @@ class EvaluationPipeline:
             response = cached_response
             cached = True
         else:
-            # Query model
+            # Reasoning models (Kimi-K2.5, DeepSeek-R1-Distill) consume tokens
+            # internally before emitting visible text.  Give them extra headroom
+            # so reasoning does not exhaust the entire budget.
+            model_name_lower = model.model_name.lower()
+            is_reasoning_model = any(
+                tag in model_name_lower
+                for tag in ("kimi", "deepseek-r1", "r1-distill")
+            )
+            max_tokens = 1024 if is_reasoning_model else 512
+
             response = model.query(
                 prompt=rendered.prompt,
                 temperature=0.0,
-                max_tokens=512
+                max_tokens=max_tokens
             )
             
             # Cache response
@@ -355,6 +364,30 @@ class EvaluationPipeline:
             domain=instance.metadata.get("domain") if instance.metadata else None,
         )
     
+    @staticmethod
+    def _extract_cot_answer(text: str) -> str:
+        """
+        Extract the hypothesis from a CoT response.
+
+        The CoT prompt instructs models to end their response with:
+            FINAL ANSWER: <hypothesis text>
+
+        When present, extract only that portion so D1 exact-match succeeds.
+        If the pattern is absent, fall through to the original text so D2/D3
+        still have a chance to recover something useful from the reasoning body.
+        """
+        import re
+        # Look for "FINAL ANSWER:" (case-insensitive) anywhere in the text.
+        match = re.search(r"FINAL ANSWER:\s*(.+?)(?:\n|$)", text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        # Fallback: try last non-empty line — models sometimes drop the prefix
+        # but still put the answer last.
+        lines = [ln.strip() for ln in text.strip().splitlines() if ln.strip()]
+        if lines:
+            return lines[-1]
+        return text
+
     def _decode_response(
         self,
         response_text: str,
@@ -363,11 +396,23 @@ class EvaluationPipeline:
         """
         Apply D1→D2→D3 cascade decoder and return (hypothesis, stage_name).
 
+        For CoT responses the model is instructed to place its answer after
+        'FINAL ANSWER:'.  We extract that fragment first so the exact-match
+        decoder (D1) can succeed without seeing the full reasoning chain.
+
         Returns:
             (decoded_hypothesis, stage) where stage is 'D1', 'D2', 'D3', or
             None when all stages fail.
         """
-        decoded, stage = self._cascade_decoder.decode(response_text, instance.candidates)
+        # Pre-process: pull the answer out of a CoT response if present.
+        text_to_decode = self._extract_cot_answer(response_text)
+        decoded, stage = self._cascade_decoder.decode(text_to_decode, instance.candidates)
+
+        # If extraction narrowed the text too much and the cascade failed,
+        # retry on the full response (D2/D3 may still find something).
+        if decoded is None and text_to_decode != response_text:
+            decoded, stage = self._cascade_decoder.decode(response_text, instance.candidates)
+
         return decoded, stage
 
     def _check_correctness(
