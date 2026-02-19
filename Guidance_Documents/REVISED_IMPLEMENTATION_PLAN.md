@@ -239,6 +239,57 @@ sbatch --export=ALL,INSTANCE_LIMIT=120,LEVEL3_LIMIT=35,MODALITIES="M4 M2 M1 M3" 
 
 ---
 
+## Paper Revisions Based on Pilot Findings
+
+### Completed immediately (no full results required)
+
+| Item | Status | Detail |
+|------|--------|--------|
+| §4.4 Models paragraph | Done | Replaced GPT-4o/Claude 3.5/Gemini/Llama 3 with actual 6-model lineup |
+| §4.6 CoT paragraph | Done | Replaced predicted positive CoT lift with actual finding (−20%, −15%) and overthinking interpretation |
+| §4.6 Scaling paragraph | Done | Updated from Llama 8B/70B cross-family to Qwen 32B/72B within-family + DeepSeek-R1 reasoning-vs-instruction comparison |
+| §4.5 k=5 TODO | Done | Justified via ProofWriter precedent and pilot accuracy (~90% at L2) |
+| §4.6 Score weights TODO | Done | Equal-spacing primary; stage-weighted and binary reported as appendix robustness checks |
+| §4.6 Theory size TODO | Done | Values adjusted from {50,100,200,500,1000} to {10,25,50,100,200} matching actual grounded KB sizes |
+| Abstract | Done | Added empirical preview: ≥88% L2 vs ≤2% L3; CoT −15 to −20 pp; two capabilities architecturally separable |
+| §§5–7 skeleton | Done | Results / Discussion / Conclusion sections added with `[placeholder]` prose and pilot numbers pre-populated |
+| `chen2024overthinking` | Done | New bib entry for overthinking reference in CoT paragraph |
+| `moonshot2025kimi`, `deepseek2025r1` | Done | New bib entries for Kimi and DeepSeek-R1 |
+
+### Requires full CURC evaluation results
+
+| Item | Unblocked by | Action |
+|------|-------------|--------|
+| §5.1 Table 1 (rendering-robust accuracy) | Full eval | Fill from `generate_paper_tables.py` output |
+| §5.1 Table 2 (per-modality breakdown) | Full eval | Fill from `generate_paper_tables.py` output |
+| §5.2 Grounding (L2) body text | Full eval | Write from `analyze_results.py` output |
+| §5.3 Belief revision (L3) body text | Full eval | Write from `analyze_results.py` + `conservativity_analysis.py` |
+| §5.4 CoT analysis body text | Full eval | Confirm pilot finding holds at scale; report per domain/modality |
+| §5.5 Scaling analysis | CURC Qwen 32B vs 72B job | Write from `scaling_analysis.py` |
+| §5.6 Symbolic ceiling | `pip install clingo` + run | Write from `symbolic_baseline.py` |
+| §6 Discussion | Full eval | Write from data; substantiate or refute three pilot claims |
+| §7 Conclusion | Full eval | Synthesis |
+| Abstract final quantification | Full eval | Replace pilot numbers with production-scale numbers |
+| NeurIPS checklist (17 TODOs) | Most resolvable now | See checklist section below |
+
+### Author field (line 125–154)
+
+Replace `David S. Hippocampus` / `Cranberry-Lemon University` with actual author information before submission.
+
+### NeurIPS checklist — pre-answerable items
+
+Several checklist items can be answered now without full results:
+
+| Question | Answer | Justification |
+|----------|--------|---------------|
+| Claims match contributions | Yes | Abstract revised to match pilot findings |
+| Limitations discussed | Yes | Add Limitations section noting: M1 decoder approximate; Level 3 set small (35); cross-ontology extraction incomplete |
+| Theory assumptions and proofs | Yes | All theorems have proofs in Appendix B |
+| Reproducibility | Yes | Code, pipeline, and instances will be released; all hyperparameters documented |
+| Open access | Yes | Instances and code released; models are commercially available APIs |
+| Human subjects | NA | No human subjects |
+| NeurIPS paper checklist items requiring full results: compute budget, broader impact |
+
 ## Known Issues to Resolve Before Submission
 
 | Issue | Impact | Resolution |

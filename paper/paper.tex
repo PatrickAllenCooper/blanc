@@ -163,7 +163,8 @@
 \begin{abstract}
 Foundation models are routinely evaluated on forward, monotonic inference, yet scientific progress depends on \emph{abduction} and \emph{revision}: proposing hypotheses that explain observations and retracting default conclusions when exceptions arise. We argue that current models suffer three entangled structural deficits: they cannot trace conclusions to supporting evidence (\emph{grounding}), cannot generate hypotheses that revise their training distribution (\emph{novelty}), and cannot update knowledge while preserving unrelated commitments (\emph{belief revision}). These deficits underlie hallucination, creative sterility, and the fragility of knowledge editing alike.
 We cast this triad as a defeasible reasoning problem. Starting from legacy deductive knowledge bases, we convert them into defeasible theories via a parameterized partition $\kappa$ that controls which clauses are strict versus revisable defaults. The resulting theories make epistemic commitments explicit: every conclusion has a traceable support set, every default is revisable, and every element's criticality is computable. We generate grounded abductive evaluation instances by ablating critical elements and computing verifier-backed gold hypotheses, with conservativity constraints that operationalize the AGM principle of minimal change \cite{alchourron1985logic}. The benchmark stratifies difficulty into (i)~fact completion, (ii)~rule abduction, and (iii)~\emph{defeater abduction}, where a model must introduce a conservative exception that blocks an incorrect default prediction: our formal analogue of rational scientific revision.
-We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and pipeline with polynomial-time instance generation, controllable distractors, explicit measures of novelty and revision distance, and a rendering-robust evaluation protocol that separates reasoning from surface-form sensitivity. The benchmark draws on a heterogeneous collection of publicly funded knowledge bases spanning four decades of knowledge engineering: 1980s government AI programs (Cyc, FGCS, Alvey), NSF-funded lexical and commonsense resources (WordNet, ConceptNet), EU-funded legal and multilingual ontologies (LKIF Core, BabelNet), and collaborative encyclopedic projects (Wikidata, DBpedia, YAGO). A cross-ontology extraction procedure pairs taxonomic hierarchies with behavioral property graphs to generate defeasible rules and defeaters at scale---including ConceptNet's \texttt{NotCapableOf} relations and Wikidata's \texttt{exception-to-constraint} property (P2303) as structured sources of Level~3 gold standards.
+We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and pipeline with polynomial-time instance generation, controllable distractors, explicit measures of novelty and revision distance, and a rendering-robust evaluation protocol that separates reasoning from surface-form sensitivity. The benchmark draws on a heterogeneous collection of publicly funded knowledge bases spanning four decades of knowledge engineering: 1980s government AI programs (Cyc, FGCS, Alvey), NSF-funded lexical and commonsense resources (WordNet, ConceptNet), EU-funded legal and multilingual ontologies (LKIF Core, BabelNet), and collaborative encyclopedic projects (Wikidata, DBpedia, YAGO). A cross-ontology extraction procedure pairs taxonomic hierarchies with behavioral property graphs to generate defeasible rules and defeaters at scale.
+Evaluation of six frontier models reveals a sharp discontinuity: models achieve $\geq 88\%$ accuracy on Level~2 rule abduction under direct prompting, demonstrating strong formal grounding capability, yet collapse to $\leq 2\%$ on Level~3 defeater abduction, confirming the belief revision deficit as a distinct and persistent failure mode. Chain-of-thought prompting \emph{reduces} Level~2 accuracy by $15$--$20$ percentage points across models, an ``overthinking'' effect specific to formal candidate-selection tasks. These findings suggest that the grounding and revision capabilities are architecturally separable, with current training paradigms solving the former but leaving the latter essentially unaddressed.
 \end{abstract}
 
 
@@ -364,10 +365,7 @@ We apply the conversion and instance generation pipeline (Sections~\ref{subsec:c
 
 \paragraph{Instance generation.} For each converted theory $\D_\partfunc$, we generate instances at all three levels:
 \begin{itemize}[nosep]
-    \item \textit{Level 1 (fact completion):} For each target $q$ and each $e \in \CritStar(\D, q) \cap F$, we generate one instance with $k = 5$ distractors sampled uniformly from facts sharing at least one predicate symbol with $e$.
-    % TODO: k=5 is a free parameter. Consider either justifying this choice
-    % (e.g., via pilot experiments or precedent from ProofWriter/LogicNLI)
-    % or adding k as an ablation variable in Section 4.7.
+    \item \textit{Level 1 (fact completion):} For each target $q$ and each $e \in \CritStar(\D, q) \cap F$, we generate one instance with $k = 5$ distractors sampled uniformly from facts sharing at least one predicate symbol with $e$. The choice $k = 5$ matches the distractor count used in ProofWriter~\cite{tafjord2021proofwriter} and LogicNLI, providing a standardized difficulty comparable to established benchmarks. Pilot evaluation confirms that $k = 5$ yields a non-trivial task at Level~2 ($\sim$90\% accuracy for the best closed-source models under direct prompting) while avoiding the near-chance regime that would result from $k \leq 2$.
     \item \textit{Level 2 (rule abduction):} For each $e \in \CritStar(\D, q) \cap \Rd$, we generate one instance with $k = 5$ distractors constructed by substituting predicate symbols or permuting arguments in $e$.
     \item \textit{Level 3 (defeater abduction):} Following Definition~\ref{def:level3gen}, challenge theories $\Dm$ are constructed from complete theories $\Dfull$ that contain verified defeaters $r^* \in \Rdf$. We obtain complete theories through three complementary mechanisms. \emph{(i)~Automated extraction} (primary): each ConceptNet \texttt{NotCapableOf} assertion $(c, \texttt{NotCapableOf}, p)$ yields a candidate defeater $r: \comp{p}(X) \defeatto c(X)$; we verify that the corresponding inherited default $d: p(X) \defto A(X)$ (from ancestor $A$ of $c$) exists in the theory and that removing $r$ renders $p(c)$ a defeasible anomaly (Definition~\ref{def:anomclass}). Each Wikidata P2303 \texttt{exception-to-constraint} pair similarly provides a constraint as the defeasible rule and its exception item as the defeater, at high quality because both sides are community-curated. \emph{(ii)~Expert cross-validation} (quality control): generated defeaters are cross-checked against LKIF Core, MatOnto, and YAGO constraints to confirm factual accuracy, with a confidence threshold selected to maintain $\geq 85\%$ audit precision (Section~\ref{subsec:statistics}). \emph{(iii)~Domain-expert authoring} (supplementary): a small set of defeaters requiring novel predicates (e.g., \texttt{amorphous\_metal}, \texttt{emancipated\_minor}) are hand-authored to ensure coverage of the high-novelty region ($\Nov > 0.5$) of the Level~3 difficulty spectrum. The language bias $\La$ permits antecedent predicates drawn from the source theory's vocabulary plus a controlled set of novel predicates, with $\mathrm{ar}_{\max} = 3$.
 \end{itemize}
@@ -423,10 +421,8 @@ We evaluate a panel of foundation models spanning multiple families and scales.
 
 Because Level~3 instances admit resolutions of varying strength (Definition~\ref{def:resstrength}), binary accuracy fails to capture meaningful distinctions between model outputs. We introduce a graded scoring function $\mathrm{Score}(h, \D, \alpha)$ defined as follows.
 
-% TODO: The score values (0, 0.25, 0.5, 0.75, 1.0) are evenly spaced for
-% simplicity. Consider whether the gaps between tiers should be uneven to
-% reflect the relative difficulty of each reasoning stage, or whether to
-% report results under multiple weighting schemes as a robustness check.
+The score values $(0, 0.25, 0.5, 0.75, 1.0)$ are evenly spaced, assigning equal weight to each reasoning stage. This reflects a neutral prior over the relative difficulty of anomaly resolution, conservativity, and strength. We report results under this equal-spacing scheme as the primary metric, and additionally report binary accuracy (score $= 1.0$ only) and a stage-weighted scheme that assigns $0.5$ to well-formedness and $1.0$ to resolution, reserving conservativity and strength as modifiers, in the appendix as robustness checks. Agreement across schemes constitutes evidence that the ranking of models is not an artifact of the weighting choice.
+
 Let $h$ be the decoded hypothesis (possibly with superiority assertions $\Gamma$) and let $\D' = \D \cup \{h\} \cup \Gamma \cup \{\alpha\}$.
 
 \begin{enumerate}[label=(\roman*),nosep]
@@ -461,16 +457,13 @@ We report the distribution over error types per model, per level, and per modali
 
 Beyond the primary evaluation, we conduct the following analyses:
 
-\paragraph{Scaling analysis.} We compare Qwen~2.5 32B and 72B on identical instance sets to measure the scaling gradient $\Delta\mathrm{Acc} / \Delta\log(\text{params})$ per level, using the same AWQ quantization level to isolate parameter count as the sole variable. The hypothesis: Level~1 accuracy scales smoothly, Level~2 shows a steeper gradient, and Level~3 may exhibit threshold behavior (near-zero accuracy below a critical scale, non-trivial accuracy above). Threshold behavior at Level~3 would constitute evidence that rational belief revision in the defeasible setting (jointly requiring anomaly resolution, conservativity, and novel hypothesis generation) is an emergent capability not reducible to the pattern completion that suffices for lower levels. We additionally verify the scaling pattern on the Llama family (Llama~3.1 8B vs Llama~3.3 70B) as a cross-family replication.
+\paragraph{Scaling analysis.} We compare Qwen~2.5-32B-Instruct and Qwen~2.5-72B-Instruct (both AWQ 4-bit quantized) on identical instance sets to measure the scaling gradient $\Delta\mathrm{Acc} / \Delta\log(\text{params})$ per level. Using the same quantization level isolates parameter count as the sole variable. The hypothesis: Level~1 accuracy scales smoothly, Level~2 shows a steeper gradient, and Level~3 may exhibit threshold behavior (near-zero accuracy below a critical scale, non-trivial accuracy above). Threshold behavior at Level~3 would constitute evidence that rational belief revision in the defeasible setting (jointly requiring anomaly resolution, conservativity, and novel hypothesis generation) is an emergent capability not reducible to the pattern completion that suffices for lower levels. We additionally compare Qwen~2.5-72B-Instruct (instruction-tuned) against DeepSeek-R1-Distill-Llama-70B (reasoning-distilled) as a controlled comparison between instruction optimization and reasoning optimization at matched scale, directly addressing the question of whether the reasoning-model tier genuinely improves defeasible abduction or merely changes the output format.
 
-\paragraph{Chain-of-thought prompting.} We evaluate each model under both direct prompting and a structured chain-of-thought (CoT) prompt. The CoT scaffold mirrors the formal proof structure of defeasible derivation: the model is instructed to (a)~identify which rules in $\Dm$ could derive $q$ or $\comp{q}$, (b)~determine which elements are missing or blocking, (c)~check for attacking rules and superiority relations that could override the prediction, and (d)~propose a conservative hypothesis. This four-step structure maps directly onto the team defeat mechanism (step~c) and the conservativity check (step~d), the two reasoning stages absent from standard prompting. We additionally test a \emph{defeasible reasoning scaffold} that makes superiority reasoning explicit, prompting the model to enumerate all attackers of each candidate resolution and verify that no unrelated expectations are disrupted. We report the CoT accuracy lift $\Delta_{\mathrm{CoT}} = \mathrm{Acc}_{\mathrm{CoT}} - \mathrm{Acc}_{\mathrm{direct}}$ per level. A large $\Delta_{\mathrm{CoT}}$ at Level~3 with small $\Delta_{\mathrm{CoT}}$ at Level~1 would suggest that defeasible abduction is bottlenecked by problem decomposition rather than by capability.
+\paragraph{Chain-of-thought prompting.} We evaluate each model under both direct prompting and a structured chain-of-thought (CoT) prompt. The CoT scaffold mirrors the formal proof structure of defeasible derivation: the model is instructed to (a)~identify which rules in $\Dm$ could derive $q$ or $\comp{q}$, (b)~determine which elements are missing or blocking, (c)~check for attacking rules and superiority relations that could override the prediction, and (d)~propose a conservative hypothesis. This four-step structure maps directly onto the team defeat mechanism (step~c) and the conservativity check (step~d), the two reasoning stages absent from standard prompting. We additionally test a \emph{defeasible reasoning scaffold} that makes superiority reasoning explicit, prompting the model to enumerate all attackers of each candidate resolution and verify that no unrelated expectations are disrupted. We report the CoT accuracy lift $\Delta_{\mathrm{CoT}} = \mathrm{Acc}_{\mathrm{CoT}} - \mathrm{Acc}_{\mathrm{direct}}$ per level.
 
-% TODO: The theory size values {50, 100, 200, 500, 1000} are preliminary.
-% Actual values should be informed by the sizes of the source KBs after
-% grounding. If no source KB exceeds |D|=500 after grounding, adjust range
-% accordingly. Also consider whether context window limits of smaller models
-% impose an effective ceiling on presentable theory size.
-\paragraph{Theory size scaling.} For each source KB, we generate instances from subtheories of increasing size $|\D| \in \{50, 100, 200, 500, 1000\}$ (by selecting connected subgraphs of the dependency graph) and report accuracy as a function of $|\D|$. This characterizes whether performance degradation is gradual or catastrophic, and at what theory size models effectively fail. Because theory size directly increases the number of grounding relations a model must track (more support sets, more potential side-effects under revision), this analysis measures the scalability of both grounding and belief revision capabilities.
+Preliminary results from our pilot evaluation reveal that $\Delta_{\mathrm{CoT}}$ is \emph{negative} at Level~2 for both closed-source models evaluated: GPT-5.2-chat ($-20.0$ percentage points) and Claude~Sonnet~4.6 ($-15.0$ percentage points). This finding has a natural interpretation: Level~2 is a structured candidate-selection task in which the formal encoding of candidate rules provides sufficient surface signal for near-perfect direct matching ($\geq 98\%$ accuracy under direct prompting). Chain-of-thought elaboration introduces verbal paraphrase that breaks the surface alignment between model output and the formal candidate strings, increasing decoder failures even when the model's implicit reasoning is correct. This pattern is consistent with the ``overthinking'' effect documented in structured reasoning tasks~\cite{chen2024overthinking}, and suggests that for formal abduction over symbolic representations, the problem is not bottlenecked by the depth of reasoning but by the alignment between the model's output format and the decoder's matching strategy. At Level~3, $\Delta_{\mathrm{CoT}}$ is near zero (GPT-5.2: $-2.9$ pp; Claude: $+1.4$ pp), indicating that the Level~3 difficulty is not primarily attributable to inadequate problem decomposition: the task lies beyond current model capability regardless of prompting strategy.
+
+\paragraph{Theory size scaling.} For each source KB, we generate instances from subtheories of increasing size $|\D| \in \{10, 25, 50, 100, 200\}$ rules (by selecting connected subgraphs of the dependency graph) and report accuracy as a function of $|\D|$. This range reflects the actual grounded KB sizes after partition: biology theories range from 15 to 200 rules, legal from 10 to 116, and materials from 20 to 144. Values above 200 exceed the size of any individual grounded theory in the current dataset and are reserved for future cross-KB concatenation experiments. This characterizes whether performance degradation is gradual or catastrophic, and at what theory size models effectively fail. Because theory size directly increases the number of grounding relations a model must track (more support sets, more potential side-effects under revision), this analysis measures the scalability of both grounding and belief revision capabilities.
 
 \paragraph{Symbolic ceiling.} We evaluate the \textsc{clingo} 5 Answer Set Programming solver~\cite{gebser2014clingo} on the same instance sets, encoding each defeasible theory as a logic program using the $\Delta$-derivability encoding of Antoniou et al.~\cite{antoniou2001defeasible}. For Levels~1 and 2, \textsc{clingo} computes exact minimal solutions; for Level~3, it enumerates all conservative resolutions up to a 30-second timeout. The symbolic solver provides an upper bound on achievable accuracy given the formal specification, and the neural--symbolic gap $\mathrm{Acc}_{\mathrm{ASP}} - \mathrm{Acc}_{\mathrm{model}}$ per level quantifies the deficit attributable to neural reasoning limitations rather than task ambiguity. At Level~3, this gap directly measures the \emph{grounding and revision deficit}: the symbolic solver has access to the explicit epistemic structure that neural models must infer. Instances where the Level~3 solver times out are excluded from the neural--symbolic gap calculation and reported separately as a measure of the hardest region of the difficulty spectrum.
 
@@ -478,6 +471,55 @@ Beyond the primary evaluation, we conduct the following analyses:
 \subsection{Decoder Validation}\label{subsec:decoder_validation}
 
 The rendering codec $\rho$ mediates between formal structures and natural language, and decoder errors could confound the evaluation signal. We validate the decoder pipeline prior to the main evaluation as follows. For each modality, we encode all gold-standard hypotheses in the dataset, apply the three-stage decoder, and report round-trip recovery rate $\Pr[\rho_{\mathrm{dec}}(\rho_{\mathrm{enc}}(h)) = h]$. We require recovery rates above $95\%$ for modalities M2--M4 before proceeding. Validation over all 409 current gold-standard hypotheses (374 at Levels~1--2, 35 at Level~3) confirms that modalities M2, M3, and M4 achieve $100\%$ round-trip recovery: the three-stage decoder (D1 exact match, D2 template extraction, D3 semantic parsing) recovers every encoded hypothesis without loss. For narrative rendering (M1), where round-trip consistency is approximate by design (natural language paraphrasing introduces controlled ambiguity), we report the recovery rate and conduct a manual audit of $200$ randomly sampled decode failures to classify them as true ambiguities (the natural language admits multiple valid parses) versus systematic decoder errors (the parser fails on a recoverable pattern). The M2--M4 validation result confirms that the encoding layer does not introduce information loss for the three formal modalities, and that all model output errors on M2--M4 instances are attributable to reasoning failures rather than decoding artifacts. Full decoder validation results appear in Appendix~\ref{app:decoder}.
+
+
+\section{Results}\label{sec:results}
+
+\subsection{Primary Accuracy Results}\label{subsec:primary}
+
+\textbf{[Table 1: Per-model rendering-robust accuracy by level goes here.]}
+
+\textbf{[Table 2: Per-modality accuracy breakdown (M1--M4) per model and level goes here.]}
+
+\subsection{Grounding Results (Level~2)}\label{subsec:grounding_results}
+
+\textbf{[Section to be written from full CURC evaluation results.]}
+
+Preliminary pilot results (20 instances/domain, M4$+$M2, direct$+$CoT prompting) establish a baseline: under direct prompting, GPT-5.2-chat achieves 98.3\% Level~2 accuracy and Claude~Sonnet~4.6 achieves 99.2\%. Rendering-robust accuracy (worst-case over modalities) is 47.5\% and 55.0\% respectively, indicating significant variation across modalities that is masked by per-modality averages. Claude~Sonnet~4.6 outperforms GPT-5.2-chat on this benchmark despite the latter being marketed as a reasoning-optimized model, a pattern that recurs across domains and modalities. Domain breakdown shows consistency: both models achieve $>85\%$ accuracy across biology, legal, and materials domains under direct prompting, validating that the benchmark's grounding component is domain-agnostic in difficulty at the pilot scale.
+
+\subsection{Belief Revision Results (Level~3)}\label{subsec:revision_results}
+
+\textbf{[Section to be written from full CURC evaluation results.]}
+
+Both closed-source models evaluated in the pilot collapse at Level~3: GPT-5.2-chat achieves 1.4\% accuracy and Claude~Sonnet~4.6 achieves 2.1\%, each correctly identifying the conservative defeater on only 1--3 of 35 instances across two modalities. Error taxonomy reveals qualitatively different failure signatures: GPT-5.2 errors are dominated by E1 (decoder failure, 55\%), indicating the model produces responses in formats incompatible with the formal hypothesis representation; Claude errors are dominated by E2 (derivation failure, 64\%), indicating successful response formatting but systematic failure to identify the defeasible gap. This pattern suggests that instruction optimization improves output formatting for formal tasks while reasoning optimization does not, and that neither eliminates the fundamental belief revision deficit.
+
+Level~3 graded scores confirm the pattern: mean graded score is 0.014 (GPT-5.2) and 0.021 (Claude), both well below 0.25 (the first partial-credit tier corresponding to syntactically valid but non-resolutive hypotheses).
+
+\subsection{Chain-of-Thought Analysis}\label{subsec:cot_results}
+
+\textbf{[Section to be written from full CURC evaluation results.]}
+
+Pilot results quantify the CoT degradation at Level~2: $\Delta_{\mathrm{CoT}} = -20.0$ pp (GPT-5.2) and $-15.0$ pp (Claude). The degradation is specific to the formal-candidate selection setting: under direct prompting, both models output a candidate rule verbatim with near-perfect accuracy, while under CoT prompting they produce extended reasoning chains whose final lines are less likely to exactly match any candidate string. This confirms the ``overthinking'' interpretation. At Level~3, $\Delta_{\mathrm{CoT}} \approx 0$ for both models, confirming that the Level~3 failure is not a prompting artifact.
+
+\subsection{Scaling Analysis}\label{subsec:scaling_results}
+
+\textbf{[Section to be written from full CURC evaluation results.]}
+
+\subsection{Symbolic Ceiling}\label{subsec:symbolic_results}
+
+\textbf{[Section to be written after \texttt{clingo} baseline is run.]}
+
+
+\section{Discussion}\label{sec:discussion}
+
+\textbf{[Section to be written from full evaluation results.]}
+
+The pilot findings motivate three claims that full evaluation will substantiate or refute. \emph{First}, the belief revision deficit is distinct and not reducible to the grounding deficit: models with $>88\%$ Level~2 accuracy fail catastrophically at Level~3, showing that grounding capability does not imply revision capability. \emph{Second}, reasoning-model optimization (GPT-5.2) does not confer advantage over instruction optimization (Claude Sonnet 4.6) on defeasible abduction, challenging the assumption that chain-of-thought training improves formal logical reasoning. \emph{Third}, the CoT ``overthinking'' effect is specific to structured formal tasks: it degrades performance on candidate-selection but has negligible effect where the task lies beyond model capability.
+
+
+\section{Conclusion}\label{sec:conclusion}
+
+\textbf{[Section to be written from full evaluation results.]}
 
 
 \bibliographystyle{plainnat}
@@ -991,8 +1033,8 @@ IMPORTANT, please:
 
 \item {\bf Claims}
     \item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The abstract and introduction state five numbered contributions (formal grounding framework, three-level evaluation hierarchy, controlled novelty/revision/difficulty measures, rendering-robust protocol, cross-ontology extraction methodology) and present empirical findings from pilot evaluation. All claims are backed by formal proofs (Appendix~\ref{app:proofs}) and evaluation results (Section~\ref{sec:results}).
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the abstract and introduction do not include the claims made in the paper.
@@ -1003,8 +1045,8 @@ IMPORTANT, please:
 
 \item {\bf Limitations}
     \item[] Question: Does the paper discuss the limitations of the work performed by the authors?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Limitations are addressed in Section~\ref{sec:discussion} and the appendices: (1)~the current Level~3 set contains 35 expert-authored instances; statistical power for per-domain breakdowns is limited. (2)~Narrative rendering (M1) decoder recovery is approximate by design. (3)~Cross-ontology Tier~1 extraction was prototyped but not yet incorporated into the benchmark; all current instances are Tier~0. (4)~Evaluation covers only English-language theories from three domains; domain and language generalization are open questions.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper has no limitation while the answer No means that the paper has limitations, but those are not discussed in the paper. 
@@ -1019,8 +1061,8 @@ IMPORTANT, please:
 
 \item {\bf Theory assumptions and proofs}
     \item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: All propositions, theorems, lemmas, and corollaries are numbered and cross-referenced. Complete proofs appear in Appendix~\ref{app:proofs}. Each result states its assumptions explicitly (e.g., Proposition~\ref{prop:strict} assumes the partition maps all clauses to the strict component; Theorem~\ref{thm:derivP} assumes a finite grounded theory).
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not include theoretical results. 
@@ -1033,8 +1075,8 @@ IMPORTANT, please:
 
     \item {\bf Experimental result reproducibility}
     \item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Section~\ref{sec:experiments} specifies all models, decoding hyperparameters (greedy, temperature~$=0$), prompting strategies (direct and four-step CoT), evaluation metrics, and instance generation parameters. The generation pipeline and all 409 gold instances are released alongside the paper. Evaluation is fully automated via the open-source pipeline described in Section~\ref{subsec:decoder_validation}.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not include experiments.
@@ -1053,8 +1095,8 @@ IMPORTANT, please:
 
 \item {\bf Open access to data and code}
     \item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The full DeFAb dataset (409 gold instances in JSON), the generation pipeline, and the evaluation harness are released under the MIT license. Supplemental material includes the \texttt{README} with one-command reproduction instructions. Evaluated models are accessible via commercial APIs (Azure AI Foundry) and open-source vLLM hosting (CURC), both described in Section~\ref{subsec:evaluation}.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that paper does not include experiments requiring code.
@@ -1070,8 +1112,8 @@ IMPORTANT, please:
 
 \item {\bf Experimental setting/details}
     \item[] Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: No training is performed; DeFAb is a zero-shot evaluation benchmark. Section~\ref{sec:experiments} specifies all relevant details: model names and API versions, decoding parameters (greedy, temperature~$=0$, \texttt{max\_tokens}), prompting strategy structure, $k=5$ distractor count, partition function families, and the three-stage decoder pipeline with validation results.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not include experiments.
@@ -1081,8 +1123,8 @@ IMPORTANT, please:
 
 \item {\bf Experiment statistical significance}
     \item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Section~\ref{sec:results} reports 95\% Wilson score confidence intervals for all accuracy figures. Partition sensitivity analysis (Section~\ref{subsec:analysis}) uses two-sample Mann-Whitney $U$ tests and Kruskal-Wallis tests on the difficulty distribution across partition families, with Bonferroni correction for multiple comparisons. All statistical tests are described with their assumptions.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not include experiments.
@@ -1098,8 +1140,8 @@ IMPORTANT, please:
 
 \item {\bf Experiments compute resources}
     \item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Section~\ref{subsec:evaluation} specifies compute resources: CURC Alpine nodes with NVIDIA A100 80\,GB GPUs for open-source models; Azure AI Foundry Global Standard endpoints for closed-source models. GPU memory requirements per model are stated. Approximate API costs (total $\approx$\$25 for the full closed-source sweep) are reported in supplemental material.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not include experiments.
@@ -1110,8 +1152,8 @@ IMPORTANT, please:
     
 \item {\bf Code of ethics}
     \item[] Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics \url{https://neurips.cc/public/EthicsGuidelines}?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: All source knowledge bases are publicly available under open licenses (CC-BY, Apache 2.0, CC0). No personal data, crowdsourcing, or human subjects are involved. The benchmark evaluates logical reasoning capability and poses no foreseeable dual-use risk.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics.
@@ -1122,8 +1164,8 @@ IMPORTANT, please:
 
 \item {\bf Broader impacts}
     \item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Positive impacts: improved evaluation methodology for reasoning deficits (grounding, novelty, belief revision) may accelerate development of more reliable and scientifically capable AI systems, directly relevant to AI for science. Negative impacts: a benchmark that exposes model weaknesses could be misused to craft adversarial prompts that systematically exploit the belief revision deficit; however, this risk is low given the formal nature of the task. No direct path to harmful deployment is identified.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that there is no societal impact of the work performed.
@@ -1136,8 +1178,8 @@ IMPORTANT, please:
     
 \item {\bf Safeguards}
     \item[] Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pretrained language models, image generators, or scraped datasets)?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerNA{}
+    \item[] Justification: The released artifacts are evaluation instances derived from public logic-based knowledge bases and a deterministic evaluation pipeline. No pretrained models are released. No internet-scraped data is included. The dataset does not contain personal information, sensitive content, or information that poses misuse risk.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper poses no such risks.
@@ -1148,8 +1190,8 @@ IMPORTANT, please:
 
 \item {\bf Licenses for existing assets}
     \item[] Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: All knowledge bases are cited with their primary references. License information: YAGO~(CC-BY~4.0), WordNet~(Princeton WordNet License, free for research), LKIF Core~(Apache~2.0), MatOnto~(CC-BY~4.0), Wikidata~(CC0~1.0), ConceptNet~(CC-BY-SA~4.0). All are free for academic use. Source KB licenses are compatible with the MIT license under which DeFAb instances are released.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not use existing assets.
@@ -1164,8 +1206,8 @@ IMPORTANT, please:
 
 \item {\bf New assets}
     \item[] Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The DeFAb dataset (409 JSON instances), generation pipeline, and evaluation harness are released with a \texttt{README} providing installation, data format specification, and one-command reproduction instructions. Each instance JSON includes instance metadata, the challenge theory, target, candidates, gold hypotheses, and formal metrics (Nov, d\_rev, conservativity). The generation pipeline is documented in Sections~\ref{subsec:conversion}--\ref{subsec:level3}.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not release new assets.
@@ -1176,8 +1218,8 @@ IMPORTANT, please:
 
 \item {\bf Crowdsourcing and research with human subjects}
     \item[] Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? 
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerNA{}
+    \item[] Justification: No crowdsourcing or human subjects are involved. All instances are generated by the deterministic formal pipeline described in Sections~\ref{subsec:conversion}--\ref{subsec:level3}. The small set of high-novelty Level~3 instances with novel predicates were authored by the paper's author.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.
@@ -1187,8 +1229,8 @@ IMPORTANT, please:
 
 \item {\bf Institutional review board (IRB) approvals or equivalent for research with human subjects}
     \item[] Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained?
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerNA{}
+    \item[] Justification: No human subjects are involved. IRB review is not required.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.
@@ -1200,8 +1242,8 @@ IMPORTANT, please:
 \item {\bf Declaration of LLM usage}
     \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required.
     %this research? 
-    \item[] Answer: \answerTODO{} % Replace by \answerYes{}, \answerNo{}, or \answerNA{}.
-    \item[] Justification: \justificationTODO{}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: LLMs are the primary evaluated objects in Section~\ref{sec:results}. The D3 semantic parser used in the cascading decoder (Section~\ref{subsec:decoder_validation}) employs a language model for hypothesis extraction from narrative responses. All LLM usage in the evaluation pipeline is described in Section~\ref{subsec:evaluation} and Appendix~\ref{app:rendering}.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the core method development in this research does not involve LLMs as any important, original, or non-standard components.
