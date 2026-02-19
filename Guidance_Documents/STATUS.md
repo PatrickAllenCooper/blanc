@@ -1,8 +1,8 @@
 # Project Status
 
 **Last Updated**: 2026-02-19  
-**Current**: Azure AI Foundry integration complete (gpt-5.2-chat, Kimi-K2.5, claude-sonnet-4-6); live evaluation can begin immediately  
-**Progress**: 10 of 14.5 weeks (69%)  
+**Current**: Pilot evaluation complete for GPT-5.2 and Claude; pipeline bugs fixed; Kimi requires CURC for full run  
+**Progress**: 11 of 14.5 weeks (76%)  
 **Timeline**: ON TRACK
 
 ---
@@ -113,11 +113,39 @@
   - 11 new unit tests for `CURCInterface` in `tests/experiments/test_model_interface.py`
     using mocked OpenAI client (no network required).
 
+- **Pilot evaluation (2026-02-19)**:
+  Three pipeline bugs found and fixed during live pilot run:
+  1. `run_evaluation.py` did not auto-load `.env`; `load_dotenv()` added at startup.
+  2. CoT responses: `FINAL ANSWER:` extraction regex was too narrow; missed markdown-bold
+     variants and multi-line patterns.  `_extract_cot_answer()` in `evaluation_pipeline.py`
+     rewritten with richer regex + last-non-heading-line fallback.
+  3. Response cache: empty cached responses (from Kimi at max_tokens=512) were being
+     served as hits.  Cache get now skips entries with empty text and retries.
+  4. `max_tokens` made model-aware: reasoning models (Kimi, DeepSeek-R1) now get 1024.
+
+  **Pilot results (20 instances/domain, M4+M2, direct+cot)**:
+
+  | Model | Level 2 acc | Level 3 acc | Rendering-robust | Direct | CoT | FAILED |
+  |-------|-------------|-------------|-----------------|--------|-----|--------|
+  | gpt-5.2-chat | **88.3%** | 1.4% | 47.5% | 98.3% | 78.3% | 18.5% |
+  | claude-sonnet-4-6 | **91.7%** | 2.1% | 55.0% | 99.2% | 84.2% | 24.0% |
+  | Kimi-K2.5 | — | — | — | — | — | deferred to CURC |
+
+  **Key findings**:
+  - Claude Sonnet 4.6 **outperforms** GPT-5.2 on this benchmark (91.7% vs 88.3% L2).
+  - Both models **fail catastrophically on Level 3** (1.4–2.1%), confirming the belief
+    revision deficit thesis.
+  - CoT prompting **hurts** Level 2 performance: delta_CoT = -20% (GPT-5.2), -15% (Claude).
+    Direct selection from candidates is near-optimal for formal rule abduction.
+  - Claude error taxonomy: 34% E1 (decoder failure), 64% E2 (derivation failure).
+  - Kimi requires max_tokens=1024 and ~35s/query; full pilot must run on CURC overnight.
+
 **ALL INFRASTRUCTURE COMPLETE**  
 **LEVEL 3 INSTANCES COMPLETE**  
 **EVALUATION PIPELINE READY**  
 **ANALYSIS INFRASTRUCTURE COMPLETE**  
 **CURC LLM HOSTER INTEGRATION COMPLETE**  
+**PILOT EVALUATION COMPLETE (GPT-5.2, Claude)**  
 **MANUSCRIPT UPDATED (2026-02-18)**
 
 ### Manuscript updates (2026-02-18)
