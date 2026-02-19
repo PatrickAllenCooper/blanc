@@ -131,45 +131,62 @@ experiments/partition_sensitivity.py   # Mann-Whitney / Kruskal-Wallis across pa
 
 ### Tests
 
-- 474 passing, 11 skipped, 0 failing
-- 85% line coverage
+- 503 passing (standard), 19 live integration tests, 2 skipped, 86% coverage
 - All `CURCInterface` tests mock the OpenAI client — no live network required
-- `TestTheoryCopy` uses `Theory.copy()` — no import of removed `_deep_copy_theory`
+- `tests/experiments/test_foundry_integration.py` — 19 live tests, run with `-m integration`
+
+---
+
+## Pilot Evaluation Results (2026-02-19)
+
+The pilot ran 20 instances/domain × M4+M2 modalities × direct+cot strategies against GPT-5.2 and Claude. Three pipeline bugs were found and fixed during the run:
+
+| Bug | Fix |
+|-----|-----|
+| `run_evaluation.py` did not load `.env` automatically | `load_dotenv()` added at startup |
+| CoT `FINAL ANSWER:` regex missed markdown-bold and multi-line variants | `_extract_cot_answer()` rewritten |
+| Empty Kimi responses (max_tokens=512 exhausted by reasoning) were reused from cache | Cache `get()` now skips empty-text entries; reasoning models get 1024 tokens |
+
+**Results (pilot v3, 320 evals each, all M4+M2, direct+cot)**:
+
+| Model | L2 accuracy | L3 accuracy | Rendering-robust | Direct L2 | CoT L2 | Cost |
+|-------|-------------|-------------|-----------------|-----------|---------|------|
+| gpt-5.2-chat | 88.3% | 1.4% | 47.5% | 98.3% | 78.3% | $1.03 |
+| claude-sonnet-4-6 | **91.7%** | **2.1%** | **55.0%** | 99.2% | 84.2% | $1.52 |
+| Kimi-K2.5 | deferred | deferred | — | — | — | CURC only |
+
+**Key findings**:
+- Claude Sonnet 4.6 **outperforms** GPT-5.2 on this benchmark (91.7% vs 88.3% L2, 55% vs 47.5% rendering-robust).
+- Both models fail **near-completely at Level 3** (1.4–2.1%), directly confirming the belief revision deficit thesis.
+- CoT prompting **hurts** Level 2: delta_CoT = −20% (GPT-5.2), −15% (Claude). Direct selection from formal candidates is near-optimal; chain-of-thought introduces noise.
+- Claude error taxonomy: 34% E1 (decoder failure), 64% E2 (derivation failure), 1% E5 (strength shortfall).
+- Kimi-K2.5 requires ~35 seconds/query at max_tokens=1024 (reasoning tokens slow it significantly). Must run on CURC overnight, not locally.
+
+Pilot result files: `experiments/results/pilot_v3_foundry_gpt/`, `experiments/results/pilot_v3_foundry_claude/` (gitignored, local only).
 
 ---
 
 ## What Needs to Happen Next
 
-### No Blockers — Evaluation Ready
+### Immediate: Full Evaluation on CURC
 
-All three Azure AI Foundry endpoints are live and confirmed via integration tests:
-- `foundry-gpt`   → gpt-5.2-chat   (`reasoning_effort='none'`, ~5 tokens/reply)
-- `foundry-kimi`  → Kimi-K2.5      (`reasoning_effort='low'` via extra_body, ~25 tokens/reply)
-- `foundry-claude`→ claude-sonnet-4-6 (standard, no reasoning controls needed)
+Pilot is done. Submit the full CURC evaluation:
 
-Shared key: `FOUNDRY_API_KEY` in `.env`.
-
-### Week 9–10: Pilot then Full Evaluation
-
-**Pilot (start here — ~30 min, < $1 cost)**:
-```powershell
-python experiments/validate_api_keys.py   # confirm all three endpoints live
-.\hpc\run_local.ps1 foundry              # runs gpt, kimi, claude sequentially
-```
-
-**Full evaluation on CURC (after pilot passes)**:
 ```bash
-sbatch hpc/slurm_evaluate_foundry.sh        # all three Foundry models
-sbatch hpc/slurm_evaluate_curc_vllm.sh     # Qwen 2.5 72B / Llama 3.3 70B
-```
+# All six models (3 Foundry sequential + 3 CURC parallel)
+sbatch hpc/slurm_evaluate_foundry.sh
+bash hpc/slurm_evaluate_curc_all.sh
 
-**Inspect results**:
-```bash
-python experiments/analyze_results.py --results-dir experiments/results/<dir>
+# Then run analysis:
+python experiments/analyze_results.py --results-dir experiments/results/
 python experiments/generate_paper_tables.py --results-dir experiments/results/
 ```
 
-**Full evaluation estimate**: ~16,360 queries across 5 models; ~$24 for the three Foundry models; CURC open-source runs are free. See `REVISED_IMPLEMENTATION_PLAN.md` for the complete cost breakdown and rate-limit analysis.
+Note: increase instance limits for the production run:
+```bash
+sbatch --export=ALL,INSTANCE_LIMIT=120,LEVEL3_LIMIT=35,MODALITIES="M4 M2 M1 M3" \
+       hpc/slurm_evaluate_foundry.sh
+```
 
 ### Week 11–12: Advanced Analyses
 
@@ -286,27 +303,51 @@ Last 5 commits:
 
 ---
 
-## First Thing to Do in the Next Session
+## Git State
 
-**All blockers cleared. Start the pilot.**
-
-```powershell
-# 1. Confirm all three Foundry endpoints are still live
-python experiments/validate_api_keys.py
-
-# 2. Run the pilot (< $1, < 30 min)
-.\hpc\run_local.ps1 foundry
-
-# 3. Inspect results
-python experiments/analyze_results.py --results-dir experiments/results/local_foundry-gpt_<timestamp>
-python experiments/generate_paper_tables.py --results-dir experiments/results/
-
-# 4. If pilot passes, submit full evaluation (all 6 models)
-sbatch hpc/slurm_evaluate_foundry.sh    # 3 Foundry models (sequential)
-bash hpc/slurm_evaluate_curc_all.sh     # 3 CURC models (parallel jobs)
+```
+Branch: main
+Remote: origin/main (in sync)
+Last 5 commits:
+  c01a4ad  Pilot results: Claude 91.7%, GPT-5.2 88.3% L2; L3 near-zero; pipeline fixes
+  55b0c1f  Fix cache: skip empty cached responses; improve CoT extraction regex
+  6227f9f  Fix CoT decoder extraction and Kimi max_tokens from pilot run
+  4b37387  Finalise open-source model lineup: DeepSeek-R1, Qwen 72B, Qwen 32B
+  6b61efb  Update implementation plan and handoff for Foundry evaluation
 ```
 
-If anything is unclear about the model setup, re-run the integration tests:
+---
+
+## First Thing to Do in the Next Session
+
+**Pilot done. Submit full CURC evaluation.**
+
+```bash
+# 1. Log in to CURC Alpine
+ssh login.rc.colorado.edu
+
+# 2. Submit all six models
+sbatch --export=ALL,INSTANCE_LIMIT=120,LEVEL3_LIMIT=35,MODALITIES="M4 M2 M1 M3" \
+       hpc/slurm_evaluate_foundry.sh
+bash hpc/slurm_evaluate_curc_all.sh
+
+# 3. Monitor jobs
+squeue -u $USER
+tail -f logs/eval_foundry_<jobid>.out
+
+# 4. After all jobs complete, run analysis
+python experiments/analyze_results.py --results-dir experiments/results/
+python experiments/generate_paper_tables.py --results-dir experiments/results/
+
+# 5. Begin writing Section 5 (Results) from the analysis output
+```
+
+**If endpoints need re-validation first:**
 ```powershell
 python -m pytest tests/experiments/test_foundry_integration.py -m integration -v --no-cov
 ```
+
+**Paper changes needed** (do in parallel with CURC runs):
+1. Update §4.4 models paragraph — replace GPT-4o/Claude 3.5/Gemini/Llama 3 with actual lineup
+2. Fix `% TODO` items at lines 368, 426, 468
+3. Replace `David S. Hippocampus` author field

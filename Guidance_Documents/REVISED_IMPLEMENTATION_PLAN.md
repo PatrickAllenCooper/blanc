@@ -105,16 +105,29 @@ Default pilot parameters (`hpc/run_local.ps1`):
 Pilot query budget: 60 L2 + 20 L3 = 80 instances × 3 models × 2 modalities × 2 strategies = **960 queries**  
 Estimated cost: < $1.00 total across all three Foundry models.
 
-**Go / No-Go criteria**:
-- Pipeline produces `results_*.json` files with non-null accuracy fields
-- Decoder distribution is sensible (not 100% FAILED)
-- No systematic API errors (rate limit, auth, encoding)
+**Pilot status: COMPLETE (2026-02-19)**
+
+Three pipeline bugs were found and fixed during the live pilot. Results (pilot v3, 320 evals each):
+
+| Model | L2 acc | L3 acc | Rendering-robust | Direct L2 | CoT L2 | Cost |
+|-------|--------|--------|-----------------|-----------|---------|------|
+| gpt-5.2-chat | 88.3% | 1.4% | 47.5% | 98.3% | 78.3% | $1.03 |
+| claude-sonnet-4-6 | **91.7%** | **2.1%** | **55.0%** | 99.2% | 84.2% | $1.52 |
+| Kimi-K2.5 | deferred | deferred | — | — | — | CURC only |
+
+**Key findings for the paper**:
+- Claude outperforms GPT-5.2 (91.7% vs 88.3% L2; 55% vs 47.5% rendering-robust)
+- Near-zero Level 3 accuracy for both models (1.4–2.1%) confirms the belief revision deficit thesis
+- CoT prompting hurts Level 2: delta_CoT = −20% GPT-5.2, −15% Claude. Direct = near-optimal for formal candidate selection.
+- Kimi requires CURC (35s/query at max_tokens=1024)
+
+**Pilot verdict: GO for full evaluation.**
 
 #### Step 2 — Inspect pilot results
 
 ```powershell
-python experiments/analyze_results.py --results-dir experiments/results/local_foundry-gpt_<timestamp>
-python experiments/generate_paper_tables.py --results-dir experiments/results/
+python experiments/analyze_results.py --results-dir experiments/results/pilot_v3_foundry_gpt
+python experiments/analyze_results.py --results-dir experiments/results/pilot_v3_foundry_claude
 ```
 
 #### Step 3 — Full evaluation (all instances, all modalities)
