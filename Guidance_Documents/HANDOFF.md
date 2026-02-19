@@ -1,11 +1,11 @@
 # BLANC Development Handoff
 
 **Author**: Patrick Cooper  
-**Date**: 2026-02-18  
-**Commit**: `133dd86`  
-**Branch**: `main` (ahead of origin: pushed)  
-**Tests**: 474 passing, 11 skipped, 85% coverage  
-**Timeline**: Week 9.5 of 14.5 — ON TRACK
+**Date**: 2026-02-19  
+**Commit**: `53f49b3`  
+**Branch**: `main` (in sync with origin)  
+**Tests**: 503 passing (standard) + 19 live integration tests, 86% coverage  
+**Timeline**: Week 10 of 14.5 — ON TRACK
 
 ---
 
@@ -119,56 +119,58 @@ experiments/partition_sensitivity.py   # Mann-Whitney / Kruskal-Wallis across pa
 
 ## What Needs to Happen Next
 
-### Immediate Blockers
+### No Blockers — Evaluation Ready
 
-1. **Azure OpenAI credentials**: `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT` must be set in `.env` before the closed-source evaluation can run.
-2. **CURC provisioning**: Alpine allocation must be active. The CURC LLM Hoster project must be set up on the cluster per its own README.
+All three Azure AI Foundry endpoints are live and confirmed via integration tests:
+- `foundry-gpt`   → gpt-5.2-chat   (`reasoning_effort='none'`, ~5 tokens/reply)
+- `foundry-kimi`  → Kimi-K2.5      (`reasoning_effort='low'` via extra_body, ~25 tokens/reply)
+- `foundry-claude`→ claude-sonnet-4-6 (standard, no reasoning controls needed)
 
-### Week 9–10: LLM Pilot Evaluation
+Shared key: `FOUNDRY_API_KEY` in `.env`.
 
-**To run against Azure (GPT-4o)**:
-```bash
-# On CURC login node or local machine with Azure creds in .env
-sbatch hpc/slurm_evaluate_azure.sh
-# or locally:
-python experiments/run_evaluation.py \
-  --provider azure \
-  --dataset instances/level3_instances.json \
-  --output results/pilot_azure.json \
-  --max-instances 50
+### Week 9–10: Pilot then Full Evaluation
+
+**Pilot (start here — ~30 min, < $1 cost)**:
+```powershell
+python experiments/validate_api_keys.py   # confirm all three endpoints live
+.\hpc\run_local.ps1 foundry              # runs gpt, kimi, claude sequentially
 ```
 
-**To run against CURC vLLM (Qwen 2.5 72B)**:
+**Full evaluation on CURC (after pilot passes)**:
 ```bash
-sbatch hpc/slurm_evaluate_curc_vllm.sh
+sbatch hpc/slurm_evaluate_foundry.sh        # all three Foundry models
+sbatch hpc/slurm_evaluate_curc_vllm.sh     # Qwen 2.5 72B / Llama 3.3 70B
 ```
-This script handles the full lifecycle: starts vLLM, waits for health, runs evaluation, shuts down, runs `analyze_results.py`.
 
-**Expected outputs**:
-- `results/pilot_*.json` — raw model responses
-- `results/analysis/` — tables from `analyze_results.py`
-- `results/tables/` — LaTeX from `generate_paper_tables.py`
+**Inspect results**:
+```bash
+python experiments/analyze_results.py --results-dir experiments/results/<dir>
+python experiments/generate_paper_tables.py --results-dir experiments/results/
+```
+
+**Full evaluation estimate**: ~16,360 queries across 5 models; ~$24 for the three Foundry models; CURC open-source runs are free. See `REVISED_IMPLEMENTATION_PLAN.md` for the complete cost breakdown and rate-limit analysis.
 
 ### Week 11–12: Advanced Analyses
 
-Once pilot results exist, run:
+Once evaluation results exist in `experiments/results/`:
 ```bash
-python experiments/symbolic_baseline.py     # ASP ceiling; needs clingo installed
-python experiments/difficulty_analysis.py   # sigma(I) structural distributions
-python experiments/partition_sensitivity.py # partition family comparison
-python experiments/novelty_analysis.py      # Nov vs accuracy scatter
+python experiments/symbolic_baseline.py     # ASP ceiling; pip install clingo first
+python experiments/difficulty_analysis.py
+python experiments/partition_sensitivity.py
+python experiments/novelty_analysis.py
 python experiments/conservativity_analysis.py
-python experiments/error_taxonomy.py        # E1-E5 distribution per model
+python experiments/error_taxonomy.py
+python experiments/scaling_analysis.py
 ```
 
 ### Week 13–14: Paper Completion
 
-Open TODOs in `paper.tex` (search for `% TODO`):
+Open TODOs in `paper.tex` (search `% TODO`):
 1. **k=5 distractors** (line ~368): justify or add ablation
-2. **Score weights** (line ~427–430): decide if even spacing is appropriate or if gaps should be uneven; consider reporting results under multiple weighting schemes
-3. **Theory size ablation** (line ~474): values `{50, 100, 200, 500, 1000}` are preliminary — adjust to actual grounded KB sizes
-4. **NeurIPS checklist** (lines ~1100–1224): all `\answerTODO{}` entries need to be replaced with `\answerYes{}`, `\answerNo{}`, or `\answerNA{}` plus justifications
-5. **Author field** (lines 125–154): still shows the NeurIPS template placeholder (`David S. Hippocampus`)
+2. **Score weights** (line ~427–430): even spacing vs empirically motivated weights
+3. **Theory size ablation** (line ~474): adjust `{50, 100, 200, 500, 1000}` to actual KB sizes
+4. **NeurIPS checklist** (lines ~1100–1224): replace all `\answerTODO{}` with `\answerYes{}`, `\answerNo{}`, or `\answerNA{}` plus justifications
+5. **Author field** (lines 125–154): replace `David S. Hippocampus` placeholder
 
 ---
 
@@ -178,31 +180,45 @@ Open TODOs in `paper.tex` (search for `% TODO`):
 blanc/
   src/blanc/
     core/           theory.py (Theory, Rule, Theory.copy())
-    codec/          m1-m3 encoders, d2-d3 decoders
+    codec/          m1-m4 encoders, d1-d3 decoders, cascading decoder
     utils/          predicates.py (extract_predicate, extract_constant, capitalize)
     kb/             loaders for YAGO, WordNet, LKIF, MatOnto
   experiments/
-    model_interface.py     # all provider interfaces inc. CURCInterface
-    run_evaluation.py      # CLI entry point
-    level3_evaluator.py    # Level 3 scoring logic
-    analyze_results.py     # primary analysis
-    symbolic_baseline.py   # clingo ASP baseline
-    generate_paper_tables.py
+    model_interface.py          # GPT-5.2 (Foundry), Kimi-K2.5 (Foundry),
+                                #   claude-sonnet-4-6 (Foundry), CURC vLLM,
+                                #   OpenAI, Anthropic, Google, Ollama, Mock
+    run_evaluation.py           # CLI: --provider foundry-gpt/foundry-kimi/foundry-claude/...
+    level3_evaluator.py         # Nov, d_rev, conservativity, resolution strength
+    analyze_results.py          # accuracy by model/modality/domain/level
+    symbolic_baseline.py        # clingo ASP ceiling
+    generate_paper_tables.py    # LaTeX tables 1-4 for Section 5
+    novelty_analysis.py
+    conservativity_analysis.py
+    error_taxonomy.py
+    scaling_analysis.py
+    difficulty_analysis.py
+    partition_sensitivity.py
+    validate_api_keys.py        # live endpoint health check
   hpc/
-    slurm_evaluate_azure.sh
-    slurm_evaluate_curc_vllm.sh
+    slurm_evaluate_foundry.sh   # Foundry: gpt-5.2, Kimi, Claude (no GPU needed)
+    slurm_evaluate_curc_vllm.sh # CURC: Qwen 2.5 72B / Llama 3.3 70B
+    run_local.ps1               # Windows local runner (reads .env)
+    run_local.sh                # Linux/macOS/WSL local runner (reads .env)
   instances/
-    level3_instances.json  # 35 Level 3 gold instances
+    level3_instances.json       # 35 Level 3 gold instances
+    biology_dev_instances.json  # 114 Level 2 instances
+    legal_dev_instances.json    # 116 Level 2 instances
+    materials_dev_instances.json # 144 Level 2 instances
   paper/
-    paper.tex              # NeurIPS 2025 manuscript
-    references.bib         # 470 lines, all cited references present
+    paper.tex                   # NeurIPS 2025 manuscript
+    references.bib
   tests/
-    experiments/           # unit tests for all experiment scripts
-    src/                   # unit tests for library code
+    experiments/                # unit + integration tests (503 standard, 19 live)
+    src/                        # library unit tests
   Guidance_Documents/
-    STATUS.md              # always-current project status
-    HANDOFF.md             # this file
-    REVISED_IMPLEMENTATION_PLAN.md
+    STATUS.md                   # always-current project status
+    HANDOFF.md                  # this file
+    REVISED_IMPLEMENTATION_PLAN.md  # evaluation plan with Foundry commands
     REPOSITORY_STRUCTURE.md
     INTUITIVE_GUIDE.md
     COMPREHENSIVE_KB_PIPELINE.md
@@ -216,17 +232,21 @@ blanc/
 
 ## Known Issues / Decisions Deferred
 
-1. **Cross-ontology extraction (Week 8)**: The attempt to extract rules from OpenCyc + ConceptNet failed. The pipeline code is in `scripts/` but produced unusable output. All paper references to this as "Tier 1" are presented as roadmap, not current results. The paper clearly frames current scope as Tier 0 (expert KBs) in Table 1.
+1. **Cross-ontology extraction (Week 8)**: Attempt to extract rules from OpenCyc + ConceptNet failed; pipeline code is in `scripts/` but produced unusable output. Paper presents current scope as Tier 0 (expert KBs) in Table 1.
 
-2. **Level 1 instance count**: Not separately reported in STATUS (they are generated inline with Level 2 from the same theories). Before paper submission, a precise Level 1 count should be computed and added to the dataset statistics table.
+2. **Level 1 instance count**: Generated inline with Level 2 instances; not separately counted. Compute before submission: parse `*_dev_instances.json` for `level == 1` entries.
 
-3. **M1 round-trip recovery**: Narrative modality round-trip is approximate by design. A manual audit of 200 decode failures is required before the decoder validation section of the paper can be marked complete.
+3. **M1 round-trip**: Approximate by design. Decoder validation section of the paper cannot be marked complete without a manual audit of ~200 decode failures.
 
-4. **NeurIPS style file**: `neurips_2025.sty` is not in the repo (expected — obtained from NeurIPS at submission time). The paper does not compile locally without it.
+4. **NeurIPS style file**: `neurips_2025.sty` not in repo — obtain from NeurIPS at submission time.
 
-5. **Qwen 2.5 32B**: Listed as a within-family comparator in the paper but `CURCInterface` defaults to 72B. At evaluation time, a second evaluation run must be configured with `VLLM_MODEL=Qwen/Qwen2.5-32B-Instruct-AWQ`.
+5. **Qwen 2.5 32B scaling comparator**: Paper lists 32B vs 72B within-family comparison. Must run a second CURC evaluation: `VLLM_MODEL=Qwen/Qwen2.5-32B-Instruct-AWQ sbatch hpc/slurm_evaluate_curc_vllm.sh`.
 
-6. **clingo installation**: `experiments/symbolic_baseline.py` requires `clingo` to be installed. On CURC: `conda install -c conda-forge clingo`. Locally: `pip install clingo`.
+6. **clingo installation**: Required by `experiments/symbolic_baseline.py`. CURC: `conda install -c conda-forge clingo`. Local: `pip install clingo`.
+
+7. **GPT-5.2 pricing**: `_COST_PER_1K_INPUT = 0.00175` and `_COST_PER_1K_OUTPUT = 0.014` are from the OpenAI public rate card (Feb 2026). Update if Microsoft revises Azure Foundry pricing.
+
+8. **Kimi-K2.5 pricing**: `_COST_PER_1K_INPUT = 0.0014`, `_COST_PER_1K_OUTPUT = 0.0028` are estimates. Confirm against Azure billing dashboard after pilot.
 
 ---
 
@@ -234,21 +254,38 @@ blanc/
 
 ```
 Branch: main
-Remote: origin/main (in sync after last push)
+Remote: origin/main (in sync)
 Last 5 commits:
-  133dd86  update manuscript to reflect implemented evaluation infrastructure
-  5f0771f  Consolidate docs: 90+ stale files -> 10 active Guidance_Documents
-  48d2462  Code quality: eliminate duplication, fix anti-patterns, decompose god-function
-  024c465  Add CURC LLM Hoster integration (CURCInterface, vLLM SLURM script)
-  fdfc5c1  store theory_size/level/domain in SingleEvaluation for scaling analysis
+  53f49b3  Add reasoning effort controls: GPT-5.2 none, Kimi low
+  b37a424  Verify Foundry endpoints live; fix GPT-5.2 temperature; add integration tests
+  5adec30  Add Azure AI Foundry integration (gpt-5.2, Kimi-K2.5, claude-sonnet-4-6)
+  29d6819  merge references: add 16 missing entries from supplementary bib
+  9470880  add HANDOFF.md and update STATUS.md for session end
 ```
 
 ---
 
 ## First Thing to Do in the Next Session
 
-1. Run `python experiments/validate_api_keys.py` to confirm which providers are live.
-2. If Azure is ready: `sbatch hpc/slurm_evaluate_azure.sh` (or run locally with `--max-instances 50` for a pilot).
-3. If CURC is ready: `sbatch hpc/slurm_evaluate_curc_vllm.sh`.
-4. Once results exist in `results/`, run `python experiments/analyze_results.py --results results/pilot_*.json`.
-5. Run `python experiments/generate_paper_tables.py` to generate draft LaTeX tables for Section 5.
+**All blockers cleared. Start the pilot.**
+
+```powershell
+# 1. Confirm all three Foundry endpoints are still live
+python experiments/validate_api_keys.py
+
+# 2. Run the pilot (< $1, < 30 min)
+.\hpc\run_local.ps1 foundry
+
+# 3. Inspect results
+python experiments/analyze_results.py --results-dir experiments/results/local_foundry-gpt_<timestamp>
+python experiments/generate_paper_tables.py --results-dir experiments/results/
+
+# 4. If pilot passes, submit full CURC evaluation
+sbatch hpc/slurm_evaluate_foundry.sh
+sbatch hpc/slurm_evaluate_curc_vllm.sh
+```
+
+If anything is unclear about the model setup, re-run the integration tests:
+```powershell
+python -m pytest tests/experiments/test_foundry_integration.py -m integration -v --no-cov
+```
