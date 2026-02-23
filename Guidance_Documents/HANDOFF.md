@@ -90,26 +90,31 @@ All 35 Level 3 instances have:
 
 Cascading decoder: D1 → D2 → D3 (fallthrough on failure).
 
-### Evaluation Model Lineup (6 models, 2026-02-19)
+### Evaluation Model Lineup (updated 2026-02-19)
 
-**Closed-source — Azure AI Foundry** (all confirmed live, 19 integration tests)
+**Strategy**: Azure AI Foundry wherever possible; CURC only where no Foundry option exists.
 
-| Model | Tier | RPM | Notes |
-|-------|------|-----|-------|
-| gpt-5.2-chat | Reasoning | 2,500 | `reasoning_effort='none'`; temperature omitted |
-| Kimi-K2.5 | Reasoning | 250 | `reasoning_effort='low'` via extra_body |
-| claude-sonnet-4-6 | Instruction | 250 | Standard AnthropicFoundry |
+**Primary — Azure AI Foundry** (all on same resource, same API key, no GPU needed)
 
-**Open-source — CURC Alpine A100 80 GB** (vLLM, AWQ 4-bit)
+| Model | Tier | RPM | Notes | Status |
+|-------|------|-----|-------|--------|
+| gpt-5.2-chat | Reasoning, closed | 2,500 | `reasoning_effort='none'`; no temperature | Live |
+| Kimi-K2.5 | Reasoning, closed | 250 | `reasoning_effort='low'` via extra_body | Live |
+| claude-sonnet-4-6 | Instruction, closed | 250 | AnthropicFoundry | Live |
+| DeepSeek-R1 | Reasoning, open | 5,000 | `<think>` blocks stripped; `FoundryDeepSeekInterface` | **Deploy now** |
 
-| Model | HuggingFace ID | VRAM | Tier |
-|-------|----------------|------|------|
-| DeepSeek-R1-Distill-Llama-70B | `casperhansen/deepseek-r1-distill-llama-70b-awq` | ~35 GB | Reasoning |
-| Qwen 2.5 72B Instruct | `Qwen/Qwen2.5-72B-Instruct-AWQ` | ~36 GB | Instruction |
-| Qwen 2.5 32B Instruct | `Qwen/Qwen2.5-32B-Instruct-AWQ` | ~16 GB | Scaling |
+DeepSeek-R1 endpoint: `https://llm-defeasible-foundry.openai.azure.com/openai/v1/`  
+Deployment name in portal: `DeepSeek-R1`
 
-DeepSeek-R1 thinking tokens are stripped in `CURCInterface.query()` before the decoder.  
-Submit all three CURC jobs: `bash hpc/slurm_evaluate_curc_all.sh`
+**Optional extension — CURC Alpine** (Qwen scaling subplot only)
+
+| Model | VRAM | Tier |
+|-------|------|------|
+| Qwen 2.5 72B Instruct AWQ | ~36 GB | Instruction comparator |
+| Qwen 2.5 32B Instruct AWQ | ~16 GB | Within-family scaling |
+
+CURC env: `vllm-env` (created by `curc-hoster/scripts/setup_environment.sh`)  
+Submit: `bash hpc/slurm_evaluate_curc_all.sh`
 
 ### Evaluation Infrastructure
 
@@ -309,45 +314,51 @@ Last 5 commits:
 Branch: main
 Remote: origin/main (in sync)
 Last 5 commits:
-  c01a4ad  Pilot results: Claude 91.7%, GPT-5.2 88.3% L2; L3 near-zero; pipeline fixes
-  55b0c1f  Fix cache: skip empty cached responses; improve CoT extraction regex
-  6227f9f  Fix CoT decoder extraction and Kimi max_tokens from pilot run
-  4b37387  Finalise open-source model lineup: DeepSeek-R1, Qwen 72B, Qwen 32B
-  6b61efb  Update implementation plan and handoff for Foundry evaluation
+  6bc0743  Add foundry-deepseek provider; DeepSeek-R1 moves from CURC to Foundry
+  bd6301f  Fix CURC vllm env name (curc-llm -> vllm-env) and HF cache path
+  fc0080b  Remove all future-timeline language; write real results, discussion, conclusion
+  5c40907  Paper: fill checklist, skeleton S5-7, fix CoT/scaling/k=5/scores/theory-size
+  b02684d  Document pilot results; update paper models paragraph and bib
 ```
 
 ---
 
 ## First Thing to Do in the Next Session
 
-**Pilot done. Submit full CURC evaluation.**
+**1. Deploy DeepSeek-R1 on Foundry portal (5 min)**  
+ai.azure.com → LLM-Defeasible-Foundry → Model catalog → DeepSeek-R1 → Deploy → Global Standard → name: `DeepSeek-R1`
 
+**2. Validate all four Foundry endpoints**
+```powershell
+python experiments/validate_api_keys.py
+```
+
+**3. Submit full Foundry evaluation (4 models, all instances, all modalities)**
 ```bash
-# 1. Log in to CURC Alpine
-ssh login.rc.colorado.edu
-
-# 2. Submit all six models
+ssh paco0228@login.rc.colorado.edu
+cd /projects/paco0228/blanc && git pull
 sbatch --export=ALL,INSTANCE_LIMIT=120,LEVEL3_LIMIT=35,MODALITIES="M4 M2 M1 M3" \
        hpc/slurm_evaluate_foundry.sh
+# Optional Qwen scaling (only if needed for paper):
 bash hpc/slurm_evaluate_curc_all.sh
+```
 
-# 3. Monitor jobs
-squeue -u $USER
-tail -f logs/eval_foundry_<jobid>.out
+**4. While jobs run, do in parallel locally:**
+- Run clingo symbolic baseline: `pip install clingo && python experiments/symbolic_baseline.py`
+- Fix GPT-5.2 citation in `paper/references.bib` (currently uses wrong `openai2023gpt4` key)
+- Add LogicNLI citation in `paper/paper.tex` §4.5
+- Add `app:decoder` appendix to paper
+- Replace `David S. Hippocampus` author field
+- Add Wilson CI computation to `experiments/analyze_results.py`
+- Write `experiments/generate_dataset_table.py`
 
-# 4. After all jobs complete, run analysis
+**5. After all jobs complete:**
+```bash
 python experiments/analyze_results.py --results-dir experiments/results/
 python experiments/generate_paper_tables.py --results-dir experiments/results/
-
-# 5. Begin writing Section 5 (Results) from the analysis output
+python experiments/error_taxonomy.py --results-dir experiments/results/
+python experiments/novelty_analysis.py --results-dir experiments/results/
+python experiments/conservativity_analysis.py --results-dir experiments/results/
+python experiments/scaling_analysis.py --results-dir experiments/results/
 ```
-
-**If endpoints need re-validation first:**
-```powershell
-python -m pytest tests/experiments/test_foundry_integration.py -m integration -v --no-cov
-```
-
-**Paper changes needed** (do in parallel with CURC runs):
-1. Update §4.4 models paragraph — replace GPT-4o/Claude 3.5/Gemini/Llama 3 with actual lineup
-2. Fix `% TODO` items at lines 368, 426, 468
-3. Replace `David S. Hippocampus` author field
+Then expand §§5.1–5.6 and §6 from script output.

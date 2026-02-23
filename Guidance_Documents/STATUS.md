@@ -1,8 +1,8 @@
 # Project Status
 
 **Last Updated**: 2026-02-19  
-**Current**: Pilot evaluation complete for GPT-5.2 and Claude; pipeline bugs fixed; Kimi requires CURC for full run  
-**Progress**: 11 of 14.5 weeks (76%)  
+**Current**: Foundry-first strategy adopted; DeepSeek-R1 added as 4th Foundry model; full 4-model evaluation ready to submit  
+**Progress**: 11.5 of 14.5 weeks (79%)  
 **Timeline**: ON TRACK
 
 ---
@@ -83,18 +83,24 @@
     to confirm all three Foundry endpoints are live, then
     `.\hpc\run_local.ps1 foundry` to begin pilot evaluation locally.
 
-- **Open-source model selection finalised** (2026-02-19):
-  Three open-source models chosen for CURC Alpine A100 80 GB (all in AWQ 4-bit):
-  - `casperhansen/deepseek-r1-distill-llama-70b-awq` (~35 GB) — reasoning comparator
-    to GPT-5.2 and Kimi-K2.5. Emits `<think>...</think>` blocks; stripped in
-    `CURCInterface.query()` before the cascading decoder. MIT license.
-  - `Qwen/Qwen2.5-72B-Instruct-AWQ` (~36 GB) — general-instruction comparator
-    to claude-sonnet-4-6. Apache 2.0.
-  - `Qwen/Qwen2.5-32B-Instruct-AWQ` (~16 GB) — within-family scaling.
-    Apache 2.0.
-  - `hpc/slurm_evaluate_curc_all.sh` added: submits all three as parallel SLURM
-    jobs. `slurm_evaluate_curc_vllm.sh` default changed to DeepSeek-R1-Distill.
-  - `_strip_thinking_tokens()` utility added to `model_interface.py`.
+- **Foundry-first strategy adopted; DeepSeek-R1 moved to Foundry** (2026-02-19):
+  DeepSeek-R1 is available as a native Azure Foundry serverless model (Direct from
+  Azure, 5M TPM / 5K RPM). It has been added as a 4th Foundry model, eliminating
+  the need for CURC for the primary evaluation.
+  - `FoundryDeepSeekInterface` added to `experiments/model_interface.py`:
+    uses `openai.OpenAI(base_url=..., api_key=...)` with `_strip_thinking_tokens()`
+    (same pattern as FoundryKimi but at the Azure OpenAI endpoint).
+  - `--provider foundry-deepseek` added to `run_evaluation.py`.
+  - `validate_api_keys.py` and local runners updated.
+  - `slurm_evaluate_foundry.sh` now runs all four Foundry models sequentially.
+  - CURC remains available for optional Qwen 2.5 72B / 32B scaling comparison.
+  - CURC conda env fixed: `curc-llm` → `vllm-env` (matches CURC LLM Hoster setup).
+  - HF cache path fixed: `/scratch/alpine/$USER/.cache/hf` → `/scratch/alpine/$USER/hf_cache`.
+
+- **Open-source model selection (CURC, optional scaling only)**:
+  - `Qwen/Qwen2.5-72B-Instruct-AWQ` (~36 GB) — instruction comparator
+  - `Qwen/Qwen2.5-32B-Instruct-AWQ` (~16 GB) — within-family scaling
+  - `_strip_thinking_tokens()` utility in `model_interface.py`
 
 - **CURC LLM Hoster integration** (2026-02-18):
   - `CURCInterface` added to `experiments/model_interface.py`: OpenAI-compatible client
