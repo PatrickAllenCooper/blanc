@@ -1,27 +1,18 @@
 """
 Model interface layer for LLM evaluation.
 
-Provides unified interface for querying multiple foundation models:
-- OpenAI GPT-4o
-- Azure OpenAI (GPT-4o via managed endpoint)
-- Anthropic Claude 3.5 Sonnet
-- Google Gemini 1.5 Pro
-- CURC vLLM server (Qwen 2.5 72B, Llama 3.3 70B, etc. via OpenAI-compatible API)
-- Meta Llama 3 (via Ollama, legacy)
-- Azure AI Foundry GPT-5.2-chat (via AzureOpenAI, api_version 2024-12-01-preview)
-- Azure AI Foundry Kimi-K2.5 (via OpenAI with custom base_url)
-- Azure AI Foundry Claude Sonnet 4.6 (via AnthropicFoundry)
-- Mock (for testing)
+Provides unified interface for querying multiple foundation models.
 
-The CURC provider uses the CURC LLM Hoster project (Patrick Cooper, 2026)
-which exposes an OpenAI-compatible REST API via vLLM on Alpine's A100 GPUs.
-The endpoint is typically reached via SSH tunnel: http://localhost:8000/v1
+Azure AI Foundry (primary platform — preferred over CURC wherever possible):
+  gpt-5.2-chat        https://llm-defeasible-foundry.cognitiveservices.azure.com/
+  Kimi-K2.5           https://llm-defeasible-foundry.services.ai.azure.com/openai/v1/
+  claude-sonnet-4-6   https://llm-defeasible-foundry.services.ai.azure.com/anthropic/
+  DeepSeek-R1         https://llm-defeasible-foundry.openai.azure.com/openai/v1/
+  All share FOUNDRY_API_KEY.
 
-Azure AI Foundry models share a single API key (FOUNDRY_API_KEY) and are
-deployed at:
-  gpt-5.2-chat:      https://llm-defeasible-foundry.cognitiveservices.azure.com/
-  Kimi-K2.5:         https://llm-defeasible-foundry.services.ai.azure.com/openai/v1/
-  claude-sonnet-4-6: https://llm-defeasible-foundry.services.ai.azure.com/anthropic/
+CURC vLLM (only for models not available on Foundry):
+  Qwen 2.5 72B / 32B for within-family scaling comparison.
+  Accessed via SSH tunnel: http://localhost:8000/v1
 
 Author: Patrick Cooper
 Date: 2026-02-13
@@ -1221,6 +1212,115 @@ class FoundryClaudeInterface(ModelInterface):
         return self._COST_PER_1K_OUTPUT
 
 
+class FoundryDeepSeekInterface(ModelInterface):
+    """
+    Azure AI Foundry interface for DeepSeek-R1.
+
+    DeepSeek-R1 is available as a Direct-from-Azure Foundry Model (Global
+    Standard), accessed via the Azure OpenAI v1 endpoint using the standard
+    openai.OpenAI client with a custom base_url.  It emits chain-of-thought
+    reasoning inside <think>...</think> tags; these are stripped before the
+    cascading decoder sees the response, with thinking content preserved in
+    metadata["thinking"] for secondary analysis.
+
+    Rate limits (Foundry Direct, as of 2026-02-19):
+        5,000,000 TPM / 5,000 RPM  — substantially higher than other Foundry models.
+
+    Endpoint pattern:
+        https://llm-defeasible-foundry.openai.azure.com/openai/v1/
+    Deployment name in the Foundry portal (set at deploy time, e.g. "DeepSeek-R1").
+    """
+
+    _COST_PER_1K_INPUT  = 0.00135   # DeepSeek-R1 Azure pricing (USD per 1K tokens)
+    _COST_PER_1K_OUTPUT = 0.0054
+
+    # Fill in endpoint and deployment name after deploying from the portal.
+    FOUNDRY_BASE_URL   = "https://llm-defeasible-foundry.openai.azure.com/openai/v1/"
+    FOUNDRY_DEPLOYMENT = "DeepSeek-R1"
+
+    def __init__(
+        self,
+        api_key: str,
+        base_url: str = FOUNDRY_BASE_URL,
+        model: str = FOUNDRY_DEPLOYMENT,
+        rpm: int = 5_000,
+        tpm: int = 5_000_000,
+    ):
+        super().__init__(model)
+        try:
+            from openai import OpenAI
+        except ImportError:
+            raise ImportError("openai package not installed. Run: pip install openai>=1.0")
+
+        self._client      = OpenAI(base_url=base_url, api_key=api_key)
+        self.rate_limiter = RateLimiter(rpm=rpm, tpm=tpm)
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
+    def query(
+        self,
+        prompt: str,
+        temperature: float = 0.0,
+        max_tokens: int = 1024,
+        **kwargs,
+    ) -> ModelResponse:
+        """Query DeepSeek-R1 via Foundry with thinking-token stripping.
+
+        max_tokens defaults to 1024 (not 512) because DeepSeek-R1 consumes
+        some tokens on internal chain-of-thought before emitting the visible
+        answer.  Increasing the budget ensures the answer is not truncated.
+        """
+        self.rate_limiter.wait_if_needed(len(prompt) // 4 + max_tokens)
+        start = time.time()
+
+        try:
+            completion = self._client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        except Exception as e:
+            logger.warning("Foundry DeepSeek API error: %s", e)
+            raise
+
+        latency  = time.time() - start
+        raw_text = completion.choices[0].message.content or ""
+        usage    = completion.usage
+
+        visible_text, thinking_text = _strip_thinking_tokens(raw_text)
+
+        result = ModelResponse(
+            text=visible_text,
+            model=self.model_name,
+            tokens_input=usage.prompt_tokens     if usage else len(prompt) // 4,
+            tokens_output=usage.completion_tokens if usage else len(raw_text) // 4,
+            cost=self.calculate_cost(
+                usage.prompt_tokens if usage else len(prompt) // 4,
+                usage.completion_tokens if usage else len(raw_text) // 4,
+            ),
+            latency=latency,
+            metadata={
+                "finish_reason": completion.choices[0].finish_reason,
+                "provider":      "foundry-deepseek",
+                "thinking":      thinking_text or None,
+            },
+        )
+        self.update_stats(result)
+        return result
+
+    @property
+    def cost_per_1k_input(self) -> float:
+        return self._COST_PER_1K_INPUT
+
+    @property
+    def cost_per_1k_output(self) -> float:
+        return self._COST_PER_1K_OUTPUT
+
+
 class MockModelInterface(ModelInterface):
     """Mock model for testing without API calls."""
     
@@ -1376,6 +1476,13 @@ def create_model_interface(
         endpoint = kwargs.pop('endpoint', FoundryClaudeInterface.FOUNDRY_ENDPOINT)
         model = model or FoundryClaudeInterface.FOUNDRY_DEPLOYMENT
         return FoundryClaudeInterface(api_key=api_key, endpoint=endpoint, model=model, **kwargs)
+
+    elif provider == 'foundry-deepseek':
+        if not api_key:
+            raise ValueError("foundry-deepseek requires api_key (FOUNDRY_API_KEY)")
+        base_url = kwargs.pop('base_url', FoundryDeepSeekInterface.FOUNDRY_BASE_URL)
+        model    = model or FoundryDeepSeekInterface.FOUNDRY_DEPLOYMENT
+        return FoundryDeepSeekInterface(api_key=api_key, base_url=base_url, model=model, **kwargs)
 
     elif provider == 'mock':
         model = model or "mock-model"

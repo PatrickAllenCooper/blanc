@@ -194,7 +194,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--provider", required=True,
                    choices=[
                        "openai", "azure", "curc", "anthropic", "google", "ollama",
-                       "foundry-gpt", "foundry-kimi", "foundry-claude",
+                       "foundry-gpt", "foundry-kimi", "foundry-claude", "foundry-deepseek",
                        "mock",
                    ],
                    help="Model provider.")
@@ -275,7 +275,7 @@ def main() -> int:
     elif args.provider == "ollama":
         kwargs["host"] = args.ollama_host
 
-    elif args.provider in ("foundry-gpt", "foundry-kimi", "foundry-claude"):
+    elif args.provider in ("foundry-gpt", "foundry-kimi", "foundry-claude", "foundry-deepseek"):
         # Fall back to FOUNDRY_API_KEY env var when --api-key is not given
         if not api_key:
             api_key = os.environ.get("FOUNDRY_API_KEY", "")

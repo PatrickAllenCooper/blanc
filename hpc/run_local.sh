@@ -10,10 +10,11 @@
 #   google        - Gemini via Google API           (requires GOOGLE_API_KEY)
 #   azure         - GPT-4o via Azure OpenAI         (requires AZURE_OPENAI_* vars)
 #   ollama        - Local model via Ollama          (requires Ollama running locally)
-#   foundry-gpt   - gpt-5.2-chat via Foundry       (requires FOUNDRY_API_KEY)
-#   foundry-kimi  - Kimi-K2.5 via Foundry          (requires FOUNDRY_API_KEY)
-#   foundry-claude- claude-sonnet-4-6 via Foundry  (requires FOUNDRY_API_KEY)
-#   foundry       - Run all three Foundry models    (requires FOUNDRY_API_KEY)
+#   foundry-gpt      - gpt-5.2-chat via Foundry       (requires FOUNDRY_API_KEY)
+#   foundry-kimi     - Kimi-K2.5 via Foundry          (requires FOUNDRY_API_KEY)
+#   foundry-claude   - claude-sonnet-4-6 via Foundry  (requires FOUNDRY_API_KEY)
+#   foundry-deepseek - DeepSeek-R1 via Foundry        (requires FOUNDRY_API_KEY)
+#   foundry          - Run all four Foundry models     (requires FOUNDRY_API_KEY)
 #   mock          - Deterministic fake model        (no credentials needed)
 #
 # Usage:
@@ -97,7 +98,7 @@ if [ "$PROVIDER" = "foundry" ]; then
     fi
     echo "Running all three Foundry models sequentially..."
     OVERALL_EXIT=0
-    for SUB_PROVIDER in foundry-gpt foundry-kimi foundry-claude; do
+    for SUB_PROVIDER in foundry-gpt foundry-kimi foundry-claude foundry-deepseek; do
         PROVIDER="$SUB_PROVIDER" "$BASH_SOURCE" "$SUB_PROVIDER" "${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}"
         SUB_EXIT=$?
         [ $SUB_EXIT -ne 0 ] && OVERALL_EXIT=$SUB_EXIT
@@ -191,7 +192,7 @@ case "$PROVIDER" in
         PROVIDER_ARGS+=(--ollama-host "$OLLAMA_HOST")
         ;;
 
-    foundry-gpt | foundry-kimi | foundry-claude)
+    foundry-gpt | foundry-kimi | foundry-claude | foundry-deepseek)
         FOUNDRY_KEY="${FOUNDRY_API_KEY:-}"
         if [ -z "$FOUNDRY_KEY" ]; then
             echo "ERROR: FOUNDRY_API_KEY not set."

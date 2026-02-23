@@ -33,7 +33,7 @@
 param(
     [Parameter(Position = 0)]
     [ValidateSet("openai", "anthropic", "google", "azure", "ollama", "curc",
-                 "foundry-gpt", "foundry-kimi", "foundry-claude", "foundry",
+                 "foundry-gpt", "foundry-kimi", "foundry-claude", "foundry-deepseek", "foundry",
                  "mock", "")]
     [string]$Provider = "",
 
@@ -115,7 +115,7 @@ if ($Provider -eq "foundry") {
     if (-not $FoundryKey) { Write-Error "FOUNDRY_API_KEY not set."; exit 1 }
     Write-Host "Running all three Foundry models sequentially..."
     $OverallExit = 0
-    foreach ($Sub in @("foundry-gpt", "foundry-kimi", "foundry-claude")) {
+    foreach ($Sub in @("foundry-gpt", "foundry-kimi", "foundry-claude", "foundry-deepseek")) {
         & $MyInvocation.MyCommand.Path $Sub `
             -InstanceLimit $InstanceLimit -Modalities $Modalities `
             -Strategies $Strategies -IncludeLevel3 $IncludeLevel3 `
@@ -216,7 +216,7 @@ switch ($Provider) {
         $ProviderArgs += "--curc-base-url", $baseUrl, "--model", $model
     }
 
-    { $_ -in "foundry-gpt", "foundry-kimi", "foundry-claude" } {
+    { $_ -in "foundry-gpt", "foundry-kimi", "foundry-claude", "foundry-deepseek" } {
         $key = Get-EnvVal "FOUNDRY_API_KEY"
         if (-not $key) { Write-Error "FOUNDRY_API_KEY not set."; exit 1 }
         $ProviderArgs += "--api-key", $key

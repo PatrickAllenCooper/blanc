@@ -11,11 +11,12 @@
 
 # DeFAb Evaluation via Azure AI Foundry
 #
-# Runs the full evaluation pipeline sequentially against all three
+# Runs the full evaluation pipeline sequentially against all four
 # Foundry-hosted models:
 #   - gpt-5.2-chat      (250,000 TPM / 2,500 RPM)
 #   - Kimi-K2.5         (250,000 TPM /   250 RPM)
 #   - claude-sonnet-4-6 (250,000 TPM /   250 RPM)
+#   - DeepSeek-R1       (5,000,000 TPM / 5,000 RPM)
 #
 # All three models share a single API key (FOUNDRY_API_KEY).
 # Jobs are I/O-bound (API calls); 4 CPUs and no GPU are needed.
@@ -36,6 +37,7 @@
 #   SKIP_GPT          "true" to skip gpt-5.2-chat        (default: false)
 #   SKIP_KIMI         "true" to skip Kimi-K2.5           (default: false)
 #   SKIP_CLAUDE       "true" to skip claude-sonnet-4-6   (default: false)
+#   SKIP_DEEPSEEK     "true" to skip DeepSeek-R1         (default: false)
 #
 # Author: Patrick Cooper
 # Date: 2026-02-19
@@ -67,6 +69,7 @@ INCLUDE_LEVEL3="${INCLUDE_LEVEL3:-true}"
 SKIP_GPT="${SKIP_GPT:-false}"
 SKIP_KIMI="${SKIP_KIMI:-false}"
 SKIP_CLAUDE="${SKIP_CLAUDE:-false}"
+SKIP_DEEPSEEK="${SKIP_DEEPSEEK:-false}"
 
 echo "Instance limit : $INSTANCE_LIMIT per domain"
 echo "Level 3 limit  : $LEVEL3_LIMIT"
@@ -165,6 +168,12 @@ if [ "$SKIP_CLAUDE" != "true" ]; then
     run_model "foundry-claude" "claude" || OVERALL_EXIT=$?
 else
     echo "Skipping claude-sonnet-4-6 (SKIP_CLAUDE=true)"
+fi
+
+if [ "$SKIP_DEEPSEEK" != "true" ]; then
+    run_model "foundry-deepseek" "deepseek" || OVERALL_EXIT=$?
+else
+    echo "Skipping DeepSeek-R1 (SKIP_DEEPSEEK=true)"
 fi
 
 # ---------------------------------------------------------------------------

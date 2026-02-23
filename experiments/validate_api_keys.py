@@ -26,6 +26,7 @@ from model_interface import (
     FoundryGPT52Interface,
     FoundryKimiInterface,
     FoundryClaudeInterface,
+    FoundryDeepSeekInterface,
 )
 
 
@@ -169,6 +170,25 @@ def test_foundry_kimi(api_key: str) -> bool:
         return False
 
 
+def test_foundry_deepseek(api_key: str) -> bool:
+    """Test Azure AI Foundry DeepSeek-R1 endpoint."""
+    print(f"\nTesting Foundry DeepSeek-R1 ({FoundryDeepSeekInterface.FOUNDRY_BASE_URL})...")
+    try:
+        interface = create_model_interface("foundry-deepseek", api_key=api_key)
+        response = interface.query("Say 'test'", max_tokens=512)
+        _ok("Model",   response.model)
+        _ok("Response", response.text[:50])
+        _ok("Tokens",  f"{response.tokens_input} in, {response.tokens_output} out")
+        _ok("Cost",    f"${response.cost:.6f}")
+        _ok("Latency", f"{response.latency:.2f}s")
+        if response.metadata.get("thinking"):
+            _ok("Thinking", f"{len(response.metadata['thinking'])} chars stripped")
+        return True
+    except Exception as e:
+        _fail("Error", e)
+        return False
+
+
 def test_foundry_claude(api_key: str) -> bool:
     """Test Azure AI Foundry claude-sonnet-4-6 endpoint."""
     print(f"\nTesting Foundry claude-sonnet-4-6 ({FoundryClaudeInterface.FOUNDRY_ENDPOINT})...")
@@ -261,9 +281,10 @@ def main() -> int:
     results["curc"] = test_curc(curc_base_url, curc_model)
 
     if foundry_key:
-        results["foundry-gpt"]    = test_foundry_gpt(foundry_key)
-        results["foundry-kimi"]   = test_foundry_kimi(foundry_key)
-        results["foundry-claude"] = test_foundry_claude(foundry_key)
+        results["foundry-gpt"]      = test_foundry_gpt(foundry_key)
+        results["foundry-kimi"]     = test_foundry_kimi(foundry_key)
+        results["foundry-claude"]   = test_foundry_claude(foundry_key)
+        results["foundry-deepseek"] = test_foundry_deepseek(foundry_key)
     else:
         print("\nINFO  FOUNDRY_API_KEY not set in .env - skipping Foundry tests")
         results["foundry-gpt"]    = False
@@ -282,7 +303,7 @@ def main() -> int:
     required_working = any(
         results.get(p)
         for p in ("openai", "azure", "anthropic", "curc",
-                  "foundry-gpt", "foundry-kimi", "foundry-claude")
+                  "foundry-gpt", "foundry-kimi", "foundry-claude", "foundry-deepseek")
     )
 
     print()
