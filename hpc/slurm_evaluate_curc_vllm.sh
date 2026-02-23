@@ -52,7 +52,7 @@
 #   VLLM_MODEL        Hugging Face model ID (default: DeepSeek-R1-Distill 70B)
 #   VLLM_PORT         Port for the vLLM server (default: 8100)
 #   CURC_HOSTER_DIR   Path to the curc-LLM-hoster repo (default: ~/curc-LLM-hoster)
-#   HF_HOME           Hugging Face cache directory (default: /scratch/alpine/$USER/.cache/hf)
+#   HF_HOME           Hugging Face cache directory (default: /scratch/alpine/$USER/hf_cache)
 #   INSTANCE_LIMIT    Instances per domain per modality (default: 50)
 #   MODALITIES        Space-separated list (default: "M4 M2 M1 M3")
 #   STRATEGIES        Space-separated list (default: "direct cot")
@@ -79,7 +79,8 @@ echo ""
 VLLM_MODEL="${VLLM_MODEL:-casperhansen/deepseek-r1-distill-llama-70b-awq}"
 VLLM_PORT="${VLLM_PORT:-8100}"
 CURC_HOSTER_DIR="${CURC_HOSTER_DIR:-$HOME/curc-LLM-hoster}"
-HF_HOME="${HF_HOME:-/scratch/alpine/$USER/.cache/hf}"
+# Match the HF cache path used by CURC LLM Hoster (setup_environment.sh)
+HF_HOME="${HF_HOME:-/scratch/alpine/$USER/hf_cache}"
 INSTANCE_LIMIT="${INSTANCE_LIMIT:-50}"
 MODALITIES="${MODALITIES:-M4 M2 M1 M3}"
 STRATEGIES="${STRATEGIES:-direct cot}"
@@ -102,9 +103,10 @@ echo ""
 module purge
 module load anaconda
 
-# Activate the curc-llm conda environment (created by CURC LLM Hoster setup)
-conda activate curc-llm 2>/dev/null || {
-    echo "WARNING: 'curc-llm' conda env not found."
+# Activate the vllm-env conda environment (created by CURC LLM Hoster setup).
+# The environment lives at /projects/$USER/software/anaconda/envs/vllm-env/
+conda activate vllm-env 2>/dev/null || {
+    echo "WARNING: 'vllm-env' conda env not found."
     echo "Run: cd $CURC_HOSTER_DIR && ./scripts/setup_environment.sh"
     echo "Falling back to base conda + pip install..."
     conda activate base
