@@ -529,15 +529,15 @@ $\geq 85\%$, and use this pair for the production Level~3 dataset.
 
 | Change | Location | Type | Status |
 |--------|----------|------|--------|
-| 1 | Abstract | Extension (~80 words) | Proposed above |
-| 2 | Intro lines 185–186 | Replacement (~200 words) | Proposed above |
-| 3 | Contributions | New 5th bullet (~80 words) | Proposed above |
-| 4 | Related Work line 215 | New paragraph (~150 words) | Proposed above |
-| 5 | Related Work line 217 | Extension (~120 words) | Proposed above |
-| 6 | Section 3.1 | Major restructure (~600 words + table) | Proposed above |
-| 7 | Section 3.2 | New paragraph (~120 words) | Proposed above |
-| 8 | Section 3.3 Level 3 bullet | Replacement (~200 words) | Proposed above |
-| 9 | Section 4.3 | New paragraph (~100 words) | Proposed above |
+| 1 | Abstract | Extension (~80 words) | IMPLEMENTED |
+| 2 | Intro lines 185–186 | Replacement (~200 words) | IMPLEMENTED |
+| 3 | Contributions | New 5th bullet (~80 words) | IMPLEMENTED |
+| 4 | Related Work line 215 | New paragraph (~150 words) | IMPLEMENTED |
+| 5 | Related Work line 217 | Extension (~120 words) | IMPLEMENTED |
+| 6 | Section 3.1 | Major restructure (~600 words + table) | IMPLEMENTED |
+| 7 | Section 3.2 | New paragraph (~120 words) | IMPLEMENTED |
+| 8 | Section 3.3 Level 3 bullet | Replacement (~200 words) | IMPLEMENTED |
+| 9 | Section 4.3 | New paragraph (~100 words) | IMPLEMENTED |
 
 **Total word addition**: ~1,650 words distributed across 9 locations  
 **Words removed**: ~80 (the hand-authored Level 3 bullet and its TODO)  
@@ -571,6 +571,45 @@ New references: rafailov2023direct (DPO), schulman2017proximal (PPO), hu2022lora
 
 ---
 
+## Change 11: Orient Express Running Analogy (Expanded)
+
+**Location**: Multiple locations throughout paper.tex
+
+**Status**: IMPLEMENTED (2026-02-24, expanded same day)
+
+**Purpose**: Address feedback that the paper is difficult to understand by threading an intuitive literary analogy through the paper, mapping Agatha Christie's *Murder on the Orient Express* onto the DeFAb framework. Specific plot events from the novel are used to concretely illustrate each formal concept.
+
+**Analogy mapping**:
+- Christie (the Author) = the complete knowledge base D^full (omniscient oracle)
+- Mystery construction = ablation (withholding critical elements to form D^-)
+- Poirot (the Detective) = the LLM (receives incomplete theory, must abduce)
+- Level 1 = finding individual clues (fact completion): burned letter, conductor's button, stopped watch
+- Level 2 = discovering the Armstrong family connection (rule abduction)
+- Level 3 = overriding the "single perpetrator" default with a conservative defeater (defeater abduction): twelve wounds of varied depth
+- Polynomial-time verifier = Christie's omniscience (checks solutions against complete theory)
+- Distractors = red herrings: kimono-clad figure, forged evidence
+- Conservativity = side-effect preservation: locked door, snowbound train, alibis
+
+**Insertion points (10 total)**:
+1. **Introduction** (after defeasible reasoning paragraph): Four paragraphs introducing the analogy with full Level 1/2/3 mapping
+2. **Section 3 opening** (Method): One sentence mapping the four pipeline stages to Christie's mystery construction
+3. **Section 3.3** (Abductive Instance Generation): Formal Example block (Example 3.1) formalizing the Orient Express as a concrete defeasible theory with facts, strict rules, defeasible rules, defeater, and superiority; concrete Level 1/2/3 ablation instances
+4. **Section 3.4** (Defeater Abduction, conservativity paragraph): Two sentences connecting Poirot's solution to the conservativity requirement
+5. **Section 3.5** (Rendering and Evaluation): Four-modality rendering of the single-perpetrator default rule (M1-M4)
+6. **Section 4.2** (Distractor strategies): Three distractor regimes illustrated with Orient Express clues (random, syntactic, adversarial); kimono-clad figure as adversarial distractor
+7. **Section 4.6** (Graded scoring): All five score tiers (0, 0.25, 0.5, 0.75, 1.0) illustrated with concrete detective hypotheses
+8. **Section 4.7** (Error taxonomy): All five error types (E1-E5) mapped to specific detective mistakes
+9. **Section 7 Discussion** (grounding/revision dissociation paragraph): One sentence restating the L2/L3 gap in Orient Express terms
+10. **Conclusion** (final sentence): Closing callback tying the analogy to future work
+
+**New reference**: christie1934murder (added to references.bib)
+
+**Net addition**: ~1,200 words distributed across 10 locations
+
+**What is unchanged**: All formal definitions, theorems, proofs, complexity results, the graded scoring function, the error taxonomy, the rendering modalities, the symbolic ceiling analysis, the fine-tuning pipeline --- the entire mathematical core of the paper.
+
+---
+
 ## References Checklist
 
 New references to add to references.bib:
@@ -595,9 +634,10 @@ Already in paper (verify these are in references.bib):
 - miller1995wordnet (WordNet) — add if missing
 - lkif2007 (LKIF Core) — add if missing
 - matonto2015 (MatOnto) — add if missing
+- [x] christie1934murder (Murder on the Orient Express) — added 2026-02-24
 
 ---
 
 **Author**: Patrick Cooper  
-**Status**: Ready for implementation in paper.tex  
-**Next step**: Implement changes in paper.tex, update references.bib
+**Status**: Changes 1-11 implemented in paper.tex  
+**Next step**: Continue implementation pipeline, run experiments
