@@ -1,11 +1,64 @@
 # BLANC Development Handoff
 
-**Author**: Patrick Cooper  
-**Date**: 2026-02-19  
-**Commit**: `53f49b3`  
-**Branch**: `main` (in sync with origin)  
-**Tests**: 503 passing (standard) + 19 live integration tests, 86% coverage  
-**Timeline**: Week 10 of 14.5 — ON TRACK
+**Author**: Patrick Cooper
+**Date**: 2026-02-24 (session 2)
+**Branch**: `main` (in sync with origin)
+**Tests**: 494 passing, 30 skipped, 81% coverage
+**Timeline**: Week 10.5 of 14.5 — ON TRACK
+
+---
+
+## What Was Built in Session 2 (2026-02-24)
+
+### 1. `blanc.author.loaders` Module (`src/blanc/author/loaders.py`)
+
+New shared module providing `load_instances_from_json()`, `load_level2_instances()`, and `load_level3_instances()`.  Eliminates duplicated loading logic in `symbolic_baseline.py`, `prepare_preference_data.py`, and any future scripts.
+
+### 2. Local Foundry Evaluation Runner (`experiments/run_foundry_local.py`)
+
+Runs the complete four-model Foundry evaluation locally (no SLURM needed):
+```bash
+python experiments/run_foundry_local.py                 # full run
+python experiments/run_foundry_local.py --dry-run       # endpoint validation only
+python experiments/run_foundry_local.py --skip-kimi     # skip a model
+```
+Validates all endpoints before starting, runs sequentially, auto-runs `analyze_results.py` after each model.
+
+### 3. Complete Fine-Tuning Pipeline (`experiments/finetuning/`)
+
+All Phase B scripts implemented:
+
+| File | Purpose |
+|------|---------|
+| `prepare_preference_data.py` | Samples n responses per instance (Foundry or CURC), scores via verifier, extracts (chosen, rejected) pairs, saves JSONL |
+| `train_dpo.py` | DPO training: standard (Eq. 9) + margin-weighted (Eq. 10) via TRL DPOTrainer + LoRA |
+| `train_rlhf_vitl.py` | RLHF training: VITL mode (verifier-as-reward, Eq. 13) + standard reward model (Eq. 11-12) |
+| `evaluate_finetuned.py` | Evaluates a LoRA/merged checkpoint on the test split using EvaluationPipeline |
+| `ds_config_zero2.json` | DeepSpeed ZeRO-2 config for 4xA100 multi-GPU training |
+
+**Key design**: `prepare_preference_data.py` works with BOTH Foundry models (via `--provider foundry-*`) and CURC vLLM (via `--provider curc`). Response sampling for preference data can be done locally using Foundry while CURC is unavailable.
+
+### 4. SLURM Scripts (`hpc/`)
+
+| Script | Purpose |
+|--------|---------|
+| `slurm_sample_responses.sh` | B1: vLLM server + response sampling (1xA100, 8h) |
+| `slurm_train_dpo.sh` | B2: DPO training (4xA100, 24h) |
+| `slurm_train_rlhf.sh` | B3: RLHF/VITL training (4xA100, 36h) |
+| `slurm_eval_finetuned.sh` | B5: Fine-tuned model evaluation (1xA100, 4h) |
+| `slurm_train_all.sh` | Orchestration: submits full 12 DPO + 4 RLHF matrix |
+
+### 5. Symbolic Baseline (Running and Verified)
+
+Fixed two bugs that caused 0% accuracy:
+1. `_FAT_ARROW_RE` label regex extended to handle predicate-style labels like `df_bird(owl)` (was stopping at `(`).
+2. `_deep_copy_theory` removed from `symbolic_baseline.py` import (function never existed in `level3_evaluator.py`); replaced with `copy.deepcopy`.
+
+**Results**: Level 2 = **100% (374/374)**, Level 3 = **100% (35/35)** — confirming the solver ceiling and providing the neural-symbolic gap metric.
+
+Saved to:
+- `experiments/results/symbolic_baseline_l2.json`
+- `experiments/results/symbolic_baseline_l3.json`
 
 ---
 

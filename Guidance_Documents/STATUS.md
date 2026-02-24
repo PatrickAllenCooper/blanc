@@ -1,17 +1,17 @@
 # Project Status
 
-**Last Updated**: 2026-02-24  
-**Current**: Defeasible fine-tuning section added to paper; DPO/RLHF methodology complete  
-**Progress**: 12 of 14.5 weeks (83%)  
+**Last Updated**: 2026-02-24 (session 2)
+**Current**: Full Phase B finetuning pipeline implemented; symbolic baseline running (100%); all Foundry-runnable tasks ready
+**Progress**: 12.5 of 14.5 weeks (86%)
 **Timeline**: ON TRACK
 
 ---
 
 ## Quick Summary
 
-**Weeks Complete**: 9.5 of 14.5  
-**Tests**: 474 passing ✅  
-**Coverage**: 85% ✅  
+**Weeks Complete**: 10 of 14.5
+**Tests**: 494 passing ✅
+**Coverage**: 81% ✅ (new modules included)  
 **Expert KBs**: 2,318 rules ✅  
 **Instances**: 374 Level 2 + 35 Level 3 (all validated)  
 **Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4) ✅  
@@ -146,13 +146,15 @@
   - Claude error taxonomy: 34% E1 (decoder failure), 64% E2 (derivation failure).
   - Kimi requires max_tokens=1024 and ~35s/query; full pilot must run on CURC overnight.
 
-**ALL INFRASTRUCTURE COMPLETE**  
-**LEVEL 3 INSTANCES COMPLETE**  
-**EVALUATION PIPELINE READY**  
-**ANALYSIS INFRASTRUCTURE COMPLETE**  
-**CURC LLM HOSTER INTEGRATION COMPLETE**  
-**PILOT EVALUATION COMPLETE (GPT-5.2, Claude)**  
+**ALL INFRASTRUCTURE COMPLETE**
+**LEVEL 3 INSTANCES COMPLETE**
+**EVALUATION PIPELINE READY**
+**ANALYSIS INFRASTRUCTURE COMPLETE**
+**CURC LLM HOSTER INTEGRATION COMPLETE**
+**PILOT EVALUATION COMPLETE (GPT-5.2, Claude)**
 **MANUSCRIPT UPDATED (2026-02-24)**
+**SYMBOLIC BASELINE COMPLETE: L2=100%, L3=100% (2026-02-24 session 2)**
+**FINE-TUNING PIPELINE COMPLETE (2026-02-24 session 2)**
 
 ### Manuscript updates (2026-02-24)
 
@@ -228,55 +230,90 @@ species/type appear in D^-, where only one has the novel property (in the gold
 
 ---
 
-## Next: LLM Evaluation (Weeks 9-10)
+## Next: Full Foundry Evaluation (Phase A3 -- Immediate)
 
-**All blockers cleared**: Foundry credentials are live.
+**All blockers cleared**: FOUNDRY_API_KEY in .env, all four models live.
 
-**To begin immediately (local)**:
-```powershell
-# Validate all three Foundry endpoints
+**Run full evaluation locally (no SLURM, no CURC needed)**:
+```bash
+# Step 1: Validate all four Foundry endpoints
 python experiments/validate_api_keys.py
 
-# Run full evaluation against all three Foundry models
-.\hpc\run_local.ps1 foundry
+# Step 2: Full evaluation -- all 4 models, 409 instances, all modalities
+python experiments/run_foundry_local.py
 
-# Or individual models:
-.\hpc\run_local.ps1 foundry-gpt
-.\hpc\run_local.ps1 foundry-kimi
-.\hpc\run_local.ps1 foundry-claude
+# Or a dry-run smoke test first (3 instances):
+python experiments/run_foundry_local.py --dry-run
+
+# After evaluation, run all analysis scripts:
+python experiments/analyze_results.py --results-dir experiments/results/
+python experiments/generate_paper_tables.py --results-dir experiments/results/
+python experiments/error_taxonomy.py --results-dir experiments/results/
+python experiments/novelty_analysis.py --results-dir experiments/results/
 ```
 
-**To run on CURC (full scale)**:
+**CURC Phase B (when Alpine is available)**:
 ```bash
-sbatch hpc/slurm_evaluate_foundry.sh
-sbatch hpc/slurm_evaluate_curc_vllm.sh   # open-source models
+# B1 response sampling (one job per model, 1xA100)
+sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ" hpc/slurm_sample_responses.sh
+
+# B2-B3 full training matrix (12 DPO + 4 RLHF jobs)
+bash hpc/slurm_train_all.sh
+
+# B5 evaluation of fine-tuned checkpoints
+sbatch --export=ALL,CHECKPOINT=<path>,BASE_MODEL=<id> hpc/slurm_eval_finetuned.sh
 ```
 
 ---
 
-## Remaining Work: ~5 Weeks
+## Implemented in Session 2 (2026-02-24)
+
+| Item | File | Status |
+|------|------|--------|
+| `blanc.author.loaders` module | `src/blanc/author/loaders.py` | New |
+| Local Foundry evaluation runner | `experiments/run_foundry_local.py` | New |
+| Preference data construction (Foundry-compatible) | `experiments/finetuning/prepare_preference_data.py` | New |
+| DPO trainer (standard + margin-weighted) | `experiments/finetuning/train_dpo.py` | New |
+| RLHF/VITL-PPO trainer | `experiments/finetuning/train_rlhf_vitl.py` | New |
+| Fine-tuned model evaluator | `experiments/finetuning/evaluate_finetuned.py` | New |
+| DeepSpeed ZeRO-2 config | `experiments/finetuning/ds_config_zero2.json` | New |
+| SLURM response sampling script | `hpc/slurm_sample_responses.sh` | New |
+| SLURM DPO training script | `hpc/slurm_train_dpo.sh` | New |
+| SLURM RLHF training script | `hpc/slurm_train_rlhf.sh` | New |
+| SLURM finetuned evaluation script | `hpc/slurm_eval_finetuned.sh` | New |
+| SLURM full matrix orchestration | `hpc/slurm_train_all.sh` | New |
+| Symbolic baseline L2 | `experiments/results/symbolic_baseline_l2.json` | **100% (374/374)** |
+| Symbolic baseline L3 | `experiments/results/symbolic_baseline_l3.json` | **100% (35/35)** |
+| **Bug fix**: `_FAT_ARROW_RE` label regex (predicate-style labels) | `experiments/level3_evaluator.py` | Fixed |
+| **Bug fix**: `_deep_copy_theory` missing import | `experiments/symbolic_baseline.py` | Fixed |
+
+---
+
+## Remaining Work: ~4 Weeks
 
 ### Phase A -- Base Evaluation (Weeks 9--10)
-- Deploy DeepSeek-R1 on Foundry
-- Full evaluation: 4 Foundry models + 3 CURC open-source models
-- Symbolic baseline (clingo)
-- All Section 5 analysis scripts
+- [ ] Run `python experiments/run_foundry_local.py` (4 Foundry models, all instances)
+- [ ] Open-source model evaluation (CURC, 3 models) -- when Alpine available
+- [ ] Run all Section 5 analysis scripts after evaluation completes
+- [x] Symbolic baseline: COMPLETE
 
-### Phase B -- Defeasible Fine-Tuning (Weeks 11--12)
-- B0: Set up `defab-train` conda environment on CURC
-- B1: Response sampling (3 models x 16 responses/instance, 1xA100 each)
-- B2: DPO training (12 configs: 3 models x {standard, margin} x {joint, sequential, weighted}, 4xA100 each)
-- B3: VITL-RLHF training (3 models, 4xA100 each)
-- B4: Level transfer ablation (3 models, L1/L2-only training)
-- B5: Evaluate all ~24 checkpoints on held-out test set
-- B6: Analysis scripts for Conjectures 6--9, curriculum comparison, novel resolutions
+### Phase B -- Defeasible Fine-Tuning (Weeks 11--12) -- CURC required
+- [x] B0: Environment setup (defab-train conda env) -- documented
+- [x] B1: `prepare_preference_data.py` -- implemented (Foundry-compatible for remote use)
+- [x] B2: `train_dpo.py` -- implemented (standard + margin-weighted + curriculum)
+- [x] B3: `train_rlhf_vitl.py` -- implemented (VITL + reward-model modes)
+- [x] B4: Level transfer via curriculum argument
+- [x] B5: `evaluate_finetuned.py` -- implemented
+- [ ] B5 (run): Execute training matrix on CURC
+- [ ] B6: Populate Tables 3--5 from B5 results
 
 ### Phase C -- Paper Completion (Weeks 13--14)
-- Populate Tables 1--5 from results
-- Confirm/reject Conjectures 6--9
-- Final paper polish and submission
+- [ ] Populate Tables 1--2 from Phase A results
+- [ ] Populate Tables 3--5 from Phase B results
+- [ ] Confirm/reject Conjectures 6--9
+- [ ] Final paper polish and NeurIPS submission
 
-**Total CURC GPU budget**: ~123 GPU-days (free for CU Boulder researchers)  
+**Total CURC GPU budget**: ~123 GPU-days (free for CU Boulder researchers)
 **Total API cost**: ~$26
 
 ---

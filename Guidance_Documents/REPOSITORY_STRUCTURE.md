@@ -104,29 +104,25 @@ experiments/
 │   ├── roundtrip_validation.py # Basic round-trip validation
 │   └── yield_model_fitting.py  # Yield model fitting
 │
-└── finetuning/                        # Section 6: DPO/RLHF fine-tuning pipeline
-    ├── prepare_preference_data.py     # Response sampling + preference extraction
-    ├── train_dpo.py                   # DPO/Margin-DPO training (TRL + LoRA)
-    ├── train_rlhf_vitl.py             # VITL-RLHF: PPO with exact DeFAb verifier
-    ├── evaluate_finetuned.py          # Evaluate fine-tuned checkpoints
-    ├── generate_ft_tables.py          # LaTeX Tables 3--5 (Section 6.7)
-    ├── analyze_ft_lift.py             # Conjecture 6: L3 improvement
-    ├── analyze_error_shift.py         # Conjecture 7: error taxonomy shift
-    ├── analyze_level_transfer.py      # Conjecture 8: L1/L2 -> L3 transfer
-    ├── analyze_margin_effect.py       # Conjecture 9: margin DPO advantage
-    ├── analyze_curriculum.py          # Curriculum schedule comparison
-    ├── analyze_novel_resolutions.py   # Generalization beyond training gold
-    ├── analyze_scaling_projections.py # Log-linear scaling curves
-    ├── ds_config_zero2.json           # DeepSpeed ZeRO-2 configuration
+└── finetuning/                        # Section 6: DPO/RLHF fine-tuning pipeline (IMPLEMENTED)
+    ├── __init__.py
+    ├── prepare_preference_data.py     # Response sampling + preference extraction (Foundry or CURC)
+    ├── train_dpo.py                   # DPO/Margin-DPO training (TRL DPOTrainer + LoRA/PEFT)
+    ├── train_rlhf_vitl.py             # VITL-RLHF: PPO with DeFAb verifier as reward
+    ├── evaluate_finetuned.py          # Evaluate LoRA checkpoint on test split via EvaluationPipeline
+    ├── ds_config_zero2.json           # DeepSpeed ZeRO-2 for 4xA100 CURC Alpine
     ├── data/                          # Preference datasets (gitignored)
     └── checkpoints/                   # LoRA checkpoints (gitignored)
+
+# Local runner (no SLURM)
+├── run_foundry_local.py           # Full 4-model Foundry evaluation, runs locally
 ```
 
 ---
 
 ## Tests (`tests/`)
 
-474 tests, 85% coverage. Run with `pytest tests/ -q`.
+494 tests, 81% coverage (new modules included). Run with `python -m pytest tests/ -q`.
 
 ```
 tests/

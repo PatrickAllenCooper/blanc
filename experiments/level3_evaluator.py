@@ -129,16 +129,16 @@ class Level3EvalResult:
 # ---------------------------------------------------------------------------
 
 _TILDE_ARROW_RE = re.compile(
-    r"(?:(?P<label>[a-zA-Z_][a-zA-Z0-9_]*):\s*)?"
-    r"(?P<body>[^~>]+?)"
+    r"(?:(?P<label>[a-zA-Z_][a-zA-Z0-9_]*(?:\([^)]*\))?):\s*)?"
+    r"(?P<body>[^~>]*?)"
     r"\s*~>\s*"
     r"(?P<head>~?[a-zA-Z_][a-zA-Z0-9_(),._ X]*)",
     re.IGNORECASE,
 )
 
 _FAT_ARROW_RE = re.compile(
-    r"(?:(?P<label>[a-zA-Z_][a-zA-Z0-9_]*):\s*)?"
-    r"(?P<body>[^=>]+?)"
+    r"(?:(?P<label>[a-zA-Z_][a-zA-Z0-9_]*(?:\([^)]*\))?):\s*)?"
+    r"(?P<body>[^=]*?)"
     r"\s*=>\s*"
     r"(?P<head>~?[a-zA-Z_][a-zA-Z0-9_(),._ X]*)",
     re.IGNORECASE,

@@ -114,7 +114,8 @@ def solve_level3(
     Symbolic Level 3 solver: enumerate candidate defeaters that (a) eliminate
     `target` and (b) are conservative w.r.t. `preserved`.
     """
-    from level3_evaluator import parse_rule_from_text, _add_rule_with_superiority, _deep_copy_theory
+    import copy
+    from level3_evaluator import parse_rule_from_text, _add_rule_with_superiority
 
     t0 = time.time()
 
@@ -141,7 +142,7 @@ def solve_level3(
             # Check conservativity
             from blanc.author.metrics import check_conservativity
             conservative, _ = check_conservativity(
-                _deep_copy_theory(theory), D2, target, preserved
+                copy.deepcopy(theory), D2, target, preserved
             )
             if conservative:
                 is_gold = cand.strip() == gold.strip()
