@@ -286,6 +286,92 @@ AI must distinguish from:
 
 ---
 
+## The Three Levels in One Example
+
+The examples above are all Level 2. DeFAb has three levels, each testing a different capability. One scenario illustrates all three.
+
+### The Theory: Bear Hibernation
+
+A biologist knows the following:
+
+```
+Facts:   bear(grizzly). bear(polar_bear). bear(black_bear).
+         arctic(polar_bear). seal_hunter(polar_bear). winter_active(polar_bear).
+Strict:  r_s1: bear(X) -> mammal(X).
+Default: r_d1: bear(X) => hibernates_in_winter(X).       "Bears typically hibernate."
+Defeater:  r*: bear(X), arctic(X), seal_hunter(X) ~> ~hibernates_in_winter(X).
+Superiority: r* > r_d1.
+```
+
+This derives: grizzly hibernates, black bear hibernates, polar bear does NOT (the defeater overrides the default). Now we ablate different pieces to create each level.
+
+### Level 1: Find the Missing Fact
+
+**Remove** `bear(grizzly)`. **Target:** `hibernates_in_winter(grizzly)`.
+
+The rule "bears typically hibernate" is present, but the theory no longer says grizzly is a bear. The derivation chain is broken at its root. The model picks from candidates:
+
+```
+  bear(grizzly)    <- GOLD: completes the chain
+  mammal(grizzly)  <- Tempting, but r_d1 requires bear(X), not mammal(X)
+  bear(salmon)     <- Wrong entity
+```
+
+**The point:** trace a derivation backward and find the missing link.
+
+### Level 2: Find the Missing Rule
+
+**Remove** `r_d1` (the default "bears hibernate"). **Target:** `hibernates_in_winter(grizzly)`.
+
+All facts are present, including `bear(grizzly)`. But no rule connects bears to hibernation. The model picks from candidates:
+
+```
+  bear(X) => hibernates_in_winter(X)    <- GOLD: the correct generalization
+  mammal(X) => hibernates_in_winter(X)  <- Too broad: makes all mammals hibernate
+  arctic(X) => hibernates_in_winter(X)  <- Wrong: arctic animals are less likely to hibernate
+```
+
+**The point:** reconstruct a missing generalization. The too-broad distractor technically works for this query but is the wrong rule.
+
+### Level 3: Construct the Missing Exception
+
+**Remove** `r*` and its superiority. **Target anomaly:** polar bear is active in winter, but the theory now predicts it hibernates.
+
+All facts and rules are present. The default `r_d1` fires for polar bear and concludes `hibernates_in_winter(polar_bear)`. This contradicts the observed `winter_active(polar_bear)`. The model must *construct* a new rule (not select from candidates) that fixes this without breaking anything else:
+
+```
+Score 0:   "bears hibernate in winter"
+           Restates the default. Anomaly unresolved.
+
+Score 0.5: "no bears hibernate" (~hibernates(X) :- bear(X))
+           Fixes the polar bear but DESTROYS grizzly and black bear
+           conclusions. Sledgehammer, not scalpel. Not conservative.
+
+Score 0.75: "arctic bears don't hibernate" (bear(X), arctic(X) ~> ~hibernates(X))
+            Fixes polar bear, preserves others, but only makes the
+            theory agnostic rather than positively asserting the exception.
+
+Score 1.0: "arctic seal-hunting bears don't hibernate"
+           (bear(X), arctic(X), seal_hunter(X) ~> ~hibernates(X), with r* > r_d1)
+           Overrides the default precisely where it fails, preserves
+           every other conclusion, captures the causal mechanism.
+```
+
+**The point:** Level 3 is qualitatively different. The model must invent a rule the theory has never seen, override a default it "believes," and do so with surgical precision. Too broad wrecks other conclusions. Too narrow misses the cause. Current models score near zero.
+
+### Summary
+
+| | Level 1 | Level 2 | Level 3 |
+|---|---------|---------|---------|
+| **What is missing** | A fact | A rule | An exception |
+| **Task** | Select from candidates | Select from candidates | Construct from scratch |
+| **Analogy** | Missing puzzle piece | Missing picture on box | Puzzle printed wrong; design the fix |
+| **Conservativity** | Not required | Not required | Required (too-broad fixes break things) |
+| **Deficit tested** | Grounding | Grounding + novelty | Grounding + novelty + belief revision |
+| **Model performance** | High | High (direct), drops with CoT | Near zero |
+
+---
+
 ## Why This is Hard for AI
 
 ### Challenge 1: Backward Reasoning
