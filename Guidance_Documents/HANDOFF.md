@@ -173,47 +173,42 @@ Pilot result files: `experiments/results/pilot_v3_foundry_gpt/`, `experiments/re
 
 ## What Needs to Happen Next
 
-### Immediate: Full Evaluation on CURC
-
-Pilot is done. Submit the full CURC evaluation:
+### Phase A (Weeks 9--10): Full Base Evaluation
 
 ```bash
-# All six models (3 Foundry sequential + 3 CURC parallel)
-sbatch hpc/slurm_evaluate_foundry.sh
-bash hpc/slurm_evaluate_curc_all.sh
-
-# Then run analysis:
-python experiments/analyze_results.py --results-dir experiments/results/
-python experiments/generate_paper_tables.py --results-dir experiments/results/
-```
-
-Note: increase instance limits for the production run:
-```bash
+# Foundry (4 models, API only, no GPU)
 sbatch --export=ALL,INSTANCE_LIMIT=120,LEVEL3_LIMIT=35,MODALITIES="M4 M2 M1 M3" \
        hpc/slurm_evaluate_foundry.sh
+
+# CURC open-source (3 models, 1xA100 each)
+bash hpc/slurm_evaluate_curc_all.sh
+
+# Analysis
+python experiments/analyze_results.py --results-dir experiments/results/
+python experiments/generate_paper_tables.py --results-dir experiments/results/
+python experiments/symbolic_baseline.py
 ```
 
-### Week 11–12: Advanced Analyses
+### Phase B (Weeks 11--12): Defeasible Fine-Tuning
 
-Once evaluation results exist in `experiments/results/`:
-```bash
-python experiments/symbolic_baseline.py     # ASP ceiling; pip install clingo first
-python experiments/difficulty_analysis.py
-python experiments/partition_sensitivity.py
-python experiments/novelty_analysis.py
-python experiments/conservativity_analysis.py
-python experiments/error_taxonomy.py
-python experiments/scaling_analysis.py
-```
+Paper Section 6 adds DPO/RLHF fine-tuning of open-source models on DeFAb preference data. All training runs on CURC Alpine (4xA100 per training job, 1xA100 for evaluation).
 
-### Week 13–14: Paper Completion
+**New infrastructure needed**:
+- conda environment `defab-train` (separate from `vllm-env`)
+- `experiments/finetuning/` directory with training scripts
+- `hpc/slurm_train_dpo.sh`, `hpc/slurm_train_rlhf.sh`, `hpc/slurm_eval_finetuned.sh`
+- DeepSpeed ZeRO-2 config at `experiments/finetuning/ds_config_zero2.json`
 
-Open TODOs in `paper.tex` (search `% TODO`):
-1. **k=5 distractors** (line ~368): justify or add ablation
-2. **Score weights** (line ~427–430): even spacing vs empirically motivated weights
-3. **Theory size ablation** (line ~474): adjust `{50, 100, 200, 500, 1000}` to actual KB sizes
-4. **NeurIPS checklist** (lines ~1100–1224): replace all `\answerTODO{}` with `\answerYes{}`, `\answerNo{}`, or `\answerNA{}` plus justifications
-5. **Author field** (lines 125–154): replace `David S. Hippocampus` placeholder
+**Training matrix**: 12 DPO jobs + 3 VITL-RLHF jobs + 3 level-transfer ablations = 18 training runs.
+
+See `Guidance_Documents/REVISED_IMPLEMENTATION_PLAN.md` for full details (SLURM scripts, hyperparameters, claim verification matrix).
+
+### Phase C (Weeks 13--14): Paper Completion
+
+1. Populate Tables 3--5 (Section 6.7) from fine-tuning results
+2. Confirm/reject Conjectures 6--9 (Section 6.8)
+3. Replace `David S. Hippocampus` author block
+4. Final paper polish and submission
 
 ---
 

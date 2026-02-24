@@ -1,8 +1,8 @@
 # Project Status
 
-**Last Updated**: 2026-02-19  
-**Current**: Foundry-first strategy adopted; DeepSeek-R1 added as 4th Foundry model; full 4-model evaluation ready to submit  
-**Progress**: 11.5 of 14.5 weeks (79%)  
+**Last Updated**: 2026-02-24  
+**Current**: Defeasible fine-tuning section added to paper; DPO/RLHF methodology complete  
+**Progress**: 12 of 14.5 weeks (83%)  
 **Timeline**: ON TRACK
 
 ---
@@ -152,7 +152,26 @@
 **ANALYSIS INFRASTRUCTURE COMPLETE**  
 **CURC LLM HOSTER INTEGRATION COMPLETE**  
 **PILOT EVALUATION COMPLETE (GPT-5.2, Claude)**  
-**MANUSCRIPT UPDATED (2026-02-18)**
+**MANUSCRIPT UPDATED (2026-02-24)**
+
+### Manuscript updates (2026-02-24)
+
+New Section 6 "Defeasible Fine-Tuning via Preference Optimization" added to paper.tex:
+
+- **Section 6.1**: Verifier-grounded preference signal -- formalizes DeFAb verifier as exact reward
+- **Section 6.2**: Preference data construction -- response sampling, gold-anchored pairs, curriculum stratification
+- **Section 6.3**: Direct Preference Optimization -- standard DPO + margin-weighted variant for graded Level 3 scoring
+- **Section 6.4**: RLHF with verifier-grounded rewards -- reward model, PPO, verifier-in-the-loop (VITL) variant
+- **Section 6.5**: Curriculum training -- joint, sequential, weighted schedules
+- **Section 6.6**: Experimental design -- LoRA configuration, data splits, hyperparameters
+- **Section 6.7**: Evaluation framework -- placeholder tables for fine-tuning results (Tables 3-5)
+- **Section 6.8**: Hypotheses -- four formal conjectures (L3 improvement, error taxonomy shift, level transfer, margin DPO advantage)
+- Abstract updated with fine-tuning mention
+- 6th contribution added to Introduction
+- Discussion section updated with fine-tuning diagnostic paragraph
+- Conclusion updated with fine-tuning reference
+- NeurIPS checklist item 6 updated for training details
+- `references.bib`: 4 new entries (DPO, PPO, LoRA, InstructGPT/RLHF)
 
 ### Manuscript updates (2026-02-18)
 
@@ -235,11 +254,30 @@ sbatch hpc/slurm_evaluate_curc_vllm.sh   # open-source models
 
 ---
 
-## Remaining Work: ~6 Weeks
+## Remaining Work: ~5 Weeks
 
-- Weeks 9-10: LLM evaluation (Azure + CURC)
-- Weeks 11-12: Advanced analyses (rendering robustness, difficulty curves)
-- Weeks 13-14: HPC production + paper submission
+### Phase A -- Base Evaluation (Weeks 9--10)
+- Deploy DeepSeek-R1 on Foundry
+- Full evaluation: 4 Foundry models + 3 CURC open-source models
+- Symbolic baseline (clingo)
+- All Section 5 analysis scripts
+
+### Phase B -- Defeasible Fine-Tuning (Weeks 11--12)
+- B0: Set up `defab-train` conda environment on CURC
+- B1: Response sampling (3 models x 16 responses/instance, 1xA100 each)
+- B2: DPO training (12 configs: 3 models x {standard, margin} x {joint, sequential, weighted}, 4xA100 each)
+- B3: VITL-RLHF training (3 models, 4xA100 each)
+- B4: Level transfer ablation (3 models, L1/L2-only training)
+- B5: Evaluate all ~24 checkpoints on held-out test set
+- B6: Analysis scripts for Conjectures 6--9, curriculum comparison, novel resolutions
+
+### Phase C -- Paper Completion (Weeks 13--14)
+- Populate Tables 1--5 from results
+- Confirm/reject Conjectures 6--9
+- Final paper polish and submission
+
+**Total CURC GPU budget**: ~123 GPU-days (free for CU Boulder researchers)  
+**Total API cost**: ~$26
 
 ---
 

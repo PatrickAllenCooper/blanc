@@ -543,7 +543,31 @@ $\geq 85\%$, and use this pair for the production Level~3 dataset.
 **Words removed**: ~80 (the hand-authored Level 3 bullet and its TODO)  
 **Net addition**: ~1,570 words
 
-**What is unchanged**: All formal definitions, theorems, proofs, complexity results, the graded scoring function, the error taxonomy, the rendering modalities, the symbolic ceiling analysis — the entire mathematical core of the paper.
+**What is unchanged**: All formal definitions, theorems, proofs, complexity results, the graded scoring function, the error taxonomy, the rendering modalities, the symbolic ceiling analysis --- the entire mathematical core of the paper.
+
+---
+
+## Change 10: New Section 6 -- Defeasible Fine-Tuning via Preference Optimization
+
+**Location**: Between Results (Section 5) and Discussion (Section 7, renumbered)
+
+**Status**: IMPLEMENTED (2026-02-24)
+
+Added complete Section 6 with 8 subsections:
+- 6.1 Verifier-Grounded Preference Signal
+- 6.2 Preference Data Construction (response sampling, gold-anchored pairs, curriculum stratification)
+- 6.3 Direct Preference Optimization (standard DPO + margin-weighted variant)
+- 6.4 RLHF with Verifier-Grounded Rewards (reward model, PPO, VITL variant)
+- 6.5 Curriculum Training (joint, sequential, weighted schedules)
+- 6.6 Experimental Design (LoRA, data splits, hyperparameters)
+- 6.7 Evaluation Framework (placeholder tables for results)
+- 6.8 Hypotheses (4 formal conjectures)
+
+Also updated: Abstract, Introduction (6th contribution + roadmap), Discussion (fine-tuning diagnostic paragraph), Conclusion, NeurIPS checklist item 6.
+
+New references: rafailov2023direct (DPO), schulman2017proximal (PPO), hu2022lora (LoRA), ouyang2022training (InstructGPT/RLHF).
+
+**Net addition**: ~3,500 words (Section 6) + ~200 words (abstract, intro, discussion, conclusion updates).
 
 ---
 

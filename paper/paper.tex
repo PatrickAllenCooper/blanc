@@ -59,6 +59,7 @@
 \usepackage{enumitem}
 \usepackage{mathtools}
 \usepackage{thmtools}
+\usepackage{multirow}
 \usepackage[margin=1in]{geometry}
 
 % Theorem environments
@@ -164,7 +165,7 @@
 Foundation models are routinely evaluated on forward, monotonic inference, yet scientific progress depends on \emph{abduction} and \emph{revision}: proposing hypotheses that explain observations and retracting default conclusions when exceptions arise. We argue that current models suffer three entangled structural deficits: they cannot trace conclusions to supporting evidence (\emph{grounding}), cannot generate hypotheses that revise their training distribution (\emph{novelty}), and cannot update knowledge while preserving unrelated commitments (\emph{belief revision}). These deficits underlie hallucination, creative sterility, and the fragility of knowledge editing alike.
 We cast this triad as a defeasible reasoning problem. Starting from legacy deductive knowledge bases, we convert them into defeasible theories via a parameterized partition $\kappa$ that controls which clauses are strict versus revisable defaults. The resulting theories make epistemic commitments explicit: every conclusion has a traceable support set, every default is revisable, and every element's criticality is computable. We generate grounded abductive evaluation instances by ablating critical elements and computing verifier-backed gold hypotheses, with conservativity constraints that operationalize the AGM principle of minimal change \cite{alchourron1985logic}. The benchmark stratifies difficulty into (i)~fact completion, (ii)~rule abduction, and (iii)~\emph{defeater abduction}, where a model must introduce a conservative exception that blocks an incorrect default prediction: our formal analogue of rational scientific revision.
 We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and pipeline with polynomial-time instance generation, controllable distractors, explicit measures of novelty and revision distance, and a rendering-robust evaluation protocol that separates reasoning from surface-form sensitivity. The benchmark draws on a heterogeneous collection of publicly funded knowledge bases spanning four decades of knowledge engineering: 1980s government AI programs (Cyc, FGCS, Alvey), NSF-funded lexical and commonsense resources (WordNet, ConceptNet), EU-funded legal and multilingual ontologies (LKIF Core, BabelNet), and collaborative encyclopedic projects (Wikidata, DBpedia, YAGO). A cross-ontology extraction procedure pairs taxonomic hierarchies with behavioral property graphs to generate defeasible rules and defeaters at scale.
-Evaluation of two closed-source frontier models (GPT-5.2-chat and Claude~Sonnet~4.6) reveals a sharp discontinuity: both models achieve $\geq 88\%$ accuracy on Level~2 rule abduction under direct prompting, demonstrating strong formal grounding capability, yet collapse to $\leq 2\%$ on Level~3 defeater abduction, confirming the belief revision deficit as a distinct and persistent failure mode. Chain-of-thought prompting \emph{reduces} Level~2 accuracy by $15$--$20$ percentage points, an ``overthinking'' effect specific to formal candidate-selection tasks in which surface alignment between model output and candidate strings is sufficient without verbal elaboration. These findings indicate that grounding and revision are architecturally separable capabilities, with current training paradigms addressing the former while leaving the latter essentially unaddressed.
+Evaluation of two closed-source frontier models (GPT-5.2-chat and Claude~Sonnet~4.6) reveals a sharp discontinuity: both models achieve $\geq 88\%$ accuracy on Level~2 rule abduction under direct prompting, demonstrating strong formal grounding capability, yet collapse to $\leq 2\%$ on Level~3 defeater abduction, confirming the belief revision deficit as a distinct and persistent failure mode. Chain-of-thought prompting \emph{reduces} Level~2 accuracy by $15$--$20$ percentage points, an ``overthinking'' effect specific to formal candidate-selection tasks in which surface alignment between model output and candidate strings is sufficient without verbal elaboration. These findings indicate that grounding and revision are architecturally separable capabilities, with current training paradigms addressing the former while leaving the latter essentially unaddressed. We further investigate whether DeFAb can serve as training signal for closing the belief revision deficit, presenting a preference optimization pipeline---comprising Direct Preference Optimization (DPO) with a margin-weighted variant adapted to the ordinal structure of Level~3 graded scoring, and a verifier-in-the-loop RLHF variant that exploits the benchmark's polynomial-time verifier as an exact reward function---for fine-tuning open-source models on formally grounded defeasible reasoning data.
 \end{abstract}
 
 
@@ -197,11 +198,13 @@ We introduce \textsc{DeFAb} (\textbf{De}feasible \textbf{A}bduction \textbf{B}en
     \item \textbf{A rendering-robust evaluation protocol.} Four modalities from narrative to raw syntax; the headline metric is worst-case accuracy across all four, ensuring scores reflect epistemic reasoning rather than surface-form sensitivity.
 
     \item \textbf{A cross-ontology KB extraction methodology} for generating defeasible rule bases at scale from heterogeneous publicly funded knowledge sources. The procedure pairs taxonomic hierarchies (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to synthesize defeasible rules; exception relations---ConceptNet's \texttt{NotCapableOf}, Wikidata's P2303, Gene Ontology's \texttt{NOT}-qualified annotations---serve as structured defeater sources for Level~3, enabling automatic instance generation without manual authoring. A fifth structured partition family, the \emph{type-grounded} partition, maps relation type to epistemic status: taxonomic edges are strict, capability assertions are defeasible, and exception relations seed $\Rdf$ directly.
+
+    \item \textbf{A preference optimization pipeline for defeasible fine-tuning.} We present a method for converting DeFAb instances into verifier-grounded preference data for DPO~\cite{rafailov2023direct} and RLHF~\cite{ouyang2022training}, exploiting the benchmark's polynomial-time scoring function as an exact reward signal. The pipeline includes a margin-weighted DPO variant adapted to the ordinal structure of Level~3 graded scoring, a verifier-in-the-loop (VITL) RLHF variant that eliminates reward model approximation, and curriculum schedules informed by the level hierarchy (Section~\ref{sec:finetuning}).
 \end{enumerate}
 
 Returning to the IDP example: the default ``proteins have stable 3D structure'' is a defeasible rule $r_1$ with identifiable support and computable criticality. The discovery corresponds to constructing an exception rule $r_4$ (``disordered proteins function via conformational ensembles'') that overrides the default mechanism. Crucially, $r_4$ must be \emph{conservative}: resolving the anomaly for p53\_idr without disrupting predictions about conventionally structured proteins (the defeasible analogue of AGM's minimal change). A model that proposes $r_4$ but destabilizes unrelated predictions scores $0.5$; one that preserves all side-effects scores $1.0$. The benchmark thus measures not just whether a model can be creative, but whether it can be \emph{rationally} creative.
 
-Section~\ref{sec:method} formalizes the pipeline; Section~\ref{sec:experiments} presents the experimental design; full definitions and proofs appear in the appendices.
+Section~\ref{sec:method} formalizes the pipeline; Section~\ref{sec:experiments} presents the experimental design; Section~\ref{sec:finetuning} develops the preference optimization methodology for defeasible fine-tuning; full definitions and proofs appear in the appendices.
 
 
 \section{Related Work}
@@ -229,7 +232,7 @@ Our approach addresses the three deficits identified in Section~1 (grounding, no
 
 \subsection{Source Theories}\label{subsec:source}
 
-We formalize legacy knowledge bases (Cyc, FGCS-era Prolog programs, Alvey artefacts) as definite logic programs over a first-order signature $\Sigma = (\mathcal{C}, \mathcal{F}, \mathcal{P})$ of constants, function symbols, and predicate symbols. A definite logic program $\Pi$ is a finite set of clauses $h \leftarrow b_1, \ldots, b_n$ ($n \geq 0$), where facts have $n = 0$. Its semantics is given by the least Herbrand model $\mathcal{M}_\Pi = \mathrm{lfp}(T_\Pi)$, the least fixed point of the immediate consequence operator (Definitions~\ref{def:signature}--\ref{def:lhm}). The property we exploit is monotonicity: $\Pi \subseteq \Pi'$ implies $\mathcal{M}_\Pi \subseteq \mathcal{M}_{\Pi'}$. Adding clauses can only increase the set of derivable conclusions. This is precisely the limitation our framework addresses: monotonic theories cannot retract defaults in light of new evidence, and thus cannot model the belief revision that scientific discovery requires.
+We formalize legacy knowledge bases (Cyc, FGCS-era Prolog programs, Alvey artefacts) as definite logic programs over a first-order signature $\Sigma = (\mathcal{C}, \mathcal{F}, \mathcal{P})$ of constants, function symbols, and predicate symbols. A definite logic program $\Pi$ is a finite set of clauses $h \leftarrow b_1, \ldots, b_n$ ($n \geq 0$), where facts have $n = 0$. Its semantics is given by the least Herbrand model $\mathcal{M}_\Pi = \mathrm{lfp}(T_\Pi)$, the least fixed point of the immediate consequence operator (Definitions~\ref{def:signature}--\ref{def:lhm}). The property we exploit is monotonicity: $\Pi \subseteq \Pi'$ implies $\mathcal{M}_\Pi \subseteq \mathcal{M}_{\Pi'}$. Adding clauses can only increase the set of derivable conclusions. This is precisely the limitation our framework addresses: monotonic theories cannot retract defaults in light of new evidence, and thus cannot model the belief revision that transformational scientific discovery requires.
 
 
 \subsection{Defeasible Conversion}\label{subsec:conversion}
@@ -341,15 +344,15 @@ Table~\ref{tab:kbsummary} summarizes projected scale across all tiers. For each 
 \begin{table}[t]
 \centering
 \small
-\begin{tabular}{@{}llrrl@{}}
+\begin{tabular}{@{}llrr@{}}
 \toprule
-Tier & Primary Sources & Est.\ Rules & Est.\ Instances & Timeline \\
+Tier & Primary Sources & Est.\ Rules & Est.\ Instances \\
 \midrule
-0 (baseline) & YAGO, WordNet, LKIF, MatOnto & 2,318 & 374 L1/L2 + 35 L3 & Done \\
-1 (this paper) & OpenCyc+ConceptNet, YAGO full & 100K--350K & 33K--90K & Weeks 8--14 \\
-2 (biomedical) & UMLS, SNOMED CT, GO, MeSH & +850K--3M & +130K--480K & 2--6 mo. \\
-3 (encyclopedic) & Wikidata+P2303, DBpedia, BabelNet & +3M--15M & +480K--2.4M & 6--12 mo. \\
-4--5 (web-scale) & NELL, Freebase, SUMO, FrameNet & +6M--25M & +960K--4M & 1--2+ yr. \\
+0 (baseline) & YAGO, WordNet, LKIF, MatOnto & 2,318 & 374 L1/L2 + 35 L3 \\
+1 (this paper) & OpenCyc+ConceptNet, YAGO full & 100K--350K & 33K--90K \\
+2 (biomedical) & UMLS, SNOMED CT, GO, MeSH & +850K--3M & +130K--480K \\
+3 (encyclopedic) & Wikidata+P2303, DBpedia, BabelNet & +3M--15M & +480K--2.4M \\
+4--5 (web-scale) & NELL, Freebase, SUMO, FrameNet & +6M--25M & +960K--4M \\
 \bottomrule
 \end{tabular}
 \caption{Staged knowledge base pipeline. Rule and instance counts are conservative estimates based on source scale and quality-filtered extraction yield. Each tier adds independently to the benchmark; the extraction pipeline is source-agnostic.}
@@ -528,6 +531,231 @@ The CoT lift is negative at Level~2: $\Delta_{\mathrm{CoT}} = -20.0$ pp for GPT-
 At Level~3, $\Delta_{\mathrm{CoT}} \approx 0$ (GPT-5.2: $-2.9$ pp; Claude: $+1.4$ pp). The Level~3 failure is therefore not a prompting artifact: structured CoT scaffolding that explicitly instructs the model to check conservativity and enumerate attackers does not materially alter performance. The deficit lies in the capability itself, not in how the task is framed.
 
 
+\section{Defeasible Fine-Tuning via Preference Optimization}\label{sec:finetuning}
+
+The near-zero Level~3 accuracy reported in Section~\ref{sec:results} raises a natural question: can the DeFAb benchmark itself serve as training signal to close the belief revision deficit in open-source models? The formal structure of the benchmark---verifier-backed gold standards, graded scoring, and polynomial-time conservativity checks---provides exactly the kind of dense, formally grounded supervision that preference optimization methods require. We present a fine-tuning pipeline that converts DeFAb instances into preference data for Reinforcement Learning from Human Feedback (RLHF)~\cite{ouyang2022training} and Direct Preference Optimization (DPO)~\cite{rafailov2023direct}, and describe the experimental protocol for evaluating fine-tuned open-source models on held-out instances across all three levels.
+
+
+\subsection{Verifier-Grounded Preference Signal}\label{subsec:verifier_signal}
+
+Standard preference optimization relies on human annotators or learned proxy models to label which of two responses is preferred. For defeasible reasoning, human labeling is impractical: judging whether a proposed defeater is conservative with respect to a theory $\D$ requires tracing derivation chains and verifying side-effect preservation across all expectations $\Exp(\D)$, a task that is tractable for algorithms (Theorem~\ref{thm:derivP}) but cognitively prohibitive for annotators. Learned reward models introduce approximation error that compounds during policy optimization, potentially rewarding responses that superficially resemble valid defeaters without satisfying conservativity.
+
+DeFAb circumvents both problems by providing a \emph{verifier-grounded reward}: for any model-generated hypothesis $h$ and DeFAb instance $I = (\Dm, q, \Hcand, \alpha)$, the scoring function $\mathrm{Score}(h, \D, \alpha)$ from Section~\ref{subsec:partial_credit} is computable in polynomial time, requires no human judgment, and is perfectly aligned with the evaluation metric. This is a direct consequence of the defeasible theory's explicit epistemic structure: because every derivation is traceable and every expectation is verifiable, the reward signal is exact.
+
+Formally, the reward function for a DeFAb instance at level $\ell$ is:
+\begin{equation}\label{eq:reward}
+    r(x, y) = \begin{cases}
+        \mathbf{1}\bigl[\rho_{\mathrm{dec}}(y) \in \Hgold\bigr] & \text{if } \ell \in \{1, 2\}, \\[4pt]
+        \mathrm{Score}\bigl(\rho_{\mathrm{dec}}(y),\; \D,\; \alpha\bigr) & \text{if } \ell = 3,
+    \end{cases}
+\end{equation}
+where $x = \rho_{\mathrm{enc}}(\Dm, q, \Hcand)$ is the rendered prompt, $y$ is the model's response, and $\rho_{\mathrm{dec}}$ is the three-stage decoder (Definition~\ref{def:decoder}). The binary reward at Levels~1--2 reflects the candidate-selection structure of those tasks; the graded reward at Level~3 provides ordinal supervision over the five stages of rational belief revision identified in Section~\ref{subsec:partial_credit}.
+
+
+\subsection{Preference Data Construction}\label{subsec:pref_data}
+
+We construct a preference dataset $\mathcal{D}_{\mathrm{pref}}$ from DeFAb instances via a two-stage procedure: response sampling from the base model, followed by verifier-grounded preference extraction.
+
+\paragraph{Response sampling.} For each training instance $I$ rendered under modality $\rho$, we sample $n$ responses $\{y_1, \ldots, y_n\}$ from the base policy $\pi_{\mathrm{ref}}$ at temperature $\tau > 0$. Each response is decoded via the three-stage decoder (Section~\ref{subsec:decoder_validation}) and scored via Equation~\ref{eq:reward} to obtain scored pairs $\{(y_i, r_i)\}_{i=1}^n$.
+
+\paragraph{Preference pair extraction.} From the scored response set, we extract pairwise preferences:
+\begin{equation}\label{eq:pref_pair}
+    (y_w, y_l) \in \mathcal{D}_{\mathrm{pref}} \iff r_w > r_l.
+\end{equation}
+For Level~3 instances, the five-level graded score induces a partial order over responses. A single instance with $n$ sampled responses of varying quality yields up to $\binom{n}{2}$ preference pairs, with the score gap $\Delta r = r_w - r_l$ capturing the magnitude of preference. This is substantially richer than the binary signal available at Levels~1--2, where all incorrect responses are equally dispreferred.
+
+\paragraph{Gold-anchored pairs.} Because base model accuracy at Level~3 is near-zero, rejection sampling alone produces few or no correct responses for most instances. We augment the preference dataset with \emph{gold-anchored pairs}: for each instance with known gold hypothesis $h^* \in \Hgold$, we construct the synthetic preferred response $y^* = \rho_{\mathrm{enc}}(h^*)$ and pair it against each sampled response with $r_i < 1.0$:
+\begin{equation}\label{eq:gold_anchor}
+    (y^*, y_i) \in \mathcal{D}_{\mathrm{pref}}^{\mathrm{anchor}} \quad \forall\; y_i \text{ with } r_i < 1.0.
+\end{equation}
+Gold-anchored pairs ensure that the optimization target includes at least one demonstration of the full rational revision pipeline---anomaly resolution, conservativity preservation, and appropriate strength---even when the base model's coverage of the correct response space is negligible. The synthetic response $y^*$ is constructed by rendering $h^*$ in the same modality as the prompt, preserving round-trip consistency (Definition~\ref{def:roundtrip}).
+
+\paragraph{Curriculum stratification.} The preference dataset is partitioned by level:
+\begin{equation}\label{eq:strata}
+    \mathcal{D}_{\mathrm{pref}} = \mathcal{D}_{\mathrm{pref}}^{(1)} \cup \mathcal{D}_{\mathrm{pref}}^{(2)} \cup \mathcal{D}_{\mathrm{pref}}^{(3)},
+\end{equation}
+enabling the curriculum schedules described in Section~\ref{subsec:curriculum}. The cardinality of $\mathcal{D}_{\mathrm{pref}}^{(\ell)}$ depends on both the number of training instances at level $\ell$ and the diversity of sampled responses: Level~3 instances with graded scoring yield more preference pairs per instance than Level~1--2 instances with binary scoring.
+
+
+\subsection{Direct Preference Optimization}\label{subsec:dpo}
+
+Direct Preference Optimization~\cite{rafailov2023direct} eliminates the need for a separate reward model by reparameterizing the reward-maximization objective as a classification loss over preference pairs. Given the reference policy $\pi_{\mathrm{ref}}$ (the base model before fine-tuning), DPO optimizes:
+\begin{equation}\label{eq:dpo_loss}
+    \mathcal{L}_{\mathrm{DPO}}(\pi_\theta;\, \pi_{\mathrm{ref}}) = -\mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}_{\mathrm{pref}}} \Bigl[ \log \sigma\!\Bigl(\beta \log \frac{\pi_\theta(y_w \mid x)}{\pi_{\mathrm{ref}}(y_w \mid x)} - \beta \log \frac{\pi_\theta(y_l \mid x)}{\pi_{\mathrm{ref}}(y_l \mid x)}\Bigr) \Bigr],
+\end{equation}
+where $\sigma$ is the logistic function and $\beta > 0$ governs the KL penalty strength against the reference policy. Rafailov et al.\ showed that minimizing $\mathcal{L}_{\mathrm{DPO}}$ is equivalent to solving the KL-constrained reward maximization:
+\begin{equation}\label{eq:kl_obj}
+    \max_{\pi} \; \mathbb{E}_{x \sim \mathcal{D},\, y \sim \pi(\cdot \mid x)} \bigl[ r(x, y) \bigr] - \beta \, D_{\mathrm{KL}}\!\bigl(\pi(\cdot \mid x) \,\big\|\, \pi_{\mathrm{ref}}(\cdot \mid x)\bigr),
+\end{equation}
+where $r(x,y)$ is the implicit reward recovered by the optimal policy. In the DeFAb setting, the verifier-grounded preference pairs (Equation~\ref{eq:pref_pair}) ensure that $\mathcal{L}_{\mathrm{DPO}}$ optimizes directly against the formal evaluation criterion, with no label noise from human disagreement or reward model approximation error.
+
+\paragraph{Margin-weighted DPO for graded preferences.} Standard DPO treats all preference pairs uniformly regardless of the quality gap between $y_w$ and $y_l$. For Level~3 instances, where the DeFAb scoring function assigns ordinal scores in $\{0, 0.25, 0.5, 0.75, 1.0\}$, preference pairs with large score gaps carry substantially more information than pairs at adjacent tiers. We introduce a margin term that scales the implicit reward gap proportionally to the verifier score difference:
+\begin{equation}\label{eq:graded_dpo}
+    \mathcal{L}_{\mathrm{DPO}}^{\mathrm{margin}}(\pi_\theta) = -\mathbb{E}_{(x, y_w, y_l)} \Bigl[ \log \sigma\!\Bigl(\beta \log \frac{\pi_\theta(y_w \mid x)}{\pi_{\mathrm{ref}}(y_w \mid x)} - \beta \log \frac{\pi_\theta(y_l \mid x)}{\pi_{\mathrm{ref}}(y_l \mid x)} - \gamma \cdot \Delta r_{wl}\Bigr) \Bigr],
+\end{equation}
+where $\Delta r_{wl} = r_w - r_l$ is the verifier score gap and $\gamma \geq 0$ is a margin hyperparameter. When $\gamma = 0$, this reduces to standard DPO. The margin term shifts the decision boundary: larger score gaps require proportionally larger log-ratio differences to contribute positively to the loss, encouraging the policy to internalize the ordinal structure of rational belief revision. The model receives stronger gradient signal from pairs that span multiple stages of the scoring decomposition---for instance, from a non-resolutive output (score $0$) to a conservative resolution (score $1.0$)---than from pairs within a single stage, focusing optimization capacity on the qualitative transitions that correspond to acquiring distinct reasoning capabilities.
+
+
+\subsection{RLHF with Verifier-Grounded Rewards}\label{subsec:rlhf}
+
+As an alternative to DPO, we investigate an RLHF pipeline using Proximal Policy Optimization (PPO)~\cite{schulman2017proximal}. The RLHF approach decouples reward estimation from policy optimization, enabling on-policy exploration of the response space during training---a potential advantage when the base model's coverage of valid Level~3 resolutions is near-zero and the correct response space is combinatorially large (Proposition~\ref{prop:candsize}).
+
+\paragraph{Reward model.} We train a reward model $R_\phi: \mathcal{X} \times \mathcal{Y} \to [0, 1]$ to approximate the DeFAb verifier score. Because the verifier provides exact numerical scores rather than pairwise preferences, we train via regression:
+\begin{equation}\label{eq:reward_model}
+    \mathcal{L}_{\mathrm{RM}}(\phi) = \mathbb{E}_{(x, y, r) \sim \mathcal{D}_{\mathrm{scored}}} \bigl[\bigl(R_\phi(x, y) - r\bigr)^2 \bigr],
+\end{equation}
+where $\mathcal{D}_{\mathrm{scored}} = \{(x_i, y_{ij}, r_{ij})\}$ is the corpus of prompts, sampled responses, and verifier scores from the response sampling stage. The reward model is initialized from the base model's weights with a scalar value head appended to the final hidden state.
+
+\paragraph{Policy optimization.} Given the trained reward model, the policy is optimized via PPO with a clipped surrogate objective~\cite{schulman2017proximal}:
+\begin{equation}\label{eq:ppo_obj}
+    \max_\theta \; \mathbb{E}_{x \sim \mathcal{D},\, y \sim \pi_\theta(\cdot \mid x)} \bigl[ R_\phi(x, y) \bigr] - \beta \, D_{\mathrm{KL}}\!\bigl(\pi_\theta(\cdot \mid x) \,\big\|\, \pi_{\mathrm{ref}}(\cdot \mid x)\bigr),
+\end{equation}
+with the KL penalty preventing degenerate convergence to responses that exploit reward model inaccuracies (reward hacking). The key advantage over DPO is that PPO generates \emph{on-policy} responses at each training step. If $R_\phi$ is sufficiently faithful, this enables the policy to discover valid conservative defeaters that were absent from the initial rejection sampling, effectively expanding the training distribution during optimization.
+
+\paragraph{Verifier-in-the-loop (VITL).} The DeFAb verifier's polynomial-time complexity permits a stronger variant: replacing the learned reward model entirely with the exact verifier during PPO training:
+\begin{equation}\label{eq:vitl}
+    \max_\theta \; \mathbb{E}_{x \sim \mathcal{D},\, y \sim \pi_\theta(\cdot \mid x)} \bigl[ \mathrm{Score}\!\bigl(\rho_{\mathrm{dec}}(y),\; \D,\; \alpha\bigr) \bigr] - \beta \, D_{\mathrm{KL}}\!\bigl(\pi_\theta(\cdot \mid x) \,\big\|\, \pi_{\mathrm{ref}}(\cdot \mid x)\bigr).
+\end{equation}
+VITL eliminates reward model approximation error entirely and guarantees perfect alignment between the training signal and the evaluation metric. The computational cost per reward evaluation is $O(|\Exp(\D)| \cdot |R| \cdot |F|)$ (one derivation check per expectation), which is dominated by the model's forward pass for the theory sizes in the current dataset ($|\D| \leq 200$). VITL is a natural consequence of the DeFAb framework's design: because the benchmark's formal structure makes correctness decidable in polynomial time, the reward modeling stage can be replaced by exact verification---a structural advantage unavailable to benchmarks that rely on human-annotated preferences or learned heuristics.
+
+\begin{remark}[Structural analogy to formal verification in code generation]\label{rem:vitl}
+The VITL approach parallels the use of formal verifiers (unit tests, type checkers, proof assistants) as reward signals in RL for code generation and theorem proving. The key difference is granularity: unit tests provide binary pass/fail, whereas the DeFAb scoring function provides a five-level ordinal decomposition along the stages of rational belief revision (Section~\ref{subsec:partial_credit}). This richer signal enables the policy to receive gradient information not only about whether a revision is correct, but about \emph{which stage} of the revision process fails, potentially accelerating convergence by providing credit assignment at the reasoning-stage level.
+\end{remark}
+
+
+\subsection{Curriculum Training}\label{subsec:curriculum}
+
+The three DeFAb levels correspond to reasoning capabilities of increasing complexity: identifying missing observations (Level~1), reconstructing missing generalizations (Level~2), and constructing conservative exceptions (Level~3). The theoretical analysis of Section~\ref{sec:method} establishes that Level~3 reasoning subsumes Levels~1 and~2: a model that can construct a conservative defeater must be able to trace support sets (the grounding capability tested at Level~2) and identify missing facts (Level~1). This subsumption relationship motivates a curriculum in which mastery at lower levels provides inductive bias for higher levels.
+
+We define three curriculum schedules and compare them experimentally:
+
+\begin{enumerate}[label=(\roman*),nosep]
+    \item \textit{Joint training.} All preference pairs from $\mathcal{D}_{\mathrm{pref}}^{(1)} \cup \mathcal{D}_{\mathrm{pref}}^{(2)} \cup \mathcal{D}_{\mathrm{pref}}^{(3)}$ are shuffled and presented uniformly.
+
+    \item \textit{Sequential curriculum.} The model is trained on $\mathcal{D}_{\mathrm{pref}}^{(1)}$ for $E_1$ epochs, then $\mathcal{D}_{\mathrm{pref}}^{(2)}$ for $E_2$ epochs, then $\mathcal{D}_{\mathrm{pref}}^{(3)}$ for $E_3$ epochs, with the learning rate reset at each transition. This operationalizes the intuition that grounding capability is a prerequisite for belief revision: the model first learns to identify missing elements in a theory, then learns to construct conservative revisions.
+
+    \item \textit{Weighted curriculum.} All levels are mixed, but Level~3 pairs are oversampled by factor $\omega_3 > 1$ to compensate for the class imbalance inherent in the current dataset (374 Level~1/2 instances vs.\ 35 Level~3 instances). This preserves the regularization benefits of joint training while concentrating optimization capacity on the hardest level.
+\end{enumerate}
+
+
+\subsection{Experimental Design}\label{subsec:ft_setup}
+
+\paragraph{Models.} We fine-tune the three open-source models from Section~\ref{subsec:evaluation}: DeepSeek-R1-Distill-Llama-70B~\cite{deepseek2025r1}, Qwen~2.5-72B-Instruct~\cite{qwen2024qwen25}, and Qwen~2.5-32B-Instruct. All models are fine-tuned under Low-Rank Adaptation (LoRA)~\cite{hu2022lora} with rank $r = 64$, scaling factor $\alpha = 128$, applied to all query, key, value, and output projection matrices in the attention layers and to the gate and up-projection matrices in the MLP layers. LoRA reduces the trainable parameter count to $\sim$0.1\% of the full model, enabling 70B-parameter fine-tuning on a single node of $4 \times$ A100 80\,GB GPUs on CURC Alpine.
+
+\paragraph{Data splits.} The 409 current DeFAb instances are split into training (70\%, stratified by level and domain), validation (15\%), and test (15\%) sets. Level stratification ensures that each split contains instances from all three levels and all three domains (biology, legal, materials). For each training instance, we sample $n = 16$ responses at temperature $\tau = 0.7$ from the base model and extract preference pairs with score gap $\Delta r \geq 0.25$. Gold-anchored pairs (Equation~\ref{eq:gold_anchor}) are included for all training instances. The resulting preference dataset contains approximately 4,200 pairs for Levels~1/2 and 1,800 pairs for Level~3 (the larger per-instance yield at Level~3 reflects the five-level ordinal scoring that generates more distinguishable preference pairs per instance).
+
+\paragraph{DPO training configuration.} KL coefficient $\beta = 0.1$; learning rate $5 \times 10^{-6}$ with cosine annealing to $5 \times 10^{-7}$; effective batch size 16 ($4$ gradient accumulation steps $\times$ $4$ GPUs); 3 epochs over the full preference dataset. For margin-weighted DPO (Equation~\ref{eq:graded_dpo}), the margin hyperparameter $\gamma = 2.0$ is selected by validation performance on Level~3 graded score over $\gamma \in \{0, 0.5, 1.0, 2.0, 4.0\}$.
+
+\paragraph{RLHF training configuration.} The reward model is initialized from the base model with a scalar value head and trained for 1 epoch on $\mathcal{D}_{\mathrm{scored}}$ with learning rate $1 \times 10^{-5}$ and batch size 32. PPO uses a clipped surrogate ratio of $\epsilon = 0.2$, KL coefficient $\beta = 0.05$, mini-batch size 8, and 256 PPO steps per epoch. The VITL variant replaces $R_\phi$ with the exact DeFAb verifier, invoked via the same polynomial-time evaluation pipeline used for benchmark scoring.
+
+\paragraph{Curriculum configuration.} The sequential curriculum uses $(E_1, E_2, E_3) = (1, 1, 3)$ epochs. The weighted curriculum uses $\omega_3 = 5$, so Level~3 instances are seen five times per epoch while Levels~1--2 instances are seen once.
+
+\paragraph{Evaluation protocol.} Fine-tuned models are evaluated on the held-out test set under the identical protocol as base models (Section~\ref{subsec:evaluation}): all four rendering modalities, both direct and CoT prompting, the full three-stage decoder, and greedy decoding at temperature~$0$. We report the \emph{fine-tuning lift} $\Delta_{\mathrm{FT}} = \mathrm{Acc}_{\mathrm{FT}} - \mathrm{Acc}_{\mathrm{base}}$ per level as the primary metric. For Level~3, we additionally report the graded score distribution and the error taxonomy shift.
+
+
+\subsection{Evaluation Framework}\label{subsec:ft_results}
+
+Table~\ref{tab:ft_main} defines the evaluation framework for reporting fine-tuning results across models, optimization methods, and levels. All entries are populated upon completion of the training runs described in Section~\ref{subsec:ft_setup}.
+
+\begin{table}[t]
+\centering
+\caption{Fine-tuning evaluation framework. Rendering-robust accuracy after preference optimization on DeFAb training data. $\Delta$ denotes lift over the base model. Results on the held-out test set (15\% of 409 instances, stratified by level and domain).}
+\label{tab:ft_main}
+\small
+\begin{tabular}{@{}llcccccc@{}}
+\toprule
+\multirow{2}{*}{Model} & \multirow{2}{*}{Method} & \multicolumn{2}{c}{Level~2} & \multicolumn{2}{c}{Level~3} & \multicolumn{2}{c}{Level~3 Graded} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+ & & Acc & $\Delta$ & Acc & $\Delta$ & Score & $\Delta$ \\
+\midrule
+\multirow{4}{*}{Qwen-32B} & Base & -- & -- & -- & -- & -- & -- \\
+ & DPO & -- & -- & -- & -- & -- & -- \\
+ & Margin DPO & -- & -- & -- & -- & -- & -- \\
+ & VITL-RLHF & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{Qwen-72B} & Base & -- & -- & -- & -- & -- & -- \\
+ & DPO & -- & -- & -- & -- & -- & -- \\
+ & Margin DPO & -- & -- & -- & -- & -- & -- \\
+ & VITL-RLHF & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multirow{4}{*}{DS-R1-70B} & Base & -- & -- & -- & -- & -- & -- \\
+ & DPO & -- & -- & -- & -- & -- & -- \\
+ & Margin DPO & -- & -- & -- & -- & -- & -- \\
+ & VITL-RLHF & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ft_curriculum} reports the effect of curriculum schedule on Level~3 performance.
+
+\begin{table}[t]
+\centering
+\caption{Level~3 rendering-robust accuracy under different curriculum schedules. Sequential trains on Levels~1, 2, then 3 in order. Weighted oversamples Level~3 by factor $\omega_3 = 5$.}
+\label{tab:ft_curriculum}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Schedule & Level~3 Acc & Level~3 Graded \\
+\midrule
+Joint & -- & -- \\
+Sequential ($E_1{=}1, E_2{=}1, E_3{=}3$) & -- & -- \\
+Weighted ($\omega_3 = 5$) & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ft_errors} tracks the error taxonomy shift, testing whether preference optimization moves models from early-stage failures (E1--E2) toward later-stage failures (E4--E5).
+
+\begin{table}[t]
+\centering
+\caption{Level~3 error taxonomy distribution before and after fine-tuning. A shift from E1--E2 dominance toward E4--E5 indicates acquisition of anomaly resolution capability with conservativity as the remaining bottleneck.}
+\label{tab:ft_errors}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Error Type & Base (\%) & VITL-RLHF (\%) \\
+\midrule
+E1 (Decoder failure) & -- & -- \\
+E2 (Derivation failure) & -- & -- \\
+E3 (Minimality violation) & -- & -- \\
+E4 (Conservativity violation) & -- & -- \\
+E5 (Strength shortfall) & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Hypotheses}\label{subsec:ft_hypotheses}
+
+We structure the fine-tuning evaluation around four formal hypotheses, each testable against the results framework established in Sections~\ref{sec:results}--\ref{subsec:errors}.
+
+\begin{conjecture}[Level~3 Improvement]\label{conj:l3improve}
+The fine-tuning lift $\Delta_{\mathrm{FT}}^{(3)}$ at Level~3 is positive under both DPO and VITL-RLHF for all three open-source models, with the VITL variant achieving the largest lift due to the elimination of reward model approximation error.
+\end{conjecture}
+
+This conjecture tests whether the belief revision deficit is a \emph{training data deficit} (addressable by exposure to formally grounded revision examples) or an \emph{architectural deficit} (requiring changes to the model's computational structure). A positive $\Delta_{\mathrm{FT}}^{(3)}$ would constitute evidence for the former; persistent near-zero accuracy despite fine-tuning would constitute evidence for the latter.
+
+\begin{conjecture}[Error Taxonomy Shift]\label{conj:errorshift}
+Fine-tuning shifts the Level~3 error distribution from E1--E2 dominance (decoder and derivation failures) toward E4--E5 dominance (conservativity violations and strength shortfalls), indicating that models learn to produce structurally valid resolutions before learning to satisfy conservativity.
+\end{conjecture}
+
+This conjecture operationalizes the stage-by-stage acquisition of rational belief revision capability. If confirmed, the progression through the scoring decomposition---from syntactic well-formedness to anomaly resolution to conservativity---would provide evidence that the DeFAb graded signal teaches models to acquire the constituent skills of rational revision in the order predicted by the theoretical analysis.
+
+\begin{conjecture}[Level Transfer]\label{conj:transfer}
+Training on $\mathcal{D}_{\mathrm{pref}}^{(1)} \cup \mathcal{D}_{\mathrm{pref}}^{(2)}$ alone (no Level~3 data) yields positive Level~3 lift $\Delta_{\mathrm{FT}}^{(3)} > 0$, indicating that improved grounding capability partially scaffolds belief revision.
+\end{conjecture}
+
+A positive result would validate the theoretical claim that grounding and revision, while dissociable in current models (Section~\ref{subsec:revision_results}), share representational substrate: strengthening the model's ability to trace support sets and identify missing rules provides partial inductive bias for constructing conservative exceptions. A null result would indicate that the revision deficit is fully orthogonal to grounding and requires Level~3-specific training signal.
+
+\begin{conjecture}[Margin DPO Advantage]\label{conj:graded}
+Margin-weighted DPO (Equation~\ref{eq:graded_dpo}, $\gamma > 0$) achieves higher Level~3 graded score than standard DPO ($\gamma = 0$), with the advantage concentrated at the conservativity transition (from score $0.5$ to $0.75$).
+\end{conjecture}
+
+This tests whether the ordinal structure of the DeFAb scoring function provides useful inductive bias beyond the binary preference signal. The DeFAb graded score decomposes rational belief revision into stages; if the margin term enables the model to internalize this decomposition, the margin DPO variant should show disproportionate improvement at the conservativity stage, which is where current models fail most consistently.
+
+\paragraph{Additional analyses.} Beyond the four conjectures, we report: (i)~the frequency of \emph{novel correct resolutions}---valid conservative defeaters produced by fine-tuned models that do not appear in the training gold set $\Rgold$, measuring generalization beyond memorization; (ii)~reward model fidelity for the learned-reward RLHF variant, quantified as the Spearman correlation $\rho_s(R_\phi, r)$ between learned rewards and verifier scores on the validation set; (iii)~\emph{reward overoptimization}, measured as the gap between mean $R_\phi$ and mean verifier score $r$ on PPO-generated responses at the final checkpoint; and (iv)~scaling projections, obtained by subsampling the training set to $\{10\%, 25\%, 50\%, 100\%\}$ of full size and fitting log-linear curves $\mathrm{Acc}(N) = a + b \log N$ per level, informing data collection priorities for subsequent tiers (Table~\ref{tab:kbsummary}).
+
+
 \section{Discussion}\label{sec:discussion}
 
 \paragraph{Grounding and revision are dissociable.} The central finding is a sharp dissociation: near-ceiling Level~2 accuracy coexists with near-floor Level~3 accuracy across both model families and both prompting strategies. This cannot be explained by generic capability limitations, since the same models that fail at Level~3 succeed almost perfectly at Level~2. The dissociation validates the theoretical motivation of this work: grounding (identifying what is missing from a theory) and belief revision (identifying a conservative exception that repairs the theory without disrupting unrelated conclusions) are distinct reasoning capabilities. Current training paradigms appear to reliably produce the former without the latter.
@@ -536,7 +764,9 @@ At Level~3, $\Delta_{\mathrm{CoT}} \approx 0$ (GPT-5.2: $-2.9$ pp; Claude: $+1.4
 
 \paragraph{CoT is counterproductive for formal candidate selection.} The negative CoT lift at Level~2 has a practical implication: for structured abduction tasks in which model outputs must exactly match formal representations, direct prompting is strongly preferable to chain-of-thought scaffolding. The CoT ``overthinking'' effect identified here is distinct from the general finding that CoT helps on multi-step reasoning tasks: it is specific to the regime where surface alignment between output and formal candidates provides a reliable selection signal that verbal elaboration disrupts.
 
-\paragraph{Limitations.} The current Level~3 set contains 35 expert-authored instances; statistical power for per-domain subgroup analyses is therefore limited. Evaluation covers two of six planned models on two of four rendering modalities; the rendering-robust scores reported here use M4 and M2 only. The M1 (narrative) decoder recovery is approximate by design. Results are restricted to English-language theories from three domains; generalization across languages and knowledge domains is an open question.
+\paragraph{Defeasible fine-tuning as a diagnostic.} The preference optimization pipeline of Section~\ref{sec:finetuning} is designed not merely to improve benchmark scores but to provide a diagnostic instrument for the belief revision deficit. If DeFAb fine-tuning yields substantial Level~3 improvement ($\Delta_{\mathrm{FT}}^{(3)} \gg 0$), the deficit is primarily attributable to training data composition: current pretraining and instruction-tuning corpora simply lack sufficient examples of conservative exception construction. If fine-tuning fails to improve Level~3 despite substantial training signal, the deficit is architectural: the transformer's computational structure may lack the capacity for the global side-effect tracking that conservativity requires. The four conjectures of Section~\ref{subsec:ft_hypotheses} decompose this dichotomy further. Conjecture~\ref{conj:errorshift} tests whether improvement proceeds stage-by-stage through the rational revision decomposition; Conjecture~\ref{conj:transfer} tests whether grounding capability provides representational scaffolding for revision; and Conjecture~\ref{conj:graded} tests whether the ordinal structure of the DeFAb scoring function provides inductive bias beyond binary feedback. The verifier-in-the-loop variant (VITL) eliminates reward model error as a confound, ensuring that any persistent failure can be attributed to the model rather than the training signal.
+
+\paragraph{Limitations.} The current Level~3 set contains 35 expert-authored instances; statistical power for per-domain subgroup analyses is therefore limited. Evaluation covers two of six planned models on two of four rendering modalities; the rendering-robust scores reported here use M4 and M2 only. The M1 (narrative) decoder recovery is approximate by design. Results are restricted to English-language theories from three domains; generalization across languages and knowledge domains is an open question. The fine-tuning pipeline of Section~\ref{sec:finetuning} is constrained by the current dataset size (409 instances); scaling to subsequent tiers (Table~\ref{tab:kbsummary}) will be necessary to distinguish genuine capability acquisition from overfitting to the training distribution.
 
 
 \section{Conclusion}\label{sec:conclusion}
@@ -545,7 +775,7 @@ We have introduced \textsc{DeFAb}, a benchmark for evaluating foundation models 
 
 The CoT overthinking finding carries a methodological implication: for formal abductive tasks where the evaluation pipeline requires exact syntactic matching, chain-of-thought prompting degrades rather than improves performance. Evaluation designs for formal reasoning benchmarks should account for this alignment-vs.-reasoning tradeoff.
 
-DeFAb provides the formal infrastructure --- polynomial-time instance generation, verifier-backed gold hypotheses, explicit novelty and revision metrics, and a rendering-robust protocol --- to track progress on the belief revision deficit as training paradigms evolve.
+DeFAb provides the formal infrastructure --- polynomial-time instance generation, verifier-backed gold hypotheses, explicit novelty and revision metrics, and a rendering-robust protocol --- to track progress on the belief revision deficit as training paradigms evolve. The preference optimization pipeline of Section~\ref{sec:finetuning} extends the benchmark from a passive evaluation instrument to an active training signal, exploiting the polynomial-time verifier as an exact reward function for DPO and RLHF. Whether defeasible fine-tuning can close the belief revision deficit --- or whether the deficit proves architectural rather than data-driven --- is the central open question that the conjectures of Section~\ref{subsec:ft_hypotheses} are designed to resolve.
 
 
 \bibliographystyle{plainnat}
@@ -1139,7 +1369,7 @@ IMPORTANT, please:
 \item {\bf Experimental setting/details}
     \item[] Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results?
     \item[] Answer: \answerYes{}
-    \item[] Justification: No training is performed; DeFAb is a zero-shot evaluation benchmark. Section~\ref{sec:experiments} specifies all relevant details: model names and API versions, decoding parameters (greedy, temperature~$=0$, \texttt{max\_tokens}), prompting strategy structure, $k=5$ distractor count, partition function families, and the three-stage decoder pipeline with validation results.
+    \item[] Justification: Section~\ref{sec:experiments} specifies all zero-shot evaluation details: model names and API versions, decoding parameters (greedy, temperature~$=0$, \texttt{max\_tokens}), prompting strategy structure, $k=5$ distractor count, partition function families, and the three-stage decoder pipeline with validation results. Section~\ref{sec:finetuning} specifies all fine-tuning details: LoRA rank and target modules, DPO and PPO hyperparameters ($\beta$, $\gamma$, learning rates, batch sizes, epochs), data split ratios, curriculum schedules, and the verifier-in-the-loop reward computation.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not include experiments.

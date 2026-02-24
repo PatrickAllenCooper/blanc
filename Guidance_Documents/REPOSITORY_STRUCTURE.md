@@ -99,10 +99,27 @@ experiments/
 ├── generate_paper_tables.py    # LaTeX tables 1-4 for Section 5
 ├── symbolic_baseline.py        # ASP solver ceiling baseline
 │
-└── # Legacy/reference
-    ├── statistics.py           # Section 4.3 statistics
-    ├── roundtrip_validation.py # Basic round-trip validation
-    └── yield_model_fitting.py  # Yield model fitting
+├── # Legacy/reference
+│   ├── statistics.py           # Section 4.3 statistics
+│   ├── roundtrip_validation.py # Basic round-trip validation
+│   └── yield_model_fitting.py  # Yield model fitting
+│
+└── finetuning/                        # Section 6: DPO/RLHF fine-tuning pipeline
+    ├── prepare_preference_data.py     # Response sampling + preference extraction
+    ├── train_dpo.py                   # DPO/Margin-DPO training (TRL + LoRA)
+    ├── train_rlhf_vitl.py             # VITL-RLHF: PPO with exact DeFAb verifier
+    ├── evaluate_finetuned.py          # Evaluate fine-tuned checkpoints
+    ├── generate_ft_tables.py          # LaTeX Tables 3--5 (Section 6.7)
+    ├── analyze_ft_lift.py             # Conjecture 6: L3 improvement
+    ├── analyze_error_shift.py         # Conjecture 7: error taxonomy shift
+    ├── analyze_level_transfer.py      # Conjecture 8: L1/L2 -> L3 transfer
+    ├── analyze_margin_effect.py       # Conjecture 9: margin DPO advantage
+    ├── analyze_curriculum.py          # Curriculum schedule comparison
+    ├── analyze_novel_resolutions.py   # Generalization beyond training gold
+    ├── analyze_scaling_projections.py # Log-linear scaling curves
+    ├── ds_config_zero2.json           # DeepSpeed ZeRO-2 configuration
+    ├── data/                          # Preference datasets (gitignored)
+    └── checkpoints/                   # LoRA checkpoints (gitignored)
 ```
 
 ---
@@ -142,9 +159,16 @@ tests/
 ```
 hpc/
 ├── slurm_evaluate_curc_vllm.sh  # PRIMARY: vLLM (Qwen 2.5 72B / Llama 3.3 70B)
+├── slurm_evaluate_foundry.sh    # Azure AI Foundry (4 models, no GPU)
+├── slurm_evaluate_curc_all.sh   # Submit all 3 CURC models in parallel
 ├── slurm_evaluate_azure.sh      # Azure OpenAI (GPT-4o)
 ├── slurm_evaluate_llama.sh      # Legacy: Ollama on compute node
 ├── slurm_generate_instances.sh  # Large-scale instance generation
+├── slurm_sample_responses.sh    # Fine-tuning: response sampling (1xA100)
+├── slurm_train_dpo.sh           # Fine-tuning: DPO training (4xA100)
+├── slurm_train_rlhf.sh          # Fine-tuning: VITL-RLHF training (4xA100)
+├── slurm_eval_finetuned.sh      # Fine-tuning: evaluate checkpoints (1xA100)
+├── slurm_train_all.sh           # Submit all training jobs
 └── README.md                    # Alpine cluster usage guide
 ```
 
