@@ -1,9 +1,9 @@
 # Implementation Plan: LLM Evaluation, Fine-Tuning, and Submission
 
-**Date**: 2026-02-24 (updated)
+**Date**: 2026-02-25 (updated)
 **Author**: Patrick Cooper
-**Status**: Pilot complete (GPT-5.2, Claude). Section 6 (DPO/RLHF fine-tuning) added to paper. Full evaluation and fine-tuning next.
-**Next action**: Deploy DeepSeek-R1 on Foundry portal, then submit full evaluation batch.
+**Status**: Phase B pipeline implemented. Phase A evaluation not yet run. B6 analysis scripts not yet written. Several paper claims still unsubstantiated.
+**Next action**: Run `python experiments/run_foundry_local.py` (full Foundry evaluation), then submit CURC base eval jobs, then build B6 analysis scripts, then run training matrix.
 
 ---
 
@@ -15,15 +15,22 @@
 | 3 | Instance generation -- 374 Level 2 instances | Done |
 | 4 | Statistical analysis (Section 4.3) | Done |
 | 5--6 | Full codec: M1--M4 encoders, D1--D3 decoders, cascading decoder | Done |
-| 7 | Validation and testing infrastructure (503 tests, 86% coverage) | Done |
+| 7 | Validation and testing infrastructure (494 tests, 81% coverage) | Done |
 | 8 | Evaluation infrastructure (pipeline, prompting, response cache) | Done |
 | 8.5a | Level 3 instance generation -- 35 defeater instances | Done |
-| 8.5b | All analysis scripts written and tested | Done |
-| 9a | Azure AI Foundry integration -- GPT-5.2, Kimi, Claude confirmed live | Done |
-| 9b | Pilot evaluation -- GPT-5.2 (88.3% L2 / 1.4% L3), Claude (91.7% / 2.1%) | Done |
+| 8.5b | All Section 5 analysis scripts written and tested | Done |
+| 9a | Azure AI Foundry integration -- GPT-5.2, Kimi, Claude, DeepSeek-R1 confirmed live | Done |
+| 9b | Pilot evaluation -- GPT-5.2 (88.3% L2 / 1.4% L3), Claude (91.7% / 2.1%) | Done (60 L2 instances, M4+M2 only) |
 | 9c | Pipeline fixes: `.env` auto-load, CoT extraction, empty-cache skip, max_tokens | Done |
 | 9d | DeepSeek-R1 added to Foundry as 4th primary model (`foundry-deepseek`) | Done |
 | 10 | Paper Section 6: Defeasible Fine-Tuning via Preference Optimization | Done |
+| B0 | `defab-train` conda env documented | Done |
+| B1 | `prepare_preference_data.py` -- preference data construction | Done |
+| B2 | `train_dpo.py` -- standard + margin-weighted DPO with curriculum | Done |
+| B3 | `train_rlhf_vitl.py` -- VITL and reward-model RLHF | Done |
+| B5 | `evaluate_finetuned.py` -- finetuned checkpoint evaluation | Done |
+| B-SLURM | `slurm_sample_responses.sh`, `slurm_train_dpo.sh`, `slurm_train_rlhf.sh`, `slurm_eval_finetuned.sh`, `slurm_train_all.sh` | Done |
+| Symbolic | Symbolic baseline: L2=100% (374/374), L3=100% (35/35) | Done |
 
 ### Dataset
 
@@ -43,9 +50,9 @@
 | Model | Provider | Deployment name | RPM | Cost/1M in | Cost/1M out | Type | Status |
 |-------|----------|----------------|-----|------------|-------------|------|--------|
 | gpt-5.2-chat | Foundry (AzureOpenAI) | `gpt-5.2-chat` | 2,500 | $1.75 | $14.00 | Reasoning | Live |
-| Kimi-K2.5 | Foundry (OpenAI-compat) | `Kimi-K2.5` | 250 | $1.40 | $2.80 | Reasoning | Live |
+| Kimi-K2.5 | Foundry (OpenAI-compat) | `Kimi-K2.5` | 250 | $1.40 | $2.80 | Reasoning | Live (deferred from pilot) |
 | claude-sonnet-4-6 | Foundry (AnthropicFoundry) | `claude-sonnet-4-6` | 250 | $3.00 | $15.00 | Instruction | Live |
-| DeepSeek-R1 | Foundry (OpenAI-compat) | `DeepSeek-R1` | 5,000 | $1.35 | $5.40 | Reasoning, open | **Deploy now** |
+| DeepSeek-R1 | Foundry (OpenAI-compat) | `DeepSeek-R1` | 5,000 | $1.35 | $5.40 | Reasoning, open | Live |
 
 **Shared key**: `FOUNDRY_API_KEY` in `.env`
 
@@ -59,26 +66,28 @@ These models are evaluated via CURC vLLM for base accuracy, then fine-tuned via 
 | Qwen 2.5 72B Instruct | `Qwen/Qwen2.5-72B-Instruct-AWQ` | ~36 GB | 4xA100 (LoRA) | Instruction |
 | Qwen 2.5 32B Instruct | `Qwen/Qwen2.5-32B-Instruct-AWQ` | ~16 GB | 2xA100 (LoRA) | Scaling |
 
-CURC env: `vllm-env` (set up by `curc-hoster/scripts/setup_environment.sh`)
+CURC env: `vllm-env` (inference), `defab-train` (fine-tuning)
 HF cache: `/scratch/alpine/paco0228/hf_cache/`
 
 ---
 
-## Phase A: Base Model Evaluation (Weeks 9--10)
+## Phase A: Base Model Evaluation (Weeks 9--10) -- NOT YET RUN
 
-### A1. Deploy DeepSeek-R1 on Foundry (5 min, portal)
-
-1. Go to [ai.azure.com](https://ai.azure.com) -> open `LLM-Defeasible-Foundry`
-2. Model catalog -> search "DeepSeek-R1" -> Deploy -> Global Standard
-3. Deployment name: `DeepSeek-R1`
-
-### A2. Validate all four endpoints
+### A1. Validate all four Foundry endpoints
 
 ```bash
 python experiments/validate_api_keys.py
 ```
 
-### A3. Submit full Foundry evaluation (4 models, all instances, all modalities)
+### A2. Submit full Foundry evaluation (4 models, all 409 instances, all modalities)
+
+Run locally (no SLURM, rate-limited API calls, ~12h):
+
+```bash
+python experiments/run_foundry_local.py
+```
+
+Or via SLURM on CURC amilan partition (no GPU required):
 
 ```bash
 cd /projects/paco0228/blanc && git pull
@@ -89,7 +98,7 @@ sbatch --export=ALL,INSTANCE_LIMIT=120,LEVEL3_LIMIT=35,MODALITIES="M4 M2 M1 M3" 
 Query budget: 409 instances x 4 models x 4 modalities x 2 strategies = **13,088 queries**
 Estimated cost: ~$23 total
 
-### A4. Submit CURC open-source base evaluation (3 models)
+### A3. Submit CURC open-source base evaluation (3 models)
 
 ```bash
 bash hpc/slurm_evaluate_curc_all.sh
@@ -97,14 +106,7 @@ bash hpc/slurm_evaluate_curc_all.sh
 
 This submits three independent SLURM jobs for DeepSeek-R1-70B, Qwen 72B, and Qwen 32B on `aa100` partition. Each uses 1x A100 80GB with vLLM for inference.
 
-### A5. Run symbolic baseline (in parallel, no GPU)
-
-```bash
-pip install clingo
-python experiments/symbolic_baseline.py --results-dir experiments/results/
-```
-
-### A6. Run all analysis scripts (after A3--A4 complete)
+### A4. Run all analysis scripts (after A2--A3 complete)
 
 ```bash
 python experiments/analyze_results.py --results-dir experiments/results/
@@ -123,9 +125,9 @@ python experiments/partition_sensitivity.py --results-dir experiments/results/
 
 ## Phase B: Defeasible Fine-Tuning (Weeks 11--12)
 
-Phase B implements paper Section 6. The goal is to test whether the belief revision deficit (near-zero Level 3 accuracy) can be addressed by fine-tuning open-source models on DeFAb preference data constructed from the benchmark's polynomial-time verifier.
+Phase B implements paper Section 6. All training scripts and SLURM jobs exist. The following sub-phases must run in order.
 
-### B0. Environment Setup (CURC)
+### B0. Environment Setup (CURC) -- Documented, not yet confirmed
 
 **New conda environment for training** (separate from inference `vllm-env`):
 
@@ -154,92 +156,9 @@ python -c "import torch; print(torch.cuda.device_count(), torch.cuda.get_device_
 
 **Script**: `experiments/finetuning/prepare_preference_data.py`
 
-**Inputs**:
-- `instances/biology_dev_instances.json` (114 L2)
-- `instances/legal_dev_instances.json` (116 L2)  
-- `instances/materials_dev_instances.json` (144 L2)
-- `instances/level3_instances.json` (35 L3)
-- Base model evaluation results from Phase A (response cache)
-
-**Process**:
-
-1. **Train/val/test split** (70/15/15, stratified by level and domain):
-   - Training: ~286 instances (262 L1/2 + 24 L3)
-   - Validation: ~61 instances (56 L1/2 + 5 L3)
-   - Test: ~62 instances (56 L1/2 + 6 L3)
-   - Save splits to `instances/splits.json` for reproducibility
-
-2. **Response sampling** from each base model:
-   - For each training instance, sample n=16 responses at temperature=0.7
-   - Use vLLM server on CURC (same setup as base eval)
-   - Decode each response via cascading decoder (D1->D2->D3)
-   - Score each response via DeFAb verifier (Equation 5 in paper):
-     - L1/2: binary (correct selection = 1, else = 0)
-     - L3: graded score {0, 0.25, 0.5, 0.75, 1.0}
-
-3. **Preference pair extraction**:
-   - From scored responses, extract all pairs where score_w > score_l
-   - Filter pairs with score gap < 0.25 (too close to provide signal)
-   - Add gold-anchored pairs: gold hypothesis rendered in same modality paired against each incorrect response
-
-4. **Output format** (Hugging Face `datasets` compatible):
-   ```json
-   {
-     "prompt": "<rendered DeFAb instance>",
-     "chosen": "<preferred response>",
-     "rejected": "<dispreferred response>",
-     "score_chosen": 1.0,
-     "score_rejected": 0.0,
-     "level": 3,
-     "domain": "biology",
-     "margin": 1.0
-   }
-   ```
-   Save to `experiments/finetuning/data/preferences_{model_name}.jsonl`
+**Prerequisite**: Phase A must complete so that base model evaluation results and response caches are available.
 
 **SLURM job for response sampling** (`hpc/slurm_sample_responses.sh`):
-
-```bash
-#!/bin/bash
-#SBATCH --job-name=defab-sample
-#SBATCH --partition=aa100
-#SBATCH --nodes=1
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
-#SBATCH --time=12:00:00
-#SBATCH --output=logs/sample_%j.out
-
-module load anaconda
-conda activate vllm-env
-
-VLLM_MODEL="${VLLM_MODEL:-casperhansen/deepseek-r1-distill-llama-70b-awq}"
-VLLM_PORT=8100
-
-# Start vLLM server
-python -m vllm.entrypoints.openai.api_server \
-    --model "$VLLM_MODEL" --port "$VLLM_PORT" \
-    --dtype auto --max-model-len 8192 \
-    --gpu-memory-utilization 0.90 --enforce-eager &
-VLLM_PID=$!
-
-# Wait for server
-for i in $(seq 1 120); do
-    curl -s "http://localhost:${VLLM_PORT}/health" && break
-    sleep 5
-done
-
-# Sample responses
-cd /projects/paco0228/blanc
-python experiments/finetuning/prepare_preference_data.py \
-    --model-name "$VLLM_MODEL" \
-    --base-url "http://localhost:${VLLM_PORT}/v1" \
-    --num-samples 16 \
-    --temperature 0.7 \
-    --output-dir experiments/finetuning/data/
-
-kill $VLLM_PID
-```
 
 Submit for each model:
 ```bash
@@ -248,11 +167,15 @@ sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ" hpc/slurm_sample_
 sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-32B-Instruct-AWQ" hpc/slurm_sample_responses.sh
 ```
 
+Each job starts a vLLM server on 1x A100 80GB, samples n=16 responses per training instance at temperature=0.7, decodes and scores all responses via the DeFAb verifier, and writes preference JSONL to `experiments/finetuning/data/`.
+
+Expected output: ~4,200 L1/L2 pairs + ~1,800 L3 pairs per model.
+
+**Note**: The `instances/splits.json` file (70/15/15 stratified split) is created by this script on first run and reused by all subsequent training scripts. Verify it exists after B1 completes before submitting B2/B3.
+
 ### B2. DPO Training
 
 **Script**: `experiments/finetuning/train_dpo.py`
-
-Uses Hugging Face TRL `DPOTrainer` with LoRA via PEFT.
 
 **Configuration** (from paper Section 6.6):
 
@@ -265,100 +188,57 @@ Uses Hugging Face TRL `DPOTrainer` with LoRA via PEFT.
 | DPO beta | 0.1 |
 | Learning rate | 5e-6 |
 | LR schedule | cosine (to 5e-7) |
-| Batch size (effective) | 16 (4 grad accum x 4 GPUs) |
+| Batch size (effective) | 16 (2 per-device x 8 grad accum x 1 node) |
 | Epochs | 3 |
 | Max sequence length | 2048 |
 | Optimizer | AdamW (betas=0.9,0.999) |
 | Weight decay | 0.01 |
-| Warmup ratio | 0.1 |
+| Warmup steps | 100 |
 | bf16 | True |
 | DeepSpeed | ZeRO Stage 2 |
 
-**Margin DPO** variant (paper Equation 10): custom loss function wrapping `DPOTrainer` that adds margin term `gamma * (score_chosen - score_rejected)` to the log-ratio difference. Gamma values to sweep: {0, 0.5, 1.0, 2.0, 4.0}. Select by validation Level 3 graded score.
+**Training matrix** (12 DPO jobs total via `slurm_train_all.sh`):
 
-**SLURM job** (`hpc/slurm_train_dpo.sh`):
+| Model | Variant | Curriculum | Job name |
+|-------|---------|------------|----------|
+| DS-R1-70B | standard | joint | dpo_std_joint_ds |
+| DS-R1-70B | margin | joint | dpo_margin_joint_ds |
+| DS-R1-70B | standard | weighted | dpo_std_weighted_ds |
+| DS-R1-70B | margin | weighted | dpo_margin_weighted_ds |
+| Qwen-72B | standard | joint | dpo_std_joint_qwen72 |
+| Qwen-72B | margin | joint | dpo_margin_joint_qwen72 |
+| Qwen-72B | standard | weighted | dpo_std_weighted_qwen72 |
+| Qwen-72B | margin | weighted | dpo_margin_weighted_qwen72 |
+| Qwen-32B | standard | joint | dpo_std_joint_qwen32 |
+| Qwen-32B | margin | joint | dpo_margin_joint_qwen32 |
+| Qwen-32B | standard | weighted | dpo_std_weighted_qwen32 |
+| Qwen-32B | margin | weighted | dpo_margin_weighted_qwen32 |
 
-```bash
-#!/bin/bash
-#SBATCH --job-name=defab-dpo
-#SBATCH --partition=aa100
-#SBATCH --nodes=1
-#SBATCH --gres=gpu:4
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=256G
-#SBATCH --time=24:00:00
-#SBATCH --output=logs/dpo_%j.out
-
-module load anaconda
-conda activate defab-train
-
-cd /projects/paco0228/blanc
-
-BASE_MODEL="${BASE_MODEL:-casperhansen/deepseek-r1-distill-llama-70b-awq}"
-DPO_VARIANT="${DPO_VARIANT:-standard}"
-GAMMA="${GAMMA:-0.0}"
-CURRICULUM="${CURRICULUM:-joint}"
-
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-
-accelerate launch --num_processes=4 --mixed_precision=bf16 \
-    --use_deepspeed --deepspeed_config_file experiments/finetuning/ds_config_zero2.json \
-    experiments/finetuning/train_dpo.py \
-    --base-model "$BASE_MODEL" \
-    --data-dir experiments/finetuning/data/ \
-    --output-dir experiments/finetuning/checkpoints/dpo_${DPO_VARIANT}_$(basename $BASE_MODEL)/ \
-    --dpo-variant "$DPO_VARIANT" \
-    --gamma "$GAMMA" \
-    --curriculum "$CURRICULUM" \
-    --beta 0.1 \
-    --learning-rate 5e-6 \
-    --epochs 3 \
-    --per-device-batch-size 1 \
-    --gradient-accumulation-steps 4 \
-    --lora-rank 64 \
-    --lora-alpha 128 \
-    --max-length 2048 \
-    --eval-steps 50 \
-    --save-steps 100 \
-    --logging-steps 10
-```
-
-**Training matrix** (12 DPO jobs total):
-
-| Model | Variant | Gamma | Curriculum | Job name |
-|-------|---------|-------|------------|----------|
-| DS-R1-70B | standard | 0.0 | joint | dpo_std_ds |
-| DS-R1-70B | margin | 2.0 | joint | dpo_margin_ds |
-| DS-R1-70B | margin | 2.0 | sequential | dpo_margin_seq_ds |
-| DS-R1-70B | margin | 2.0 | weighted | dpo_margin_wt_ds |
-| Qwen-72B | standard | 0.0 | joint | dpo_std_qwen72 |
-| Qwen-72B | margin | 2.0 | joint | dpo_margin_qwen72 |
-| Qwen-72B | margin | 2.0 | sequential | dpo_margin_seq_qwen72 |
-| Qwen-72B | margin | 2.0 | weighted | dpo_margin_wt_qwen72 |
-| Qwen-32B | standard | 0.0 | joint | dpo_std_qwen32 |
-| Qwen-32B | margin | 2.0 | joint | dpo_margin_qwen32 |
-| Qwen-32B | margin | 2.0 | sequential | dpo_margin_seq_qwen32 |
-| Qwen-32B | margin | 2.0 | weighted | dpo_margin_wt_qwen32 |
-
-Submit all:
+**Sequential curriculum** (3 additional jobs, L1/L2 then L3 in order):
 ```bash
 for MODEL in "casperhansen/deepseek-r1-distill-llama-70b-awq" "Qwen/Qwen2.5-72B-Instruct-AWQ" "Qwen/Qwen2.5-32B-Instruct-AWQ"; do
-    # Standard DPO
-    sbatch --export=ALL,BASE_MODEL="$MODEL",DPO_VARIANT=standard,GAMMA=0.0,CURRICULUM=joint \
-           hpc/slurm_train_dpo.sh
-    # Margin DPO (joint)
-    sbatch --export=ALL,BASE_MODEL="$MODEL",DPO_VARIANT=margin,GAMMA=2.0,CURRICULUM=joint \
-           hpc/slurm_train_dpo.sh
-    # Margin DPO (sequential)
     sbatch --export=ALL,BASE_MODEL="$MODEL",DPO_VARIANT=margin,GAMMA=2.0,CURRICULUM=sequential \
-           hpc/slurm_train_dpo.sh
-    # Margin DPO (weighted)
-    sbatch --export=ALL,BASE_MODEL="$MODEL",DPO_VARIANT=margin,GAMMA=2.0,CURRICULUM=weighted \
            hpc/slurm_train_dpo.sh
 done
 ```
 
-**Gamma sweep** (separate job, best model only):
+**Level-transfer ablation** (B4, tests Conjecture 3 -- Qwen-72B only):
+The `l12_only` curriculum is currently **not implemented** in `train_dpo.py`. Add it as a fourth curriculum option that filters out all Level 3 preference pairs before training:
+
+```python
+# In _load_preference_data(), add to curriculum handling:
+elif curriculum == "l12_only":
+    records = [r for r in records if r.get("level", 2) != 3]
+    print(f"  L1/L2-only curriculum: {len(records)} pairs (L3 excluded)")
+```
+
+Then submit:
+```bash
+sbatch --export=ALL,BASE_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",DPO_VARIANT=margin,GAMMA=2.0,CURRICULUM=l12_only \
+       hpc/slurm_train_dpo.sh
+```
+
+**Gamma sweep** (3 additional jobs on Qwen-72B only, to select optimal gamma):
 ```bash
 for G in 0.5 1.0 4.0; do
     sbatch --export=ALL,BASE_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",DPO_VARIANT=margin,GAMMA=$G,CURRICULUM=joint \
@@ -366,11 +246,14 @@ for G in 0.5 1.0 4.0; do
 done
 ```
 
+Submit all 12 standard DPO jobs at once:
+```bash
+bash hpc/slurm_train_all.sh --dpo-only
+```
+
 ### B3. RLHF Training (VITL variant)
 
 **Script**: `experiments/finetuning/train_rlhf_vitl.py`
-
-Uses TRL `GRPOTrainer` (or custom PPO loop) with the DeFAb verifier as the exact reward function. The verifier is called at each PPO step to score generated responses.
 
 **Configuration** (from paper Section 6.6):
 
@@ -387,172 +270,68 @@ Uses TRL `GRPOTrainer` (or custom PPO loop) with the DeFAb verifier as the exact
 | Max new tokens | 512 |
 | DeepSpeed | ZeRO Stage 2 |
 
-**Architecture**: The VITL variant replaces the learned reward model with the DeFAb verifier called directly:
-
-1. Model generates response to DeFAb prompt
-2. Response is decoded by cascading decoder (D1->D2->D3)
-3. Decoded hypothesis is scored by `Level3Evaluator.compute_score()` (or binary check for L1/2)
-4. Score is returned as exact reward to PPO optimizer
-
-This requires the blanc library (`src/blanc/`) to be importable during training, which is handled by `pip install -e .` in the training environment.
-
-**SLURM job** (`hpc/slurm_train_rlhf.sh`):
+**Note**: The current `slurm_train_rlhf.sh` has `KL_COEFF=0.1` and `MINI_BATCH_SIZE=4` as defaults, which conflict with the paper's values (beta=0.05, mini-batch=8). These defaults must be corrected before submission:
 
 ```bash
-#!/bin/bash
-#SBATCH --job-name=defab-rlhf
-#SBATCH --partition=aa100
-#SBATCH --nodes=1
-#SBATCH --gres=gpu:4
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=256G
-#SBATCH --time=24:00:00
-#SBATCH --output=logs/rlhf_%j.out
-
-module load anaconda
-conda activate defab-train
-
-cd /projects/paco0228/blanc
-
-BASE_MODEL="${BASE_MODEL:-casperhansen/deepseek-r1-distill-llama-70b-awq}"
-
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-
-accelerate launch --num_processes=4 --mixed_precision=bf16 \
-    --use_deepspeed --deepspeed_config_file experiments/finetuning/ds_config_zero2.json \
-    experiments/finetuning/train_rlhf_vitl.py \
-    --base-model "$BASE_MODEL" \
-    --instances-dir instances/ \
-    --output-dir experiments/finetuning/checkpoints/vitl_$(basename $BASE_MODEL)/ \
-    --kl-coeff 0.05 \
-    --clip-ratio 0.2 \
-    --ppo-steps 256 \
-    --learning-rate 1e-6 \
-    --per-device-batch-size 2 \
-    --gradient-accumulation-steps 2 \
-    --lora-rank 64 \
-    --lora-alpha 128 \
-    --max-new-tokens 512 \
-    --generation-temperature 0.7 \
-    --eval-steps 50 \
-    --save-steps 100
+# Correct submission with paper-specified hyperparameters:
+sbatch --export=ALL,BASE_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",RLHF_MODE=vitl,KL_COEFF=0.05,MINI_BATCH_SIZE=8 \
+       hpc/slurm_train_rlhf.sh
 ```
 
-Submit for each model:
-```bash
-for MODEL in "casperhansen/deepseek-r1-distill-llama-70b-awq" "Qwen/Qwen2.5-72B-Instruct-AWQ" "Qwen/Qwen2.5-32B-Instruct-AWQ"; do
-    sbatch --export=ALL,BASE_MODEL="$MODEL" hpc/slurm_train_rlhf.sh
-done
-```
+RLHF training matrix (4 jobs, submitted via `bash hpc/slurm_train_all.sh --rlhf-only`):
+- VITL for DS-R1-70B, Qwen-72B, Qwen-32B (3 jobs)
+- Standard reward-model RLHF for Qwen-72B only (1 job, as control)
 
 ### B4. Level Transfer Ablation
 
-Tests paper Conjecture 8 (Level Transfer): train on L1/L2 data only, evaluate on L3.
-
-```bash
-for MODEL in "casperhansen/deepseek-r1-distill-llama-70b-awq" "Qwen/Qwen2.5-72B-Instruct-AWQ" "Qwen/Qwen2.5-32B-Instruct-AWQ"; do
-    sbatch --export=ALL,BASE_MODEL="$MODEL",DPO_VARIANT=margin,GAMMA=2.0,CURRICULUM=l12_only \
-           hpc/slurm_train_dpo.sh
-done
-```
-
-The `l12_only` curriculum filters out all Level 3 preference pairs from the training set.
+Requires `l12_only` curriculum to be added to `train_dpo.py` first (see B2 above). Tests Conjecture 3 (Level Transfer): grounding-only training partially improves Level 3.
 
 ### B5. Evaluate Fine-Tuned Models
 
-After training completes, evaluate each checkpoint on the held-out test set using the same protocol as base models.
+After training completes, evaluate each checkpoint on the held-out test set.
 
 **Script**: `experiments/finetuning/evaluate_finetuned.py`
 
-Process:
-1. Load base model + LoRA adapter from checkpoint
-2. Merge LoRA weights (or serve via vLLM with LoRA adapter support)
-3. Run the standard evaluation pipeline against the test split
-4. Report fine-tuning lift per level, graded scores, error taxonomy shift
+**SLURM job**: `hpc/slurm_eval_finetuned.sh`
 
-**SLURM job** (`hpc/slurm_eval_finetuned.sh`):
+**Missing**: `hpc/submit_eval_finetuned_all.sh` -- referenced in `slurm_train_all.sh` line 116 but does not exist. Must be written. It should loop over all checkpoint directories and submit an eval job for each:
 
 ```bash
 #!/bin/bash
-#SBATCH --job-name=defab-eval-ft
-#SBATCH --partition=aa100
-#SBATCH --nodes=1
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
-#SBATCH --time=12:00:00
-#SBATCH --output=logs/eval_ft_%j.out
-
-module load anaconda
-conda activate defab-train
-
-cd /projects/paco0228/blanc
-
-CHECKPOINT="${CHECKPOINT:-experiments/finetuning/checkpoints/dpo_margin_qwen72/}"
-BASE_MODEL="${BASE_MODEL:-Qwen/Qwen2.5-72B-Instruct-AWQ}"
-
-python experiments/finetuning/evaluate_finetuned.py \
-    --base-model "$BASE_MODEL" \
-    --checkpoint "$CHECKPOINT" \
-    --instances-dir instances/ \
-    --splits-file instances/splits.json \
-    --split test \
-    --modalities M4 M2 M1 M3 \
-    --strategies direct cot \
-    --output-dir experiments/results/finetuned/$(basename $CHECKPOINT)/
-```
-
-Submit all trained checkpoints:
-```bash
-for CKPT in experiments/finetuning/checkpoints/*/; do
-    MODEL_NAME=$(cat "$CKPT/base_model.txt")
-    sbatch --export=ALL,CHECKPOINT="$CKPT",BASE_MODEL="$MODEL_NAME" hpc/slurm_eval_finetuned.sh
+# hpc/submit_eval_finetuned_all.sh
+for CKPT in experiments/finetuning/checkpoints/*/final; do
+    BASE_MODEL=$(cat "$(dirname $CKPT)/base_model.txt" 2>/dev/null || echo "unknown")
+    echo "Submitting eval for $CKPT (base: $BASE_MODEL)"
+    sbatch --export=ALL,CHECKPOINT="$CKPT",BASE_MODEL="$BASE_MODEL" \
+           hpc/slurm_eval_finetuned.sh
 done
 ```
 
-### B6. Fine-Tuning Analysis
+Each `train_dpo.py` and `train_rlhf_vitl.py` run should write `base_model.txt` to the checkpoint directory. Verify this is implemented in both training scripts.
 
-**Scripts** (run after B5 completes):
+### B6. Fine-Tuning Analysis Scripts -- NOT YET WRITTEN
 
-```bash
-# Generate Tables 3--5 from paper Section 6.7
-python experiments/finetuning/generate_ft_tables.py \
-    --results-dir experiments/results/finetuned/ \
-    --base-results-dir experiments/results/ \
-    --output-dir paper/tables/
+All scripts listed below are referenced in the implementation plan but **do not exist** in `experiments/finetuning/`. They must be written before paper results can be populated.
 
-# Test Conjecture 6 (L3 Improvement)
-python experiments/finetuning/analyze_ft_lift.py \
-    --results-dir experiments/results/finetuned/ \
-    --base-results-dir experiments/results/
+| Script | Purpose | Paper table/section |
+|--------|---------|---------------------|
+| `experiments/finetuning/generate_ft_tables.py` | LaTeX Tables 4--6 (ft_main, curriculum, error_shift) | Section 6.7 |
+| `experiments/finetuning/analyze_ft_lift.py` | Test Conjecture 1: L3 lift > 0, VITL > DPO | Section 6.8 |
+| `experiments/finetuning/analyze_error_shift.py` | Test Conjecture 2: E1/E2 -> E4/E5 shift | Section 6.8, Table 6 |
+| `experiments/finetuning/analyze_level_transfer.py` | Test Conjecture 3: L1/L2 training -> L3 lift | Section 6.8 |
+| `experiments/finetuning/analyze_margin_effect.py` | Test Conjecture 4: margin DPO > standard DPO | Section 6.8 |
+| `experiments/finetuning/analyze_curriculum.py` | Compare joint vs sequential vs weighted | Section 6.7, Table 5 |
+| `experiments/finetuning/analyze_novel_resolutions.py` | Fraction of novel correct resolutions (generalization) | Section 6.8 additional |
+| `experiments/finetuning/analyze_scaling_projections.py` | Log-linear scaling at 10/25/50/100% data | Section 6.8 additional |
+| `experiments/finetuning/analyze_reward_fidelity.py` | Spearman correlation R_phi vs verifier score | Section 6.8 additional |
+| `experiments/finetuning/analyze_reward_overoptimization.py` | Gap between mean R_phi and verifier score at final PPO checkpoint | Section 6.8 additional |
 
-# Test Conjecture 7 (Error Taxonomy Shift)
-python experiments/finetuning/analyze_error_shift.py \
-    --results-dir experiments/results/finetuned/ \
-    --base-results-dir experiments/results/
-
-# Test Conjecture 8 (Level Transfer)
-python experiments/finetuning/analyze_level_transfer.py \
-    --results-dir experiments/results/finetuned/ \
-    --base-results-dir experiments/results/
-
-# Test Conjecture 9 (Margin DPO Advantage)
-python experiments/finetuning/analyze_margin_effect.py \
-    --results-dir experiments/results/finetuned/
-
-# Curriculum comparison
-python experiments/finetuning/analyze_curriculum.py \
-    --results-dir experiments/results/finetuned/
-
-# Novel correct resolutions (generalization beyond memorization)
-python experiments/finetuning/analyze_novel_resolutions.py \
-    --results-dir experiments/results/finetuned/ \
-    --instances-dir instances/
-
-# Scaling projections
-python experiments/finetuning/analyze_scaling_projections.py \
-    --results-dir experiments/results/finetuned/
-```
+Each script should:
+1. Accept `--results-dir` and `--base-results-dir` arguments
+2. Load result JSONs from the evaluation pipeline
+3. Compute the relevant metric(s)
+4. Print a formatted summary and optionally write a `.tex` snippet
+5. Handle missing data gracefully (not all checkpoints may have completed)
 
 ---
 
@@ -562,75 +341,102 @@ python experiments/finetuning/analyze_scaling_projections.py \
 
 | Table | Source | Script |
 |-------|--------|--------|
-| Table 1 (main accuracy) | Phase A results | `generate_paper_tables.py` |
-| Table 2 (modality breakdown) | Phase A results | `generate_paper_tables.py` |
-| Table 3 (fine-tuning results) | Phase B results | `generate_ft_tables.py` |
-| Table 4 (curriculum comparison) | Phase B results | `generate_ft_tables.py` |
-| Table 5 (error taxonomy shift) | Phase B results | `generate_ft_tables.py` |
+| Table 1 (main accuracy, 6+ models) | Phase A results | `generate_paper_tables.py` |
+| Table 2 (modality x strategy breakdown) | Phase A results | `generate_paper_tables.py` |
+| Table 4 (fine-tuning results) | Phase B results | `generate_ft_tables.py` |
+| Table 5 (curriculum comparison) | Phase B results | `generate_ft_tables.py` |
+| Table 6 (error taxonomy shift) | Phase B results | `generate_ft_tables.py` |
 
 ### C2. Update Paper Sections with Results
 
 | Section | Source | Notes |
 |---------|--------|-------|
-| Section 5.1 Tables 1--2 (expand to 6+ models) | Phase A | Include all Foundry + CURC models |
-| Section 5.2 Grounding results | Phase A | Domain breakdown for all models |
-| Section 5.3 Belief revision results | Phase A | Error taxonomy for all models |
-| Section 5.4 CoT analysis | Phase A | CoT lift for all models |
-| Section 6.7 Fine-tuning results | Phase B | Fill Tables 3--5 |
-| Section 6.8 Hypotheses | Phase B | Confirm/reject Conjectures 6--9 |
-| Section 7 Discussion (expand) | Phase A+B | Fine-tuning diagnostic paragraph |
-| Section 8 Conclusion (update) | Phase A+B | Summarize fine-tuning findings |
-| Abstract (update numbers) | Phase A+B | Final accuracy figures |
+| Section 5.1 Tables 1--2 (expand to 6 models) | Phase A | Include Kimi-K2.5, DeepSeek-R1, Qwen-72B, Qwen-32B |
+| Section 5.2 Grounding results | Phase A | Domain breakdown for all 6 models |
+| Section 5.3 Belief revision results | Phase A | Error taxonomy for all 6 models |
+| Section 5.4 CoT analysis | Phase A | CoT lift for all 6 models |
+| Section 5.5 Theory size scaling | Phase A | Run `difficulty_analysis.py` with size subsets |
+| Section 6.7 Fine-tuning results | Phase B | Fill Tables 4--6 |
+| Section 6.8 Hypotheses | Phase B | Confirm/reject Conjectures 1--4 |
+| Section 7 Discussion | Phase A+B | Update with all model findings |
+| Section 8 Conclusion | Phase A+B | Summarize fine-tuning findings |
+| Abstract | Phase A+B | Update accuracy figures to full 6-model results |
 
-### C3. Remaining Code Changes
+### C3. Remaining Code and Paper Fixes
 
-| Task | File | Effort |
-|------|------|--------|
-| Add 95% Wilson CIs to all accuracy output | `experiments/analyze_results.py` | ~20 lines |
-| Write dataset statistics LaTeX generator | `experiments/generate_dataset_table.py` | ~50 lines |
-| Fix `\cite{openai2023gpt4}` -> GPT-5.2 bib entry | `paper/references.bib` | 5 min |
-| Add `\section{Decoder Validation Results}\label{app:decoder}` appendix | `paper/paper.tex` | 15 min |
-| Replace `David S. Hippocampus` author block | `paper/paper.tex` lines 125--154 | 2 min |
+| Task | File | Priority |
+|------|------|----------|
+| Add `l12_only` curriculum to `train_dpo.py` | `experiments/finetuning/train_dpo.py` | **High** (blocks B4) |
+| Write `hpc/submit_eval_finetuned_all.sh` | `hpc/submit_eval_finetuned_all.sh` | **High** (blocks B5) |
+| Fix `slurm_train_rlhf.sh` default KL_COEFF (0.1 -> 0.05) and MINI_BATCH_SIZE (4 -> 8) | `hpc/slurm_train_rlhf.sh` | **High** (paper accuracy) |
+| Write all 10 B6 analysis scripts | `experiments/finetuning/` | **High** (blocks C1) |
+| Add 95% Wilson CIs to all accuracy output | `experiments/analyze_results.py` | Medium |
+| Write dataset statistics LaTeX generator | `experiments/generate_dataset_table.py` | Medium |
+| Fix GPT-5.2 bib entry (`\cite{openai2023gpt4}` is incorrect) | `paper/references.bib` | Medium |
+| Add `\appendix\section{Decoder Validation Results}\label{app:decoder}` | `paper/paper.tex` | Medium (referenced at line 527) |
+| Replace `David S. Hippocampus` author block | `paper/paper.tex` lines 125--154 | **High** |
+| M1 narrative decoder manual audit (200 randomly sampled failures) | Manual + `validate_decoder_pipeline.py` | Medium |
+| Add stage-weighted scoring robustness check to appendix | `paper/paper.tex` | Low |
+| Verify `base_model.txt` written by training scripts | `experiments/finetuning/train_dpo.py`, `train_rlhf_vitl.py` | Medium |
 
 ---
 
 ## Experimental Design: Claim Verification Matrix
 
-Every claim in the paper maps to a specific experiment. This matrix ensures rigorous verification.
+Every claim in the paper maps to a specific experiment. Unverified claims are marked.
+
+### Section 4.1 Claims (Model Lineup)
+
+| Claim | Status | Verified by |
+|-------|--------|-------------|
+| Six models evaluated across three tiers | **UNVERIFIED** -- only 2 complete | Phase A full eval |
+| GPT-5.2 and Kimi on Foundry (eastus2, 250K TPM) | Partially verified (GPT/Claude live; Kimi deferred) | `validate_api_keys.py` |
+| Open-source models fit in single A100 80GB under AWQ 4-bit | **UNVERIFIED** -- not yet run on CURC | Phase A CURC eval |
+| DeepSeek-R1 `<think>` tokens stripped by harness | Done (code exists) | `model_interface.py` |
 
 ### Section 5 Claims (Base Evaluation -- Phase A)
 
-| Claim | Experiment | Metric | Verified by |
-|-------|-----------|--------|-------------|
-| L2 accuracy >= 88% (closed-source) | Full Foundry eval, 4 models | Rendering-robust accuracy | `analyze_results.py` |
-| L3 accuracy <= 2% (closed-source) | Full Foundry eval, 4 models | Rendering-robust accuracy | `analyze_results.py` |
-| ~90pp gap between L2 and L3 | All 6+ models evaluated | Per-level accuracy | `analyze_results.py` |
-| CoT hurts L2 (overthinking) | All models, direct vs CoT | Delta_CoT per level | `analyze_results.py` |
-| CoT neutral at L3 | All models, direct vs CoT | Delta_CoT at L3 | `analyze_results.py` |
-| Claude outperforms GPT-5.2 | Foundry eval | Per-metric comparison | `analyze_results.py` |
-| Error taxonomy: GPT=E1, Claude=E2 | Full eval L3 | E1-E5 distribution | `error_taxonomy.py` |
-| Rendering-robust < per-modality avg | All models | Min-modality vs mean | `analyze_results.py` |
-| Domain-agnostic L2 difficulty | Per-domain breakdown | Accuracy by domain | `analyze_results.py` |
-| Symbolic solver ceiling | clingo on same instances | ASP accuracy | `symbolic_baseline.py` |
-| Difficulty ordering L1 < L2 < L3 | All models, all levels | Accuracy monotonicity | `difficulty_analysis.py` |
-| Yield monotonicity (Prop 8) | Partition sensitivity | Yield vs delta | `partition_sensitivity.py` |
-| Qwen 72B vs 32B scaling gradient | CURC Qwen pair | Delta_Acc / Delta_log(params) | `scaling_analysis.py` |
-| Reasoning vs instruction tier | DS-R1 vs Qwen-72B at ~70B | Per-level accuracy | `analyze_results.py` |
+| Claim | Status | Verified by |
+|-------|--------|-------------|
+| L2 accuracy >= 88% (closed-source) | Pilot only (60 L2 instances, 2 models) | Full Foundry eval |
+| L3 accuracy <= 2% (closed-source) | Pilot only | Full Foundry eval |
+| ~90pp gap between L2 and L3 | Pilot only | All 6 models evaluated |
+| CoT hurts L2 by 15--20pp (overthinking) | Pilot only (GPT: -20pp, Claude: -15pp) | All 6 models |
+| CoT neutral at L3 (GPT: -2.9pp, Claude: +1.4pp) | Pilot only | All 6 models |
+| Claude outperforms GPT-5.2 on all metrics | Pilot only | Full Foundry eval |
+| Error taxonomy: GPT=E1 dominant (55%), Claude=E2 dominant (64%) | Pilot only | Full eval L3 |
+| Domain-agnostic L2 difficulty (>85% all domains) | Pilot only (2 models, 3 domains) | Full 6-model eval |
+| Symbolic solver ceiling (L2=100%, L3=100%) | **VERIFIED** | `symbolic_baseline.py` |
+| Difficulty ordering L1 < L2 < L3 | **UNVERIFIED** | `difficulty_analysis.py` |
+| Rendering-robust < per-modality average | Pilot only | `analyze_results.py` |
+| Conjecture modlevel (M1 best for L1, M4 best for L3) | **UNVERIFIED** | Phase A full 4-modality eval |
+| Qwen 72B vs 32B scaling gradient per level | **UNVERIFIED** | Phase A CURC eval |
+| Reasoning vs instruction tier at ~70B matched scale | **UNVERIFIED** | Phase A CURC eval |
+| Theory size scaling (performance vs \|D\|) | **UNVERIFIED** | `difficulty_analysis.py` with size subsets |
+
+### Section 5.4 Decoder Validation Claims
+
+| Claim | Status | Verified by |
+|-------|--------|-------------|
+| M2--M4 achieve 100% round-trip recovery | **VERIFIED** | `validate_decoder_pipeline.py` |
+| M1 narrative decoder: recovery rate reported | **UNVERIFIED** -- rate not computed | `validate_decoder_pipeline.py` M1 mode |
+| Manual audit of 200 M1 decode failures | **UNVERIFIED** | Manual audit required |
+| Full results in Appendix C (app:decoder) | **UNVERIFIED** -- appendix section missing from paper | Must be added to `paper.tex` |
 
 ### Section 6 Claims (Fine-Tuning -- Phase B)
 
-| Claim / Conjecture | Experiment | Metric | Verified by |
-|---------------------|-----------|--------|-------------|
-| Conj 6: L3 lift > 0 under DPO and VITL | DPO + VITL for all 3 models | Delta_FT per level | `analyze_ft_lift.py` |
-| Conj 6: VITL > DPO | Compare VITL vs DPO per model | L3 accuracy and graded score | `analyze_ft_lift.py` |
-| Conj 7: Error shift E1/E2 -> E4/E5 | Error taxonomy before/after FT | E1-E5 distribution shift | `analyze_error_shift.py` |
-| Conj 8: L1/L2 training -> L3 transfer | DPO on L1/L2 only, eval L3 | L3 Delta_FT | `analyze_level_transfer.py` |
-| Conj 9: Margin DPO > standard DPO | Gamma=2.0 vs gamma=0 | L3 graded score | `analyze_margin_effect.py` |
-| Conj 9: Advantage at 0.5->0.75 transition | Score distribution analysis | Per-tier improvement | `analyze_margin_effect.py` |
-| Sequential curriculum > joint | Compare 3 curriculum schedules | L3 accuracy | `analyze_curriculum.py` |
-| Novel correct resolutions exist | Check FT outputs against training gold | Fraction novel-correct | `analyze_novel_resolutions.py` |
-| Scaling projections (log-linear) | Subsample training at 10/25/50/100% | Fitted slope b per level | `analyze_scaling_projections.py` |
-| Training data deficit vs architectural | L3 lift magnitude | Delta_FT >> 0 vs ~0 | `analyze_ft_lift.py` |
+| Claim / Conjecture | Status | Verified by |
+|---------------------|--------|-------------|
+| Conj 1: L3 lift > 0 under DPO and VITL | **UNVERIFIED** | `analyze_ft_lift.py` |
+| Conj 1: VITL > standard DPO | **UNVERIFIED** | `analyze_ft_lift.py` |
+| Conj 2: Error shift E1/E2 -> E4/E5 | **UNVERIFIED** | `analyze_error_shift.py` |
+| Conj 3: L1/L2 training -> L3 lift > 0 | **UNVERIFIED** | `analyze_level_transfer.py` |
+| Conj 4: Margin DPO > standard DPO (advantage at 0.5->0.75 transition) | **UNVERIFIED** | `analyze_margin_effect.py` |
+| Sequential curriculum > joint/weighted at L3 | **UNVERIFIED** | `analyze_curriculum.py` |
+| Novel correct resolutions exist (generalization) | **UNVERIFIED** | `analyze_novel_resolutions.py` |
+| Reward model fidelity: Spearman rho(R_phi, verifier) | **UNVERIFIED** | `analyze_reward_fidelity.py` |
+| Reward overoptimization: gap between R_phi and verifier at final PPO ckpt | **UNVERIFIED** | `analyze_reward_overoptimization.py` |
+| Scaling projections (log-linear at 10/25/50/100% data) | **UNVERIFIED** | `analyze_scaling_projections.py` |
 
 ---
 
@@ -638,28 +444,31 @@ Every claim in the paper maps to a specific experiment. This matrix ensures rigo
 
 ```
 experiments/finetuning/
-    prepare_preference_data.py     # B1: Response sampling + preference extraction
-    train_dpo.py                   # B2: DPO/Margin-DPO training with TRL
-    train_rlhf_vitl.py             # B3: VITL-RLHF training with exact verifier
-    evaluate_finetuned.py          # B5: Evaluate fine-tuned checkpoints
-    generate_ft_tables.py          # B6: LaTeX Tables 3--5
-    analyze_ft_lift.py             # B6: Conjecture 6
-    analyze_error_shift.py         # B6: Conjecture 7
-    analyze_level_transfer.py      # B6: Conjecture 8
-    analyze_margin_effect.py       # B6: Conjecture 9
-    analyze_curriculum.py          # B6: Curriculum comparison
-    analyze_novel_resolutions.py   # B6: Generalization analysis
-    analyze_scaling_projections.py # B6: Log-linear scaling curves
-    ds_config_zero2.json           # DeepSpeed ZeRO-2 config
-    data/                          # Generated preference datasets (gitignored)
-    checkpoints/                   # LoRA checkpoints (gitignored)
+    prepare_preference_data.py          # B1: Response sampling + preference extraction [EXISTS]
+    train_dpo.py                        # B2: DPO/Margin-DPO training with TRL [EXISTS]
+    train_rlhf_vitl.py                  # B3: VITL-RLHF training with exact verifier [EXISTS]
+    evaluate_finetuned.py               # B5: Evaluate fine-tuned checkpoints [EXISTS]
+    generate_ft_tables.py               # B6: LaTeX Tables 4--6 [MISSING]
+    analyze_ft_lift.py                  # B6: Conjecture 1 [MISSING]
+    analyze_error_shift.py              # B6: Conjecture 2 [MISSING]
+    analyze_level_transfer.py           # B6: Conjecture 3 [MISSING]
+    analyze_margin_effect.py            # B6: Conjecture 4 [MISSING]
+    analyze_curriculum.py               # B6: Curriculum comparison [MISSING]
+    analyze_novel_resolutions.py        # B6: Generalization analysis [MISSING]
+    analyze_scaling_projections.py      # B6: Log-linear scaling curves [MISSING]
+    analyze_reward_fidelity.py          # B6: Spearman rho(R_phi, verifier) [MISSING]
+    analyze_reward_overoptimization.py  # B6: Reward hacking diagnostic [MISSING]
+    ds_config_zero2.json                # DeepSpeed ZeRO-2 config [EXISTS]
+    data/                               # Generated preference datasets (gitignored)
+    checkpoints/                        # LoRA checkpoints (gitignored)
 
 hpc/
-    slurm_sample_responses.sh      # B1: Response sampling on GPU
-    slurm_train_dpo.sh             # B2: DPO training (4xA100)
-    slurm_train_rlhf.sh            # B3: VITL-RLHF training (4xA100)
-    slurm_eval_finetuned.sh        # B5: Evaluate checkpoints (1xA100)
-    slurm_train_all.sh             # Submit all training jobs
+    slurm_sample_responses.sh           # B1: Response sampling on GPU [EXISTS]
+    slurm_train_dpo.sh                  # B2: DPO training (4xA100) [EXISTS]
+    slurm_train_rlhf.sh                 # B3: VITL-RLHF training (4xA100) [EXISTS -- hyperparams need fix]
+    slurm_eval_finetuned.sh             # B5: Evaluate checkpoints (1xA100) [EXISTS]
+    slurm_train_all.sh                  # Submit all training jobs [EXISTS]
+    submit_eval_finetuned_all.sh        # Submit all checkpoint eval jobs [MISSING]
 ```
 
 ---
@@ -670,7 +479,7 @@ hpc/
 
 | Job | Partition | GPUs | Time | Jobs |
 |-----|-----------|------|------|------|
-| Foundry eval (4 models, API only) | amilan | 0 | 12h | 1 |
+| Foundry eval (4 models, API only, amilan) | amilan | 0 | 12h | 1 |
 | CURC eval (DS-R1-70B) | aa100 | 1x A100 | 24h | 1 |
 | CURC eval (Qwen-72B) | aa100 | 1x A100 | 24h | 1 |
 | CURC eval (Qwen-32B) | aa100 | 1x A100 | 24h | 1 |
@@ -680,19 +489,21 @@ hpc/
 
 | Job | Partition | GPUs | Time | Jobs |
 |-----|-----------|------|------|------|
-| Response sampling (3 models) | aa100 | 1x A100 | 12h each | 3 |
-| DPO training (12 configs) | aa100 | 4x A100 | 24h each | 12 |
-| VITL-RLHF training (3 models) | aa100 | 4x A100 | 24h each | 3 |
-| Level transfer ablation (3 models) | aa100 | 4x A100 | 24h each | 3 |
-| Gamma sweep (3 extra values) | aa100 | 4x A100 | 24h each | 3 |
-| Evaluation of checkpoints (~24 ckpts) | aa100 | 1x A100 | 12h each | 24 |
-| **Subtotal** | | ~120 GPU-days | | 48 |
+| Response sampling (3 models) | aa100 | 1x A100 | 8h each | 3 |
+| DPO training (12 std configs) | aa100 | 4x A100 | 24h each | 12 |
+| DPO sequential curriculum (3 models) | aa100 | 4x A100 | 24h each | 3 |
+| DPO l12_only ablation (Qwen-72B) | aa100 | 4x A100 | 24h | 1 |
+| DPO gamma sweep (3 extra values, Qwen-72B) | aa100 | 4x A100 | 24h each | 3 |
+| VITL-RLHF training (3 models) | aa100 | 4x A100 | 36h each | 3 |
+| Standard RM RLHF training (Qwen-72B) | aa100 | 4x A100 | 36h | 1 |
+| Evaluation of all checkpoints (~24 ckpts) | aa100 | 1x A100 | 4h each | 24 |
+| **Subtotal** | | ~155 GPU-days | | 50 |
 
-### Total CURC Budget: ~123 GPU-days
+### Total CURC Budget: ~158 GPU-days
 
-At CURC Alpine rates (free for CU Boulder researchers), this is $0. The bottleneck is queue wait time on `aa100` partition, not cost. Jobs can be submitted in parallel to the extent queue capacity allows. The 4xA100 training jobs are the long pole; prioritize these.
+At CURC Alpine rates (free for CU Boulder researchers), this is $0. The bottleneck is queue wait time on `aa100` partition, not cost. The 4xA100 training jobs (24--36h each) are the long pole.
 
-**Parallelism strategy**: Submit the 3 response sampling jobs first (1 GPU each, can run concurrently). Once complete, submit all DPO training jobs (12 jobs x 4 GPUs = 48 GPUs requested; queue will serialize as needed). VITL-RLHF jobs can wait until DPO results indicate which model benefits most. Evaluation jobs (1 GPU each) are lightweight and can run in gaps.
+**Parallelism strategy**: Submit the 3 response sampling jobs first (1 GPU each, run concurrently). Once all three complete and `instances/splits.json` exists, submit all DPO and RLHF training jobs. Evaluation jobs (4h, 1 GPU) are lightweight and can run in gaps. Gamma sweep (Qwen-72B only) can run in parallel with other model training.
 
 ---
 
@@ -713,12 +524,14 @@ At CURC Alpine rates (free for CU Boulder researchers), this is $0. The bottlene
 
 | Week | Phase | Deliverable |
 |------|-------|-------------|
-| 9--10 | A | Base evaluation: all 6+ models, all modalities, all levels |
-| 10 | B0--B1 | Fine-tuning env setup, preference data construction |
-| 11 | B2--B3 | DPO and VITL-RLHF training (12+ jobs on CURC) |
-| 12 | B4--B6 | Level transfer ablation, fine-tuned model evaluation, analysis |
+| 9--10 | A | Base evaluation: all 6 models, all modalities, all levels |
+| 10 | B0--B1 | Fine-tuning env setup + confirmation, preference data construction |
+| 10--11 | Code | Write 10 B6 analysis scripts; add `l12_only` curriculum; write `submit_eval_finetuned_all.sh` |
+| 11 | B2--B3 | DPO and VITL-RLHF training (15+ jobs on CURC) |
+| 12 | B4--B5 | Level transfer ablation, fine-tuned model evaluation |
+| 12 | B6 | Run all analysis scripts; populate Tables 4--6 |
 | 13 | C1--C2 | Populate all paper tables and sections from results |
-| 14 | C3 | Final paper polish, submission |
+| 14 | C3 | Author block, bib fix, decoder appendix, final polish, submission |
 
 ---
 
@@ -727,20 +540,20 @@ At CURC Alpine rates (free for CU Boulder researchers), this is $0. The bottlene
 ```bash
 # Phase A: Base evaluation
 python experiments/validate_api_keys.py
-sbatch --export=ALL,INSTANCE_LIMIT=120,LEVEL3_LIMIT=35,MODALITIES="M4 M2 M1 M3" \
-       hpc/slurm_evaluate_foundry.sh
-bash hpc/slurm_evaluate_curc_all.sh
+python experiments/run_foundry_local.py                   # Full Foundry eval (local)
+bash hpc/slurm_evaluate_curc_all.sh                       # CURC open-source eval
 
 # Phase B: Fine-tuning
-sbatch hpc/slurm_sample_responses.sh                    # Response sampling
-sbatch hpc/slurm_train_dpo.sh                           # DPO training
-sbatch hpc/slurm_train_rlhf.sh                          # VITL-RLHF training
-for CKPT in experiments/finetuning/checkpoints/*/; do   # Evaluate all checkpoints
-    sbatch --export=ALL,CHECKPOINT="$CKPT" hpc/slurm_eval_finetuned.sh
-done
+sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ" hpc/slurm_sample_responses.sh
+sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-32B-Instruct-AWQ" hpc/slurm_sample_responses.sh
+sbatch --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq" hpc/slurm_sample_responses.sh
+
+bash hpc/slurm_train_all.sh                               # Submit all DPO + RLHF jobs
+bash hpc/submit_eval_finetuned_all.sh                     # Evaluate all checkpoints (write this first)
 
 # Analysis
 python experiments/analyze_results.py --results-dir experiments/results/
+python experiments/generate_paper_tables.py --results-dir experiments/results/
 python experiments/finetuning/generate_ft_tables.py --results-dir experiments/results/finetuned/
 python experiments/finetuning/analyze_ft_lift.py --results-dir experiments/results/finetuned/
 ```

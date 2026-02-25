@@ -1,9 +1,9 @@
 # Project Status
 
-**Last Updated**: 2026-02-24 (session 2)
-**Current**: Full Phase B finetuning pipeline implemented; symbolic baseline running (100%); all Foundry-runnable tasks ready
-**Progress**: 12.5 of 14.5 weeks (86%)
-**Timeline**: ON TRACK
+**Last Updated**: 2026-02-25
+**Current**: Phase B training scripts complete. Phase A full evaluation NOT YET RUN. 10 B6 analysis scripts missing. Several paper claims unsubstantiated. `slurm_train_rlhf.sh` has wrong hyperparameter defaults. `l12_only` curriculum not implemented. `submit_eval_finetuned_all.sh` missing.
+**Progress**: 10 of 14 weeks (71% -- implementation done, experiments not yet run)
+**Timeline**: AT RISK -- Phase A must run before B can start; B6 scripts must be written before results can be populated
 
 ---
 
@@ -229,6 +229,36 @@ species/type appear in D^-, where only one has the novel property (in the gold
 (targets only the entity with the novel property).
 
 ---
+
+## Audit: Gaps Found (2026-02-25)
+
+### Missing Scripts (block paper completion)
+- `experiments/finetuning/generate_ft_tables.py` -- LaTeX Tables 4--6
+- `experiments/finetuning/analyze_ft_lift.py` -- Conjecture 1
+- `experiments/finetuning/analyze_error_shift.py` -- Conjecture 2
+- `experiments/finetuning/analyze_level_transfer.py` -- Conjecture 3
+- `experiments/finetuning/analyze_margin_effect.py` -- Conjecture 4
+- `experiments/finetuning/analyze_curriculum.py` -- curriculum comparison
+- `experiments/finetuning/analyze_novel_resolutions.py` -- generalization
+- `experiments/finetuning/analyze_scaling_projections.py` -- log-linear scaling
+- `experiments/finetuning/analyze_reward_fidelity.py` -- Spearman rho(R_phi, verifier)
+- `experiments/finetuning/analyze_reward_overoptimization.py` -- reward hacking diagnostic
+- `hpc/submit_eval_finetuned_all.sh` -- referenced in `slurm_train_all.sh` but does not exist
+
+### Code Bugs (must fix before submitting training jobs)
+- `hpc/slurm_train_rlhf.sh`: `KL_COEFF` defaults to 0.1 but paper specifies 0.05; `MINI_BATCH_SIZE` defaults to 4 but paper specifies 8
+- `experiments/finetuning/train_dpo.py`: `l12_only` curriculum not in choices list (required for B4 level transfer ablation)
+- Both training scripts must write `base_model.txt` to checkpoint dir (needed by `submit_eval_finetuned_all.sh`)
+
+### Paper Claims Not Yet Substantiated
+- Tables 1--2 only contain 2 models (GPT-5.2, Claude); need 6 models total
+- Kimi-K2.5 results never collected (deferred from pilot)
+- All open-source model results missing (DeepSeek-R1-Distill, Qwen-72B, Qwen-32B)
+- M1 narrative decoder recovery rate not computed; manual audit of 200 failures not done
+- Appendix section `app:decoder` referenced in text but does not exist in paper
+- All Section 6 fine-tuning conjectures unverified (experiments not run)
+- Author block still shows "David S. Hippocampus"
+- `\cite{openai2023gpt4}` is wrong bib key for GPT-5.2
 
 ## Next: Full Foundry Evaluation (Phase A3 -- Immediate)
 
