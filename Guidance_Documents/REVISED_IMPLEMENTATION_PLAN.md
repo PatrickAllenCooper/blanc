@@ -52,7 +52,7 @@
 | gpt-5.2-chat | Foundry (AzureOpenAI) | `gpt-5.2-chat` | 2,500 | $1.75 | $14.00 | Reasoning | Live |
 | Kimi-K2.5 | Foundry (OpenAI-compat) | `Kimi-K2.5` | 250 | $1.40 | $2.80 | Reasoning | Live (deferred from pilot) |
 | claude-sonnet-4-6 | Foundry (AnthropicFoundry) | `claude-sonnet-4-6` | 250 | $3.00 | $15.00 | Instruction | Live |
-| DeepSeek-R1 | Foundry (OpenAI-compat) | `DeepSeek-R1` | 5,000 | $1.35 | $5.40 | Reasoning, open | Live |
+| DeepSeek-R1 | Foundry (OpenAI-compat) | `DeepSeek-R1` | 250 | $1.35 | $5.40 | Reasoning, open | Live (endpoint: services.ai.azure.com) |
 
 **Shared key**: `FOUNDRY_API_KEY` in `.env`
 

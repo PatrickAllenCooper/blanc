@@ -1234,8 +1234,11 @@ class FoundryDeepSeekInterface(ModelInterface):
     _COST_PER_1K_INPUT  = 0.00135   # DeepSeek-R1 Azure pricing (USD per 1K tokens)
     _COST_PER_1K_OUTPUT = 0.0054
 
-    # Fill in endpoint and deployment name after deploying from the portal.
-    FOUNDRY_BASE_URL   = "https://llm-defeasible-foundry.openai.azure.com/openai/v1/"
+    # Endpoint confirmed from Foundry portal (2026-02-25).
+    # Note: uses services.ai.azure.com (same subdomain as Kimi/Claude),
+    # NOT openai.azure.com which was the pre-deployment placeholder.
+    # Rate limit: 250 RPM / 250K TPM (Global Standard, same as Kimi/Claude).
+    FOUNDRY_BASE_URL   = "https://llm-defeasible-foundry.services.ai.azure.com/openai/v1/"
     FOUNDRY_DEPLOYMENT = "DeepSeek-R1"
 
     def __init__(
@@ -1243,8 +1246,8 @@ class FoundryDeepSeekInterface(ModelInterface):
         api_key: str,
         base_url: str = FOUNDRY_BASE_URL,
         model: str = FOUNDRY_DEPLOYMENT,
-        rpm: int = 5_000,
-        tpm: int = 5_000_000,
+        rpm: int = 250,
+        tpm: int = 250_000,
     ):
         super().__init__(model)
         try:
