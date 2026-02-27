@@ -295,15 +295,35 @@ class EvaluationPipeline:
             response = cached_response
             cached = True
         else:
-            # Reasoning models (Kimi-K2.5, DeepSeek-R1-Distill) consume tokens
-            # internally before emitting visible text.  Give them extra headroom
-            # so reasoning does not exhaust the entire budget.
+            # Token budget strategy:
+            #
+            # Reasoning models (DeepSeek-R1, Kimi) spend a large fraction of
+            # their output budget on internal chain-of-thought before emitting
+            # the visible answer.  With only 1024 tokens the model exhausts the
+            # budget during thinking and returns an empty string -- confirmed by
+            # finish_reason='length' on 48% of DeepSeek and 70% of Kimi
+            # responses in the initial evaluation run.
+            #
+            # Empirical minimums after analysis (2026-02-26):
+            #   DeepSeek-R1 : 4096  (L3 thinking can exceed 3000 tokens)
+            #   Kimi-K2.5   : 2048  (CoT reasoning hits 1024 limit on ~70%)
+            #   GPT-5.2     :  512  (reasoning_effort=none → no thinking tokens)
+            #   Claude      :  512  (no internal reasoning tokens)
+            #   CURC models :  512  (direct-serving, no thinking prefix)
+            #
+            # L3 instances additionally need extra headroom because conservative
+            # defeater reasoning is substantially more verbose than rule selection.
             model_name_lower = model.model_name.lower()
-            is_reasoning_model = any(
-                tag in model_name_lower
-                for tag in ("kimi", "deepseek-r1", "r1-distill")
-            )
-            max_tokens = 1024 if is_reasoning_model else 512
+            is_deepseek = "deepseek-r1" in model_name_lower or "r1-distill" in model_name_lower
+            is_kimi     = "kimi" in model_name_lower
+            level       = getattr(instance, "level", 2)
+
+            if is_deepseek:
+                max_tokens = 4096
+            elif is_kimi:
+                max_tokens = 2048
+            else:
+                max_tokens = 512
 
             response = model.query(
                 prompt=rendered.prompt,
