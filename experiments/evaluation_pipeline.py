@@ -319,9 +319,12 @@ class EvaluationPipeline:
             level       = getattr(instance, "level", 2)
 
             if is_deepseek:
-                max_tokens = 4096
+                # 4096 left 16.9% of responses still truncated (finish_reason=length).
+                # Increase to 8192 to clear the residual tail.
+                max_tokens = 8192
             elif is_kimi:
-                max_tokens = 2048
+                # 2048 left 52.7% still truncated; increase to 4096.
+                max_tokens = 4096
             else:
                 max_tokens = 512
 

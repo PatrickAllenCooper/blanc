@@ -46,7 +46,8 @@ Your task: Select or generate the hypothesis that, when added to the theory, ena
 Output only the hypothesis that restores derivability. Do not include explanations or additional text."""
 
 
-COT_PROMPT_TEMPLATE = """You are an expert in defeasible logical reasoning and abductive inference. Think step-by-step.
+# Level 2: candidate selection -- model picks from the list.
+COT_PROMPT_TEMPLATE_L2 = """You are an expert in defeasible logical reasoning and abductive inference. Think step-by-step.
 
 You will be given:
 1. A theory (knowledge base) with some elements removed
@@ -63,12 +64,51 @@ Reason through this in three steps:
 
 Step 1 - Identify support and attackers: Which rules in the theory could derive the target query (or its negation)? Trace which rule(s) would support the target and which, if any, would block or attack it.
 
-Step 2 - Identify the gap: What element is missing or what is blocking derivation of the target? Is a required rule absent, or is a defeater suppressing the conclusion without justification?
+Step 2 - Identify the gap: What element is missing or blocking derivation of the target? Is a required rule absent, or is a defeater suppressing the conclusion without justification?
 
-Step 3 - Select the hypothesis: Which candidate, when added to the theory, restores derivability of the target while leaving all other conclusions intact?
+Step 3 - Select the hypothesis: Which candidate from the list above, when added to the theory, restores derivability of the target while leaving all other conclusions intact?
 
-After your analysis, output only the selected hypothesis on the final line:
-FINAL ANSWER: [the hypothesis that restores derivability]"""
+After your analysis, copy the selected hypothesis exactly as it appears in the candidate list on the final line. Do not paraphrase or reformat it.
+FINAL ANSWER: [copy the exact candidate string here]"""
+
+
+# Level 3: defeater generation -- model must construct a novel conservative exception rule.
+COT_PROMPT_TEMPLATE_L3 = """You are an expert in defeasible logical reasoning. Think step-by-step.
+
+You will be given:
+1. A defeasible theory (knowledge base) containing strict rules, defeasible rules, and facts
+2. An anomaly: a query that is incorrectly derivable from the current theory
+3. A set of candidate defeater rules
+
+Your task: Identify a defeater rule that blocks the anomalous conclusion while preserving all other derivable expectations (conservativity).
+
+{theory_section}
+
+{target_section}
+
+{candidates_section}
+
+Reason through this in four steps:
+
+Step 1 - Trace the anomaly: Which defeasible rule(s) derive the anomalous conclusion? What facts activate them?
+
+Step 2 - Identify candidate defeaters: Which candidates, if added, would block the anomaly by introducing a stronger or more specific exception?
+
+Step 3 - Check conservativity: For each candidate defeater, verify that it does not block any other conclusions that were correctly derivable before. A good defeater is as specific as possible -- it targets only the anomaly.
+
+Step 4 - Select the best defeater: Choose the most specific conservative defeater.
+
+After your analysis, write your final answer on its own line in this exact format. Use the formal rule syntax -- do not use prose.
+
+FINAL ANSWER: label: body ~> ~head
+
+Example of correct format: FINAL ANSWER: d_penguin: penguin(X) ~> ~flies(X)
+
+Your answer:"""
+
+
+# Keep the old name as an alias so any external code still works.
+COT_PROMPT_TEMPLATE = COT_PROMPT_TEMPLATE_L2
 
 
 # M1 (Narrative) specific
@@ -133,11 +173,16 @@ def render_prompt(
     if strategy not in ['direct', 'cot']:
         raise ValueError(f"Unknown strategy: {strategy}. Use 'direct' or 'cot'")
     
-    # Select template
+    # Select template.  Level 3 uses a generation-specific CoT template that
+    # instructs the model to construct a formal defeater rule with an explicit
+    # syntax example, rather than selecting from a candidate list.
+    level = getattr(instance, 'level', 2)
     if strategy == 'direct':
         template = DIRECT_PROMPT_TEMPLATE
+    elif level == 3:
+        template = COT_PROMPT_TEMPLATE_L3
     else:
-        template = COT_PROMPT_TEMPLATE
+        template = COT_PROMPT_TEMPLATE_L2
     
     # Encode theory in appropriate modality
     theory_text = _encode_theory(instance.D_minus, modality, domain)
