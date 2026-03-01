@@ -1,0 +1,20 @@
+% Table 3: Level 3 Formal Metrics by Model
+\begin{table}[t]
+  \centering
+  \caption{Level~3 (Defeater Abduction) formal metrics by model.
+           \emph{Resolves}: fraction of responses that eliminate the anomaly.
+           \emph{Conserv.}: fraction that are also conservative (Definition~\ref{def:conservativity}).
+           \emph{Nov}: mean predicate novelty $\mathrm{Nov}(h, D^-)$.
+           $d_\text{rev}$: mean revision distance.}
+  \label{tab:level3_metrics}
+  \begin{tabular}{lrrrrr}
+    \toprule
+    Model & Acc & Resolves & Conserv. & Nov (mean) & $d_\text{rev}$ \\
+    \midrule
+    DeepSeek-R1 & 1.8 & 27.3 & -- & -- & -- \\
+    Kimi-K2.5 & 0.0 & -- & -- & -- & -- \\
+    claude-sonnet-4-6 & 12.1 & 42.3 & -- & -- & -- \\
+    gpt-5.2-chat & 6.4 & 14.4 & -- & -- & -- \\
+    \bottomrule
+  \end{tabular}
+\end{table}

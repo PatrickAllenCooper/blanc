@@ -235,21 +235,85 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="Generate LaTeX tables for paper Section 5")
     parser.add_argument("--results-dir", default=str(ROOT / "experiments" / "results"))
-    parser.add_argument("--results-file", default=None)
+    parser.add_argument("--results-file", default=None,
+                        help="Single results JSON (one model). Overrides --results-dir.")
+    parser.add_argument("--results-files", nargs="+", default=None,
+                        help="Multiple results JSON files (one per model). Produces combined "
+                             "multi-model tables. Example: "
+                             "--results-files results/foundry_gpt52_*/results_foundry-gpt.json "
+                             "results/foundry_claude_*/results_foundry-claude.json")
+    parser.add_argument("--canonical", action="store_true",
+                        help="Auto-discover canonical result files: latest run per provider "
+                             "in experiments/results/. Selects foundry_gpt52_*, "
+                             "foundry_claude_*, foundry_deepseek_* (newest), "
+                             "foundry_kimi_* (newest).")
     parser.add_argument("--output-dir", default=str(ROOT / "paper" / "tables"))
     parser.add_argument("--tables", nargs="+", default=["1", "2", "3", "4"],
                         help="Which tables to generate (1-4)")
     args = parser.parse_args()
 
-    path = Path(args.results_file) if args.results_file else Path(args.results_dir)
-    if not path.exists():
-        print(f"Error: {path} does not exist. Run evaluation first.")
-        return 1
+    results_root = ROOT / "experiments" / "results"
 
-    evaluations = load_results(path)
-    if not evaluations:
-        print("No evaluations found.")
-        return 1
+    if args.canonical:
+        # Auto-discover the newest result file per provider.
+        import glob, re
+        providers = {
+            "gpt":      "foundry_gpt52_*",
+            "claude":   "foundry_claude_*",
+            "deepseek": "foundry_deepseek_*",
+            "kimi":     "foundry_kimi_*",
+        }
+        paths = []
+        for key, pattern in providers.items():
+            # Pick the latest run directory (alphabetically last = newest timestamp)
+            dirs = sorted(results_root.glob(pattern))
+            # Skip pilot dirs
+            dirs = [d for d in dirs if "pilot" not in d.name]
+            if not dirs:
+                print(f"  WARNING: no results found for pattern {pattern}")
+                continue
+            latest = dirs[-1]
+            # Find the results JSON inside
+            jsons = list(latest.glob("results_*.json"))
+            if not jsons:
+                print(f"  WARNING: no results_*.json in {latest}")
+                continue
+            paths.append(jsons[0])
+            print(f"  {key}: {jsons[0].relative_to(ROOT)}")
+        if not paths:
+            print("No canonical results found.")
+            return 1
+        all_evaluations = []
+        for p in paths:
+            evs = load_results(p)
+            all_evaluations.extend(evs)
+            print(f"  Loaded {len(evs)} evaluations from {p.name}")
+        evaluations = all_evaluations
+
+    elif args.results_files:
+        all_evaluations = []
+        for fpath in args.results_files:
+            p = Path(fpath)
+            if not p.exists():
+                print(f"  WARNING: {p} does not exist, skipping.")
+                continue
+            evs = load_results(p)
+            all_evaluations.extend(evs)
+            print(f"  Loaded {len(evs)} evaluations from {p.name}")
+        evaluations = all_evaluations
+        if not evaluations:
+            print("No evaluations found in provided files.")
+            return 1
+
+    else:
+        path = Path(args.results_file) if args.results_file else Path(args.results_dir)
+        if not path.exists():
+            print(f"Error: {path} does not exist. Run evaluation first.")
+            return 1
+        evaluations = load_results(path)
+        if not evaluations:
+            print("No evaluations found.")
+            return 1
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
