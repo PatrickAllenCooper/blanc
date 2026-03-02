@@ -63,9 +63,11 @@ PER_DEVICE_BATCH="${PER_DEVICE_BATCH:-2}"
 GRAD_ACCUM="${GRAD_ACCUM:-8}"
 WARMUP_STEPS="${WARMUP_STEPS:-100}"
 DATA_DIR="${DATA_DIR:-experiments/finetuning/data}"
+DATA_FRACTION="${DATA_FRACTION:-1.0}"      # <1.0 for B6 scaling ablation
 
 MODEL_SLUG=$(echo "$BASE_MODEL" | tr '/' '_' | tr ':' '_')
-OUTPUT_DIR="${OUTPUT_DIR:-experiments/finetuning/checkpoints/dpo_${DPO_VARIANT}_${CURRICULUM}_${MODEL_SLUG}}"
+FRAC_SUFFIX=$([ "$DATA_FRACTION" = "1.0" ] && echo "" || echo "_frac${DATA_FRACTION}")
+OUTPUT_DIR="${OUTPUT_DIR:-experiments/finetuning/checkpoints/dpo_${DPO_VARIANT}_${CURRICULUM}_${MODEL_SLUG}${FRAC_SUFFIX}}"
 
 echo "Base model     : $BASE_MODEL"
 echo "DPO variant    : $DPO_VARIANT"
@@ -120,6 +122,7 @@ torchrun \
     --grad-accum-steps "$GRAD_ACCUM" \
     --warmup-steps "$WARMUP_STEPS" \
     --data-dir "$DATA_DIR" \
+    --data-fraction "$DATA_FRACTION" \
     --output-dir "$OUTPUT_DIR" \
     --deepspeed-config experiments/finetuning/ds_config_zero2.json
 

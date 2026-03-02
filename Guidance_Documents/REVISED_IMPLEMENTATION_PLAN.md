@@ -1,9 +1,9 @@
 # Implementation Plan: LLM Evaluation, Fine-Tuning, and Submission
 
-**Date**: 2026-02-25 (updated)
+**Date**: 2026-03-02 (updated)
 **Author**: Patrick Cooper
-**Status**: Phase B pipeline implemented. Phase A evaluation not yet run. B6 analysis scripts not yet written. Several paper claims still unsubstantiated.
-**Next action**: Run `python experiments/run_foundry_local.py` (full Foundry evaluation), then submit CURC base eval jobs, then build B6 analysis scripts, then run training matrix.
+**Status**: All training scripts corrected and complete. All B6 analysis scripts written. Phase A evaluation not yet run. Training matrix not yet submitted. Several paper claims unsubstantiated pending experimental runs.
+**Next action**: Run `python experiments/run_foundry_local.py` (full Foundry evaluation), then submit CURC base eval jobs (`bash hpc/slurm_evaluate_curc_all.sh`), then submit training matrix (`bash hpc/slurm_train_all.sh`), then evaluate checkpoints (`bash hpc/submit_eval_finetuned_all.sh`).
 
 ---
 
@@ -26,10 +26,12 @@
 | 10 | Paper Section 6: Defeasible Fine-Tuning via Preference Optimization | Done |
 | B0 | `defab-train` conda env documented | Done |
 | B1 | `prepare_preference_data.py` -- preference data construction | Done |
-| B2 | `train_dpo.py` -- standard + margin-weighted DPO with curriculum | Done |
-| B3 | `train_rlhf_vitl.py` -- VITL and reward-model RLHF | Done |
+| B2 | `train_dpo.py` -- standard + margin-weighted DPO with curriculum | Done (fixed: Eq.10 additive margin, `l12_only`, `--data-fraction`, `base_model.txt`) |
+| B3 | `train_rlhf_vitl.py` -- VITL and reward-model RLHF | Done (fixed: KL=0.05, mini_batch=8, LR=1e-6, max_tokens=512, `base_model.txt`) |
 | B5 | `evaluate_finetuned.py` -- finetuned checkpoint evaluation | Done |
-| B-SLURM | `slurm_sample_responses.sh`, `slurm_train_dpo.sh`, `slurm_train_rlhf.sh`, `slurm_eval_finetuned.sh`, `slurm_train_all.sh` | Done |
+| B5-sub | `hpc/submit_eval_finetuned_all.sh` -- batch checkpoint eval submission | Done |
+| B-SLURM | `slurm_sample_responses.sh`, `slurm_train_dpo.sh`, `slurm_train_rlhf.sh`, `slurm_eval_finetuned.sh`, `slurm_train_all.sh` | Done (rlhf hyperparams fixed; dpo DATA_FRACTION added) |
+| B6 | All 10 B6 analysis scripts | Done |
 | Symbolic | Symbolic baseline: L2=100% (374/374), L3=100% (35/35) | Done |
 
 ### Dataset
@@ -366,10 +368,13 @@ Each script should:
 
 | Task | File | Priority |
 |------|------|----------|
-| Add `l12_only` curriculum to `train_dpo.py` | `experiments/finetuning/train_dpo.py` | **High** (blocks B4) |
-| Write `hpc/submit_eval_finetuned_all.sh` | `hpc/submit_eval_finetuned_all.sh` | **High** (blocks B5) |
-| Fix `slurm_train_rlhf.sh` default KL_COEFF (0.1 -> 0.05) and MINI_BATCH_SIZE (4 -> 8) | `hpc/slurm_train_rlhf.sh` | **High** (paper accuracy) |
-| Write all 10 B6 analysis scripts | `experiments/finetuning/` | **High** (blocks C1) |
+| ~~Add `l12_only` curriculum to `train_dpo.py`~~ | Done | |
+| ~~Write `hpc/submit_eval_finetuned_all.sh`~~ | Done | |
+| ~~Fix `slurm_train_rlhf.sh` hyperparams~~ | Done | |
+| ~~Fix `MarginDPOTrainer` to match paper Eq.10 (additive, not multiplicative)~~ | Done | |
+| ~~Write all 10 B6 analysis scripts~~ | Done | |
+| Run Phase A full Foundry evaluation | Local | **Next** |
+| Submit CURC base evaluation jobs | CURC | **Next** |
 | Add 95% Wilson CIs to all accuracy output | `experiments/analyze_results.py` | Medium |
 | Write dataset statistics LaTeX generator | `experiments/generate_dataset_table.py` | Medium |
 | Fix GPT-5.2 bib entry (`\cite{openai2023gpt4}` is incorrect) | `paper/references.bib` | Medium |
@@ -445,30 +450,30 @@ Every claim in the paper maps to a specific experiment. Unverified claims are ma
 ```
 experiments/finetuning/
     prepare_preference_data.py          # B1: Response sampling + preference extraction [EXISTS]
-    train_dpo.py                        # B2: DPO/Margin-DPO training with TRL [EXISTS]
-    train_rlhf_vitl.py                  # B3: VITL-RLHF training with exact verifier [EXISTS]
+    train_dpo.py                        # B2: DPO/Margin-DPO, Eq.10, all curricula, data_fraction [EXISTS]
+    train_rlhf_vitl.py                  # B3: VITL-RLHF with correct PPO hyperparams [EXISTS]
     evaluate_finetuned.py               # B5: Evaluate fine-tuned checkpoints [EXISTS]
-    generate_ft_tables.py               # B6: LaTeX Tables 4--6 [MISSING]
-    analyze_ft_lift.py                  # B6: Conjecture 1 [MISSING]
-    analyze_error_shift.py              # B6: Conjecture 2 [MISSING]
-    analyze_level_transfer.py           # B6: Conjecture 3 [MISSING]
-    analyze_margin_effect.py            # B6: Conjecture 4 [MISSING]
-    analyze_curriculum.py               # B6: Curriculum comparison [MISSING]
-    analyze_novel_resolutions.py        # B6: Generalization analysis [MISSING]
-    analyze_scaling_projections.py      # B6: Log-linear scaling curves [MISSING]
-    analyze_reward_fidelity.py          # B6: Spearman rho(R_phi, verifier) [MISSING]
-    analyze_reward_overoptimization.py  # B6: Reward hacking diagnostic [MISSING]
+    generate_ft_tables.py               # B6: LaTeX Tables 4-6 [EXISTS]
+    analyze_ft_lift.py                  # B6: Conjecture 1 -- L3 lift [EXISTS]
+    analyze_error_shift.py              # B6: Conjecture 2 -- E1/E2 -> E4/E5 shift [EXISTS]
+    analyze_level_transfer.py           # B6: Conjecture 3 -- l12_only transfer [EXISTS]
+    analyze_margin_effect.py            # B6: Conjecture 4 -- margin vs std DPO [EXISTS]
+    analyze_curriculum.py               # B6: Curriculum comparison [EXISTS]
+    analyze_novel_resolutions.py        # B6: Novel correct resolutions [EXISTS]
+    analyze_scaling_projections.py      # B6: Log-linear scaling curves [EXISTS]
+    analyze_reward_fidelity.py          # B6: Spearman rho(R_phi, verifier) [EXISTS]
+    analyze_reward_overoptimization.py  # B6: Reward hacking diagnostic [EXISTS]
     ds_config_zero2.json                # DeepSpeed ZeRO-2 config [EXISTS]
     data/                               # Generated preference datasets (gitignored)
     checkpoints/                        # LoRA checkpoints (gitignored)
 
 hpc/
     slurm_sample_responses.sh           # B1: Response sampling on GPU [EXISTS]
-    slurm_train_dpo.sh                  # B2: DPO training (4xA100) [EXISTS]
-    slurm_train_rlhf.sh                 # B3: VITL-RLHF training (4xA100) [EXISTS -- hyperparams need fix]
+    slurm_train_dpo.sh                  # B2: DPO training (4xA100, DATA_FRACTION support) [EXISTS]
+    slurm_train_rlhf.sh                 # B3: VITL-RLHF (KL=0.05, mini_batch=8, LR=1e-6) [EXISTS]
     slurm_eval_finetuned.sh             # B5: Evaluate checkpoints (1xA100) [EXISTS]
     slurm_train_all.sh                  # Submit all training jobs [EXISTS]
-    submit_eval_finetuned_all.sh        # Submit all checkpoint eval jobs [MISSING]
+    submit_eval_finetuned_all.sh        # Submit all checkpoint eval jobs [EXISTS]
 ```
 
 ---

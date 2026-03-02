@@ -3,7 +3,7 @@ Phase B2: Direct Preference Optimization (DPO) Training.
 
 Implements Section 6.3 of the paper:
 
-  Standard DPO (Rafailov et al. 2023):
+  Standard DPO (Rafailov et al. 2023, Equation 9):
     L_DPO(theta) = -E_{(x,y_w,y_l)} [
       log sigma(beta * (log pi_theta(y_w|x) / pi_ref(y_w|x)
                       - log pi_theta(y_l|x) / pi_ref(y_l|x)))
@@ -11,19 +11,24 @@ Implements Section 6.3 of the paper:
 
   Margin-weighted DPO (Equation 10):
     L_mDPO(theta) = -E_{(x,y_w,y_l)} [
-      m(y_w, y_l) * log sigma(beta * (...))
+      log sigma(beta * log_ratio_w - beta * log_ratio_l - gamma * delta_r)
     ]
-    where m(y_w, y_l) = log(1 + delta * (r(y_w) - r(y_l)))
+    where delta_r = r(y_w) - r(y_l) is the verifier score gap.
+    The margin shifts the decision boundary so that pairs with larger
+    verifier score gaps require proportionally larger log-ratio differences
+    to contribute positively to the loss.
 
 Configuration (from paper Section 6.6):
-  - LoRA: rank=64, alpha=128, target modules [q_proj, v_proj]
+  - LoRA: rank=64, alpha=128, target all attention + MLP projections
   - beta=0.1, learning_rate=5e-6, per_device_batch=2
-  - Curriculum: joint | sequential | weighted
+  - Curriculum: joint | sequential | weighted | l12_only
 
 Supports three DPO variants:
   --dpo-variant standard       (Equation 9)
-  --dpo-variant margin         (Equation 10, margin-weighted)
-  --dpo-variant margin-strict  (Equation 10, margin capped at level)
+  --dpo-variant margin         (Equation 10, additive margin shift in sigmoid)
+  --dpo-variant margin-strict  (Equation 10, margin capped at level boundary)
+
+Requires TRL >= 0.9 for MarginDPOTrainer (uses dpo_loss override).
 
 Usage (CURC Alpine):
   torchrun --nproc_per_node=4 experiments/finetuning/train_dpo.py \\
@@ -57,6 +62,7 @@ from pathlib import Path
 from typing import Optional
 
 import torch
+import torch.nn.functional as F
 from datasets import Dataset
 from peft import LoraConfig, TaskType, get_peft_model
 from transformers import (
@@ -83,42 +89,52 @@ except ImportError:
 
 class MarginDPOTrainer(DPOTrainer):
     """
-    DPO with margin weighting per preference pair.
+    DPO with additive margin shift inside the sigmoid (paper Equation 10).
 
-    Each preference pair carries a `margin` field (r(y_w) - r(y_l)).
-    The standard DPO loss is scaled by:
+    For each preference pair with verifier score gap delta_r = r(y_w) - r(y_l):
 
-        m(y_w, y_l) = log(1 + delta * margin)
+        L = -E[ log sigma( beta*(log_ratio_w - log_ratio_l) - gamma*delta_r ) ]
 
-    so pairs with larger verifier score differences contribute proportionally
-    more to the gradient.  When delta=0 this reduces to standard DPO.
+    The margin shifts the decision boundary: larger score gaps require
+    proportionally larger log-ratio differences to contribute positively to
+    the loss, encoding the ordinal structure of Level-3 graded scoring.
+    When gamma=0 this reduces to standard DPO.
+
+    Requires TRL >= 0.9 (overrides dpo_loss method).
     """
 
-    def __init__(self, *args, margin_delta: float = 2.0, **kwargs):
+    def __init__(self, *args, gamma: float = 2.0, **kwargs):
         super().__init__(*args, **kwargs)
-        self.margin_delta = margin_delta
-
-    def concatenated_forward(self, model, batch):
-        all_logits, all_labels, _ = super().concatenated_forward(model, batch)
-        return all_logits, all_labels, _
+        self.gamma = gamma
+        self._margins_buffer: Optional[torch.Tensor] = None
 
     def get_batch_loss_metrics(self, model, batch, train_eval="train"):
-        metrics    = {}
-        margins    = batch.get("margins", None)
-        base_loss, base_metrics = super().get_batch_loss_metrics(
-            model, batch, train_eval
-        )
-        metrics.update(base_metrics)
+        # Stash margins then remove so TRL internals don't see an unexpected key.
+        self._margins_buffer = batch.pop("margins", None)
+        return super().get_batch_loss_metrics(model, batch, train_eval)
 
-        if margins is not None and self.margin_delta > 0:
-            weights = torch.log(
-                1.0 + self.margin_delta * margins.to(base_loss.device)
-            )
-            loss = (base_loss * weights).mean()
-        else:
-            loss = base_loss.mean()
+    def dpo_loss(
+        self,
+        policy_chosen_logps: torch.FloatTensor,
+        policy_rejected_logps: torch.FloatTensor,
+        reference_chosen_logps: torch.FloatTensor,
+        reference_rejected_logps: torch.FloatTensor,
+    ):
+        """Paper Equation 10: margin shifts the sigmoid decision boundary."""
+        chosen_logratios   = policy_chosen_logps   - reference_chosen_logps
+        rejected_logratios = policy_rejected_logps - reference_rejected_logps
 
-        return loss, metrics
+        logits = self.beta * (chosen_logratios - rejected_logratios)
+
+        if self._margins_buffer is not None and self.gamma > 0:
+            delta_r = self._margins_buffer.float().to(logits.device)
+            logits  = logits - self.gamma * delta_r
+            self._margins_buffer = None  # consume once per batch
+
+        losses           = -F.logsigmoid(logits)
+        chosen_rewards   = self.beta * chosen_logratios.detach()
+        rejected_rewards = self.beta * rejected_logratios.detach()
+        return losses, chosen_rewards, rejected_rewards
 
 
 # ---------------------------------------------------------------------------
@@ -136,9 +152,10 @@ def _load_jsonl(path: Path) -> list[dict]:
 
 
 def _load_preference_data(
-    data_dir:   Path,
-    curriculum: str,
-    model_name: str,
+    data_dir:      Path,
+    curriculum:    str,
+    model_name:    str,
+    data_fraction: float = 1.0,
 ) -> tuple[Dataset, Dataset]:
     """
     Load preference JSONL files from *data_dir* and return (train, val) Datasets.
@@ -170,6 +187,19 @@ def _load_preference_data(
     records = _load_jsonl(src)
     print(f"  Loaded {len(records)} preference pairs")
 
+    # Apply data fraction before curriculum weighting (B6 scaling ablation).
+    # Stratify the subsample by level so L3 coverage is preserved.
+    if data_fraction < 1.0:
+        import random as _random
+        _rng = _random.Random(42)
+        l3_recs   = [r for r in records if r.get("level", 2) == 3]
+        other_recs = [r for r in records if r.get("level", 2) != 3]
+        k_l3    = max(1, round(len(l3_recs)   * data_fraction))
+        k_other = max(1, round(len(other_recs) * data_fraction))
+        records = _rng.sample(l3_recs, min(k_l3, len(l3_recs))) + \
+                  _rng.sample(other_recs, min(k_other, len(other_recs)))
+        print(f"  Data fraction {data_fraction:.0%}: {len(records)} pairs retained")
+
     # Apply curriculum weighting
     if curriculum == "weighted":
         l3    = [r for r in records if r.get("level", 2) == 3]
@@ -178,6 +208,9 @@ def _load_preference_data(
         import random
         random.shuffle(records)
         print(f"  Weighted curriculum: {len(other)} L2 + {len(l3)*5} L3 (5x)")
+    elif curriculum == "l12_only":
+        records = [r for r in records if r.get("level", 2) != 3]
+        print(f"  L1/L2-only curriculum: {len(records)} pairs (Level 3 excluded)")
 
     # Split: find val from val split info, else 85/15
     val_file = data_dir / f"splits_{slug}.json"
@@ -285,8 +318,8 @@ def parse_args() -> argparse.Namespace:
 
     # Training
     p.add_argument("--curriculum", default="joint",
-                   choices=["joint", "sequential", "weighted"],
-                   help="Curriculum strategy (Section 6.5).")
+                   choices=["joint", "sequential", "weighted", "l12_only"],
+                   help="Curriculum strategy (Section 6.5). l12_only excludes Level-3 pairs (B4 ablation).")
     p.add_argument("--learning-rate", type=float, default=5e-6)
     p.add_argument("--num-epochs",    type=int,   default=3)
     p.add_argument("--max-steps",     type=int,   default=-1,
@@ -297,9 +330,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--max-length",            type=int, default=1024)
     p.add_argument("--max-prompt-length",     type=int, default=512)
 
-    # I/O
-    p.add_argument("--data-dir",   default="experiments/finetuning/data",
+    # Data
+    p.add_argument("--data-dir",      default="experiments/finetuning/data",
                    help="Directory with preferences_*.jsonl files.")
+    p.add_argument("--data-fraction", type=float, default=1.0,
+                   help="Fraction of training pairs to use (B6 scaling ablation). "
+                        "Range: (0, 1]. E.g. 0.5 uses 50%% of pairs.")
     p.add_argument("--output-dir", required=True,
                    help="Checkpoint output directory.")
     p.add_argument("--logging-dir", default=None,
@@ -338,7 +374,7 @@ def main() -> int:
     # --- Load data ---
     print("\nLoading preference data...")
     train_dataset, val_dataset = _load_preference_data(
-        data_dir, args.curriculum, args.base_model
+        data_dir, args.curriculum, args.base_model, args.data_fraction
     )
 
     # --- Load model + LoRA ---
@@ -387,7 +423,7 @@ def main() -> int:
 
     if args.dpo_variant in ("margin", "margin-strict"):
         TrainerClass = MarginDPOTrainer
-        trainer_kwargs["margin_delta"] = args.margin_delta
+        trainer_kwargs["gamma"] = args.margin_delta
 
     trainer = TrainerClass(
         model=model,
@@ -410,6 +446,12 @@ def main() -> int:
     with open(config_path, "w") as f:
         json.dump(vars(args), f, indent=2)
     print(f"\nTraining config saved to {config_path}")
+
+    # Save base model ID so submit_eval_finetuned_all.sh can read it
+    base_model_path = output_dir / "base_model.txt"
+    base_model_path.write_text(args.base_model)
+    (output_dir / "final" / "base_model.txt").write_text(args.base_model)
+    print(f"Base model ID written to {base_model_path}")
 
     print(f"\nDPO training complete.  Checkpoint: {output_dir / 'final'}")
     return 0

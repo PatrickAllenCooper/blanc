@@ -413,6 +413,7 @@ def _run_ppo(
 
     # Final save
     final_dir = output_dir / "final"
+    final_dir.mkdir(parents=True, exist_ok=True)
     ppo_trainer.model.save_pretrained(str(final_dir))
     tokenizer.save_pretrained(str(final_dir))
     print(f"  Final model saved to {final_dir}")
@@ -444,12 +445,16 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--lora-dropout", type=float, default=0.05)
 
     # PPO
-    p.add_argument("--kl-coeff",       type=float, default=0.1)
+    p.add_argument("--kl-coeff",       type=float, default=0.05,
+                   help="PPO KL penalty coefficient beta (paper Section 6.6: 0.05).")
     p.add_argument("--ppo-epochs",     type=int,   default=3)
     p.add_argument("--batch-size",     type=int,   default=16)
-    p.add_argument("--mini-batch-size",type=int,   default=4)
-    p.add_argument("--learning-rate",  type=float, default=1e-5)
-    p.add_argument("--max-new-tokens", type=int,   default=256)
+    p.add_argument("--mini-batch-size",type=int,   default=8,
+                   help="PPO mini-batch size (paper Section 6.6: 8).")
+    p.add_argument("--learning-rate",  type=float, default=1e-6,
+                   help="Learning rate for PPO policy (paper Section 6.6: 1e-6).")
+    p.add_argument("--max-new-tokens", type=int,   default=512,
+                   help="Max tokens generated per response during PPO rollout.")
 
     # Reward model training (only for --mode reward-model)
     p.add_argument("--rm-learning-rate",type=float, default=1e-5)
@@ -548,9 +553,10 @@ def main() -> int:
             result = reward_pipe(response_text[:1024], truncation=True)
             return float(result[0]["score"])
 
-    # Save config
+    # Save config and base model ID
     with open(output_dir / "training_config.json", "w") as f:
         json.dump(vars(args), f, indent=2)
+    (output_dir / "base_model.txt").write_text(args.base_model)
 
     # Run PPO
     print("\nStarting PPO training...")
@@ -572,6 +578,11 @@ def main() -> int:
         curriculum=args.curriculum,
         seed=args.seed,
     )
+
+    # Write base_model.txt to final checkpoint dir for submit_eval_finetuned_all.sh
+    final_dir = output_dir / "final"
+    if final_dir.exists():
+        (final_dir / "base_model.txt").write_text(args.base_model)
 
     print(f"\nRLHF training complete.  Output: {output_dir}")
     return 0
