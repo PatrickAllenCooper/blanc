@@ -546,7 +546,27 @@ GPT-5.2-chat        & \textbf{22.0 [19--25]}\% & 75.1 [72--78]\% & 72.8 [69--76]
 
 Under direct prompting across formal modalities (M2--M4), all four models achieve strong Level~2 accuracy: Claude~Sonnet~4.6 79.3\%, GPT-5.2-chat 78.5\%, DeepSeek-R1 73.7\%, and Kimi-K2.5 71.9\%. Rendering-robust accuracy (worst-case over all four modalities including narrative M1) is substantially lower---15.5\%, 9.1\%, 23.5\%, and 7.8\% respectively---driven almost entirely by the M1 collapse: all models fall to 14--22\% on narrative rendering compared with 73--94\% on formal modalities (Section~\ref{subsec:cot_results}). This $55$--$70$ percentage-point gap between M1 and formal modalities is larger than any inter-model difference and is consistent across all four model families, confirming Conjecture~\ref{conj:modlevel}: different task levels and output types require qualitatively different modality-presentation strategies.
 
-Domain breakdown at Level~2 (Wilson 95\% CI half-width $\pm 3$--$4$ pp) reveals a consistent ordering: legal is the hardest domain for all models (Claude 72\%, DeepSeek-R1 67\%, GPT-5.2 57\%, Kimi 64\%), while biology is consistently easiest (82\%, 80\%, 68\%, 68\%). This ordering is stable across model families and reflects the denser rule structures and more complex defeasibility conditions of LKIF Core relative to the biology and materials KBs, rather than idiosyncratic knowledge gaps: no model performs substantially better on legal than others when controlling for overall accuracy level.
+Domain breakdown at Level~2 (Table~\ref{tab:domain_breakdown}; Wilson 95\% CI half-width $\pm 3$--$4$ pp) reveals a consistent ordering: legal is the hardest domain for all models (Claude 72\%, DeepSeek-R1 67\%, GPT-5.2 57\%, Kimi 64\%), while biology is consistently easiest (82\%, 80\%, 68\%, 68\%). This ordering is stable across model families and reflects the denser rule structures and more complex defeasibility conditions of LKIF Core relative to the biology and materials KBs, rather than idiosyncratic knowledge gaps: no model performs substantially better on legal than others when controlling for overall accuracy level.
+
+\begin{table}[t]
+\centering
+\caption{Accuracy by domain and level. Level~2 Wilson 95\% confidence intervals (half-width $\pm 3$--$4$ pp, $n \approx 228$--$288$ evaluations per cell). Level~3 figures are descriptive only: per-domain $n \in \{36, 40, 64\}$ evaluations gives CI half-widths of $\pm 25$--$33$ pp. Bold denotes best per column. L2 pooled over all four modalities and both prompting strategies; L3 pooled over all modalities with best-performing strategy (CoT for reasoning models, direct for Claude).}
+\label{tab:domain_breakdown}
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Level~2 (rule abduction)}} & \multicolumn{3}{c}{\textbf{Level~3 (defeater abduction)}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+\textbf{Model} & \textbf{Biology} & \textbf{Legal} & \textbf{Materials} & \textbf{Biology} & \textbf{Legal} & \textbf{Materials} \\
+\midrule
+Claude Sonnet~4.6   & \textbf{82\%} & \textbf{72\%} & \textbf{77\%} & 16\% & 12\% & 21\% \\
+DeepSeek-R1         & 80\% & 67\% & 72\% & \textbf{72\%} & \textbf{56\%} & \textbf{62\%} \\
+GPT-5.2-chat        & 68\% & 57\% & 64\% & 52\% & 44\% & 43\% \\
+Kimi-K2.5           & 68\% & 64\% & 64\% & 17\% & 13\% & 10\% \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Belief Revision Results (Level~3)}\label{subsec:revision_results}
 
@@ -558,7 +578,7 @@ Error taxonomy reveals qualitatively different failure signatures. DeepSeek-R1 e
 
 Level~3 graded scores corroborate the ranking: mean graded score 0.596 (DeepSeek-R1), 0.429 (GPT-5.2), 0.150 (Claude), 0.139 (Kimi). The bimodal score distribution---nearly all responses score exactly 0.0 or 1.0 with no intermediate values---indicates that models either fully solve or completely fail the rational revision pipeline, with no consistent partial progress through intermediate scoring stages. This stands in contrast to the expected graduated performance and suggests the scoring stages are not independently acquired in practice.
 
-Domain breakdown (descriptive only; per-domain Level~3 $n \in \{9, 10, 16\}$ gives Wilson CI half-widths of $\pm 25$--$33$ pp): biology is consistently the easiest domain for all models, legal the hardest. DeepSeek-R1 achieves 72\% in biology, 56\% in legal, 62\% in materials; GPT-5.2 achieves 52\%, 44\%, 43\% respectively.
+Domain breakdown is reported in Table~\ref{tab:domain_breakdown} (descriptive only; wide CIs preclude inference at the per-domain level). Biology is consistently the easiest domain for all models, legal the hardest, a pattern stable across all four model families.
 
 \subsection{Chain-of-Thought Analysis}\label{subsec:cot_results}
 
