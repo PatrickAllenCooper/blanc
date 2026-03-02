@@ -62,6 +62,7 @@ python_functions = ["test_*"]
 addopts = "--cov=src/blanc --cov-report=term-missing --cov-report=html"
 markers = [
     "integration: live network tests against real API endpoints (deselected by default)",
+    "benchmark: performance benchmarks (not run by default)",
 ]
 
 [tool.coverage.run]
