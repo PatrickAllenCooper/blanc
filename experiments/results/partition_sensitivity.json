@@ -1,0 +1,144 @@
+{
+  "n_candidates": {
+    "metric": "n_candidates",
+    "group_sizes": {
+      "Q1": 206,
+      "Q2": 0,
+      "Q3": 168,
+      "Q4": 0
+    },
+    "kruskal_wallis": {
+      "H": 9.246417016584019e-05,
+      "p": 0.9923277966192249,
+      "significant": false
+    },
+    "pairwise": [
+      {
+        "groups": [
+          "Q1",
+          "Q2"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      },
+      {
+        "groups": [
+          "Q1",
+          "Q3"
+        ],
+        "U": 17294.0,
+        "p": 0.9923277966205428,
+        "significant": false
+      },
+      {
+        "groups": [
+          "Q1",
+          "Q4"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      },
+      {
+        "groups": [
+          "Q2",
+          "Q3"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      },
+      {
+        "groups": [
+          "Q2",
+          "Q4"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      },
+      {
+        "groups": [
+          "Q3",
+          "Q4"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      }
+    ],
+    "conclusion": "No significant difference in n_candidates across theory-size quartiles (partition strategy is robust)."
+  },
+  "theory_size": {
+    "metric": "theory_size",
+    "group_sizes": {
+      "Q1": 206,
+      "Q2": 0,
+      "Q3": 168,
+      "Q4": 0
+    },
+    "kruskal_wallis": {
+      "H": 276.86400000000003,
+      "p": 0.0,
+      "significant": true
+    },
+    "pairwise": [
+      {
+        "groups": [
+          "Q1",
+          "Q2"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      },
+      {
+        "groups": [
+          "Q1",
+          "Q3"
+        ],
+        "U": 0.0,
+        "p": 0.0,
+        "significant": true
+      },
+      {
+        "groups": [
+          "Q1",
+          "Q4"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      },
+      {
+        "groups": [
+          "Q2",
+          "Q3"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      },
+      {
+        "groups": [
+          "Q2",
+          "Q4"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      },
+      {
+        "groups": [
+          "Q3",
+          "Q4"
+        ],
+        "U": NaN,
+        "p": 1.0,
+        "significant": false
+      }
+    ],
+    "conclusion": "Theory-size quartiles produce distinguishable theory_size distributions."
+  }
+}
