@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=64G
 #SBATCH --partition=aa100
+#SBATCH --qos=normal
 #SBATCH --gres=gpu:1
 
 # DeFAb Llama 3 Evaluation on CURC Alpine (GPU)

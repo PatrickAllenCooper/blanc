@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=48G
 #SBATCH --partition=aa100
+#SBATCH --qos=normal
 #SBATCH --gres=gpu:1
 
 # DeFAb Phase B1: Response Sampling for Preference Data Construction

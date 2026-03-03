@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --partition=aa100
+#SBATCH --qos=normal
 #SBATCH --gres=gpu:1
 
 # DeFAb Evaluation via CURC LLM Hoster (vLLM, OpenAI-compatible API)

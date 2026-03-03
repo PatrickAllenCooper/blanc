@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=80G
 #SBATCH --partition=aa100
+#SBATCH --qos=normal
 #SBATCH --gres=gpu:1
 
 # DeFAb Phase B5: Evaluate a fine-tuned checkpoint on the test split
