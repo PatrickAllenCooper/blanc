@@ -64,7 +64,16 @@ echo ""
 # ---------------------------------------------------------------------------
 module purge
 module load anaconda
-conda activate vllm-env
+
+# vllm-env may be a standard conda env or at a custom path on CURC
+if conda env list 2>/dev/null | grep -q "vllm-env"; then
+    conda activate vllm-env
+elif [ -d "/projects/paco0228/software/anaconda/envs/vllm-env" ]; then
+    source activate /projects/paco0228/software/anaconda/envs/vllm-env
+else
+    echo "ERROR: vllm-env not found. Install vLLM first."
+    exit 1
+fi
 
 PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 cd "$PROJ_DIR"
@@ -117,7 +126,7 @@ echo "Running prepare_preference_data.py..."
 
 python experiments/finetuning/prepare_preference_data.py \
     --provider curc \
-    --base-url "http://localhost:$VLLM_PORT/v1" \
+    --base-url "http://localhost:$VLLM_PORT" \
     --model-name "$VLLM_MODEL" \
     --num-samples "$NUM_SAMPLES" \
     --temperature "$TEMPERATURE" \
