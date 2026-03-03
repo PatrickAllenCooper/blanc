@@ -62,16 +62,17 @@ echo ""
 # ---------------------------------------------------------------------------
 # Environment
 # ---------------------------------------------------------------------------
-module purge
-module load anaconda
+if ! command -v conda &>/dev/null; then
+    module load anaconda 2>/dev/null || module load Anaconda3 2>/dev/null || true
+fi
+eval "$(conda shell.bash hook)"
 
-# vllm-env may be a standard conda env or at a custom path on CURC
-if conda env list 2>/dev/null | grep -q "vllm-env"; then
+if [ -d "/projects/paco0228/software/anaconda/envs/vllm-env" ]; then
+    conda activate /projects/paco0228/software/anaconda/envs/vllm-env
+elif conda env list 2>/dev/null | grep -q "vllm-env"; then
     conda activate vllm-env
-elif [ -d "/projects/paco0228/software/anaconda/envs/vllm-env" ]; then
-    source activate /projects/paco0228/software/anaconda/envs/vllm-env
 else
-    echo "ERROR: vllm-env not found. Install vLLM first."
+    echo "ERROR: vllm-env not found."
     exit 1
 fi
 

@@ -100,8 +100,10 @@ echo ""
 # ---------------------------------------------------------------------------
 # Environment setup
 # ---------------------------------------------------------------------------
-module purge
-module load anaconda
+if ! command -v conda &>/dev/null; then
+    module load anaconda 2>/dev/null || module load Anaconda3 2>/dev/null || true
+fi
+eval "$(conda shell.bash hook)"
 
 # Activate the vllm-env conda environment (created by CURC LLM Hoster setup).
 # The environment lives at /projects/$USER/software/anaconda/envs/vllm-env/

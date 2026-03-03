@@ -26,8 +26,10 @@ echo "Start: $(date)"
 echo ""
 
 # Load modules
-module purge
-module load anaconda
+if ! command -v conda &>/dev/null; then
+    module load anaconda 2>/dev/null || module load Anaconda3 2>/dev/null || true
+fi
+eval "$(conda shell.bash hook)"
 module load python/3.11
 
 # Activate environment (create if doesn't exist)

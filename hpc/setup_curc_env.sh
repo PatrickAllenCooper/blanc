@@ -53,8 +53,11 @@ echo ""
 # ---------------------------------------------------------------------------
 # 3. Create defab-train conda environment
 # ---------------------------------------------------------------------------
-module purge
-module load anaconda
+# Ensure conda is available (works whether loaded via module or already in PATH)
+if ! command -v conda &>/dev/null; then
+    module load anaconda 2>/dev/null || module load Anaconda3 2>/dev/null || true
+fi
+eval "$(conda shell.bash hook)"
 
 if conda env list | grep -q "defab-train"; then
     echo "defab-train environment already exists."
@@ -62,12 +65,13 @@ if conda env list | grep -q "defab-train"; then
 else
     echo "Creating defab-train conda environment..."
     conda create -n defab-train python=3.11 -y
+    conda activate defab-train
 
     echo "Installing PyTorch with CUDA 12.1..."
-    conda run -n defab-train pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+    pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
 
     echo "Installing training dependencies..."
-    conda run -n defab-train pip install \
+    pip install \
         transformers \
         accelerate \
         peft \
@@ -77,7 +81,7 @@ else
         deepspeed
 
     echo "Installing additional dependencies..."
-    conda run -n defab-train pip install \
+    pip install \
         scipy \
         numpy \
         tqdm \
@@ -87,7 +91,7 @@ else
         python-Levenshtein
 
     echo "Installing blanc in editable mode..."
-    conda run -n defab-train pip install -e "$PROJ_DIR"
+    pip install -e "$PROJ_DIR"
 
     echo ""
     echo "defab-train environment created successfully."

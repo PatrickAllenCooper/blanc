@@ -75,8 +75,10 @@ echo ""
 # ---------------------------------------------------------------------------
 # Environment
 # ---------------------------------------------------------------------------
-module purge
-module load anaconda
+if ! command -v conda &>/dev/null; then
+    module load anaconda 2>/dev/null || module load Anaconda3 2>/dev/null || true
+fi
+eval "$(conda shell.bash hook)"
 conda activate defab-train
 
 PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
