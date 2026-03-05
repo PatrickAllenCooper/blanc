@@ -90,7 +90,7 @@ conda activate defab-train
 PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 cd "$PROJ_DIR"
 
-export PYTHONPATH="$PROJ_DIR/src:$PYTHONPATH"
+export PYTHONPATH="$PROJ_DIR/src:${PYTHONPATH:-}"
 export HF_HOME="${HF_HOME:-/scratch/alpine/$USER/hf_cache}"
 export TRANSFORMERS_CACHE="$HF_HOME"
 
