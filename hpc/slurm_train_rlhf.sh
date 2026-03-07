@@ -82,7 +82,11 @@ fi
 eval "$(conda shell.bash hook)"
 conda activate defab-train
 
-PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+if [ -n "${SLURM_SUBMIT_DIR:-}" ]; then
+    PROJ_DIR="$SLURM_SUBMIT_DIR"
+else
+    PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+fi
 cd "$PROJ_DIR"
 
 export PYTHONPATH="$PROJ_DIR/src:${PYTHONPATH:-}"

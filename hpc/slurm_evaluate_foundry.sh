@@ -87,7 +87,11 @@ fi
 eval "$(conda shell.bash hook)"
 module load python/3.11
 
-PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+if [ -n "${SLURM_SUBMIT_DIR:-}" ]; then
+    PROJ_DIR="$SLURM_SUBMIT_DIR"
+else
+    PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+fi
 cd "$PROJ_DIR"
 
 if [ ! -d "venv" ]; then

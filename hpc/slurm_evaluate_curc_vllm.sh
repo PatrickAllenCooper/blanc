@@ -116,7 +116,11 @@ conda activate vllm-env 2>/dev/null || {
     pip install -q vllm openai tenacity
 }
 
-PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+if [ -n "${SLURM_SUBMIT_DIR:-}" ]; then
+    PROJ_DIR="$SLURM_SUBMIT_DIR"
+else
+    PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+fi
 cd "$PROJ_DIR"
 
 # Install DeFAb dependencies into whichever env is active
