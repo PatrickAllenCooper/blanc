@@ -1,9 +1,9 @@
 # Implementation Plan: LLM Evaluation, Fine-Tuning, and Submission
 
-**Date**: 2026-03-02 (updated)
+**Date**: 2026-03-07 (updated)
 **Author**: Patrick Cooper
-**Status**: All training scripts corrected and complete. All B6 analysis scripts written. Phase A evaluation not yet run. Training matrix not yet submitted. Several paper claims unsubstantiated pending experimental runs.
-**Next action**: Run `python experiments/run_foundry_local.py` (full Foundry evaluation), then submit CURC base eval jobs (`bash hpc/slurm_evaluate_curc_all.sh`), then submit training matrix (`bash hpc/slurm_train_all.sh`), then evaluate checkpoints (`bash hpc/submit_eval_finetuned_all.sh`).
+**Status**: Phase A Foundry evaluation COMPLETE (4 models, paper tables populated). Phase B finetuning NOT STARTED -- two B1 attempts failed on CURC due to SLURM script bugs (BASH_SOURCE resolves to spool dir). Fixed in commit `8e67169`. Models not yet downloaded to CURC HF cache. All training scripts, analysis scripts, and SLURM scripts are written and tested.
+**Next action**: Download 3 models to CURC HF cache, pull fix on CURC, resubmit B1 response sampling for all 3 models, then follow B2/B3/B5/B6 pipeline.
 
 ---
 
@@ -33,6 +33,9 @@
 | B-SLURM | `slurm_sample_responses.sh`, `slurm_train_dpo.sh`, `slurm_train_rlhf.sh`, `slurm_eval_finetuned.sh`, `slurm_train_all.sh` | Done (rlhf hyperparams fixed; dpo DATA_FRACTION added) |
 | B6 | All 10 B6 analysis scripts | Done |
 | Symbolic | Symbolic baseline: L2=100% (374/374), L3=100% (35/35) | Done |
+| A2 | Full Foundry evaluation -- 4 models, 409 instances, 4 modalities, 2 strategies | Done (paper Tables 1-3 populated) |
+| A4 | Analysis scripts run on Foundry results (McNemar, Wilson CIs, domain breakdown) | Done |
+| SLURM | Fix `BASH_SOURCE` bug in 8 SLURM scripts (use `SLURM_SUBMIT_DIR` fallback) | Done (commit `8e67169`) |
 
 ### Dataset
 
@@ -73,7 +76,7 @@ HF cache: `/scratch/alpine/paco0228/hf_cache/`
 
 ---
 
-## Phase A: Base Model Evaluation (Weeks 9--10) -- NOT YET RUN
+## Phase A: Base Model Evaluation (Weeks 9--10) -- FOUNDRY COMPLETE, CURC OPTIONAL
 
 ### A1. Validate all four Foundry endpoints
 
@@ -341,48 +344,42 @@ Each script should:
 
 ### C1. Populate Paper Tables with Results
 
-| Table | Source | Script |
+| Table | Source | Status |
 |-------|--------|--------|
-| Table 1 (main accuracy, 6+ models) | Phase A results | `generate_paper_tables.py` |
-| Table 2 (modality x strategy breakdown) | Phase A results | `generate_paper_tables.py` |
-| Table 4 (fine-tuning results) | Phase B results | `generate_ft_tables.py` |
-| Table 5 (curriculum comparison) | Phase B results | `generate_ft_tables.py` |
-| Table 6 (error taxonomy shift) | Phase B results | `generate_ft_tables.py` |
+| Table 1 (main accuracy, 4 models) | Phase A results | **DONE** |
+| Table 2 (modality breakdown) | Phase A results | **DONE** |
+| Table 3 (domain breakdown) | Phase A results | **DONE** |
+| Table 4 (fine-tuning results) | Phase B results | Awaiting B5 |
+| Table 5 (curriculum comparison) | Phase B results | Awaiting B5 |
+| Table 6 (error taxonomy shift) | Phase B results | Awaiting B5 |
 
 ### C2. Update Paper Sections with Results
 
-| Section | Source | Notes |
-|---------|--------|-------|
-| Section 5.1 Tables 1--2 (expand to 6 models) | Phase A | Include Kimi-K2.5, DeepSeek-R1, Qwen-72B, Qwen-32B |
-| Section 5.2 Grounding results | Phase A | Domain breakdown for all 6 models |
-| Section 5.3 Belief revision results | Phase A | Error taxonomy for all 6 models |
-| Section 5.4 CoT analysis | Phase A | CoT lift for all 6 models |
-| Section 5.5 Theory size scaling | Phase A | Run `difficulty_analysis.py` with size subsets |
-| Section 6.7 Fine-tuning results | Phase B | Fill Tables 4--6 |
-| Section 6.8 Hypotheses | Phase B | Confirm/reject Conjectures 1--4 |
-| Section 7 Discussion | Phase A+B | Update with all model findings |
-| Section 8 Conclusion | Phase A+B | Summarize fine-tuning findings |
-| Abstract | Phase A+B | Update accuracy figures to full 6-model results |
+| Section | Source | Status |
+|---------|--------|--------|
+| Sections 5.1-5.4 (4-model results) | Phase A | **DONE** |
+| Section 6.7 Fine-tuning results | Phase B | Awaiting B5/B6 |
+| Section 6.8 Hypotheses | Phase B | Awaiting B5/B6 |
+| Section 7 Discussion | Phase A done, Phase B pending | Partial |
+| Section 8 Conclusion | Phase A done, Phase B pending | Partial |
+| Appendix C (decoder validation) | Standalone | **Not written** |
 
 ### C3. Remaining Code and Paper Fixes
 
-| Task | File | Priority |
-|------|------|----------|
-| ~~Add `l12_only` curriculum to `train_dpo.py`~~ | Done | |
-| ~~Write `hpc/submit_eval_finetuned_all.sh`~~ | Done | |
-| ~~Fix `slurm_train_rlhf.sh` hyperparams~~ | Done | |
-| ~~Fix `MarginDPOTrainer` to match paper Eq.10 (additive, not multiplicative)~~ | Done | |
-| ~~Write all 10 B6 analysis scripts~~ | Done | |
-| Run Phase A full Foundry evaluation | Local | **Next** |
-| Submit CURC base evaluation jobs | CURC | **Next** |
-| Add 95% Wilson CIs to all accuracy output | `experiments/analyze_results.py` | Medium |
-| Write dataset statistics LaTeX generator | `experiments/generate_dataset_table.py` | Medium |
-| Fix GPT-5.2 bib entry (`\cite{openai2023gpt4}` is incorrect) | `paper/references.bib` | Medium |
-| Add `\appendix\section{Decoder Validation Results}\label{app:decoder}` | `paper/paper.tex` | Medium (referenced at line 527) |
-| Replace `David S. Hippocampus` author block | `paper/paper.tex` lines 125--154 | **High** |
-| M1 narrative decoder manual audit (200 randomly sampled failures) | Manual + `validate_decoder_pipeline.py` | Medium |
+| Task | File | Status |
+|------|------|--------|
+| ~~Add `l12_only` curriculum to `train_dpo.py`~~ | | Done |
+| ~~Write `hpc/submit_eval_finetuned_all.sh`~~ | | Done |
+| ~~Fix `slurm_train_rlhf.sh` hyperparams~~ | | Done |
+| ~~Fix `MarginDPOTrainer` to match paper Eq.10~~ | | Done |
+| ~~Write all 10 B6 analysis scripts~~ | | Done |
+| ~~Run Phase A full Foundry evaluation~~ | | Done |
+| ~~Fix author block~~ | | Done (commit `759b06c`) |
+| ~~Fix GPT-5.2 bib entry~~ | | Done (commit `759b06c`) |
+| ~~Fix SLURM BASH_SOURCE bug~~ | | Done (commit `8e67169`) |
+| Add Appendix C (`app:decoder`) | `paper/paper.tex` | **Pending** |
+| M1 narrative decoder manual audit | Manual | **Optional** |
 | Add stage-weighted scoring robustness check to appendix | `paper/paper.tex` | Low |
-| Verify `base_model.txt` written by training scripts | `experiments/finetuning/train_dpo.py`, `train_rlhf_vitl.py` | Medium |
 
 ---
 
@@ -394,29 +391,29 @@ Every claim in the paper maps to a specific experiment. Unverified claims are ma
 
 | Claim | Status | Verified by |
 |-------|--------|-------------|
-| Six models evaluated across three tiers | **UNVERIFIED** -- only 2 complete | Phase A full eval |
-| GPT-5.2 and Kimi on Foundry (eastus2, 250K TPM) | Partially verified (GPT/Claude live; Kimi deferred) | `validate_api_keys.py` |
-| Open-source models fit in single A100 80GB under AWQ 4-bit | **UNVERIFIED** -- not yet run on CURC | Phase A CURC eval |
-| DeepSeek-R1 `<think>` tokens stripped by harness | Done (code exists) | `model_interface.py` |
+| Four frontier models evaluated on Foundry | **VERIFIED** | Full Foundry eval (Feb 28) |
+| GPT-5.2, Kimi, Claude, DeepSeek-R1 on Foundry | **VERIFIED** | `validate_api_keys.py` + full eval |
+| Open-source models fit in single A100 80GB under AWQ 4-bit | **UNVERIFIED** -- not yet run on CURC | Phase A CURC eval (optional) |
+| DeepSeek-R1 `<think>` tokens stripped by harness | **VERIFIED** (code exists and tested) | `model_interface.py` |
 
 ### Section 5 Claims (Base Evaluation -- Phase A)
 
 | Claim | Status | Verified by |
 |-------|--------|-------------|
-| L2 accuracy >= 88% (closed-source) | Pilot only (60 L2 instances, 2 models) | Full Foundry eval |
-| L3 accuracy <= 2% (closed-source) | Pilot only | Full Foundry eval |
-| ~90pp gap between L2 and L3 | Pilot only | All 6 models evaluated |
-| CoT hurts L2 by 15--20pp (overthinking) | Pilot only (GPT: -20pp, Claude: -15pp) | All 6 models |
-| CoT neutral at L3 (GPT: -2.9pp, Claude: +1.4pp) | Pilot only | All 6 models |
-| Claude outperforms GPT-5.2 on all metrics | Pilot only | Full Foundry eval |
-| Error taxonomy: GPT=E1 dominant (55%), Claude=E2 dominant (64%) | Pilot only | Full eval L3 |
-| Domain-agnostic L2 difficulty (>85% all domains) | Pilot only (2 models, 3 domains) | Full 6-model eval |
+| L2 accuracy 62-77% (4 models) | **VERIFIED** | Full Foundry eval, Table 1 |
+| L3 accuracy 14-65% (strategy-dependent) | **VERIFIED** | Full Foundry eval, Table 1 |
+| L2-to-L3 gap substantial (12-59 pp) | **VERIFIED** | Full Foundry eval |
+| CoT hurts L2 by 1.5-31.3 pp (overthinking) | **VERIFIED** | Full Foundry eval, Section 5.4 |
+| CoT helps reasoning models at L3 (+27 to +79 pp) | **VERIFIED** | Full Foundry eval, Section 5.4 |
+| CoT hurts Claude at L3 (-14.3 pp) | **VERIFIED** | Full Foundry eval |
+| Architectural dissociation (reasoning vs instruction) | **VERIFIED** | McNemar tests, p < 0.001 |
+| Error taxonomy: model-specific failure signatures | **VERIFIED** | Full L3 eval |
+| Domain ordering: biology easiest, legal hardest | **VERIFIED** | Table 3, 4 models |
 | Symbolic solver ceiling (L2=100%, L3=100%) | **VERIFIED** | `symbolic_baseline.py` |
-| Difficulty ordering L1 < L2 < L3 | **UNVERIFIED** | `difficulty_analysis.py` |
-| Rendering-robust < per-modality average | Pilot only | `analyze_results.py` |
-| Conjecture modlevel (M1 best for L1, M4 best for L3) | **UNVERIFIED** | Phase A full 4-modality eval |
-| Qwen 72B vs 32B scaling gradient per level | **UNVERIFIED** | Phase A CURC eval |
-| Reasoning vs instruction tier at ~70B matched scale | **UNVERIFIED** | Phase A CURC eval |
+| M1 narrative bottleneck (55-70 pp gap) | **VERIFIED** | Table 2, 4 models |
+| Rendering-robust accuracy dominated by M1 | **VERIFIED** | Full 4-modality eval |
+| Qwen 72B vs 32B scaling gradient per level | **UNVERIFIED** | Phase A CURC eval (optional) |
+| Reasoning vs instruction tier at ~70B matched scale | **UNVERIFIED** | Phase A CURC eval (optional) |
 | Theory size scaling (performance vs \|D\|) | **UNVERIFIED** | `difficulty_analysis.py` with size subsets |
 
 ### Section 5.4 Decoder Validation Claims
@@ -527,38 +524,51 @@ At CURC Alpine rates (free for CU Boulder researchers), this is $0. The bottlene
 
 ## Timeline
 
-| Week | Phase | Deliverable |
-|------|-------|-------------|
-| 9--10 | A | Base evaluation: all 6 models, all modalities, all levels |
-| 10 | B0--B1 | Fine-tuning env setup + confirmation, preference data construction |
-| 10--11 | Code | Write 10 B6 analysis scripts; add `l12_only` curriculum; write `submit_eval_finetuned_all.sh` |
-| 11 | B2--B3 | DPO and VITL-RLHF training (15+ jobs on CURC) |
-| 12 | B4--B5 | Level transfer ablation, fine-tuned model evaluation |
-| 12 | B6 | Run all analysis scripts; populate Tables 4--6 |
-| 13 | C1--C2 | Populate all paper tables and sections from results |
-| 14 | C3 | Author block, bib fix, decoder appendix, final polish, submission |
+| Week | Phase | Deliverable | Status |
+|------|-------|-------------|--------|
+| 9--10 | A | Base evaluation: 4 Foundry models, all modalities, all levels | **DONE** |
+| 10 | Code | All B6 analysis scripts, l12_only, submit_eval_finetuned_all.sh | **DONE** |
+| 10--11 | B0--B1 | CURC env setup, response sampling (3 models) | B1 failed twice; SLURM fix committed `8e67169` |
+| 11 | B1 retry | Download models to HF cache, resubmit B1 | **NOW** |
+| 11--12 | B2--B3 | DPO and VITL-RLHF training (16 jobs on CURC) | Pending B1 |
+| 12--13 | B4--B5 | Level transfer ablation, fine-tuned model evaluation | Pending B2/B3 |
+| 13 | B6 | Run all analysis scripts; populate Tables 4--6 | Pending B5 |
+| 13--14 | C | Appendix C, final paper updates, submission | Pending B6 |
 
 ---
 
 ## Quick-Reference Commands
 
 ```bash
-# Phase A: Base evaluation
-python experiments/validate_api_keys.py
-python experiments/run_foundry_local.py                   # Full Foundry eval (local)
-bash hpc/slurm_evaluate_curc_all.sh                       # CURC open-source eval
+# Step 0: Download models to CURC HF cache (run on login node or acompile)
+conda activate vllm-env
+export HF_HOME=/scratch/alpine/paco0228/hf_cache
+huggingface-cli download Qwen/Qwen2.5-32B-Instruct-AWQ
+huggingface-cli download Qwen/Qwen2.5-72B-Instruct-AWQ
+huggingface-cli download casperhansen/deepseek-r1-distill-llama-70b-awq
 
-# Phase B: Fine-tuning
-sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ" hpc/slurm_sample_responses.sh
+# Step 1: B1 response sampling (submit from /projects/paco0228/blanc)
+cd /projects/paco0228/blanc && git pull
 sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-32B-Instruct-AWQ" hpc/slurm_sample_responses.sh
+sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ" hpc/slurm_sample_responses.sh
 sbatch --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq" hpc/slurm_sample_responses.sh
 
-bash hpc/slurm_train_all.sh                               # Submit all DPO + RLHF jobs
-bash hpc/submit_eval_finetuned_all.sh                     # Evaluate all checkpoints (write this first)
+# Step 2: After B1 completes -- verify data then submit training
+ls experiments/finetuning/data/preferences_*.jsonl         # Should exist
+cat instances/splits.json | head -5                        # Should exist
+bash hpc/slurm_train_all.sh                                # 12 DPO + 4 RLHF jobs
 
-# Analysis
-python experiments/analyze_results.py --results-dir experiments/results/
-python experiments/generate_paper_tables.py --results-dir experiments/results/
+# Step 3: After training completes -- evaluate checkpoints
+bash hpc/submit_eval_finetuned_all.sh
+
+# Step 4: After evaluation -- run analysis and populate tables
 python experiments/finetuning/generate_ft_tables.py --results-dir experiments/results/finetuned/
 python experiments/finetuning/analyze_ft_lift.py --results-dir experiments/results/finetuned/
+python experiments/finetuning/analyze_error_shift.py --results-dir experiments/results/finetuned/
+python experiments/finetuning/analyze_level_transfer.py --results-dir experiments/results/finetuned/
+python experiments/finetuning/analyze_margin_effect.py --results-dir experiments/results/finetuned/
+python experiments/finetuning/analyze_curriculum.py --results-dir experiments/results/finetuned/
+
+# Optional: CURC base evaluation for scaling analysis
+bash hpc/slurm_evaluate_curc_all.sh
 ```

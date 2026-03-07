@@ -1,352 +1,119 @@
 # Project Status
 
-**Last Updated**: 2026-02-25
-**Current**: Phase B training scripts complete. Phase A full evaluation NOT YET RUN. 10 B6 analysis scripts missing. Several paper claims unsubstantiated. `slurm_train_rlhf.sh` has wrong hyperparameter defaults. `l12_only` curriculum not implemented. `submit_eval_finetuned_all.sh` missing.
-**Progress**: 10 of 14 weeks (71% -- implementation done, experiments not yet run)
-**Timeline**: AT RISK -- Phase A must run before B can start; B6 scripts must be written before results can be populated
+**Last Updated**: 2026-03-07
+**Current**: Phase A (Foundry evaluation) COMPLETE -- 4 models, all results in paper. Phase B (finetuning) NOT STARTED -- two B1 attempts failed on CURC due to SLURM script bugs (now fixed). Models not yet downloaded to CURC HF cache.
+**Progress**: 12 of 14 weeks (86% -- infrastructure and base evaluation done, finetuning experiments pending)
+**Timeline**: ON TRACK if B1 starts this week -- finetuning pipeline is ~2 weeks end-to-end
 
 ---
 
 ## Quick Summary
 
-**Weeks Complete**: 10 of 14.5
-**Tests**: 494 passing ✅
-**Coverage**: 81% ✅ (new modules included)  
-**Expert KBs**: 2,318 rules ✅  
-**Instances**: 374 Level 2 + 35 Level 3 (all validated)  
-**Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4) ✅  
-**Pipeline**: dry run passing with MockModelInterface + Level3Evaluator ✅  
-**Level 3 Generation**: COMPLETE - 35 instances, 10 with Nov > 0  
-**Analysis scripts**: COMPLETE - all paper Section 5 analysis ready
+**Tests**: 734 passing (91% coverage)
+**Expert KBs**: 2,318 rules
+**Instances**: 374 Level 2 + 35 Level 3 (all validated)
+**Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4)
+**Base Evaluation**: COMPLETE -- 4 Foundry models, all instances, all modalities
+**Paper Tables 1-3**: Populated with real results
+**Symbolic Baseline**: L2=100% (374/374), L3=100% (35/35)
+**Fine-Tuning Scripts**: All written and tested (B1-B6 + SLURM)
+**Paper Tables 4-6**: EMPTY -- awaiting finetuning results
 
 ---
 
-## Completed Weeks
+## What Is Done
 
-- **Week 1-2**: Expert KB foundation (2,318 rules)
-- **Week 3**: Instance generation (374 Level 2 instances)
-- **Week 4**: Statistical analysis (Section 4.3)
-- **Week 5**: M2, M3, D2 codec
-- **Week 6**: M1, D3, Cascading decoder
-- **Week 7**: Validation + testing infrastructure
-- **Week 8**: Cross-ontology proof-of-concept (failed; documented)
-- **Week 8.5a**: Phase 2B - Manual Level 3 generation (33 instances)
-- **Week 8.5b**: Pre-evaluation preparation
-  - AzureOpenAIInterface added to `experiments/model_interface.py`
-  - Full pipeline dry run (`scripts/dry_run_pipeline.py`) passing
-  - SLURM evaluation scripts: `hpc/slurm_evaluate_azure.sh`, `hpc/slurm_evaluate_llama.sh`
-  - `experiments/run_evaluation.py` CLI with all provider support
-  - Related Work (Section 2) expanded: LLM-ASPIC+ (ECAI 2025), LogiDynamics (EMNLP 2025)
-  - Pipeline bug fixed: `EvaluationPipeline` now routes through `CascadingDecoder` (D1→D2→D3)
-  - Prompting bug fixed: M4 candidate encoding no longer attempts to re-encode formal strings
-- **Week 9 preparation**: All analysis scripts written and tested (no cloud needed)
-  - `experiments/level3_evaluator.py`: parses model responses, computes Nov/conservativity/d_rev
-  - `experiments/validate_decoder_pipeline.py`: confirmed 100% round-trip M2-M4
-  - `experiments/analyze_results.py`: accuracy by model/modality/domain/level
-  - `experiments/novelty_analysis.py`: Nov distribution + accuracy-novelty correlation
-  - `experiments/conservativity_analysis.py`: conservativity rate + d_rev distribution
-  - `experiments/error_taxonomy.py`: E1-E5 error classification
-  - `experiments/generate_paper_tables.py`: LaTeX tables 1-4 for Section 5
-  - `experiments/symbolic_baseline.py`: ASP ceiling evaluation for Levels 2 and 3
-  - `experiments/difficulty_analysis.py`: rewritten with correct sigma(I) extraction
-  - `experiments/partition_sensitivity.py`: rewritten with real Mann-Whitney/KW tests
-  - Azure OpenAI added to `experiments/validate_api_keys.py` and `.env.template`
-- **Azure AI Foundry integration** (2026-02-19):
-  - Three closed-source models now live on LLM-Defeasible-Foundry (eastus2, S0),
-    all accessible under a single shared API key (`FOUNDRY_API_KEY`):
-    - `gpt-5.2-chat` — GPT-5.2 (2025-12-11); 250K TPM / 2,500 RPM
-    - `Kimi-K2.5`    — Moonshot AI; 250K TPM / 250 RPM
-    - `claude-sonnet-4-6` — Anthropic Sonnet 4.6; 250K TPM / 250 RPM
-  - `FoundryGPT52Interface`, `FoundryKimiInterface`, `FoundryClaudeInterface`
-    added to `experiments/model_interface.py`. Note: GPT-5.2 uses
-    `max_completion_tokens` (not `max_tokens`); Claude uses `AnthropicFoundry`
-    (anthropic>=0.40 required).
-  - `--provider foundry-gpt / foundry-kimi / foundry-claude` added to
-    `experiments/run_evaluation.py`; `FOUNDRY_API_KEY` env var falls back
-    automatically when `--api-key` is not passed.
-  - `experiments/validate_api_keys.py` — `test_foundry_gpt()`,
-    `test_foundry_kimi()`, `test_foundry_claude()` added; auto-skips when
-    key not set.
-  - `hpc/slurm_evaluate_foundry.sh` — new SLURM script (amilan partition,
-    4 CPUs, no GPU) that runs all three Foundry models sequentially and then
-    calls `analyze_results.py`; individual models skippable via `SKIP_GPT`,
-    `SKIP_KIMI`, `SKIP_CLAUDE` flags.
-  - `hpc/run_local.sh` and `hpc/run_local.ps1` — `foundry-gpt`,
-    `foundry-kimi`, `foundry-claude` added; `foundry` meta-provider runs all
-    three sequentially; `FOUNDRY_API_KEY` is auto-detected during provider
-    selection.
-  - 15 new unit tests (all mocked, no live network) in
-    `tests/experiments/test_model_interface.py`.
-  - `.env.template` updated with `FOUNDRY_API_KEY` documentation; `.env`
-    populated with credentials.
-  - **Immediate unblocked action**: run `python experiments/validate_api_keys.py`
-    to confirm all three Foundry endpoints are live, then
-    `.\hpc\run_local.ps1 foundry` to begin pilot evaluation locally.
+### Phase A: Base Evaluation (COMPLETE)
 
-- **Foundry-first strategy adopted; DeepSeek-R1 moved to Foundry** (2026-02-19):
-  DeepSeek-R1 is available as a native Azure Foundry serverless model (Direct from
-  Azure, 5M TPM / 5K RPM). It has been added as a 4th Foundry model, eliminating
-  the need for CURC for the primary evaluation.
-  - `FoundryDeepSeekInterface` added to `experiments/model_interface.py`:
-    uses `openai.OpenAI(base_url=..., api_key=...)` with `_strip_thinking_tokens()`
-    (same pattern as FoundryKimi but at the Azure OpenAI endpoint).
-  - `--provider foundry-deepseek` added to `run_evaluation.py`.
-  - `validate_api_keys.py` and local runners updated.
-  - `slurm_evaluate_foundry.sh` now runs all four Foundry models sequentially.
-  - CURC remains available for optional Qwen 2.5 72B / 32B scaling comparison.
-  - CURC conda env fixed: `curc-llm` → `vllm-env` (matches CURC LLM Hoster setup).
-  - HF cache path fixed: `/scratch/alpine/$USER/.cache/hf` → `/scratch/alpine/$USER/hf_cache`.
+Four frontier models evaluated via Azure AI Foundry across 374 L2 + 35 L3 instances, 4 modalities (M1-M4), 2 prompting strategies (direct + CoT):
 
-- **Open-source model selection (CURC, optional scaling only)**:
-  - `Qwen/Qwen2.5-72B-Instruct-AWQ` (~36 GB) — instruction comparator
-  - `Qwen/Qwen2.5-32B-Instruct-AWQ` (~16 GB) — within-family scaling
-  - `_strip_thinking_tokens()` utility in `model_interface.py`
+| Model | L2 | L3 | L3 CoT | Rendering-Robust |
+|-------|----|----|--------|-----------------|
+| DeepSeek-R1 | 73.0% | 65.0% | 92.9% | 23.5% |
+| GPT-5.2-chat | 62.8% | 47.5% | 87.1% | 9.1% |
+| Claude Sonnet 4.6 | 77.2% | 16.4% | 9.3% | 15.5% |
+| Kimi-K2.5 | 65.5% | 14.2% | 27.6% | 7.8% |
 
-- **CURC LLM Hoster integration** (2026-02-18):
-  - `CURCInterface` added to `experiments/model_interface.py`: OpenAI-compatible client
-    pointed at the vLLM server (Patrick Cooper's CURC LLM Hoster project). Uses
-    `openai.OpenAI(base_url=..., api_key="not-needed")` with retry logic.
-  - Supported models: Qwen 2.5 72B AWQ (recommended), Llama 3.3 70B AWQ-INT4,
-    Qwen 2.5 32B AWQ, Llama 3.1 70B AWQ-INT4.
-  - `--provider curc --curc-base-url http://localhost:8000` added to `run_evaluation.py`.
-  - `hpc/slurm_evaluate_curc_vllm.sh`: replaces Ollama-based SLURM script.
-    Starts the vLLM server (tensor-parallel across all node GPUs), waits for the
-    /health endpoint, runs evaluation, shuts down server. Automatically runs
-    `analyze_results.py` on completion.
-  - `test_curc()` added to `validate_api_keys.py`; CURC counted as a valid
-    provider for pilot readiness.
-  - `.env.template` updated with `CURC_VLLM_BASE_URL` and `CURC_VLLM_MODEL`.
-  - 11 new unit tests for `CURCInterface` in `tests/experiments/test_model_interface.py`
-    using mocked OpenAI client (no network required).
+Key findings substantiated in paper:
+- Architectural dissociation: CoT helps reasoning models (+56-79 pp at L3), hurts instruction models (-14 pp)
+- M1 narrative bottleneck: 55-70 pp gap between M1 and formal modalities
+- Domain ordering: biology easiest, legal hardest (stable across all 4 models)
+- All McNemar tests significant (p < 0.001) except Claude vs Kimi at L3
 
-- **Pilot evaluation (2026-02-19)**:
-  Three pipeline bugs found and fixed during live pilot run:
-  1. `run_evaluation.py` did not auto-load `.env`; `load_dotenv()` added at startup.
-  2. CoT responses: `FINAL ANSWER:` extraction regex was too narrow; missed markdown-bold
-     variants and multi-line patterns.  `_extract_cot_answer()` in `evaluation_pipeline.py`
-     rewritten with richer regex + last-non-heading-line fallback.
-  3. Response cache: empty cached responses (from Kimi at max_tokens=512) were being
-     served as hits.  Cache get now skips entries with empty text and retries.
-  4. `max_tokens` made model-aware: reasoning models (Kimi, DeepSeek-R1) now get 1024.
+### Infrastructure (COMPLETE)
 
-  **Pilot results (20 instances/domain, M4+M2, direct+cot)**:
+- All analysis scripts: `analyze_results.py`, `generate_paper_tables.py`, `error_taxonomy.py`, `novelty_analysis.py`, `conservativity_analysis.py`, `scaling_analysis.py`, `difficulty_analysis.py`, `partition_sensitivity.py`
+- All B6 finetuning analysis scripts (10 scripts in `experiments/finetuning/`)
+- All SLURM scripts for B1-B5 pipeline
+- `submit_eval_finetuned_all.sh` for batch checkpoint evaluation
+- `l12_only` curriculum implemented in `train_dpo.py`
+- `slurm_train_rlhf.sh` hyperparams corrected (KL=0.05, mini_batch=8)
+- `base_model.txt` written by both training scripts
+- Margin DPO matches paper Eq.10 (additive, not multiplicative)
 
-  | Model | Level 2 acc | Level 3 acc | Rendering-robust | Direct | CoT | FAILED |
-  |-------|-------------|-------------|-----------------|--------|-----|--------|
-  | gpt-5.2-chat | **88.3%** | 1.4% | 47.5% | 98.3% | 78.3% | 18.5% |
-  | claude-sonnet-4-6 | **91.7%** | 2.1% | 55.0% | 99.2% | 84.2% | 24.0% |
-  | Kimi-K2.5 | — | — | — | — | — | deferred to CURC |
+### Paper (Sections 1-5 COMPLETE, Section 6 tables empty)
 
-  **Key findings**:
-  - Claude Sonnet 4.6 **outperforms** GPT-5.2 on this benchmark (91.7% vs 88.3% L2).
-  - Both models **fail catastrophically on Level 3** (1.4–2.1%), confirming the belief
-    revision deficit thesis.
-  - CoT prompting **hurts** Level 2 performance: delta_CoT = -20% (GPT-5.2), -15% (Claude).
-    Direct selection from candidates is near-optimal for formal rule abduction.
-  - Claude error taxonomy: 34% E1 (decoder failure), 64% E2 (derivation failure).
-  - Kimi requires max_tokens=1024 and ~35s/query; full pilot must run on CURC overnight.
-
-**ALL INFRASTRUCTURE COMPLETE**
-**LEVEL 3 INSTANCES COMPLETE**
-**EVALUATION PIPELINE READY**
-**ANALYSIS INFRASTRUCTURE COMPLETE**
-**CURC LLM HOSTER INTEGRATION COMPLETE**
-**PILOT EVALUATION COMPLETE (GPT-5.2, Claude)**
-**MANUSCRIPT UPDATED (2026-02-24)**
-**SYMBOLIC BASELINE COMPLETE: L2=100%, L3=100% (2026-02-24 session 2)**
-**FINE-TUNING PIPELINE COMPLETE (2026-02-24 session 2)**
-
-### Manuscript updates (2026-02-24)
-
-New Section 6 "Defeasible Fine-Tuning via Preference Optimization" added to paper.tex:
-
-- **Section 6.1**: Verifier-grounded preference signal -- formalizes DeFAb verifier as exact reward
-- **Section 6.2**: Preference data construction -- response sampling, gold-anchored pairs, curriculum stratification
-- **Section 6.3**: Direct Preference Optimization -- standard DPO + margin-weighted variant for graded Level 3 scoring
-- **Section 6.4**: RLHF with verifier-grounded rewards -- reward model, PPO, verifier-in-the-loop (VITL) variant
-- **Section 6.5**: Curriculum training -- joint, sequential, weighted schedules
-- **Section 6.6**: Experimental design -- LoRA configuration, data splits, hyperparameters
-- **Section 6.7**: Evaluation framework -- placeholder tables for fine-tuning results (Tables 3-5)
-- **Section 6.8**: Hypotheses -- four formal conjectures (L3 improvement, error taxonomy shift, level transfer, margin DPO advantage)
-- Abstract updated with fine-tuning mention
-- 6th contribution added to Introduction
-- Discussion section updated with fine-tuning diagnostic paragraph
-- Conclusion updated with fine-tuning reference
-- NeurIPS checklist item 6 updated for training details
-- `references.bib`: 4 new entries (DPO, PPO, LoRA, InstructGPT/RLHF)
-
-### Manuscript updates (2026-02-18)
-
-All additions to `paper/paper.tex`; nothing removed:
-
-- Models paragraph: `Llama 3 70B/8B` replaced by `Qwen 2.5 72B/32B AWQ` (CURC top model);
-  Llama 3.3 70B added as cross-family comparator; TODO removed
-- New paragraph: compute infrastructure (CURC Alpine A100, Azure OpenAI, vLLM REST API)
-- Tier 0 table row: `374` updated to `374 L1/L2 + 35 L3`
-- Scaling analysis: updated to Qwen 2.5 32B vs 72B with Llama cross-family replication
-- Symbolic ceiling TODO resolved: clingo 5, $\Delta$-derivability encoding, 30s timeout
-- Decoder validation TODO resolved: M2-M4 at 100% round-trip over all 409 gold hypotheses
-- Chain-of-thought TODO replaced: full four-step defeasible scaffold described
-- `references.bib`: added 8 new entries (GPT-4o, Claude, Gemini, Qwen 2.5, Llama 3, vLLM, clingo)
-
-### Documentation consolidation (2026-02-18)
-
-Reduced from 90+ markdown files across 8 directories to 10 files in
-`Guidance_Documents/` plus directory READMEs. All historical session
-artefacts (Phase_* summaries, CONTINUE_DEVELOPMENT, CROSS_ONTOLOGY_PLAN,
-completed_weeks/, session_reports/, week3_docs/, planning/, audits/,
-and root-level stray files) deleted. Unique content merged:
-
-- Level-objectives quick-reference table added to `INTUITIVE_GUIDE.md`
-- `DATA_DOWNLOAD.md` created from `docs/DATA_DOWNLOAD_INSTRUCTIONS.md`
-- `REPOSITORY_STRUCTURE.md` rewritten from scratch to reflect current state
-- Cross-ontology failure already captured in STATUS.md (Week 8.5a entry)
+- Abstract, Introduction, Related Work, Method, Results: all written with real numbers
+- Section 6 (Defeasible Fine-Tuning): methodology written, Tables 4-6 placeholders
+- Discussion and Conclusion: written referencing finetuning as diagnostic
+- Author block: Patrick Cooper (fixed)
+- Bibliography: all entries present
 
 ---
 
-## Phase 2B Results (2026-02-18)
+## What Is Not Done
 
-**Script**: `scripts/generate_level3_manual.py`  
-**Output**: `instances/level3_instances.json`
+### Phase B: Finetuning on CURC (BLOCKED -- now unblocked)
 
-| Domain | Instances | Nov > 0 | Valid |
-|--------|-----------|---------|-------|
-| Biology | 16 | 4 | 16/16 |
-| Legal | 10 | 2 | 10/10 |
-| Materials | 9 | 4 | 9/9 |
-| **Total** | **35** | **10** | **35/35** |
+**Root cause of failures**: Two B1 sampling attempts failed on CURC:
+- Job 24442872 (Mar 3): `PYTHONPATH: unbound variable` -- fixed in commit `b009a48`
+- Job 24482007 (Mar 5): `mkdir: Permission denied` -- `BASH_SOURCE[0]` resolves to SLURM spool dir, not original script path. Fixed in commit `8e67169` (uses `SLURM_SUBMIT_DIR` fallback).
 
-**Verified properties for each instance**:
-- D^- ⊢∂ anomaly (anomaly is defeasibly provable in challenge theory)
-- D^full ⊬∂ anomaly (gold defeater resolves the anomaly)
-- Conservativity: all preserved expectations hold after defeater is added
-- Distractor quality: no distractor is simultaneously resolutive AND conservative
+**Additional blocker**: Required models not downloaded to CURC HF cache (`/scratch/alpine/paco0228/hf_cache/`). Only `Qwen2.5-7B` exists (from another project). Need:
+- `Qwen/Qwen2.5-32B-Instruct-AWQ` (~16 GB)
+- `Qwen/Qwen2.5-72B-Instruct-AWQ` (~36 GB)
+- `casperhansen/deepseek-r1-distill-llama-70b-awq` (~35 GB)
 
-**Two-entity pattern** used for all Nov > 0 instances: two entities of the same
-species/type appear in D^-, where only one has the novel property (in the gold
-`novel_facts`). This ensures the "no-novel" distractor is non-conservative
-(it would incorrectly block the second entity), while the gold is conservative
-(targets only the entity with the novel property).
+**CURC environment status**: Both `defab-train` and `vllm-env` conda envs exist and are ready.
 
----
-
-## Audit: Gaps Found (2026-02-25)
-
-### Missing Scripts (block paper completion)
-- `experiments/finetuning/generate_ft_tables.py` -- LaTeX Tables 4--6
-- `experiments/finetuning/analyze_ft_lift.py` -- Conjecture 1
-- `experiments/finetuning/analyze_error_shift.py` -- Conjecture 2
-- `experiments/finetuning/analyze_level_transfer.py` -- Conjecture 3
-- `experiments/finetuning/analyze_margin_effect.py` -- Conjecture 4
-- `experiments/finetuning/analyze_curriculum.py` -- curriculum comparison
-- `experiments/finetuning/analyze_novel_resolutions.py` -- generalization
-- `experiments/finetuning/analyze_scaling_projections.py` -- log-linear scaling
-- `experiments/finetuning/analyze_reward_fidelity.py` -- Spearman rho(R_phi, verifier)
-- `experiments/finetuning/analyze_reward_overoptimization.py` -- reward hacking diagnostic
-- `hpc/submit_eval_finetuned_all.sh` -- referenced in `slurm_train_all.sh` but does not exist
-
-### Code Bugs (must fix before submitting training jobs)
-- `hpc/slurm_train_rlhf.sh`: `KL_COEFF` defaults to 0.1 but paper specifies 0.05; `MINI_BATCH_SIZE` defaults to 4 but paper specifies 8
-- `experiments/finetuning/train_dpo.py`: `l12_only` curriculum not in choices list (required for B4 level transfer ablation)
-- Both training scripts must write `base_model.txt` to checkpoint dir (needed by `submit_eval_finetuned_all.sh`)
+**Pipeline sequence**: B1 (response sampling, ~8h each, 1x A100) -> B2 (DPO, 12 jobs, 24h, 4x A100) -> B3 (RLHF, 4 jobs, 36h, 4x A100) -> B5 (eval, ~4h each, 1x A100) -> B6 (analysis)
 
 ### Paper Claims Not Yet Substantiated
-- Tables 1--2 only contain 2 models (GPT-5.2, Claude); need 6 models total
-- Kimi-K2.5 results never collected (deferred from pilot)
-- All open-source model results missing (DeepSeek-R1-Distill, Qwen-72B, Qwen-32B)
-- M1 narrative decoder recovery rate not computed; manual audit of 200 failures not done
-- Appendix section `app:decoder` referenced in text but does not exist in paper
-- All Section 6 fine-tuning conjectures unverified (experiments not run)
-- Author block still shows "David S. Hippocampus"
-- `\cite{openai2023gpt4}` is wrong bib key for GPT-5.2
 
-## Next: Full Foundry Evaluation (Phase A3 -- Immediate)
-
-**All blockers cleared**: FOUNDRY_API_KEY in .env, all four models live.
-
-**Run full evaluation locally (no SLURM, no CURC needed)**:
-```bash
-# Step 1: Validate all four Foundry endpoints
-python experiments/validate_api_keys.py
-
-# Step 2: Full evaluation -- all 4 models, 409 instances, all modalities
-python experiments/run_foundry_local.py
-
-# Or a dry-run smoke test first (3 instances):
-python experiments/run_foundry_local.py --dry-run
-
-# After evaluation, run all analysis scripts:
-python experiments/analyze_results.py --results-dir experiments/results/
-python experiments/generate_paper_tables.py --results-dir experiments/results/
-python experiments/error_taxonomy.py --results-dir experiments/results/
-python experiments/novelty_analysis.py --results-dir experiments/results/
-```
-
-**CURC Phase B (when Alpine is available)**:
-```bash
-# B1 response sampling (one job per model, 1xA100)
-sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ" hpc/slurm_sample_responses.sh
-
-# B2-B3 full training matrix (12 DPO + 4 RLHF jobs)
-bash hpc/slurm_train_all.sh
-
-# B5 evaluation of fine-tuned checkpoints
-sbatch --export=ALL,CHECKPOINT=<path>,BASE_MODEL=<id> hpc/slurm_eval_finetuned.sh
-```
+- Tables 4-6: finetuning results (all "--")
+- Conjectures 1-4 (Section 6.8): unverified
+- M1 decoder recovery rate: not computed; 200-failure manual audit not done
+- Appendix C (decoder validation): referenced as `app:decoder` but not written
+- Scaling analysis (Qwen 72B vs 32B): requires CURC base eval (optional -- deprioritized vs finetuning)
 
 ---
 
-## Implemented in Session 2 (2026-02-24)
+## Remaining Work
 
-| Item | File | Status |
-|------|------|--------|
-| `blanc.author.loaders` module | `src/blanc/author/loaders.py` | New |
-| Local Foundry evaluation runner | `experiments/run_foundry_local.py` | New |
-| Preference data construction (Foundry-compatible) | `experiments/finetuning/prepare_preference_data.py` | New |
-| DPO trainer (standard + margin-weighted) | `experiments/finetuning/train_dpo.py` | New |
-| RLHF/VITL-PPO trainer | `experiments/finetuning/train_rlhf_vitl.py` | New |
-| Fine-tuned model evaluator | `experiments/finetuning/evaluate_finetuned.py` | New |
-| DeepSpeed ZeRO-2 config | `experiments/finetuning/ds_config_zero2.json` | New |
-| SLURM response sampling script | `hpc/slurm_sample_responses.sh` | New |
-| SLURM DPO training script | `hpc/slurm_train_dpo.sh` | New |
-| SLURM RLHF training script | `hpc/slurm_train_rlhf.sh` | New |
-| SLURM finetuned evaluation script | `hpc/slurm_eval_finetuned.sh` | New |
-| SLURM full matrix orchestration | `hpc/slurm_train_all.sh` | New |
-| Symbolic baseline L2 | `experiments/results/symbolic_baseline_l2.json` | **100% (374/374)** |
-| Symbolic baseline L3 | `experiments/results/symbolic_baseline_l3.json` | **100% (35/35)** |
-| **Bug fix**: `_FAT_ARROW_RE` label regex (predicate-style labels) | `experiments/level3_evaluator.py` | Fixed |
-| **Bug fix**: `_deep_copy_theory` missing import | `experiments/symbolic_baseline.py` | Fixed |
+### Immediate (this week)
+- [x] Fix SLURM `BASH_SOURCE` bug -- commit `8e67169`
+- [ ] Download 3 models to CURC HF cache (~87 GB)
+- [ ] Pull fix on CURC, resubmit B1 for all 3 models
+- [ ] Update guidance documents (this file + REVISED_IMPLEMENTATION_PLAN.md)
 
----
+### Phase B Execution (~2 weeks)
+- [ ] B1: Response sampling (3 models, ~8h each)
+- [ ] B2: DPO training (12 jobs, ~24h each)
+- [ ] B3: RLHF training (4 jobs, ~36h each)
+- [ ] B4: Level transfer ablation (l12_only curriculum, Qwen-72B)
+- [ ] B5: Evaluate all checkpoints (~24 jobs, ~4h each)
+- [ ] B6: Run all 10 analysis scripts, populate Tables 4-6
 
-## Remaining Work: ~4 Weeks
+### Paper Completion (~1 week after B6)
+- [ ] Populate Tables 4-6 from finetuning results
+- [ ] Confirm/reject Conjectures 1-4
+- [ ] Write Appendix C (decoder validation)
+- [ ] Update Discussion and Conclusion with finetuning findings
+- [ ] Final polish and submission
 
-### Phase A -- Base Evaluation (Weeks 9--10)
-- [ ] Run `python experiments/run_foundry_local.py` (4 Foundry models, all instances)
-- [ ] Open-source model evaluation (CURC, 3 models) -- when Alpine available
-- [ ] Run all Section 5 analysis scripts after evaluation completes
-- [x] Symbolic baseline: COMPLETE
+### Optional (if time permits)
+- [ ] CURC base evaluation (Qwen-72B, Qwen-32B, DS-R1-70B) for scaling analysis
+- [ ] M1 decoder 200-failure manual audit
 
-### Phase B -- Defeasible Fine-Tuning (Weeks 11--12) -- CURC required
-- [x] B0: Environment setup (defab-train conda env) -- documented
-- [x] B1: `prepare_preference_data.py` -- implemented (Foundry-compatible for remote use)
-- [x] B2: `train_dpo.py` -- implemented (standard + margin-weighted + curriculum)
-- [x] B3: `train_rlhf_vitl.py` -- implemented (VITL + reward-model modes)
-- [x] B4: Level transfer via curriculum argument
-- [x] B5: `evaluate_finetuned.py` -- implemented
-- [ ] B5 (run): Execute training matrix on CURC
-- [ ] B6: Populate Tables 3--5 from B5 results
-
-### Phase C -- Paper Completion (Weeks 13--14)
-- [ ] Populate Tables 1--2 from Phase A results
-- [ ] Populate Tables 3--5 from Phase B results
-- [ ] Confirm/reject Conjectures 6--9
-- [ ] Final paper polish and NeurIPS submission
-
-**Total CURC GPU budget**: ~123 GPU-days (free for CU Boulder researchers)
-**Total API cost**: ~$26
-
----
-
-**For details**: See `Guidance_Documents/CURRENT_STATUS_AND_PLAN.md`  
-**For roadmap**: See `Guidance_Documents/NEURIPS_FULL_ROADMAP.md`
+**Total CURC GPU budget**: ~158 GPU-days (free for CU Boulder researchers)
+**Total API cost**: ~$26 (Foundry eval already spent)
