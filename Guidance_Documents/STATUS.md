@@ -1,6 +1,6 @@
 # Project Status
 
-**Last Updated**: 2026-03-07
+**Last Updated**: 2026-03-11
 **Current**: Phase A (Foundry evaluation) COMPLETE -- 4 models, all results in paper. Phase B (finetuning) NOT STARTED -- two B1 attempts failed on CURC due to SLURM script bugs (now fixed). Models not yet downloaded to CURC HF cache.
 **Progress**: 12 of 14 weeks (86% -- infrastructure and base evaluation done, finetuning experiments pending)
 **Timeline**: ON TRACK if B1 starts this week -- finetuning pipeline is ~2 weeks end-to-end
@@ -18,6 +18,7 @@
 **Symbolic Baseline**: L2=100% (374/374), L3=100% (35/35)
 **Fine-Tuning Scripts**: All written and tested (B1-B6 + SLURM)
 **Paper Tables 4-6**: EMPTY -- awaiting finetuning results
+**Presentation**: `paper/mvp_validation_slides.tex` updated from MVP prototype to current project state (metropolis theme, real results, 29 slides)
 
 ---
 

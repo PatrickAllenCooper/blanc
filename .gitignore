@@ -51,8 +51,21 @@ venv.bak/
 *.swn
 .DS_Store
 
-# Project specific
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
 *.log
+*.out
+*.nav
+*.snm
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.pdf
+
+# Project specific
 .mypy_cache/
 .dmypy.json
 dmypy.json

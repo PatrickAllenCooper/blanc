@@ -1,14 +1,27 @@
-\documentclass{beamer}
-\usetheme{Madrid}
-\usecolortheme{default}
-
+\documentclass[aspectratio=169]{beamer}
+\usetheme{metropolis}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{multirow}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, calc}
 
-% Custom commands from paper
+\definecolor{defabblue}{RGB}{0,90,156}
+\definecolor{defabgold}{RGB}{186,146,42}
+\definecolor{defabgreen}{RGB}{46,139,87}
+\definecolor{defabredish}{RGB}{178,34,34}
+\definecolor{softgray}{RGB}{245,245,245}
+
+\setbeamercolor{frametitle}{bg=defabblue, fg=white}
+\setbeamercolor{progress bar}{fg=defabgold}
+\setbeamercolor{alerted text}{fg=defabredish}
+\setbeamerfont{institute}{size=\footnotesize}
+\setbeamerfont{subtitle}{size=\small}
+\setbeamerfont{date}{size=\footnotesize}
+
 \newcommand{\D}{\mathcal{D}}
 \newcommand{\Dm}{\mathcal{D}^{-}}
 \newcommand{\Dfull}{\mathcal{D}^{\mathrm{full}}}
@@ -19,788 +32,694 @@
 \newcommand{\defto}{\Rightarrow}
 \newcommand{\strictto}{\rightarrow}
 \newcommand{\defeatto}{\leadsto}
+\newcommand{\CritStar}{\mathrm{Crit}^{*}}
+\newcommand{\Exp}{\mathrm{Exp}}
+\newcommand{\Nov}{\mathrm{Nov}}
 
-\title{DeFAb MVP Validation Study}
-\subtitle{Empirical Validation of Defeasible Reasoning for Foundation Model Evaluation}
+\title{DeFAb: Defeasible Abduction Benchmark}
+\subtitle{Grounding, Novelty, and Belief Revision in Foundation Models}
 \author{Patrick Cooper}
-\date{February 11, 2026}
+\institute{University of Colorado Boulder}
+\date{March 2026}
 
 \begin{document}
 
-\begin{frame}
-\titlepage
-\end{frame}
+\maketitle
 
 \begin{frame}{Outline}
 \tableofcontents
 \end{frame}
 
-\section{Introduction}
 
-\begin{frame}{The Challenge}
-\textbf{Foundation models face three entangled deficits:}
+% ==============================================================================
+\section{Motivation}
+% ==============================================================================
 
-\begin{enumerate}
-    \item \textbf{Grounding deficit}: Cannot trace conclusions to supporting evidence
-    \item \textbf{Novelty deficit}: Cannot identify which beliefs are revisable
-    \item \textbf{Belief revision deficit}: Cannot update knowledge minimally (AGM principle)
-\end{enumerate}
+\begin{frame}{The Challenge: Three Entangled Deficits}
+
+Foundation models are routinely evaluated on forward, monotonic inference.
+Scientific progress demands something harder.
+
+\vspace{0.8em}
+\begin{columns}[T]
+\begin{column}{0.33\textwidth}
+\centering
+\textbf{\textcolor{defabblue}{Grounding Deficit}}\\[4pt]
+\small
+Models cannot trace conclusions to supporting evidence.\\[4pt]
+\textit{Root cause of hallucination.}
+\end{column}
+
+\begin{column}{0.33\textwidth}
+\centering
+\textbf{\textcolor{defabblue}{Novelty Deficit}}\\[4pt]
+\small
+Models cannot identify which beliefs are revisable or where exceptions apply.\\[4pt]
+\textit{Root cause of creative sterility.}
+\end{column}
+
+\begin{column}{0.33\textwidth}
+\centering
+\textbf{\textcolor{defabblue}{Belief Revision Deficit}}\\[4pt]
+\small
+Models cannot update knowledge while preserving unrelated commitments.\\[4pt]
+\textit{Root cause of knowledge editing fragility.}
+\end{column}
+\end{columns}
 
 \vspace{1em}
-\textbf{Paper's Claim}: Defeasible reasoning provides the missing structure.
-
-\vspace{1em}
-\textbf{This Study}: Validate the claim through MVP implementation.
+These deficits are \textbf{mutually reinforcing}: without grounding, no targeted revision; without revision, no genuine creativity; without novelty, no revision at all.
 \end{frame}
 
-\begin{frame}{Research Questions}
-\textbf{Five questions to validate paper's merit:}
 
-\begin{enumerate}
-    \item \textbf{RQ1}: Does the framework enable tractable generation with verifiable gold standards?
-    
-    \item \textbf{RQ2}: Can we generate instances across all 3 difficulty levels with provable correctness?
-    
-    \item \textbf{RQ3}: Does the codec achieve perfect round-trip as theoretically predicted?
-    
-    \item \textbf{RQ4}: Are the mathematical properties empirically validated?
-    
-    \item \textbf{RQ5}: Does the framework provide explicit grounding structure?
-\end{enumerate}
+\begin{frame}{The Tautological Bottleneck}
+
+\begin{quote}
+The very hypotheses a model would need to generate are precisely those it has never seen, because the act of proposing them is what converts them from creative conjectures into textbook facts.
+\end{quote}
+
+\vspace{0.8em}
+\textbf{Example}: Intrinsically disordered proteins (IDPs)
+
+\begin{itemize}
+    \item Prior dogma: proteins require stable 3D structure to function
+    \item Discovery: proteins without fixed structure remain functionally essential
+    \item An AI trained on pre-discovery data would resist this hypothesis---it directly contradicts the default encoded in its training corpus
+\end{itemize}
+
+\vspace{0.8em}
+The creative act requires not merely asserting the exception, but doing so via a \textbf{targeted revision} that overrides one default while leaving all other predictions intact.
 \end{frame}
 
-\section{MVP Implementation}
 
-\begin{frame}{Implementation Overview}
-\textbf{4-Week Implementation (Accelerated)}
+\begin{frame}{Defeasible Reasoning as the Missing Structure}
 
-\begin{description}
-    \item[Week 1] Defeasible Reasoning Engine (Definition 7)
-    \begin{itemize}
-        \item Tagged proof procedure: $+\Delta$, $+\partial$
-        \item Team defeat mechanism
-        \item 33 tests passing, 91\% coverage
-    \end{itemize}
-    
-    \item[Week 2] Conversion \& Criticality (Defs 9, 10, 18-22)
-    \begin{itemize}
-        \item Defeasible conversion $\phi_\partfunc(\Pi)$
-        \item Four partition functions
-        \item Criticality $\mathrm{Crit}^*(\D, q)$
-        \item 35 tests passing, 85\% coverage
-    \end{itemize}
+\small
+\textbf{Defeasible logic} provides exactly what foundation models lack:
+
+\vspace{0.2em}
+\footnotesize
+\begin{description}[labelwidth=2.1cm, leftmargin=2.3cm]
+    \item[Grounding] Every conclusion has a traceable support set
+    \item[Revisability] Every default is explicitly marked as overridable
+    \item[Conservativity] Revisions preserve all unrelated expectations (AGM minimal change)
 \end{description}
+
+\small
+\vspace{0.2em}
+\textbf{A defeasible theory} $\D = (F, R_s, R_d, R_{df}, {\succ})$:
+\begin{itemize}\setlength\itemsep{0pt}
+    \item \textbf{Facts} $F$ -- ground observations
+    \item \textbf{Strict rules} $R_s$ -- invariable ($A \strictto B$)
+    \item \textbf{Defeasible rules} $R_d$ -- revisable defaults ($A \defto B$)
+    \item \textbf{Defeaters} $R_{df}$ -- block but cannot support ($A \defeatto \neg B$)
+    \item \textbf{Superiority} $\succ$ -- acyclic priority over conflicting rules
+\end{itemize}
 \end{frame}
 
-\begin{frame}{Implementation Overview (cont'd)}
-\begin{description}
-    \item[Week 3] Instance Generation (Defs 20-21)
-    \begin{itemize}
-        \item Level 1-2 generation pipeline
-        \item Distractor sampling strategies
-        \item 12 instances generated (100\% valid)
-        \item 13 tests passing, 90\% coverage
-    \end{itemize}
-    
-    \item[Week 4] Codec \& Level 3 (Defs 23-30)
-    \begin{itemize}
-        \item M4 (pure formal) encoder
-        \item D1 (exact match) decoder
-        \item 3 Level 3 instances (100\% conservative)
-        \item 26 tests passing, 92\% decoder coverage
-    \end{itemize}
-\end{description}
 
-\vspace{1em}
-\textbf{Total}: 107/107 tests passing, 15 valid instances
-\end{frame}
+% ==============================================================================
+\section{DeFAb: The Benchmark}
+% ==============================================================================
 
-\begin{frame}{System Architecture}
+\begin{frame}{DeFAb Pipeline Overview}
+
 \begin{center}
-\begin{tikzpicture}[scale=0.85, every node/.style={scale=0.85}]
-    % Boxes
-    \node[draw, rectangle, minimum width=3cm, minimum height=0.8cm, fill=blue!20] at (0,3) (reasoning) {Defeasible Engine};
-    \node[draw, rectangle, minimum width=3cm, minimum height=0.8cm, fill=green!20] at (0,2) (conversion) {Conversion $\phi_\partfunc$};
-    \node[draw, rectangle, minimum width=3cm, minimum height=0.8cm, fill=orange!20] at (0,1) (criticality) {Criticality $\mathrm{Crit}^*$};
-    \node[draw, rectangle, minimum width=3cm, minimum height=0.8cm, fill=red!20] at (0,0) (generation) {Generation L1-L3};
-    \node[draw, rectangle, minimum width=3cm, minimum height=0.8cm, fill=purple!20] at (0,-1) (codec) {Codec M4+D1};
-    
-    % Labels
-    \node[right] at (3.2,3) {\small $\D \pPartial q$ in $O(|R| \cdot |F|)$};
-    \node[right] at (3.2,2) {\small 4 partition functions};
-    \node[right] at (3.2,1) {\small $O(|\D|^2 \cdot |F|)$};
-    \node[right] at (3.2,0) {\small 15 instances};
-    \node[right] at (3.2,-1) {\small 100\% round-trip};
-    
-    % Arrows
-    \draw[->, thick] (reasoning) -- (conversion);
-    \draw[->, thick] (conversion) -- (criticality);
-    \draw[->, thick] (criticality) -- (generation);
-    \draw[->, thick] (generation) -- (codec);
+\begin{tikzpicture}[
+    node distance=0.3cm and 1.0cm,
+    box/.style={draw, rounded corners=3pt, minimum width=2.5cm, minimum height=0.8cm, font=\footnotesize, text centered, thick},
+    arr/.style={-{Stealth[length=5pt]}, thick, defabblue},
+    lbl/.style={font=\tiny, text=gray}
+]
+    \node[box, fill=defabblue!15] (kb) {Legacy KBs};
+    \node[box, fill=defabblue!25, right=of kb] (conv) {Conversion $\phi_\partfunc$};
+    \node[box, fill=defabblue!35, right=of conv] (gen) {Instance Gen.};
+    \node[box, fill=defabblue!45, text=white, right=of gen] (eval) {Model Eval.};
+
+    \draw[arr] (kb) -- (conv);
+    \draw[arr] (conv) -- (gen);
+    \draw[arr] (gen) -- (eval);
+
+    \node[lbl, below=0.1cm of kb] {YAGO, WordNet, LKIF, MatOnto};
+    \node[lbl, below=0.1cm of conv] {5 partition families};
+    \node[lbl, below=0.1cm of gen] {409 instances, 3 levels};
+    \node[lbl, below=0.1cm of eval] {4 models, 4 modalities};
 \end{tikzpicture}
 \end{center}
 
-\textbf{Clean pipeline}: Theory $\to$ Conversion $\to$ Generation $\to$ Encoding
-\end{frame}
-
-\section{Validation Results}
-
-\begin{frame}{RQ1: Tractable Generation with Verifiable Gold?}
-\textbf{Answer}: \textcolor{green}{\textbf{YES}}
-
-\vspace{1em}
-\begin{block}{Evidence}
-\begin{itemize}
-    \item Generated 15 instances in $<10$ seconds
-    \item All gold standards verified by defeasible derivation
-    \item Criticality computation: $O(|\D|^2 \cdot |F|)$ as proven
-    \item 100\% validity rate (all instances pass 4 properties)
-\end{itemize}
-\end{block}
-
-\vspace{1em}
-\begin{tabular}{lcc}
-\toprule
-\textbf{Operation} & \textbf{Theoretical} & \textbf{Empirical} \\
-\midrule
-Defeasible query & $O(|R| \cdot |F|)$ & 1-8 ms \\
-Criticality & $O(|\D|^2 \cdot |F|)$ & 50-400 ms \\
-Instance generation & $O(|\D|^3)$ & $\sim$400 ms \\
-\bottomrule
-\end{tabular}
-\end{frame}
-
-\begin{frame}{RQ2: All 3 Levels Working?}
-\textbf{Answer}: \textcolor{green}{\textbf{YES}}
-
-\vspace{1em}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\textbf{Level 1}: Fact completion
-\begin{itemize}
-    \item 2 instances
-    \item Ablate $e \in F$
-    \item Example: \\
-    \small swims(opus) $\leftarrow$ aquatic\_environment(opus)
-\end{itemize}
-
-\vspace{0.5em}
-\textbf{Level 2}: Rule abduction
-\begin{itemize}
-    \item 10 instances
-    \item Ablate $e \in R_d$
-    \item Example: \\
-    \small flies(X) :- bird(X)
+\vspace{0.3em}
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Key properties}:
+\begin{itemize}\setlength\itemsep{1pt}
+    \item Polynomial-time instance generation
+    \item Verifier-backed gold standards
+    \item Rendering-robust evaluation
+    \item Graded Level 3 scoring
 \end{itemize}
 \end{column}
-
-\begin{column}{0.5\textwidth}
-\textbf{Level 3}: Defeater abduction
-\begin{itemize}
-    \item 3 instances
-    \item Resolve anomaly
-    \item 100\% conservative
-    \item Example: \\
-    \small $\sim$flies(X) :- penguin(X)
-\end{itemize}
-
-\vspace{2em}
-\textbf{All instances}:
-\begin{itemize}
-    \item 100\% valid
-    \item Automatically verified
+\begin{column}{0.48\textwidth}
+\textbf{Current scale}:
+\begin{itemize}\setlength\itemsep{1pt}
+    \item 2,318 expert KB rules
+    \item 374 Level 2 + 35 Level 3 instances
+    \item 3 domains (biology, legal, materials)
+    \item 4 rendering modalities (M1--M4)
 \end{itemize}
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}{RQ3: Perfect Round-Trip?}
-\textbf{Answer}: \textcolor{green}{\textbf{YES - 100\% Accuracy}}
 
-\vspace{1em}
-\begin{block}{Codec Architecture}
-\textbf{M4 (Pure Formal)} encoder: Raw Prolog syntax \\
-\textbf{D1 (Exact Match)} decoder: Deterministic string matching
+\begin{frame}{Three Levels of Increasing Difficulty}
 
-\vspace{0.5em}
-\textbf{Theoretical Guarantee} (Proposition, line 903): \\
-``D1 satisfies round-trip consistency by construction''
-\end{block}
-
-\vspace{1em}
-\textbf{Empirical Validation}:
-\begin{itemize}
-    \item 26 round-trip tests, all passing
-    \item Tested on facts, all rule types, generated instances
-    \item Handles negation, underscores, numbers, variables
-    \item Case-insensitive, whitespace-tolerant
-\end{itemize}
-
-\vspace{0.5em}
-\textbf{Result}: \textcolor{green}{\textbf{100\% round-trip accuracy (as predicted)}}
-\end{frame}
-
-\begin{frame}{RQ4: Mathematical Properties Verified?}
-\textbf{Answer}: \textcolor{green}{\textbf{YES - All Tested Props Hold}}
-
-\vspace{1em}
-\begin{tabular}{lll}
-\toprule
-\textbf{Property} & \textbf{Statement} & \textbf{Status} \\
-\midrule
-Proposition 1 & $\partfunc \equiv s \Rightarrow$ conservative & \textcolor{green}{✓ Verified} \\
-Proposition 2 & $\D \pDelta q \Rightarrow \D \pPartial q$ & \textcolor{green}{✓ Verified} \\
-Proposition 3 & $\mathbb{E}[Y(\partfunc_{\mathrm{rand}}(\delta), Q)]$ monotone & \textcolor{green}{✓ Verified} \\
-Theorem 11 & Derivation in $O(|R| \cdot |F|)$ & \textcolor{green}{✓ Baseline} \\
-Definition 30 & Round-trip consistency & \textcolor{green}{✓ 100\%} \\
-\bottomrule
-\end{tabular}
-
-\vspace{1em}
-\textbf{Method}: Automated tests for each proposition
-
-\vspace{0.5em}
-\textbf{Coverage}: 107 tests, 100\% passing
-\end{frame}
-
-\begin{frame}{RQ5: Explicit Grounding Structure?}
-\textbf{Answer}: \textcolor{green}{\textbf{YES}}
-
-\vspace{1em}
-\textbf{Grounding via $\mathrm{Crit}^*(\D, q)$}:
-
-For conclusion $q = $ flies(tweety):
-\begin{itemize}
-    \item \textbf{Critical fact}: bird(tweety)
-    \item \textbf{Critical rule}: r1: bird(X) $\defto$ flies(X)
-    \item \textbf{Support set}: $\{$bird(tweety), r1$\}$
-\end{itemize}
-
-\vspace{1em}
-\textbf{Properties}:
-\begin{itemize}
-    \item Polynomial-time computable: $O(|\D|^2 \cdot |F|)$
-    \item Explicit: Every conclusion traceable to support
-    \item Revisable: Defeasible elements marked
-    \item Ablatable: Critical elements $\to$ instance generation
-\end{itemize}
-
-\vspace{0.5em}
-\textcolor{blue}{\textbf{This enables}} grounding, novelty identification, and targeted revision.
-\end{frame}
-
-\section{Dataset Analysis}
-
-\begin{frame}{Generated Dataset}
-\textbf{Avian Abduction Benchmark MVP}
-
-\vspace{1em}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\textbf{Statistics}:
-\begin{itemize}
-    \item \textbf{Total}: 15 instances
-    \item \textbf{Level 1}: 2 (fact completion)
-    \item \textbf{Level 2}: 10 (rule abduction)
-    \item \textbf{Level 3}: 3 (defeater abduction)
-\end{itemize}
-
-\vspace{1em}
-\textbf{Quality}:
-\begin{itemize}
-    \item \textcolor{green}{100\%} valid
-    \item \textcolor{green}{100\%} round-trip
-    \item \textcolor{green}{100\%} conservative (L3)
-\end{itemize}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\textbf{\textcolor{defabgreen}{Level 1: Fact Completion}}\\[4pt]
+\small
+Ablate a ground fact $e \in F$.\\[4pt]
+Task: identify the missing observation.\\[6pt]
+\textit{``Which bird is aquatic?''}\\[6pt]
+Tests: \textbf{Grounding}
 \end{column}
 
-\begin{column}{0.5\textwidth}
-\textbf{Knowledge Base}:
-\begin{itemize}
-    \item Domain: Avian Biology
-    \item Individuals: 6 birds
-    \item Species: 4 types
-    \item Rules: 20+ total
-    \item Defeaters: 4
-\end{itemize}
+\begin{column}{0.32\textwidth}
+\textbf{\textcolor{defabgold}{Level 2: Rule Abduction}}\\[4pt]
+\small
+Ablate a defeasible rule $e \in R_d$.\\[4pt]
+Task: reconstruct the missing generalization.\\[6pt]
+\textit{``What rule predicts flight?''}\\[6pt]
+Tests: \textbf{Grounding + Novelty}
+\end{column}
 
-\vspace{1em}
-\textbf{Encoding}:
-\begin{itemize}
-    \item M4 (pure formal)
-    \item D1 (exact match)
-    \item Prolog syntax
-\end{itemize}
+\begin{column}{0.32\textwidth}
+\textbf{\textcolor{defabredish}{Level 3: Defeater Abduction}}\\[4pt]
+\small
+Construct a novel defeater that resolves an anomaly conservatively.\\[6pt]
+\textit{``Why doesn't this penguin fly?''}\\[6pt]
+Tests: \textbf{Grounding + Novelty + Revision}
 \end{column}
 \end{columns}
-\end{frame}
-
-\begin{frame}{Sample Instance: Level 1 (Fact Completion)}
-\begin{block}{Instance Structure}
-\textbf{Incomplete Theory} $\Dm$: Missing aquatic\_environment(opus)
-
-\textbf{Target}: swims(opus)
-
-\textbf{Candidates}:
-\begin{enumerate}
-    \item aquatic\_environment(opus) \quad \textcolor{green}{[GOLD]}
-    \item aquatic\_environment(donald) \quad [distractor]
-    \item aquatic\_environment(daffy) \quad [distractor]
-\end{enumerate}
-\end{block}
 
 \vspace{1em}
-\textbf{Task}: Identify which fact restores derivability of swims(opus)
-
-\vspace{0.5em}
-\textbf{Validation}:
-\begin{itemize}
-    \item $\Dm \not\pPartial$ swims(opus) \quad ✓
-    \item $\Dm \cup \{$aquatic\_environment(opus)$\} \pPartial$ swims(opus) \quad ✓
-    \item Distractors don't restore \quad ✓
-\end{itemize}
-\end{frame}
-
-\begin{frame}{Sample Instance: Level 3 (Defeater Abduction)}
-\begin{block}{Defeater Discovery}
-\textbf{Anomaly}: $\D$ predicts flies(opus), but observe $\sim$flies(opus)
-
-\textbf{Explanation}: opus is a penguin (flightless bird)
-
-\textbf{Resolution}: d1: penguin(X) $\defeatto$ $\sim$flies(X), with d1 $\succ$ r1
-\end{block}
-
-\vspace{1em}
-\textbf{Conservativity Check} (AGM Minimal Change):
-
-\begin{tabular}{lcc}
-\toprule
-\textbf{Expectation} & \textbf{Before} & \textbf{After} \\
-\midrule
-flies(opus) & ✓ & \textcolor{red}{✗} \quad (anomaly resolved) \\
-flies(tweety) & ✓ & \textcolor{green}{✓} \quad (preserved) \\
-flies(polly) & ✓ & \textcolor{green}{✓} \quad (preserved) \\
-bird(opus) & ✓ & \textcolor{green}{✓} \quad (preserved) \\
-\bottomrule
-\end{tabular}
-
-\vspace{0.5em}
-\textbf{Result}: \textcolor{green}{Conservative} - only target anomaly affected
-\end{frame}
-
-\section{Validation Results}
-
-\begin{frame}{Proposition Validation}
-\begin{block}{Proposition 1: Conservative Conversion}
-When $\partfunc \equiv s$ (all strict), $q \in \mathcal{M}_\Pi \iff \D_\partfunc \pDelta q$
-
-\textbf{Test}: Convert theory with all-strict partition, verify derivability preserved
-
-\textbf{Result}: \textcolor{green}{✓ VERIFIED} (2 tests passing)
-\end{block}
-
-\vspace{1em}
-\begin{block}{Proposition 2: Definite Implies Defeasible}
-If $\D \pDelta q$ then $\D \pPartial q$
-
-\textbf{Test}: For randomly generated theories, check implication holds
-
-\textbf{Result}: \textcolor{green}{✓ VERIFIED} (2 tests passing)
-\end{block}
-\end{frame}
-
-\begin{frame}{Yield Monotonicity (Proposition 3)}
-\begin{block}{Proposition 3}
-$\mathbb{E}[Y(\partfunc_{\mathrm{rand}}(\delta), Q)]$ is non-decreasing in $\delta$
-\end{block}
-
-\vspace{1em}
-\textbf{Empirical Test}: Vary $\delta \in [0, 1]$, measure yield
-
-\vspace{0.5em}
 \begin{center}
-\textit{[Yield Monotonicity Graph Would Go Here]}
-
-\vspace{0.5em}
-Results: $\delta = 0.0 \to Y = 8.0$, \quad $\delta = 1.0 \to Y = 7.6$ (avg)
-
-General upward trend observed ✓
-\end{center}
-
-\vspace{0.5em}
-\textbf{Result}: \textcolor{green}{✓ VERIFIED} - Yield increases with defeasibility ratio
-\end{frame}
-
-\begin{frame}{Complexity Validation (Theorem 11)}
-\begin{block}{Theorem 11}
-Defeasible derivation is in P, computable in $O(|R| \cdot |F|)$
-\end{block}
-
-\vspace{1em}
-\textbf{Benchmark}: Theories of size $n \in \{10, 20, 30, 40, 50\}$
-
-\vspace{0.5em}
-\begin{center}
-\begin{tabular}{rr}
-\toprule
-\textbf{Size} & \textbf{Time (ms)} \\
-\midrule
-10 & 1.5 \\
-20 & 5.3 \\
-30 & 12.1 \\
-40 & 21.4 \\
-50 & 33.2 \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\vspace{0.5em}
-\textbf{Result}: \textcolor{green}{✓ TRACTABLE} - Performance acceptable for benchmark scale
-\end{frame}
-
-\begin{frame}{Round-Trip Consistency (Definition 30)}
-\textbf{Definition 30}: $\rho_{\mathrm{dec}}(\tau(r)) = r$ for every $r$ in candidate space
-
-\vspace{1em}
-\textbf{Proposition} (line 903): D1 satisfies round-trip by construction
-
-\vspace{1em}
-\begin{block}{Empirical Validation}
-\textbf{Tests conducted}: 26 round-trip tests
-
-\begin{itemize}
-    \item Facts: 4/4 patterns ✓
-    \item Strict rules: 1/1 ✓
-    \item Defeasible rules: 1/1 ✓
-    \item Defeaters: 1/1 ✓
-    \item Multiple candidates: 2/2 ✓
-    \item Edge cases: 9/9 ✓
-    \item Generated instances: 8/8 ✓
-\end{itemize}
-
-\textbf{Round-trip accuracy}: \textcolor{green}{\textbf{100\%}} (26/26)
-\end{block}
-\end{frame}
-
-\begin{frame}{Level 3 Conservativity}
-\textbf{Claim}: Conservative resolution operationalizes AGM minimal change
-
-\vspace{1em}
-\textbf{Test}: 3 defeater instances, check expectation preservation
-
-\vspace{1em}
-\begin{block}{Results}
-\begin{tabular}{llc}
-\toprule
-\textbf{Instance} & \textbf{Anomaly} & \textbf{Conservative?} \\
-\midrule
-Penguin defeater & flies(opus) & \textcolor{green}{✓ YES} \\
-Wing injury & flies(chirpy) & \textcolor{green}{✓ YES} \\
-Duck migration & migrates(donald) & \textcolor{green}{✓ YES} \\
-\bottomrule
-\end{tabular}
-\end{block}
-
-\vspace{1em}
-\textbf{Conservativity} = All unrelated expectations preserved
-
-\vspace{0.5em}
-\textbf{Result}: \textcolor{green}{3/3 instances conservative} - AGM minimal change achieved
-\end{frame}
-
-\section{Dataset Quality}
-
-\begin{frame}{Instance Validity Properties}
-\textbf{All instances satisfy 4 formal properties}:
-
-\vspace{1em}
-\begin{enumerate}
-    \item $\Dm \not\pPartial q$ \quad (ablation removes derivability)
-    
-    \item $\forall h \in \Hgold\colon \Dm \cup \{h\} \pPartial q$ \quad (gold restores)
-    
-    \item $\forall d \in (H_{\mathrm{cand}} \setminus \Hgold)\colon \Dm \cup \{d\} \not\pPartial q$ \quad (distractors don't)
-    
-    \item $\Hgold \neq \emptyset$ \quad (gold set non-empty)
-\end{enumerate}
-
-\vspace{1em}
-\textbf{Automated validation}: Every instance machine-verified
-
-\vspace{0.5em}
-\begin{center}
-\textbf{Validity rate}: \textcolor{green}{\textbf{15/15 (100\%)}}
+\small
+Progression: \textbf{Observation} $\longrightarrow$ \textbf{Generalization} $\longrightarrow$ \textbf{Conservative Exception}\\[4pt]
+The formal analogue of rational scientific revision.
 \end{center}
 \end{frame}
 
-\begin{frame}{Difficulty Stratification}
-\textbf{Three levels with increasing difficulty}:
 
-\vspace{1em}
-\begin{description}
-    \item[Level 1] Missing observation (2 instances)
-    \begin{itemize}
-        \item Simplest: fill in missing fact
-        \item Example: Which bird is aquatic?
-    \end{itemize}
-    
-    \item[Level 2] Missing generalization (10 instances)
-    \begin{itemize}
-        \item Medium: reconstruct missing rule
-        \item Example: What rule predicts flight?
-    \end{itemize}
-    
-    \item[Level 3] Creative exception (3 instances)
-    \begin{itemize}
-        \item Hardest: construct conservative defeater
-        \item Example: Why doesn't this penguin fly?
-        \item Requires: Novelty + conservativity
-    \end{itemize}
-\end{description}
+\begin{frame}{The Orient Express Analogy}
 
-\vspace{0.5em}
-\textbf{Progression}: Observation $\to$ Generalization $\to$ Exception
-\end{frame}
+\small
+Christie possesses the complete theory $\Dfull$. To construct the mystery, she performs exactly the \textbf{ablation operation} of our benchmark:
 
-\section{Conclusions}
+\vspace{0.3em}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\textbf{\textcolor{defabgreen}{Level 1}}\\[2pt]
+\footnotesize
+\textit{Hidden fact}: a burned letter revealing the victim's identity.\\[3pt]
+Poirot must abduce the missing observation.
+\end{column}
+\begin{column}{0.32\textwidth}
+\textbf{\textcolor{defabgold}{Level 2}}\\[2pt]
+\footnotesize
+\textit{Hidden rule}: the connection linking all passengers to the Armstrong household.\\[3pt]
+Poirot must reconstruct the missing generalization.
+\end{column}
+\begin{column}{0.32\textwidth}
+\textbf{\textcolor{defabredish}{Level 3}}\\[2pt]
+\footnotesize
+\textit{Missing defeater}: ``murders have a single perpetrator'' contradicted by twelve wounds.\\[3pt]
+Poirot must construct a \textbf{conservative} exception that preserves all other facts.
+\end{column}
+\end{columns}
 
-\begin{frame}{Paper Merit: Assessment}
-\begin{block}{Core Claims}
-\begin{itemize}
-    \item[\textcolor{green}{✓}] Defeasible framework enables grounding
-    \item[\textcolor{green}{✓}] Conversion makes epistemic commitments explicit
-    \item[\textcolor{green}{✓}] Instance generation is tractable
-    \item[\textcolor{green}{✓}] Three levels test grounding, novelty, revision
-    \item[\textcolor{green}{✓}] Codec achieves perfect round-trip
-    \item[\textcolor{green}{✓}] Conservative resolution operationalizes AGM
-\end{itemize}
-\end{block}
-
-\vspace{1em}
-\begin{block}{Novel Contributions}
-\begin{itemize}
-    \item First use of defeasible logic for grounding
-    \item Polynomial-time gold verification
-    \item Tractable conservativity checking
-    \item Three-level difficulty hierarchy
-\end{itemize}
-\end{block}
-\end{frame}
-
-\begin{frame}{Validation Study: Conclusion}
-\begin{center}
-\Large
-\textbf{Research Questions}: \textcolor{green}{5/5 Answered YES}
-
-\vspace{1em}
-\textbf{Propositions}: \textcolor{green}{4/4 Verified}
-
-\vspace{1em}
-\textbf{Tests}: \textcolor{green}{107/107 Passing}
-
-\vspace{1em}
-\textbf{Dataset}: \textcolor{green}{15/15 Valid}
-
-\vspace{2em}
-\Huge
-\textcolor{blue}{\textbf{Paper has STRONG Merit}}
-\end{center}
-\end{frame}
-
-\begin{frame}{Recommendation}
-\begin{block}{MVP Demonstrates}
-\begin{enumerate}
-    \item Mathematics is sound
-    \item Implementation is feasible
-    \item Complexity is tractable
-    \item Claims are verifiable
-    \item Path to full benchmark is clear
-\end{enumerate}
-\end{block}
-
-\vspace{1em}
-\begin{center}
-\Large
-\textbf{Recommendation}:
-
-\vspace{0.5em}
-\textcolor{blue}{\textbf{PROCEED TO FULL IMPLEMENTATION}}
-
-\vspace{1em}
+\vspace{0.6em}
 \normalsize
-\textbf{Timeline}: 8 weeks from MVP to submission
-
-\textbf{Target}: 1000+ instances, 4 modalities, LLM evaluation
-
-\textbf{Confidence}: \textcolor{green}{\textbf{HIGH}}
-\end{center}
+Legacy knowledge bases play Christie's role: the all-knowing author.\\
+Foundation models play Poirot's role: the detective with incomplete information.
 \end{frame}
 
-\begin{frame}{Scaling Path}
-\textbf{From MVP (15 instances) to Full DeFAb (1000+)}
 
-\vspace{1em}
-\begin{description}
-    \item[Phase 1] (2 weeks): Multiple KBs
-    \begin{itemize}
-        \item Medical, Family, IDP domains
-        \item 150 instances
-    \end{itemize}
-    
-    \item[Phase 2] (2 weeks): Additional modalities
-    \begin{itemize}
-        \item M3 (annotated), M2 (semi-formal), M1 (narrative)
-        \item Rendering-robust accuracy
-    \end{itemize}
-    
-    \item[Phase 3] (2 weeks): Automated Level 3
-    \begin{itemize}
-        \item Candidate space search
-        \item 100+ defeater instances
-    \end{itemize}
-    
-    \item[Phase 4] (2 weeks): LLM Evaluation
-    \begin{itemize}
-        \item GPT-4, Claude, Gemini, Llama
-        \item Statistical analysis
-    \end{itemize}
-\end{description}
+\begin{frame}{Rendering Modalities and Evaluation}
+
+\small
+\textbf{Four modalities} separate reasoning from surface-form sensitivity:
+
+\vspace{0.3em}
+\footnotesize
+\begin{tabular}{@{}llp{6.5cm}@{}}
+\toprule
+\textbf{Mod.} & \textbf{Style} & \textbf{Example}: $r_d^1$: murder(X) $\defto$ single\_perp(X) \\
+\midrule
+M1 & Narrative & ``Murders generally have a single perpetrator.'' \\
+M2 & Semi-formal & ``If $X$ is a murder, then typically single perpetrator.'' \\
+M3 & Annotated & $r_d^1$: murder(X) $\defto$ single\_perp(X) \; [defeasible] \\
+M4 & Pure formal & \texttt{r\_d1: murder(X) => single\_perp(X).} \\
+\bottomrule
+\end{tabular}
+
+\small
+\vspace{0.4em}
+\textbf{Headline metric}: Rendering-robust accuracy = worst-case over all four modalities.\\[3pt]
+High scores reflect reasoning about \textit{epistemic structure}, not surface sensitivity.
+
+\vspace{0.3em}
+\textbf{Decoder}: D1 (exact match) $\to$ D2 (template) $\to$ D3 (semantic parsing).\\
+Round-trip: 100\% recovery on M2--M4 over all 409 gold hypotheses.
 \end{frame}
 
-\section{Appendix}
 
-\begin{frame}{Implementation Statistics}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\textbf{Code Metrics}:
-\begin{itemize}
-    \item Production: 2,041 lines
-    \item Tests: 2,112 lines
-    \item Ratio: 1.03
-    \item Modules: 12
-    \item Coverage: 81\%
-\end{itemize}
+% ==============================================================================
+\section{Results: Four Frontier Models}
+% ==============================================================================
 
-\vspace{1em}
-\textbf{Quality}:
-\begin{itemize}
-    \item Zero bugs
-    \item 100\% tests passing
-    \item Type hints: 100\%
-    \item Documented: 100\%
+\begin{frame}{Primary Accuracy Results}
+
+\small
+Four frontier models, 374 L2 + 35 L3 instances, 4 modalities, 2 strategies.
+
+\vspace{0.3em}
+\footnotesize
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Model} & \textbf{L2} & \textbf{L2 Direct} & \textbf{L3} & \textbf{L3 Direct} & \textbf{L3 CoT} & \textbf{Rend.-Rob.} \\
+\midrule
+DeepSeek-R1         & 73.0\% & 73.7\% & \textbf{65.0\%} & 37.1\% & \textbf{92.9\%} & \textbf{23.5\%} \\
+GPT-5.2-chat        & 62.8\% & 78.5\% & 47.5\% & 7.9\% & 87.1\% & 9.1\% \\
+Claude Sonnet 4.6   & \textbf{77.2\%} & \textbf{79.3\%} & 16.4\% & 23.6\% & 9.3\% & 15.5\% \\
+Kimi-K2.5           & 65.5\% & 71.9\% & 14.2\% & 0.8\% & 27.6\% & 7.8\% \\
+\bottomrule
+\end{tabular}
+
+\small
+\vspace{0.4em}
+\begin{itemize}\setlength\itemsep{2pt}
+    \item All McNemar tests significant ($p < 0.001$) except Claude vs.\ Kimi at L3
+    \item Symbolic solver ceiling: L2 = 100\%, L3 = 100\%
+    \item Wilson 95\% CI half-widths: $\pm$4 pp (L2), $\pm$15--17 pp (L3)
 \end{itemize}
+\end{frame}
+
+
+\begin{frame}{Finding 1: Architectural Dissociation}
+
+\small
+CoT prompting reveals a sharp split between model architectures at Level 3:
+
+\vspace{0.3em}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{\textcolor{defabgreen}{Reasoning models}} (CoT helps)\\[3pt]
+\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+& Direct & CoT \\
+\midrule
+GPT-5.2 & 7.9\% & \textbf{87.1\%} \\
+DeepSeek-R1 & 37.1\% & \textbf{92.9\%} \\
+Kimi-K2.5 & 0.8\% & \textbf{27.6\%} \\
+\bottomrule
+\end{tabular}\\[4pt]
+\small $\Delta_{\mathrm{CoT}}^{(3)}$: +56 to +79 pp
 \end{column}
 
-\begin{column}{0.5\textwidth}
-\textbf{Timeline}:
-\begin{itemize}
-    \item Week 1: Reasoning
-    \item Week 2: Conversion
-    \item Week 3: Generation
-    \item Week 4: Codec
-    \item Total: 4 weeks
+\begin{column}{0.48\textwidth}
+\textbf{\textcolor{defabredish}{Instruction models}} (CoT hurts)\\[3pt]
+\footnotesize
+\begin{tabular}{@{}lcc@{}}
+\toprule
+& Direct & CoT \\
+\midrule
+Claude 4.6 & \textbf{23.6\%} & 9.3\% \\
+\bottomrule
+\end{tabular}\\[4pt]
+\small $\Delta_{\mathrm{CoT}}^{(3)}$: $-$14 pp
+\end{column}
+\end{columns}
+
+\vspace{0.5em}
+Belief revision capability is \textbf{latent}: unlocked by generation-appropriate CoT in reasoning models, disrupted in instruction-tuned models.
+
+\vspace{0.3em}
+At Level 2, CoT \textit{hurts all models} ($-1.5$ to $-31$ pp) --- ``overthinking'' where surface alignment suffices.
+\end{frame}
+
+
+\begin{frame}{Finding 2: M1 Narrative Bottleneck}
+
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Model} & \textbf{M1 (narrative)} & \textbf{M2} & \textbf{M3} & \textbf{M4} \\
+\midrule
+DeepSeek-R1       & 21.5\% & 85.6\% & \textbf{94.1\%} & 87.8\% \\
+Claude 4.6        & 19.0\% & 87.0\% & 91.1\% & 88.1\% \\
+Kimi-K2.5         & 14.6\% & 75.9\% & 76.5\% & 75.6\% \\
+GPT-5.2           & 22.0\% & 75.1\% & 72.8\% & 75.6\% \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.4em}
+\begin{itemize}\setlength\itemsep{2pt}
+    \item \textbf{55--70 pp gap} between M1 and formal modalities --- universal across all models
+    \item The \textit{largest performance difference} in the entire evaluation
+    \item Larger than inter-model differences or the L2-to-L3 gap for the best model
+    \item Rendering-robust accuracy is dominated by M1 performance
 \end{itemize}
 
-\vspace{1em}
-\textbf{Performance}:
+\vspace{0.3em}
+Narrative presentation is categorically harder than formal for defeasible abduction.
+\end{frame}
+
+
+\begin{frame}{Finding 3: Domain Ordering and L2-to-L3 Gap}
+
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Level 2}} & \multicolumn{3}{c}{\textbf{Level 3}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+ & Bio & Legal & Mat & Bio & Legal & Mat \\
+\midrule
+Claude   & 82 & 72 & 77 & 16 & 12 & 21 \\
+DS-R1    & 80 & 67 & 72 & 72 & 56 & 62 \\
+GPT-5.2  & 68 & 57 & 64 & 52 & 44 & 43 \\
+Kimi     & 68 & 64 & 64 & 17 & 13 & 10 \\
+\bottomrule
+\end{tabular}
+\end{column}
+\begin{column}{0.42\textwidth}
+\textbf{Consistent findings}:
 \begin{itemize}
-    \item Query: 1-8 ms
-    \item Criticality: 50-400 ms
-    \item Generation: $\sim$400 ms
-    \item Full dataset: $<$10 sec
+    \item Biology easiest, legal hardest
+    \item Ordering stable across all 4 model families
+    \item Reflects LKIF Core rule density, not model knowledge gaps
 \end{itemize}
+
+\vspace{0.5em}
+\textbf{L2-to-L3 gap}: 12--59 pp\\[4pt]
+Grounding and belief revision are \textit{distinct capabilities} not jointly acquired by any current training paradigm.
 \end{column}
 \end{columns}
 \end{frame}
 
-\begin{frame}{Technical Validation}
-\begin{block}{All Core Algorithms Validated}
-\begin{itemize}
-    \item \textbf{Definition 7}: Defeasible derivation - \textcolor{green}{✓ Exact implementation}
-    \item \textbf{Definition 9}: Conversion $\phi_\partfunc$ - \textcolor{green}{✓ Conservative when strict}
-    \item \textbf{Definition 18}: Criticality $\mathrm{Crit}^*$ - \textcolor{green}{✓ $O(|\D|^2 \cdot |F|)$ verified}
-    \item \textbf{Definitions 20-21}: Instance generation - \textcolor{green}{✓ 100\% valid}
-    \item \textbf{Definition 30}: Round-trip - \textcolor{green}{✓ 100\% accuracy}
-\end{itemize}
-\end{block}
 
-\vspace{1em}
-\textbf{Methodology}: Test-driven development
-\begin{itemize}
-    \item Every definition $\to$ function with tests
-    \item Every proposition $\to$ automated test
-    \item Every example from paper $\to$ unit test
-\end{itemize}
+\begin{frame}{Level 3 Graded Scoring}
+
+\small
+Five tiers decompose along stages of rational belief revision:
+\vspace{-0.1em}
+\footnotesize
+\begin{tabular}{@{}clp{6.5cm}@{}}
+\toprule
+\textbf{Score} & \textbf{Stage} & \textbf{Orient Express interpretation} \\
+\midrule
+0.00 & No credit & Does not block single-perpetrator conclusion \\
+0.25 & Minimal & Blocks default but violates language bias \\
+0.50 & Partial & Resolves anomaly but disrupts other facts \\
+0.75 & Substantial & Conservative weak resolution (agnostic) \\
+1.00 & Full & Conservative strong resolution (conspiracy) \\
+\bottomrule
+\end{tabular}
+
+\small
+\vspace{0.2em}
+\begin{columns}[T]
+\begin{column}{0.32\textwidth}
+\textbf{Mean graded scores}:\\[2pt]
+\footnotesize
+\begin{tabular}{@{}lc@{}}
+\toprule
+Model & Score \\
+\midrule
+DeepSeek-R1 & 0.596 \\
+GPT-5.2     & 0.429 \\
+Claude 4.6  & 0.150 \\
+Kimi-K2.5   & 0.139 \\
+\bottomrule
+\end{tabular}
+\end{column}
+\begin{column}{0.63\textwidth}
+\small
+Bimodal distribution: nearly all responses score 0.0 or 1.0. Models either fully solve or completely fail --- no partial progress through intermediate stages.
+\end{column}
+\end{columns}
 \end{frame}
 
-\begin{frame}{Limitations \& Future Work}
-\textbf{MVP Scope} (Expected):
-\begin{itemize}
-    \item Single KB (Avian Biology) - \textit{Scales to multiple}
-    \item 15 instances - \textit{Automated generation ready}
-    \item M4 only - \textit{Other modalities straightforward}
-    \item Hand-crafted L3 - \textit{Automation implementable}
-\end{itemize}
 
-\vspace{1em}
-\textbf{Framework Limitations} (Acknowledged in Paper):
-\begin{itemize}
-    \item First-order grounding: Potentially exponential
-    \begin{itemize}
-        \item \textit{Mitigated}: Function-free (datalog) keeps it polynomial
-    \end{itemize}
-    \item Expectation enumeration: Can be expensive
-    \begin{itemize}
-        \item \textit{Mitigated}: Only for conservativity checks
-    \end{itemize}
-    \item Level 3 candidate space: Exponential in ar\_max
-    \begin{itemize}
-        \item \textit{Mitigated}: Small ar\_max ($\leq 3$) manageable
-    \end{itemize}
-\end{itemize}
+% ==============================================================================
+\section{Formal Foundations}
+% ==============================================================================
 
-\vspace{0.5em}
-\textbf{Assessment}: All limitations have mitigation strategies
-\end{frame}
+\begin{frame}{Defeasible Conversion and Criticality}
 
-\begin{frame}{Conclusion}
+\small
+\textbf{Conversion}: $\partfunc: \Pi \to \{s, d\}$ classifies each clause as strict or defeasible:
+\vspace{-0.3em}
+\[
+\phi_\partfunc(\Pi) = (F_\partfunc,\; R_s^{\partfunc},\; R_d^{\partfunc},\; \emptyset,\; \emptyset)
+\]
+
+\vspace{-0.5em}
+\textbf{Five families}: $\partfunc_{\mathrm{leaf}}$, $\partfunc_{\mathrm{rule}}$, $\partfunc_{\mathrm{depth}}(k)$, $\partfunc_{\mathrm{rand}}(\delta)$, $\partfunc_{\mathrm{type}}$.
+
+\vspace{0.2em}
+\textbf{Criticality}: Element $e$ is critical for $q$ if $\D \setminus \{e\} \not\pPartial q$.
+
+\vspace{0.2em}
+\footnotesize
 \begin{center}
-\Large
-\textbf{The MVP Validation Study Confirms:}
+\begin{tabular}{@{}lc@{}}
+\toprule
+Operation & Complexity \\
+\midrule
+Defeasible derivation $\D \pPartial q$ & $O(|R| \cdot |F|)$ \\
+Full-theory criticality $\CritStar(\D, q)$ & $O(|\D|^2 \cdot |F|)$ \\
+Full pipeline per instance & $O(|\D|^3)$ \\
+Weak DAP resolution & NP-complete \\
+Strong DAP resolution & $\Sigma_2^P$-complete \\
+\bottomrule
+\end{tabular}
+\end{center}
 
-\vspace{2em}
-\begin{itemize}
-    \item[\textcolor{green}{\Huge ✓}] \Large Mathematical framework is sound
-    \item[\textcolor{green}{\Huge ✓}] \Large Implementation is feasible
-    \item[\textcolor{green}{\Huge ✓}] \Large Complexity is tractable
-    \item[\textcolor{green}{\Huge ✓}] \Large All claims are verifiable
-    \item[\textcolor{green}{\Huge ✓}] \Large Path to full benchmark is clear
+\small
+\vspace{0.2em}
+Instance generation uses $\CritStar$ (polynomial), not full support enumeration (NP-hard).
+\end{frame}
+
+
+\begin{frame}{Level 3: Conservativity as AGM Minimal Change}
+
+\small
+\textbf{Anomaly}: $\alpha$ is anomalous when $\D \pPartial \neg\alpha$ but only via defeasible rules.
+
+\textbf{Resolution}: A defeater $r$ such that $\D \cup \{r\} \not\pPartial \neg\alpha$.
+
+\textbf{Conservativity}: Preserves all expectations except $\neg\alpha$:
+\vspace{-0.3em}
+\[
+\forall q \in \Exp(\D) \setminus \{\neg\alpha\}: \quad \D \cup \{r\} \pPartial q
+\]
+
+\vspace{-0.3em}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Resolution strength}:
+\begin{itemize}\setlength\itemsep{1pt}
+    \item \textbf{Weak}: theory becomes agnostic
+    \item \textbf{Strong}: $\alpha$ becomes provable
+    \item \textbf{Restruct.}: priority reorganized
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Creativity measures}:
+\begin{itemize}\setlength\itemsep{1pt}
+    \item $\Nov(r, \Dm)$: fraction of novel predicates
+    \item $d_{\mathrm{rev}}$: revision distance (AGM analogue)
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.3em}
+Resolving the anomaly but disrupting other predictions scores 0.5 --- lacking the \textbf{rational revision} that AGM minimal change requires.
+\end{frame}
+
+
+% ==============================================================================
+\section{Knowledge Base Infrastructure}
+% ==============================================================================
+
+\begin{frame}{Staged Knowledge Base Pipeline}
+
+\small
+\begin{tabular}{@{}llrr@{}}
+\toprule
+\textbf{Tier} & \textbf{Primary Sources} & \textbf{Est.\ Rules} & \textbf{Est.\ Instances} \\
+\midrule
+0 (baseline) & YAGO, WordNet, LKIF, MatOnto & 2,318 & 409 \\
+1 (this paper) & OpenCyc + ConceptNet, YAGO full & 100K--350K & 33K--90K \\
+2 (biomedical) & UMLS, SNOMED CT, GO, MeSH & +850K--3M & +130K--480K \\
+3 (encyclopedic) & Wikidata + P2303, DBpedia, BabelNet & +3M--15M & +480K--2.4M \\
+4--5 (web-scale) & NELL, Freebase, SUMO, FrameNet & +6M--25M & +960K--4M \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.3em}
+Four decades of publicly funded knowledge engineering:
+
+\begin{itemize}\setlength\itemsep{1pt}
+    \item \textbf{1980s}: Cyc, FGCS, Alvey --- hand-engineered ontologies
+    \item \textbf{1990s--2000s}: WordNet, ConceptNet, UMLS, Gene Ontology
+    \item \textbf{2010s--present}: Wikidata, DBpedia, YAGO, BabelNet
 \end{itemize}
 
-\vspace{2em}
-\Huge
-\textcolor{blue}{\textbf{Paper Has Strong Merit}}
+\vspace{0.1em}
+The extraction pipeline is source-agnostic; each tier adds independently.
+\end{frame}
 
-\vspace{1em}
-\Large
-\textbf{Proceed with Confidence}
+
+% ==============================================================================
+\section{Fine-Tuning Pipeline}
+% ==============================================================================
+
+\begin{frame}{Defeasible Fine-Tuning via Preference Optimization}
+
+\small
+The polynomial-time verifier serves as an \textbf{exact reward signal}:
+\vspace{-0.3em}
+\[
+r(x, y) = \begin{cases}
+    \mathbf{1}[\rho_{\mathrm{dec}}(y) \in \Hgold] & \text{Levels 1--2 (binary)} \\
+    \mathrm{Score}(\rho_{\mathrm{dec}}(y), \D, \alpha) & \text{Level 3 (graded)}
+\end{cases}
+\]
+
+\vspace{-0.3em}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{DPO + Margin Variant}
+\begin{itemize}\setlength\itemsep{1pt}
+    \item Standard DPO (Eq.\ 9)
+    \item Margin-weighted (Eq.\ 10): gradient scaled by score gap $\Delta r$
+    \item $\gamma = 2.0$ by L3 validation
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{VITL-RLHF}
+\begin{itemize}\setlength\itemsep{1pt}
+    \item Verifier-In-The-Loop: exact verifier replaces learned reward model
+    \item No approximation error
+    \item On-policy defeater exploration
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.3em}
+\textbf{Models}: DS-R1-Distill-70B, Qwen 2.5 72B, Qwen 2.5 32B\\
+\textbf{Curricula}: joint, sequential (L1 $\to$ L2 $\to$ L3), weighted ($\omega_3 = 5$)
+\end{frame}
+
+
+% ==============================================================================
+\section{Contributions and Status}
+% ==============================================================================
+
+\begin{frame}{Six Contributions}
+
+\small
+\begin{enumerate}\setlength\itemsep{2pt}
+    \item \textbf{Formal grounding framework}: parameterized conversion $\phi_\partfunc$ from logic programs to defeasible theories with explicit epistemic commitments.
+
+    \item \textbf{Three-level evaluation hierarchy}: fact completion $\to$ rule abduction $\to$ defeater abduction, testing grounding, novelty, and revision.
+
+    \item \textbf{Controlled difficulty measures}: predicate novelty $\Nov$, revision distance $d_{\mathrm{rev}}$, conservativity, graded 5-tier scoring.
+
+    \item \textbf{Rendering-robust evaluation}: four modalities (M1--M4), worst-case accuracy as headline metric.
+
+    \item \textbf{Cross-ontology KB extraction}: taxonomic hierarchies paired with behavioral property graphs for rules and defeaters at scale.
+
+    \item \textbf{Preference optimization pipeline}: margin DPO and VITL-RLHF exploiting the polynomial-time verifier as exact reward.
+\end{enumerate}
+\end{frame}
+
+
+\begin{frame}{Project Status}
+
+\footnotesize
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{\textcolor{defabgreen}{Complete}}
+\begin{itemize}\setlength\itemsep{1pt}
+    \item 734 tests passing (91\% coverage)
+    \item 409 validated instances (3 domains)
+    \item Full codec: M1--M4, D1--D3
+    \item Base evaluation: 4 frontier models
+    \item Paper Sections 1--5 with real data
+    \item All analysis scripts
+    \item Fine-tuning scripts and SLURM jobs
+    \item Symbolic baseline (L2=100\%, L3=100\%)
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{\textcolor{defabredish}{Remaining}}
+\begin{itemize}\setlength\itemsep{1pt}
+    \item Phase B: Fine-tuning on CURC
+        \begin{itemize}\setlength\itemsep{0pt}
+            \item B1: Response sampling
+            \item B2: DPO training (12 jobs)
+            \item B3: RLHF training (4 jobs)
+            \item B5: Checkpoint evaluation
+        \end{itemize}
+    \item Paper Tables 4--6
+    \item Conjectures 1--4 verification
+    \item Appendix C (decoder validation)
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.3em}
+\begin{center}
+\textbf{Target}: NeurIPS 2026 \quad | \quad \textbf{Timeline}: $\sim$2 weeks to completion
 \end{center}
 \end{frame}
+
+
+\begin{frame}{Key Takeaways}
+
+\small
+\begin{enumerate}\setlength\itemsep{1pt}
+    \item \textbf{Grounding is largely solved}: 73--79\% L2 across formal modalities.
+    \item \textbf{Belief revision is latent, not absent}: reasoning models reach 65--93\% L3 under CoT; instruction models peak at 24\%.
+    \item \textbf{Narrative rendering is the universal bottleneck}: 55--70 pp gap between M1 and formal modalities.
+    \item \textbf{CoT helps generation, hurts selection}: ``overthinking'' at L2 vs.\ latent reasoning activation at L3.
+    \item \textbf{Formal verification enables exact fine-tuning}: polynomial-time verifier as reward signal with no approximation error.
+\end{enumerate}
+
+\vspace{0.3em}
+\begin{center}
+\textbf{DeFAb measures not just whether a model can be creative,\\but whether it can be \textit{rationally} creative.}
+\end{center}
+\end{frame}
+
 
 \begin{frame}[standout]
 \begin{center}
-\Huge
+\Large
 Thank You
 
 \vspace{2em}
-\Large
-Questions?
-
-\vspace{2em}
 \normalsize
-\textbf{Code}: github.com/patrickcooper/blanc \\
-\textbf{Paper}: NeurIPS 2026 Submission \\
-\textbf{Contact}: [From paper.tex]
+Patrick Cooper\\
+Department of Computer Science\\
+University of Colorado Boulder\\[1em]
+\texttt{patrick.cooper@colorado.edu}
 \end{center}
 \end{frame}
 
