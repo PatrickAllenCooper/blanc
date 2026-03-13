@@ -2,8 +2,8 @@
 
 **Date**: 2026-03-07 (updated)
 **Author**: Patrick Cooper
-**Status**: Phase A Foundry evaluation COMPLETE (4 models, paper tables populated). Phase B finetuning NOT STARTED -- two B1 attempts failed on CURC due to SLURM script bugs (BASH_SOURCE resolves to spool dir). Fixed in commit `8e67169`. Models not yet downloaded to CURC HF cache. All training scripts, analysis scripts, and SLURM scripts are written and tested.
-**Next action**: Download 3 models to CURC HF cache, pull fix on CURC, resubmit B1 response sampling for all 3 models, then follow B2/B3/B5/B6 pipeline.
+**Status**: Phase A Foundry evaluation COMPLETE (4 models, paper tables populated). Phase B finetuning NOT STARTED -- five B1 attempts failed on CURC: two SLURM script bugs (fixed in `b009a48`, `8e67169`), then three CUDA OOM failures on 40GB A100 nodes (70B+ AWQ models need ~36-37 GB, leaving no KV cache room). Fixed: tensor parallelism (TP=2) for 70B+ models. Models downloaded to CURC HF cache (confirmed Mar 9). All training scripts, analysis scripts, and SLURM scripts written and tested.
+**Next action**: Push TP fix, pull on CURC, resubmit B1 with `--gres=gpu:2,TP_SIZE=2` for 70B+ models.
 
 ---
 
@@ -36,6 +36,7 @@
 | A2 | Full Foundry evaluation -- 4 models, 409 instances, 4 modalities, 2 strategies | Done (paper Tables 1-3 populated) |
 | A4 | Analysis scripts run on Foundry results (McNemar, Wilson CIs, domain breakdown) | Done |
 | SLURM | Fix `BASH_SOURCE` bug in 8 SLURM scripts (use `SLURM_SUBMIT_DIR` fallback) | Done (commit `8e67169`) |
+| SLURM | Fix CUDA OOM for 70B+ models: add TP_SIZE support, tensor parallelism, optimized vLLM params | Done (Mar 13) |
 
 ### Dataset
 
@@ -165,14 +166,16 @@ python -c "import torch; print(torch.cuda.device_count(), torch.cuda.get_device_
 
 **SLURM job for response sampling** (`hpc/slurm_sample_responses.sh`):
 
-Submit for each model:
+Submit for each model (70B+ models require TP=2 and 2 GPUs due to CURC aa100 partition
+having a mix of 40GB and 80GB A100 nodes -- 72B/70B AWQ models need ~36-37 GB for weights
+alone, which leaves no KV cache room on 40GB nodes):
 ```bash
-sbatch --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq" hpc/slurm_sample_responses.sh
-sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ" hpc/slurm_sample_responses.sh
+sbatch --gres=gpu:2 --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq",TP_SIZE=2 hpc/slurm_sample_responses.sh
+sbatch --gres=gpu:2 --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",TP_SIZE=2 hpc/slurm_sample_responses.sh
 sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-32B-Instruct-AWQ" hpc/slurm_sample_responses.sh
 ```
 
-Each job starts a vLLM server on 1x A100 80GB, samples n=16 responses per training instance at temperature=0.7, decodes and scores all responses via the DeFAb verifier, and writes preference JSONL to `experiments/finetuning/data/`.
+Each job starts a vLLM server (TP=2 for 70B+ models, TP=1 for 32B), samples n=16 responses per training instance at temperature=0.7, decodes and scores all responses via the DeFAb verifier, and writes preference JSONL to `experiments/finetuning/data/`.
 
 Expected output: ~4,200 L1/L2 pairs + ~1,800 L3 pairs per model.
 
@@ -491,7 +494,7 @@ hpc/
 
 | Job | Partition | GPUs | Time | Jobs |
 |-----|-----------|------|------|------|
-| Response sampling (3 models) | aa100 | 1x A100 | 8h each | 3 |
+| Response sampling (3 models) | aa100 | 2x A100 (70B+), 1x A100 (32B) | 8h each | 3 |
 | DPO training (12 std configs) | aa100 | 4x A100 | 24h each | 12 |
 | DPO sequential curriculum (3 models) | aa100 | 4x A100 | 24h each | 3 |
 | DPO l12_only ablation (Qwen-72B) | aa100 | 4x A100 | 24h | 1 |
@@ -528,8 +531,8 @@ At CURC Alpine rates (free for CU Boulder researchers), this is $0. The bottlene
 |------|-------|-------------|--------|
 | 9--10 | A | Base evaluation: 4 Foundry models, all modalities, all levels | **DONE** |
 | 10 | Code | All B6 analysis scripts, l12_only, submit_eval_finetuned_all.sh | **DONE** |
-| 10--11 | B0--B1 | CURC env setup, response sampling (3 models) | B1 failed twice; SLURM fix committed `8e67169` |
-| 11 | B1 retry | Download models to HF cache, resubmit B1 | **NOW** |
+| 10--11 | B0--B1 | CURC env setup, response sampling (3 models) | B1 failed 5 times: 2 SLURM bugs + 3 CUDA OOM (40GB A100) |
+| 12 | B1 retry | TP=2 fix committed, resubmit B1 | **NOW** (Mar 13) |
 | 11--12 | B2--B3 | DPO and VITL-RLHF training (16 jobs on CURC) | Pending B1 |
 | 12--13 | B4--B5 | Level transfer ablation, fine-tuned model evaluation | Pending B2/B3 |
 | 13 | B6 | Run all analysis scripts; populate Tables 4--6 | Pending B5 |
@@ -540,18 +543,17 @@ At CURC Alpine rates (free for CU Boulder researchers), this is $0. The bottlene
 ## Quick-Reference Commands
 
 ```bash
-# Step 0: Download models to CURC HF cache (run on login node or acompile)
-conda activate vllm-env
-export HF_HOME=/scratch/alpine/paco0228/hf_cache
-huggingface-cli download Qwen/Qwen2.5-32B-Instruct-AWQ
-huggingface-cli download Qwen/Qwen2.5-72B-Instruct-AWQ
-huggingface-cli download casperhansen/deepseek-r1-distill-llama-70b-awq
+# Step 0: Models already downloaded to CURC HF cache (confirmed Mar 9)
+# /scratch/alpine/paco0228/hf_cache/models--Qwen--Qwen2.5-32B-Instruct-AWQ
+# /scratch/alpine/paco0228/hf_cache/models--Qwen--Qwen2.5-72B-Instruct-AWQ
+# /scratch/alpine/paco0228/hf_cache/models--casperhansen--deepseek-r1-distill-llama-70b-awq
 
 # Step 1: B1 response sampling (submit from /projects/paco0228/blanc)
+# 70B+ models need TP=2 (2 GPUs) because aa100 has 40GB and 80GB A100 nodes
 cd /projects/paco0228/blanc && git pull
 sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-32B-Instruct-AWQ" hpc/slurm_sample_responses.sh
-sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ" hpc/slurm_sample_responses.sh
-sbatch --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq" hpc/slurm_sample_responses.sh
+sbatch --gres=gpu:2 --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",TP_SIZE=2 hpc/slurm_sample_responses.sh
+sbatch --gres=gpu:2 --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq",TP_SIZE=2 hpc/slurm_sample_responses.sh
 
 # Step 2: After B1 completes -- verify data then submit training
 ls experiments/finetuning/data/preferences_*.jsonl         # Should exist

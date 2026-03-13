@@ -13,22 +13,28 @@
 
 # DeFAb Phase B1: Response Sampling for Preference Data Construction
 #
-# Starts a vLLM server on the allocated GPU, then runs
+# Starts a vLLM server on the allocated GPU(s), then runs
 # prepare_preference_data.py to sample n=16 responses per training instance.
 # The resulting preferences_*.jsonl file is the input for DPO and RLHF.
 #
+# CURC aa100 partition has a mix of 40GB and 80GB A100s. The 72B and 70B AWQ
+# models require ~36-37 GB for weights alone, which leaves no KV cache room
+# on 40GB nodes. Use TP_SIZE=2 (tensor parallelism) for 70B+ models to
+# guarantee they fit regardless of which A100 variant is assigned.
+#
 # Environment variables (set via --export or sbatch environment):
 #   VLLM_MODEL       HuggingFace model ID (default: Qwen/Qwen2.5-72B-Instruct-AWQ)
+#   TP_SIZE          Tensor parallel GPUs (default: 1). Set to 2 for 70B+ models.
 #   NUM_SAMPLES      Responses per instance (default: 16)
 #   TEMPERATURE      Sampling temperature (default: 0.7)
 #   MIN_MARGIN       Minimum score gap for pairs (default: 0.25)
 #   VLLM_PORT        Port for vLLM server (default: 8111)
 #   OUTPUT_DIR       Destination for JSONL files (default: experiments/finetuning/data)
 #
-# Submit for each model:
-#   sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ" hpc/slurm_sample_responses.sh
+# Submit for each model (override --gres for 70B+ models):
+#   sbatch --gres=gpu:2 --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",TP_SIZE=2 hpc/slurm_sample_responses.sh
 #   sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-32B-Instruct-AWQ" hpc/slurm_sample_responses.sh
-#   sbatch --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq" hpc/slurm_sample_responses.sh
+#   sbatch --gres=gpu:2 --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq",TP_SIZE=2 hpc/slurm_sample_responses.sh
 #
 # Author: Patrick Cooper
 
@@ -47,6 +53,7 @@ echo ""
 # Configuration
 # ---------------------------------------------------------------------------
 VLLM_MODEL="${VLLM_MODEL:-Qwen/Qwen2.5-72B-Instruct-AWQ}"
+TP_SIZE="${TP_SIZE:-1}"
 NUM_SAMPLES="${NUM_SAMPLES:-16}"
 TEMPERATURE="${TEMPERATURE:-0.7}"
 MIN_MARGIN="${MIN_MARGIN:-0.25}"
@@ -54,11 +61,14 @@ VLLM_PORT="${VLLM_PORT:-8111}"
 OUTPUT_DIR="${OUTPUT_DIR:-experiments/finetuning/data}"
 
 echo "Model        : $VLLM_MODEL"
+echo "TP size      : $TP_SIZE"
 echo "Num samples  : $NUM_SAMPLES"
 echo "Temperature  : $TEMPERATURE"
 echo "Min margin   : $MIN_MARGIN"
 echo "Output dir   : $OUTPUT_DIR"
 echo ""
+
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # ---------------------------------------------------------------------------
 # Environment
@@ -99,10 +109,11 @@ python -m vllm.entrypoints.openai.api_server \
     --model "$VLLM_MODEL" \
     --host 0.0.0.0 \
     --port "$VLLM_PORT" \
-    --dtype bfloat16 \
-    --max-model-len 4096 \
-    --gpu-memory-utilization 0.90 \
-    --max-num-seqs 32 \
+    --dtype auto \
+    --max-model-len 2048 \
+    --gpu-memory-utilization 0.95 \
+    --max-num-seqs 16 \
+    --tensor-parallel-size "$TP_SIZE" \
     --enforce-eager \
     &
 VLLM_PID=$!

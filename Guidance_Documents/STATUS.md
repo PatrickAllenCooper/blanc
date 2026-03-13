@@ -1,9 +1,9 @@
 # Project Status
 
-**Last Updated**: 2026-03-11
-**Current**: Phase A (Foundry evaluation) COMPLETE -- 4 models, all results in paper. Phase B (finetuning) NOT STARTED -- two B1 attempts failed on CURC due to SLURM script bugs (now fixed). Models not yet downloaded to CURC HF cache.
+**Last Updated**: 2026-03-13
+**Current**: Phase A (Foundry evaluation) COMPLETE -- 4 models, all results in paper. Phase B (finetuning) NOT STARTED -- five B1 attempts failed on CURC (two SLURM bugs, then CUDA OOM on 40GB A100 nodes). Models downloaded. Fix: tensor parallelism (TP=2) for 70B+ models.
 **Progress**: 12 of 14 weeks (86% -- infrastructure and base evaluation done, finetuning experiments pending)
-**Timeline**: ON TRACK if B1 starts this week -- finetuning pipeline is ~2 weeks end-to-end
+**Timeline**: TIGHT -- B1 must start today; finetuning pipeline is ~2 weeks end-to-end
 
 ---
 
@@ -64,20 +64,29 @@ Key findings substantiated in paper:
 
 ## What Is Not Done
 
-### Phase B: Finetuning on CURC (BLOCKED -- now unblocked)
+### Phase B: Finetuning on CURC (BLOCKED -- fix committed, ready to resubmit)
 
-**Root cause of failures**: Two B1 sampling attempts failed on CURC:
-- Job 24442872 (Mar 3): `PYTHONPATH: unbound variable` -- fixed in commit `b009a48`
-- Job 24482007 (Mar 5): `mkdir: Permission denied` -- `BASH_SOURCE[0]` resolves to SLURM spool dir, not original script path. Fixed in commit `8e67169` (uses `SLURM_SUBMIT_DIR` fallback).
+**Full failure history** (5 B1 attempts, all failed):
 
-**Additional blocker**: Required models not downloaded to CURC HF cache (`/scratch/alpine/paco0228/hf_cache/`). Only `Qwen2.5-7B` exists (from another project). Need:
-- `Qwen/Qwen2.5-32B-Instruct-AWQ` (~16 GB)
-- `Qwen/Qwen2.5-72B-Instruct-AWQ` (~36 GB)
-- `casperhansen/deepseek-r1-distill-llama-70b-awq` (~35 GB)
+| Job | Date | Duration | Failure |
+|-----|------|----------|---------|
+| 24442872 | Mar 3 | 12s | `PYTHONPATH: unbound variable` -- fixed in `b009a48` |
+| 24482007 | Mar 5 | 18s | `mkdir: Permission denied` -- `BASH_SOURCE` resolves to SLURM spool dir. Fixed in `8e67169` |
+| 24552735 | Mar 9 | 5m09s | CUDA OOM (see below) |
+| 24552736 | Mar 9 | 5m06s | CUDA OOM -- Qwen 72B AWQ: 36 GB weights, 39.49 GiB GPU total. OOM during `awq_marlin_repack` |
+| 24552737 | Mar 9 | 5m07s | CUDA OOM -- DS-R1 70B AWQ: 37.09 GB weights loaded, `Available KV cache memory: -2.00 GiB` |
+
+**Root cause of Mar 9 OOM**: CURC `aa100` partition has a mix of 40GB and 80GB A100 nodes. All three Mar 9 jobs landed on `c3gpu-c2-u9` (40GB A100-SXM4-40GB). The 72B and 70B AWQ models require ~36-37 GB for weights alone, leaving no room for KV cache or AWQ kernel repacking on 40GB GPUs.
+
+**Fix**: Use tensor parallelism (TP=2) for 70B+ models. Updated `slurm_sample_responses.sh` to accept `TP_SIZE` env var and `--tensor-parallel-size` flag. Override `--gres=gpu:2` at submission time for 70B+ models. Also: `--dtype auto`, `--max-model-len 2048`, `--gpu-memory-utilization 0.95`, `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`.
+
+**Models downloaded**: All three models present in CURC HF cache (`/scratch/alpine/paco0228/hf_cache/`, dated Mar 9).
+
+**CURC repo status**: At commit `d426c7d` (missing only `3e9163b` which is slides/gitignore). Needs `git pull` to get the TP fix.
 
 **CURC environment status**: Both `defab-train` and `vllm-env` conda envs exist and are ready.
 
-**Pipeline sequence**: B1 (response sampling, ~8h each, 1x A100) -> B2 (DPO, 12 jobs, 24h, 4x A100) -> B3 (RLHF, 4 jobs, 36h, 4x A100) -> B5 (eval, ~4h each, 1x A100) -> B6 (analysis)
+**Pipeline sequence**: B1 (response sampling, ~8h each, 2x A100 for 70B+) -> B2 (DPO, 12 jobs, 24h, 4x A100) -> B3 (RLHF, 4 jobs, 36h, 4x A100) -> B5 (eval, ~4h each, 2x A100 for 70B+) -> B6 (analysis)
 
 ### Paper Claims Not Yet Substantiated
 
@@ -91,11 +100,14 @@ Key findings substantiated in paper:
 
 ## Remaining Work
 
-### Immediate (this week)
+### Immediate (today -- Mar 13)
 - [x] Fix SLURM `BASH_SOURCE` bug -- commit `8e67169`
-- [ ] Download 3 models to CURC HF cache (~87 GB)
-- [ ] Pull fix on CURC, resubmit B1 for all 3 models
-- [ ] Update guidance documents (this file + REVISED_IMPLEMENTATION_PLAN.md)
+- [x] Fix SLURM `PYTHONPATH` bug -- commit `b009a48`
+- [x] Download 3 models to CURC HF cache (~87 GB) -- confirmed present Mar 9
+- [x] Diagnose Mar 9 CUDA OOM failures -- 40GB A100 nodes, models too large for single GPU
+- [x] Fix `slurm_sample_responses.sh` -- add TP_SIZE, tensor parallelism, optimized vLLM params
+- [ ] Push TP fix, pull on CURC, resubmit B1 for all 3 models
+- [x] Update guidance documents
 
 ### Phase B Execution (~2 weeks)
 - [ ] B1: Response sampling (3 models, ~8h each)
