@@ -612,7 +612,7 @@ Across all four models and both levels, M1 (narrative rendering) produces dramat
 
 \section{Defeasible Fine-Tuning via Preference Optimization}\label{sec:finetuning}
 
-The Level~3 results of Section~\ref{sec:results} establish that belief revision capability is latent in current models but highly sensitive to prompting strategy: reasoning-optimized models achieve 48--65\% under structured generation scaffolds while instruction-optimized models perform best under direct prompting. This raises a natural follow-on question: can the DeFAb benchmark serve as training signal to further improve belief revision capability, and in particular to close the remaining gap for instruction-tuned models? The formal structure of the benchmark (verifier-backed gold standards, graded scoring, and polynomial-time conservativity checks) provides exactly the kind of dense, formally grounded supervision that preference optimization methods require. We present a fine-tuning pipeline that converts DeFAb instances into preference data for Reinforcement Learning from Human Feedback (RLHF)~\cite{ouyang2022training} and Direct Preference Optimization (DPO)~\cite{rafailov2023direct}, and describe the experimental protocol for evaluating fine-tuned open-source models on held-out instances across all three levels.
+The Level~3 results of Section~\ref{sec:results} establish that belief revision capability is latent in current models but highly sensitive to prompting strategy: reasoning-optimized models achieve 48--65\% under structured generation scaffolds while instruction-optimized models perform best under direct prompting. This raises a natural follow-on question: can the DeFAb benchmark serve as training signal to further improve belief revision capability, and in particular to close the remaining gap for instruction-tuned models? The formal structure of the benchmark (verifier-backed gold standards, graded scoring, and polynomial-time conservativity checks) provides exactly the kind of dense, formally grounded supervision that preference optimization methods require. We present a fine-tuning pipeline that converts DeFAb instances into training signal for four post-training methods: supervised fine-tuning (SFT) on gold hypotheses, Direct Preference Optimization (DPO)~\cite{rafailov2023direct}, RLHF with Verifier-in-the-Loop (VITL)~\cite{ouyang2022training}, and Reinforcement Learning with Verifiable Rewards (RLVR) via Group Relative Policy Optimization (GRPO)~\cite{shao2024deepseekmath}.  The methods span the spectrum from pure imitation (SFT) through offline contrastive learning (DPO) to online RL with exact verification (GRPO), enabling controlled ablation of the role that contrastive signal, on-policy exploration, and gradient sparsity play in acquiring defeasible reasoning capability.
 
 
 \subsection{Verifier-Grounded Preference Signal}\label{subsec:verifier_signal}
@@ -702,6 +702,44 @@ The VITL approach parallels the use of formal verifiers (unit tests, type checke
 \end{remark}
 
 
+\subsection{Supervised Fine-Tuning Baseline}\label{subsec:sft}
+
+As a lower bound on what preference-based and RL methods can achieve, we include a supervised fine-tuning (SFT) baseline that directly trains the model to reproduce gold-standard hypotheses.  Because the DeFAb codec provides exact round-trip encoding (Definition~\ref{def:roundtrip}), the gold hypothesis $h^* \in \Hgold$ can be deterministically rendered in the same modality as the prompt, producing $(x, y^*)$ pairs without any sampling or preference extraction:
+\begin{equation}\label{eq:sft_loss}
+    \mathcal{L}_{\mathrm{SFT}}(\pi_\theta) = -\mathbb{E}_{(x, y^*) \sim \mathcal{D}_{\mathrm{sft}}} \bigl[\log \pi_\theta(y^* \mid x)\bigr],
+\end{equation}
+where $y^* = \rho_{\mathrm{enc}}(h^*)$ is the gold hypothesis encoded in the prompt's modality.  SFT requires no preference pairs, no reward model, and no on-policy sampling: it is the simplest post-training signal available from the benchmark.  Its inclusion enables a principled ablation: if SFT alone closes the Level~3 gap, the deficit is purely one of training data; if preference or RL methods outperform SFT, the relative comparison signal provides information beyond what gold demonstrations supply.
+
+
+\subsection{Reinforcement Learning with Verifiable Rewards}\label{subsec:rlvr}
+
+The DeFAb verifier satisfies the defining property of a \emph{verifiable reward}: it is computable in polynomial time, requires no human labels, and is perfectly aligned with the evaluation metric.  This makes the benchmark a natural setting for Reinforcement Learning with Verifiable Rewards (RLVR), a paradigm that has demonstrated strong results in mathematical reasoning~\cite{deepseek2025r1} by replacing learned reward models with exact programmatic scoring.
+
+We instantiate RLVR via Group Relative Policy Optimization (GRPO)~\cite{shao2024deepseekmath}, which eliminates the critic network used in PPO by normalizing advantages within groups of sampled completions.  For each prompt $x$, GRPO generates $G$ completions $\{o_1, \ldots, o_G\}$ from the current policy and scores each with the DeFAb verifier:
+\begin{equation}\label{eq:grpo_advantage}
+    \hat{A}_{i,t} = \frac{r_i - \mathrm{mean}(\mathbf{r})}{\mathrm{std}(\mathbf{r})}, \quad r_i = \mathrm{Score}\bigl(\rho_{\mathrm{dec}}(o_i),\; \D,\; \alpha\bigr),
+\end{equation}
+where $\mathbf{r} = (r_1, \ldots, r_G)$ is the vector of verifier scores for the group.  The clipped surrogate objective is:
+\begin{equation}\label{eq:grpo_loss}
+    \mathcal{L}_{\mathrm{GRPO}}(\theta) = -\frac{1}{\sum_i |o_i|} \sum_{i=1}^G \sum_{t=1}^{|o_i|} \min\!\Bigl(\frac{\pi_\theta(o_{i,t} \mid q, o_{i,<t})}{\pi_{\mathrm{old}}(o_{i,t} \mid q, o_{i,<t})} \hat{A}_{i,t},\;\; \mathrm{clip}\bigl(r_t(\theta), 1{-}\epsilon, 1{+}\epsilon\bigr) \hat{A}_{i,t}\Bigr).
+\end{equation}
+
+\paragraph{Gradient sparsity.}  A key structural property of GRPO is that advantage normalization produces naturally sparse gradient signal.  If all $G$ completions for a given prompt receive the same verifier score---as occurs when the model consistently solves (or fails) an instance---then $\mathrm{std}(\mathbf{r}) \to 0$ and no gradient flows for that prompt.  Only prompts with \emph{diverse} reward outcomes across the group contribute to parameter updates.  This concentrates learning on the model's decision boundary: instances where the model is uncertain produce mixed correct/incorrect completions, generating non-zero advantages and targeted gradients.
+
+In contrast, DPO computes a classification loss over every preference pair regardless of the score diversity within the pair, producing uniformly dense parameter updates.  We hypothesize that GRPO's implicit sparsity leads to lower effective rank in the LoRA weight deltas (Conjecture~\ref{conj:sparsity}), concentrating adaptation capacity on the reasoning capabilities where the model is weakest.
+
+
+\subsection{Spectral LoRA Initialization}\label{subsec:spectral_lora}
+
+Standard LoRA initializes $A$ with Kaiming uniform and $B$ with zeros, so the initial weight perturbation $\Delta W = BA = 0$.  We introduce an optional \emph{spectral initialization} that seeds the LoRA matrices from the truncated SVD of the pre-trained weight matrix $W = U \Sigma V^\top$:
+\begin{equation}\label{eq:spectral_init}
+    A \gets V_r^\top, \qquad B \gets U_r \Sigma_r \cdot \frac{\alpha}{r},
+\end{equation}
+where $V_r \in \mathbb{R}^{r \times d_{\mathrm{in}}}$ and $U_r \in \mathbb{R}^{d_{\mathrm{out}} \times r}$ are the top-$r$ right and left singular vectors, $\Sigma_r = \mathrm{diag}(\sigma_1, \ldots, \sigma_r)$, and $\alpha/r$ is the standard LoRA scaling factor.  This concentrates adaptation onto the most significant spectral components of the pre-trained weights rather than a random subspace, and has been shown to reduce the gap between low-rank and full-rank training~\cite{hu2022lora}.
+
+Spectral initialization is orthogonal to the choice of optimization method (SFT, DPO, or GRPO) and is applied as a configuration option to all training scripts.  We report whether spectral initialization yields measurable improvements in convergence speed or final accuracy.
+
+
 \subsection{Curriculum Training}\label{subsec:curriculum}
 
 The three DeFAb levels correspond to reasoning capabilities of increasing complexity: identifying missing observations (Level~1), reconstructing missing generalizations (Level~2), and constructing conservative exceptions (Level~3). The theoretical analysis of Section~\ref{sec:method} establishes that Level~3 reasoning subsumes Levels~1 and~2: a model that can construct a conservative defeater must be able to trace support sets (the grounding capability tested at Level~2) and identify missing facts (Level~1). This subsumption relationship motivates a curriculum in which mastery at lower levels provides inductive bias for higher levels.
@@ -727,6 +765,12 @@ We define three curriculum schedules and compare them experimentally:
 
 \paragraph{RLHF training configuration.} The reward model is initialized from the base model with a scalar value head and trained for 1 epoch on $\mathcal{D}_{\mathrm{scored}}$ with learning rate $1 \times 10^{-5}$ and batch size 32. PPO uses a clipped surrogate ratio of $\epsilon = 0.2$, KL coefficient $\beta = 0.05$, mini-batch size 8, and 256 PPO steps per epoch. The VITL variant replaces $R_\phi$ with the exact DeFAb verifier, invoked via the same polynomial-time evaluation pipeline used for benchmark scoring.
 
+\paragraph{SFT training configuration.} The SFT baseline uses the same LoRA configuration as DPO but trains on $(x, y^*)$ pairs generated by rendering gold hypotheses through the M4 encoder. Learning rate $2 \times 10^{-5}$ with cosine annealing; 3 epochs; effective batch size~16.
+
+\paragraph{GRPO training configuration.} GRPO (Section~\ref{subsec:rlvr}) uses group size $G = 8$ completions per prompt, KL coefficient $\beta = 0.04$, clipping $\epsilon = 0.2$, learning rate $5 \times 10^{-7}$, and the same LoRA configuration.  The DeFAb verifier serves as the reward function; no reward model is trained.  Generation uses temperature $\tau = 0.7$ and maximum completion length of 512 tokens.
+
+\paragraph{Spectral initialization.} For each method, we additionally train one model (Qwen~72B) with spectral LoRA initialization (Section~\ref{subsec:spectral_lora}) to evaluate whether SVD-based seeding of the LoRA matrices improves convergence or final accuracy.
+
 \paragraph{Curriculum configuration.} The sequential curriculum uses $(E_1, E_2, E_3) = (1, 1, 3)$ epochs. The weighted curriculum uses $\omega_3 = 5$, so Level~3 instances are seen five times per epoch while Levels~1--2 instances are seen once.
 
 \paragraph{Evaluation protocol.} Fine-tuned models are evaluated on the held-out test set under the identical protocol as base models (Section~\ref{subsec:evaluation}): all four rendering modalities, both direct and CoT prompting, the full three-stage decoder, and greedy decoding at temperature~$0$. We report the \emph{fine-tuning lift} $\Delta_{\mathrm{FT}} = \mathrm{Acc}_{\mathrm{FT}} - \mathrm{Acc}_{\mathrm{base}}$ per level as the primary metric. For Level~3, we additionally report the graded score distribution and the error taxonomy shift.
@@ -738,7 +782,7 @@ Table~\ref{tab:ft_main} defines the evaluation framework for reporting fine-tuni
 
 \begin{table}[t]
 \centering
-\caption{Fine-tuning evaluation framework. Rendering-robust accuracy after preference optimization on DeFAb training data. $\Delta$ denotes lift over the base model. Results on the held-out test set (15\% of 409 instances, stratified by level and domain).}
+\caption{Fine-tuning evaluation framework. Rendering-robust accuracy after post-training on DeFAb data via SFT, DPO, VITL-RLHF, and GRPO (RLVR). $\Delta$ denotes lift over the base model. Results on the held-out test set (15\% of 409 instances, stratified by level and domain).}
 \label{tab:ft_main}
 \small
 \begin{tabular}{@{}llcccccc@{}}
@@ -747,20 +791,26 @@ Table~\ref{tab:ft_main} defines the evaluation framework for reporting fine-tuni
 \cmidrule(lr){3-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
  & & Acc & $\Delta$ & Acc & $\Delta$ & Score & $\Delta$ \\
 \midrule
-\multirow{4}{*}{Qwen-32B} & Base & -- & -- & -- & -- & -- & -- \\
+\multirow{6}{*}{Qwen-32B} & Base & -- & -- & -- & -- & -- & -- \\
+ & SFT & -- & -- & -- & -- & -- & -- \\
  & DPO & -- & -- & -- & -- & -- & -- \\
  & Margin DPO & -- & -- & -- & -- & -- & -- \\
  & VITL-RLHF & -- & -- & -- & -- & -- & -- \\
+ & GRPO (RLVR) & -- & -- & -- & -- & -- & -- \\
 \midrule
-\multirow{4}{*}{Qwen-72B} & Base & -- & -- & -- & -- & -- & -- \\
+\multirow{6}{*}{Qwen-72B} & Base & -- & -- & -- & -- & -- & -- \\
+ & SFT & -- & -- & -- & -- & -- & -- \\
  & DPO & -- & -- & -- & -- & -- & -- \\
  & Margin DPO & -- & -- & -- & -- & -- & -- \\
  & VITL-RLHF & -- & -- & -- & -- & -- & -- \\
+ & GRPO (RLVR) & -- & -- & -- & -- & -- & -- \\
 \midrule
-\multirow{4}{*}{DS-R1-70B} & Base & -- & -- & -- & -- & -- & -- \\
+\multirow{6}{*}{DS-R1-70B} & Base & -- & -- & -- & -- & -- & -- \\
+ & SFT & -- & -- & -- & -- & -- & -- \\
  & DPO & -- & -- & -- & -- & -- & -- \\
  & Margin DPO & -- & -- & -- & -- & -- & -- \\
  & VITL-RLHF & -- & -- & -- & -- & -- & -- \\
+ & GRPO (RLVR) & -- & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -831,6 +881,18 @@ Margin-weighted DPO (Equation~\ref{eq:graded_dpo}, $\gamma > 0$) achieves higher
 \end{conjecture}
 
 This tests whether the ordinal structure of the DeFAb scoring function provides useful inductive bias beyond the binary preference signal. The DeFAb graded score decomposes rational belief revision into stages; if the margin term enables the model to internalize this decomposition, the margin DPO variant should show disproportionate improvement at the conservativity stage, which is where current models fail most consistently.
+
+\begin{conjecture}[RLVR Parameter Sparsity]\label{conj:sparsity}
+GRPO produces sparser parameter updates than DPO, as measured by lower effective rank and higher $L_0$ sparsity of the LoRA weight deltas $\Delta W = BA$, with the sparsity concentrated in layers responsible for the conservativity reasoning bottleneck (attention layers in later transformer blocks).
+\end{conjecture}
+
+This conjecture operationalizes the gradient sparsity argument of Section~\ref{subsec:rlvr}: because GRPO's group-relative advantage normalization assigns zero gradient to prompts where all completions receive identical verifier scores, the resulting parameter updates should be more concentrated than DPO's uniformly dense updates across all preference pairs.  If confirmed, the sparsity pattern would provide evidence that RLVR selectively tunes the parameters most relevant to the model's uncertainty frontier, a form of implicit curriculum at the parameter level.
+
+\begin{conjecture}[SFT vs.\ Preference Signal]\label{conj:sft_vs_pref}
+SFT achieves positive Level~2 fine-tuning lift $\Delta_{\mathrm{FT}}^{(2)} > 0$ from gold demonstrations but lower Level~3 lift than DPO and GRPO, because the ordinal structure of Level~3 scoring requires contrastive or relative signal that pure supervised imitation cannot provide.
+\end{conjecture}
+
+This tests whether the information provided by incorrect responses is essential for learning Level~3 belief revision.  SFT sees only the gold hypothesis; preference methods see both correct and incorrect responses; GRPO sees a \emph{distribution} of responses at varying quality levels.  If SFT matches preference methods at Level~2 (where the task is candidate selection with binary signal) but underperforms at Level~3 (where graded scoring provides ordinal structure), this would confirm that the relative comparison signal is critical specifically for the multi-stage reasoning capabilities that Level~3 evaluates.
 
 \paragraph{Additional analyses.} Beyond the four conjectures, we report: (i)~the frequency of \emph{novel correct resolutions}: valid conservative defeaters produced by fine-tuned models that do not appear in the training gold set $\Rgold$, measuring generalization beyond memorization; (ii)~reward model fidelity for the learned-reward RLHF variant, quantified as the Spearman correlation $\rho_s(R_\phi, r)$ between learned rewards and verifier scores on the validation set; (iii)~\emph{reward overoptimization}, measured as the gap between mean $R_\phi$ and mean verifier score $r$ on PPO-generated responses at the final checkpoint; and (iv)~scaling projections, obtained by subsampling the training set to $\{10\%, 25\%, 50\%, 100\%\}$ of full size and fitting log-linear curves $\mathrm{Acc}(N) = a + b \log N$ per level, informing data collection priorities for subsequent tiers (Table~\ref{tab:kbsummary}).
 

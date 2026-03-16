@@ -443,6 +443,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--lora-rank",    type=int, default=64)
     p.add_argument("--lora-alpha",   type=int, default=128)
     p.add_argument("--lora-dropout", type=float, default=0.05)
+    p.add_argument("--lora-init",    default="default",
+                   choices=["default", "spectral"],
+                   help="LoRA initialization: default (Kaiming+zero) or spectral (SVD).")
 
     # PPO
     p.add_argument("--kl-coeff",       type=float, default=0.05,

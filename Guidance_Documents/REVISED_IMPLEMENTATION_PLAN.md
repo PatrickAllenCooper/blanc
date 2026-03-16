@@ -479,6 +479,63 @@ Every claim in the paper maps to a specific experiment. Unverified claims are ma
 | Reward model fidelity: Spearman rho(R_phi, verifier) | **UNVERIFIED** | `analyze_reward_fidelity.py` |
 | Reward overoptimization: gap between R_phi and verifier at final PPO ckpt | **UNVERIFIED** | `analyze_reward_overoptimization.py` |
 | Scaling projections (log-linear at 10/25/50/100% data) | **UNVERIFIED** | `analyze_scaling_projections.py` |
+| Conj 5: GRPO sparser updates than DPO (effective rank, L0) | **UNVERIFIED** | `analyze_parameter_sparsity.py` |
+| Conj 6: SFT positive L2 lift, lower L3 lift than DPO/GRPO | **UNVERIFIED** | `analyze_ft_lift.py` (SFT rows) |
+| SFT baseline achieves positive L2 lift from gold demonstrations | **UNVERIFIED** | `evaluate_finetuned.py` on SFT checkpoints |
+| GRPO/RLVR with DeFAb verifier produces targeted parameter updates | **UNVERIFIED** | `analyze_parameter_sparsity.py` |
+| Spectral LoRA init concentrates adaptation on dominant spectral components | **UNVERIFIED** | `analyze_parameter_sparsity.py` (spectral checkpoints) |
+
+---
+
+## Phase B-SFT: Supervised Fine-Tuning (NEW)
+
+SFT is the simplest post-training method: directly optimize the model to reproduce gold hypotheses encoded through the codec.
+
+### B-SFT-1. Generate SFT Data
+
+```bash
+python experiments/finetuning/prepare_sft_data.py \
+    --modalities M4 --strategies direct \
+    --output-dir experiments/finetuning/data/
+```
+
+### B-SFT-2. Train SFT
+
+```bash
+for MODEL in "Qwen/Qwen2.5-72B-Instruct-AWQ" "Qwen/Qwen2.5-32B-Instruct-AWQ" "casperhansen/deepseek-r1-distill-llama-70b-awq"; do
+    sbatch --export=ALL,BASE_MODEL="$MODEL",CURRICULUM=joint hpc/slurm_train_sft.sh
+done
+```
+
+Training matrix: 3 models x joint curriculum = 3 jobs.
+
+---
+
+## Phase B-GRPO: RLVR via Group Relative Policy Optimization (NEW)
+
+GRPO uses the DeFAb verifier as a verifiable reward, with group-relative advantage normalization producing sparse gradient signal.
+
+### B-GRPO-1. Train GRPO
+
+```bash
+for MODEL in "Qwen/Qwen2.5-72B-Instruct-AWQ" "Qwen/Qwen2.5-32B-Instruct-AWQ" "casperhansen/deepseek-r1-distill-llama-70b-awq"; do
+    sbatch --export=ALL,BASE_MODEL="$MODEL",CURRICULUM=joint hpc/slurm_train_grpo.sh
+done
+```
+
+Training matrix: 3 models x joint curriculum = 3 jobs. GRPO is an online method (generates its own completions, scores with verifier) -- no preference data needed.
+
+---
+
+## Phase B-SPECTRAL: Spectral LoRA Initialization (NEW)
+
+Optional `--lora-init spectral` flag added to all training scripts. Uses SVD of pre-trained weights to initialize LoRA matrices, concentrating adaptation on dominant spectral components.
+
+To run any method with spectral init, add `LORA_INIT=spectral` to the SLURM export:
+
+```bash
+sbatch --export=ALL,BASE_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",LORA_INIT=spectral hpc/slurm_train_grpo.sh
+```
 
 ---
 
@@ -487,10 +544,14 @@ Every claim in the paper maps to a specific experiment. Unverified claims are ma
 ```
 experiments/finetuning/
     prepare_preference_data.py          # B1: Response sampling + preference extraction [EXISTS]
+    prepare_sft_data.py                 # B-SFT: SFT dataset from gold hypotheses [EXISTS]
     train_dpo.py                        # B2: DPO/Margin-DPO, Eq.10, all curricula, data_fraction [EXISTS]
     train_rlhf_vitl.py                  # B3: VITL-RLHF with correct PPO hyperparams [EXISTS]
+    train_sft.py                        # B-SFT: Supervised fine-tuning via TRL SFTTrainer [EXISTS]
+    train_grpo.py                       # B-GRPO: RLVR via GRPO with DeFAb verifier reward [EXISTS]
+    spectral_lora.py                    # B-SPECTRAL: SVD-based LoRA init + spectral metrics [EXISTS]
     evaluate_finetuned.py               # B5: Evaluate fine-tuned checkpoints [EXISTS]
-    generate_ft_tables.py               # B6: LaTeX Tables 4-6 [EXISTS]
+    generate_ft_tables.py               # B6: LaTeX Tables 4-6 (SFT + GRPO rows added) [EXISTS]
     analyze_ft_lift.py                  # B6: Conjecture 1 -- L3 lift [EXISTS]
     analyze_error_shift.py              # B6: Conjecture 2 -- E1/E2 -> E4/E5 shift [EXISTS]
     analyze_level_transfer.py           # B6: Conjecture 3 -- l12_only transfer [EXISTS]
@@ -500,17 +561,29 @@ experiments/finetuning/
     analyze_scaling_projections.py      # B6: Log-linear scaling curves [EXISTS]
     analyze_reward_fidelity.py          # B6: Spearman rho(R_phi, verifier) [EXISTS]
     analyze_reward_overoptimization.py  # B6: Reward hacking diagnostic [EXISTS]
+    analyze_parameter_sparsity.py       # B6: Conjecture 5 -- GRPO sparse vs DPO dense [EXISTS]
     ds_config_zero2.json                # DeepSpeed ZeRO-2 config [EXISTS]
-    data/                               # Generated preference datasets (gitignored)
+    data/                               # Generated preference/SFT datasets (gitignored)
     checkpoints/                        # LoRA checkpoints (gitignored)
 
 hpc/
+    run_all_experiments.sh              # Comprehensive orchestrator -- submits ALL phases [EXISTS]
+    slurm_generate_instances.sh         # A0: Instance generation (Level 2 + Level 3) [EXISTS]
+    slurm_evaluate_foundry.sh           # A2: Foundry eval (4 closed-source models) [EXISTS]
+    slurm_evaluate_curc_all.sh          # A3: CURC eval coordinator (3 open-source models) [EXISTS]
+    slurm_evaluate_curc_vllm.sh         # A3: Single model vLLM eval [EXISTS]
+    slurm_analysis.sh                   # A4: Phase A analysis pipeline (11 scripts) [EXISTS]
     slurm_sample_responses.sh           # B1: Response sampling on GPU [EXISTS]
     slurm_train_dpo.sh                  # B2: DPO training (4xA100, DATA_FRACTION support) [EXISTS]
     slurm_train_rlhf.sh                 # B3: VITL-RLHF (KL=0.05, mini_batch=8, LR=1e-6) [EXISTS]
+    slurm_train_sft.sh                  # B-SFT: SFT training (4xA100) [EXISTS]
+    slurm_train_grpo.sh                 # B-GRPO: GRPO/RLVR training (4xA100) [EXISTS]
     slurm_eval_finetuned.sh             # B5: Evaluate checkpoints (1xA100) [EXISTS]
-    slurm_train_all.sh                  # Submit all training jobs [EXISTS]
+    slurm_train_all.sh                  # Submit all training jobs (DPO+RLHF+SFT+GRPO) [EXISTS]
     submit_eval_finetuned_all.sh        # Submit all checkpoint eval jobs [EXISTS]
+    slurm_ft_analysis.sh                # B6: Fine-tuning analysis (11 scripts, Tables 4-6) [EXISTS]
+    slurm_debate.sh                     # C: Adversarial debate experiments (Tables 7-9) [EXISTS]
+    setup_curc_env.sh                   # Environment setup [EXISTS]
 ```
 
 ---
@@ -579,6 +652,29 @@ At CURC Alpine rates (free for CU Boulder researchers), this is $0. The bottlene
 
 ## Quick-Reference Commands
 
+### Run Everything (recommended)
+
+```bash
+cd /projects/paco0228/blanc && git pull
+
+# Preview what will be submitted (no actual SLURM jobs):
+bash hpc/run_all_experiments.sh --dry-run
+
+# Submit ALL phases (A0-A4, B0-B6, C) with SLURM dependency chains:
+bash hpc/run_all_experiments.sh
+
+# Skip phases that are already complete:
+bash hpc/run_all_experiments.sh --skip-foundry --skip-instances --skip-debate
+
+# Run only fine-tuning phases:
+bash hpc/run_all_experiments.sh --phase B
+
+# Resume from a specific phase:
+bash hpc/run_all_experiments.sh --resume-from B1
+```
+
+### Run Individual Phases
+
 ```bash
 # Step 0: Models already downloaded to CURC HF cache (confirmed Mar 9)
 # /scratch/alpine/paco0228/hf_cache/models--Qwen--Qwen2.5-32B-Instruct-AWQ
@@ -586,27 +682,26 @@ At CURC Alpine rates (free for CU Boulder researchers), this is $0. The bottlene
 # /scratch/alpine/paco0228/hf_cache/models--casperhansen--deepseek-r1-distill-llama-70b-awq
 
 # Step 1: B1 response sampling (submit from /projects/paco0228/blanc)
-# 70B+ models need TP=2 (2 GPUs) because aa100 has 40GB and 80GB A100 nodes
 cd /projects/paco0228/blanc && git pull
 sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-32B-Instruct-AWQ" hpc/slurm_sample_responses.sh
 sbatch --gres=gpu:2 --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",TP_SIZE=2 hpc/slurm_sample_responses.sh
 sbatch --gres=gpu:2 --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq",TP_SIZE=2 hpc/slurm_sample_responses.sh
 
 # Step 2: After B1 completes -- verify data then submit training
-ls experiments/finetuning/data/preferences_*.jsonl         # Should exist
-cat instances/splits.json | head -5                        # Should exist
-bash hpc/slurm_train_all.sh                                # 12 DPO + 4 RLHF jobs
+ls experiments/finetuning/data/preferences_*.jsonl
+bash hpc/slurm_train_all.sh
 
 # Step 3: After training completes -- evaluate checkpoints
 bash hpc/submit_eval_finetuned_all.sh
 
-# Step 4: After evaluation -- run analysis and populate tables
-python experiments/finetuning/generate_ft_tables.py --results-dir experiments/results/finetuned/
-python experiments/finetuning/analyze_ft_lift.py --results-dir experiments/results/finetuned/
-python experiments/finetuning/analyze_error_shift.py --results-dir experiments/results/finetuned/
-python experiments/finetuning/analyze_level_transfer.py --results-dir experiments/results/finetuned/
-python experiments/finetuning/analyze_margin_effect.py --results-dir experiments/results/finetuned/
-python experiments/finetuning/analyze_curriculum.py --results-dir experiments/results/finetuned/
+# Step 4: After evaluation -- run FT analysis (Tables 4-6, Conjectures 1-6)
+sbatch hpc/slurm_ft_analysis.sh
+
+# Step 5: Run debate experiments (Tables 7-9)
+sbatch hpc/slurm_debate.sh
+
+# Step 6: Run Phase A analysis (Tables 1-3)
+sbatch hpc/slurm_analysis.sh
 
 # Optional: CURC base evaluation for scaling analysis
 bash hpc/slurm_evaluate_curc_all.sh

@@ -285,7 +285,7 @@ def _load_model_and_tokenizer(
     model = get_peft_model(model, lora_config)
     model.print_trainable_parameters()
 
-    return model, tokenizer
+    return model, tokenizer, lora_config
 
 
 # ---------------------------------------------------------------------------
@@ -305,6 +305,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--lora-rank",    type=int, default=64)
     p.add_argument("--lora-alpha",   type=int, default=128)
     p.add_argument("--lora-dropout", type=float, default=0.05)
+    p.add_argument("--lora-init",    default="default",
+                   choices=["default", "spectral"],
+                   help="LoRA initialization: default (Kaiming+zero) or spectral (SVD).")
 
     # DPO
     p.add_argument("--dpo-variant", default="standard",
@@ -379,13 +382,18 @@ def main() -> int:
 
     # --- Load model + LoRA ---
     print("\nLoading model and applying LoRA...")
-    model, tokenizer = _load_model_and_tokenizer(
+    model, tokenizer, lora_config = _load_model_and_tokenizer(
         args.base_model,
         args.use_4bit,
         args.lora_rank,
         args.lora_alpha,
         args.lora_dropout,
     )
+
+    if args.lora_init == "spectral":
+        from finetuning.spectral_lora import spectral_init_lora
+        n = spectral_init_lora(model, lora_config)
+        print(f"  Applied spectral LoRA initialization to {n} layers")
 
     # --- DPO config ---
     dpo_config = DPOConfig(

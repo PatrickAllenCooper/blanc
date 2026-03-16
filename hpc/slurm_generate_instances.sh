@@ -5,89 +5,119 @@
 #SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=64
-#SBATCH --mem=128G
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64G
 #SBATCH --partition=amilan
 
 # DeFAb Instance Generation on CURC Alpine
-# Generates instances from expert-curated KBs using parallel processing
+#
+# Generates Level 2 and Level 3 instances from expert-curated KBs
+# (Biology, Legal, Materials) using all 13 partition strategies.
+#
+# Output files (written to project root):
+#   biology_instances_expert.json
+#   legal_instances_expert.json
+#   materials_instances_expert.json
+#
+# Level 3 instances are generated separately via generate_level3_instances.py.
+#
+# Usage:
+#   sbatch hpc/slurm_generate_instances.sh
 #
 # Author: Patrick Cooper
-# Date: 2026-02-12
+
+set -euo pipefail
 
 echo "======================================================================="
 echo "DeFAb Instance Generation - CURC Alpine HPC"
 echo "======================================================================="
-echo "Job ID: $SLURM_JOB_ID"
-echo "Node: $SLURM_NODELIST"
-echo "CPUs: $SLURM_CPUS_PER_TASK"
-echo "Memory: $SLURM_MEM_PER_NODE MB"
-echo "Start: $(date)"
+echo "Job ID : $SLURM_JOB_ID"
+echo "Node   : $SLURM_NODELIST"
+echo "CPUs   : $SLURM_CPUS_PER_TASK"
+echo "Memory : ${SLURM_MEM_PER_NODE:-unknown} MB"
+echo "Start  : $(date)"
 echo ""
 
-# Load modules
+# ---------------------------------------------------------------------------
+# Environment setup
+# ---------------------------------------------------------------------------
 if ! command -v conda &>/dev/null; then
     module load anaconda 2>/dev/null || module load Anaconda3 2>/dev/null || true
 fi
 eval "$(conda shell.bash hook)"
 module load python/3.11
 
-# Activate environment (create if doesn't exist)
+if [ -n "${SLURM_SUBMIT_DIR:-}" ]; then
+    PROJ_DIR="$SLURM_SUBMIT_DIR"
+else
+    PROJ_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+fi
+cd "$PROJ_DIR"
+
 if [ ! -d "venv" ]; then
     echo "Creating virtual environment..."
     python -m venv venv
 fi
 
 source venv/bin/activate
-
-# Install dependencies
-echo "Installing dependencies..."
 pip install -q -r requirements.txt
 
+export PYTHONPATH="${PROJ_DIR}/src:${PROJ_DIR}/examples:${PYTHONPATH:-}"
+
+mkdir -p logs
+
+# ---------------------------------------------------------------------------
 # Download expert KBs if not present
-if [ ! -d "data/yago" ]; then
+# ---------------------------------------------------------------------------
+if [ ! -d "data/yago" ] || [ ! -d "data/wordnet" ]; then
     echo "Downloading expert KBs..."
-    python scripts/download_yago.py
-    python scripts/download_wordnet.py
-    python scripts/download_lkif.py
-    python scripts/download_matonto.py
+    python scripts/download_yago.py      2>&1 || echo "  YAGO download skipped"
+    python scripts/download_wordnet.py   2>&1 || echo "  WordNet download skipped"
+    python scripts/download_matonto.py   2>&1 || echo "  MatOnto download skipped"
 fi
 
-# Run parallel instance generation
+# ---------------------------------------------------------------------------
+# Generate Level 2 instances (all 3 domains, 13 partition strategies)
+# ---------------------------------------------------------------------------
 echo ""
-echo "Starting parallel instance generation..."
-echo "CPUs available: $SLURM_CPUS_PER_TASK"
+echo "Starting Level 2 instance generation..."
+python scripts/generate_all_instances.py
+L2_EXIT=$?
+
+# ---------------------------------------------------------------------------
+# Generate Level 3 instances
+# ---------------------------------------------------------------------------
 echo ""
+echo "Starting Level 3 instance generation..."
+python scripts/generate_level3_instances.py
+L3_EXIT=$?
 
-# Set number of workers to match allocated CPUs
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-
-# Run generation script
-python scripts/generate_instances_parallel.py
-
-# Check results
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
 echo ""
 echo "======================================================================="
 echo "Generation Complete"
 echo "======================================================================="
-echo "End: $(date)"
+echo "End : $(date)"
 echo ""
 
-# List generated files
-if [ -f "biology_expert_instances_parallel.json" ]; then
-    INSTANCES=$(python -c "import json; d=json.load(open('biology_expert_instances_parallel.json')); print(len(d['instances']))")
-    echo "Biology instances: $INSTANCES"
-fi
-
-if [ -f "legal_expert_instances_parallel.json" ]; then
-    INSTANCES=$(python -c "import json; d=json.load(open('legal_expert_instances_parallel.json')); print(len(d['instances']))")
-    echo "Legal instances: $INSTANCES"
-fi
-
-if [ -f "materials_expert_instances_parallel.json" ]; then
-    INSTANCES=$(python -c "import json; d=json.load(open('materials_expert_instances_parallel.json')); print(len(d['instances']))")
-    echo "Materials instances: $INSTANCES"
-fi
+for DOMAIN in biology legal materials; do
+    FILE="${DOMAIN}_instances_expert.json"
+    if [ -f "$FILE" ]; then
+        COUNT=$(python -c "import json; d=json.load(open('$FILE')); print(len(d['instances']))" 2>/dev/null || echo "?")
+        echo "${DOMAIN^} L2 instances: $COUNT"
+    else
+        echo "${DOMAIN^} L2 instances: FILE NOT FOUND"
+    fi
+done
 
 echo ""
-echo "Job complete. Results saved to JSON files."
+echo "L2 generation exit code: $L2_EXIT"
+echo "L3 generation exit code: $L3_EXIT"
+
+if [ $L2_EXIT -ne 0 ] || [ $L3_EXIT -ne 0 ]; then
+    exit 1
+fi
+
+exit 0

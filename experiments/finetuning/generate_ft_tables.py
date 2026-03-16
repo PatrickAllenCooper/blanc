@@ -83,9 +83,17 @@ def _model_short(base_model: str) -> str:
 
 
 def _method_short(cfg: dict) -> str:
-    """Identify DPO/RLHF variant from training config."""
-    if "mode" in cfg:  # RLHF
+    """Identify training method from training config."""
+    # GRPO/RLVR -- has num_generations but no dpo_variant
+    if "num_generations" in cfg and "dpo_variant" not in cfg and "mode" not in cfg:
+        return "GRPO"
+    # RLHF (VITL or reward-model)
+    if "mode" in cfg:
         return "VITL" if cfg["mode"] == "vitl" else "RLHF-RM"
+    # SFT -- uses SFT data format, no dpo_variant or mode
+    if "max_seq_length" in cfg and "dpo_variant" not in cfg and "mode" not in cfg:
+        return "SFT"
+    # DPO variants
     variant = cfg.get("dpo_variant", "standard")
     if variant == "standard":
         return "DPO-std"
@@ -175,7 +183,7 @@ def build_table4(results: list[tuple[list[dict], dict]]) -> str:
     ]
 
     model_order = ["Qwen-72B", "Qwen-32B", "DS-R1-70B"]
-    method_order = ["DPO-std", "DPO-margin", "VITL", "RLHF-RM"]
+    method_order = ["SFT", "DPO-std", "DPO-margin", "VITL", "RLHF-RM", "GRPO"]
     prev_model = None
 
     for model in model_order:

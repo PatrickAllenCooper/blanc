@@ -19,6 +19,7 @@
 **Fine-Tuning Scripts**: All written and tested (B1-B6 + SLURM)
 **Paper Tables 4-6**: EMPTY -- awaiting finetuning results
 **Debate Infrastructure**: COMPLETE -- MCTS engine, debate agents, protocol, resolution, experiments, Tables 7-9
+**Comprehensive Orchestrator**: `hpc/run_all_experiments.sh` -- single script submits ALL phases (A0-A4, B0-B6, C) with SLURM dependency chains
 **Presentation**: `paper/mvp_validation_slides.tex` updated from MVP prototype to current project state (metropolis theme, real results, 29 slides)
 
 ---
@@ -52,6 +53,11 @@ Key findings substantiated in paper:
 - `slurm_train_rlhf.sh` hyperparams corrected (KL=0.05, mini_batch=8)
 - `base_model.txt` written by both training scripts
 - Margin DPO matches paper Eq.10 (additive, not multiplicative)
+- `hpc/run_all_experiments.sh`: comprehensive orchestrator submitting all ~65 SLURM jobs across phases A0-A4, B0-B6, C with dependency chains
+- `hpc/slurm_debate.sh`: SLURM wrapper for adversarial debate experiments (Section 7)
+- `hpc/slurm_analysis.sh`: SLURM wrapper for Phase A analysis pipeline (11 scripts)
+- `hpc/slurm_ft_analysis.sh`: SLURM wrapper for Phase B6 fine-tuning analysis (11 scripts)
+- `hpc/slurm_generate_instances.sh`: fixed to reference correct script (`generate_all_instances.py`)
 
 ### Phase C: Adversarial Defeasible Debate (COMPLETE)
 
