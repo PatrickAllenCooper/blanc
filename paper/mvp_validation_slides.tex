@@ -35,9 +35,13 @@
 \newcommand{\CritStar}{\mathrm{Crit}^{*}}
 \newcommand{\Exp}{\mathrm{Exp}}
 \newcommand{\Nov}{\mathrm{Nov}}
+\newcommand{\SD}{\mathcal{S}_{\D}}
+\newcommand{\Rob}{\mathrm{Rob}}
+\newcommand{\Gnd}{\mathrm{Gnd}}
+\newcommand{\Cre}{\mathrm{Cre}}
 
 \title{DeFAb: Defeasible Abduction Benchmark}
-\subtitle{Grounding, Novelty, and Belief Revision in Foundation Models}
+\subtitle{Grounding, Novelty, Belief Revision, and Adversarial Debate in Foundation Models}
 \author{Patrick Cooper}
 \institute{University of Colorado Boulder}
 \date{March 2026}
@@ -160,10 +164,10 @@ The creative act requires not merely asserting the exception, but doing so via a
     \draw[arr] (conv) -- (gen);
     \draw[arr] (gen) -- (eval);
 
-    \node[lbl, below=0.1cm of kb] {YAGO, WordNet, LKIF, MatOnto};
+    \node[lbl, below=0.1cm of kb] {YAGO, WordNet, LKIF, MatOnto + behavioral};
     \node[lbl, below=0.1cm of conv] {5 partition families};
     \node[lbl, below=0.1cm of gen] {409 instances, 3 levels};
-    \node[lbl, below=0.1cm of eval] {4 models, 4 modalities};
+    \node[lbl, below=0.1cm of eval] {4 models, 4 modalities, debate};
 \end{tikzpicture}
 \end{center}
 
@@ -182,7 +186,7 @@ The creative act requires not merely asserting the exception, but doing so via a
 \begin{column}{0.48\textwidth}
 \textbf{Current scale}:
 \begin{itemize}\setlength\itemsep{1pt}
-    \item 2,318 expert KB rules
+    \item 2,318 strict + ${\sim}$280 defeasible + ${\sim}$90 defeaters
     \item 374 Level 2 + 35 Level 3 instances
     \item 3 domains (biology, legal, materials)
     \item 4 rendering modalities (M1--M4)
@@ -556,32 +560,46 @@ Resolving the anomaly but disrupting other predictions scores 0.5 --- lacking th
 \section{Knowledge Base Infrastructure}
 % ==============================================================================
 
-\begin{frame}{Staged Knowledge Base Pipeline}
+\begin{frame}{Knowledge Base Infrastructure}
 
 \small
+\textbf{Tier 0 (current)}: 2,318 strict taxonomic + ${\sim}$280 defeasible behavioral + ${\sim}$90 defeaters
+
+\vspace{0.2em}
+\footnotesize
 \begin{tabular}{@{}llrr@{}}
 \toprule
 \textbf{Tier} & \textbf{Primary Sources} & \textbf{Est.\ Rules} & \textbf{Est.\ Instances} \\
 \midrule
-0 (baseline) & YAGO, WordNet, LKIF, MatOnto & 2,318 & 409 \\
-1 (this paper) & OpenCyc + ConceptNet, YAGO full & 100K--350K & 33K--90K \\
+0 (current) & YAGO, WordNet, LKIF, MatOnto + behavioral & ${\sim}$2,690 & 409 \\
+1 (NeurIPS) & OpenCyc + ConceptNet, YAGO full & 100K--350K & 33K--90K \\
 2 (biomedical) & UMLS, SNOMED CT, GO, MeSH & +850K--3M & +130K--480K \\
 3 (encyclopedic) & Wikidata + P2303, DBpedia, BabelNet & +3M--15M & +480K--2.4M \\
 4--5 (web-scale) & NELL, Freebase, SUMO, FrameNet & +6M--25M & +960K--4M \\
 \bottomrule
 \end{tabular}
 
+\small
 \vspace{0.3em}
-Four decades of publicly funded knowledge engineering:
-
-\begin{itemize}\setlength\itemsep{1pt}
-    \item \textbf{1980s}: Cyc, FGCS, Alvey --- hand-engineered ontologies
-    \item \textbf{1990s--2000s}: WordNet, ConceptNet, UMLS, Gene Ontology
-    \item \textbf{2010s--present}: Wikidata, DBpedia, YAGO, BabelNet
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Behavioral rule expansion} (complete):
+\begin{itemize}\setlength\itemsep{0pt}
+    \item Biology: ${\sim}$150 rules (8 categories)
+    \item Legal: ${\sim}$100 rules (5 categories)
+    \item Materials: ${\sim}$120 rules (9 categories)
 \end{itemize}
-
-\vspace{0.1em}
-The extraction pipeline is source-agnostic; each tier adds independently.
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Cross-ontology infrastructure} (complete):
+\begin{itemize}\setlength\itemsep{0pt}
+    \item 5 domain profiles (+ chemistry, everyday)
+    \item ConceptNet extractor (6 relation types)
+    \item OpenCyc extractor (OWL properties)
+    \item Rule validation framework
+\end{itemize}
+\end{column}
+\end{columns}
 \end{frame}
 
 
@@ -628,13 +646,116 @@ r(x, y) = \begin{cases}
 
 
 % ==============================================================================
+\section{Adversarial Defeasible Debate}
+% ==============================================================================
+
+\begin{frame}{Phase C: Adversarial Debate via MCTS}
+
+\small
+A third evaluation paradigm: place two agents in \textbf{competitive dialogue} over the derivation space of a shared defeasible theory.
+
+\vspace{0.3em}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Derivation search space} $\SD$:
+\begin{itemize}\setlength\itemsep{1pt}
+    \item Root = facts $F$; edges = single rule applications
+    \item UCB1 tree policy for exploration--exploitation
+    \item Finite by Herbrand base bound
+    \item MCTS with $N{=}200$ iterations, $c{=}\sqrt{2}$
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Derivation reward} $\rho(C)$:
+\[
+\rho(C) = w_s \cdot \rho_{\mathrm{str}} + w_n \cdot \rho_{\mathrm{nov}}
+\]
+\begin{itemize}\setlength\itemsep{1pt}
+    \item Proponent: $(w_s, w_n) = (0.7, 0.3)$
+    \item Opponent: $(w_s, w_n) = (0.4, 0.6)$
+    \item Strength $\times$ novelty tradeoff
+\end{itemize}
+\end{column}
+\end{columns}
+
+\vspace{0.5em}
+\textbf{Key insight}: MCTS proposals are verified; challenges are standard DeFAb instances (same codec, scoring, pipeline).
+\end{frame}
+
+
+\begin{frame}{Debate Protocol and Resolution}
+
+\small
+\textbf{$K$-round adversarial debate} (Definition in paper Section 7.4):
+
+\vspace{0.3em}
+\begin{enumerate}\setlength\itemsep{3pt}
+    \item \textbf{Proposal}: Both agents run MCTS independently; proponent proposes $q_P$ with proof tree $T_P$, opponent proposes $q_O$ with $T_O$.
+    \item \textbf{Challenge}: Compute $\CritStar(\D, q)$, ablate critical element $e$, generate distractor hypotheses $\to$ standard abductive instance $I$.
+    \item \textbf{Defense}: Opposing agent receives $I$, selects $h \in \Hcand$ to restore derivability.
+    \item \textbf{Resolution}: Score defense as successful iff $h \in \Hgold$.
+\end{enumerate}
+
+\vspace{0.5em}
+\textbf{Three resolution metrics} (parallel to the paper's central triad):
+
+\vspace{0.2em}
+\footnotesize
+\begin{tabular}{@{}lp{8cm}@{}}
+\toprule
+\textbf{Metric} & \textbf{Definition} \\
+\midrule
+$\mathrm{Rob}(\mathcal{A})$ & Fraction of challenges survived (robustness) \\
+$\mathrm{Gnd}(\mathcal{A})$ & Fraction of proposals that are legitimately derivable (grounding) \\
+$\mathrm{Cre}(\mathcal{A})$ & Fraction of successful defenses with novel predicates (creativity) \\
+\bottomrule
+\end{tabular}
+
+\small
+\vspace{0.3em}
+Winner: agent with higher $0.5 \cdot \mathrm{Rob} + 0.3 \cdot \mathrm{Gnd} + 0.2 \cdot \mathrm{Cre}$.
+\end{frame}
+
+
+\begin{frame}{Debate: Formal Properties}
+
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Theoretical results}:
+\begin{itemize}\setlength\itemsep{3pt}
+    \item \textbf{MCTS convergence}: In finite $\SD$, action values converge to optimal reward ($\epsilon$-optimality after $N_\epsilon$ iterations)
+    \item \textbf{Challenge completeness}: Any defeasibly provable $q$ with $|\CritStar| \geq 1$ yields a valid abductive instance
+    \item \textbf{Robustness monotonicity}: $\mathbb{E}[\mathrm{Rob}]$ is non-decreasing in MCTS iterations $N$
+\end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Three evaluation paradigms}:
+\begin{itemize}\setlength\itemsep{3pt}
+    \item \textbf{Direct evaluation} (Sec.~5): Fixed instances, single-pass accuracy
+    \item \textbf{Fine-tuning} (Sec.~6): Gradient-based, verifier as reward
+    \item \textbf{Debate} (Sec.~7): Competitive MCTS, adversarial perturbation
+\end{itemize}
+
+\vspace{0.3em}
+Complementary: debate generates challenging instances adaptively; fine-tuning internalizes solutions; direct evaluation provides the fixed benchmark.
+\end{column}
+\end{columns}
+
+\vspace{0.5em}
+\small
+\textbf{Toward LLM-in-the-loop debate}: Replace symbolic defense with foundation model selection $\to$ neuro-symbolic debate measuring competitive pressure on LLM robustness.
+\end{frame}
+
+
+% ==============================================================================
 \section{Contributions and Status}
 % ==============================================================================
 
-\begin{frame}{Six Contributions}
+\begin{frame}{Seven Contributions}
 
 \small
-\begin{enumerate}\setlength\itemsep{2pt}
+\begin{enumerate}\setlength\itemsep{1pt}
     \item \textbf{Formal grounding framework}: parameterized conversion $\phi_\partfunc$ from logic programs to defeasible theories with explicit epistemic commitments.
 
     \item \textbf{Three-level evaluation hierarchy}: fact completion $\to$ rule abduction $\to$ defeater abduction, testing grounding, novelty, and revision.
@@ -646,6 +767,8 @@ r(x, y) = \begin{cases}
     \item \textbf{Cross-ontology KB extraction}: taxonomic hierarchies paired with behavioral property graphs for rules and defeaters at scale.
 
     \item \textbf{Preference optimization pipeline}: margin DPO and VITL-RLHF exploiting the polynomial-time verifier as exact reward.
+
+    \item \textbf{Adversarial defeasible debate}: MCTS-driven competitive agents that propose, challenge, and defend derivations under adversarial proof perturbation, measuring robustness, grounding, and creativity.
 \end{enumerate}
 \end{frame}
 
@@ -657,27 +780,28 @@ r(x, y) = \begin{cases}
 \begin{column}{0.48\textwidth}
 \textbf{\textcolor{defabgreen}{Complete}}
 \begin{itemize}\setlength\itemsep{1pt}
-    \item 734 tests passing (91\% coverage)
+    \item 947 tests passing (27\% line coverage)
     \item 409 validated instances (3 domains)
     \item Full codec: M1--M4, D1--D3
     \item Base evaluation: 4 frontier models
-    \item Paper Sections 1--5 with real data
-    \item All analysis scripts
-    \item Fine-tuning scripts and SLURM jobs
-    \item Symbolic baseline (L2=100\%, L3=100\%)
+    \item Paper Sections 1--7 with real data
+    \item Phase C: adversarial debate (MCTS, agents, protocol, Tables 7--9)
+    \item KB expansion: behavioral rules (${\sim}$370) + cross-ontology extractors
+    \item All analysis + fine-tuning scripts
+    \item SLURM orchestrator (65 jobs, dependency chains)
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
 \textbf{\textcolor{defabredish}{Remaining}}
 \begin{itemize}\setlength\itemsep{1pt}
-    \item Phase B: Fine-tuning on CURC
+    \item Phase B: Fine-tuning on CURC (blocked $\to$ TP fix committed)
         \begin{itemize}\setlength\itemsep{0pt}
-            \item B1: Response sampling
+            \item B1: Response sampling (TP=2 for 70B+)
             \item B2: DPO training (12 jobs)
             \item B3: RLHF training (4 jobs)
             \item B5: Checkpoint evaluation
         \end{itemize}
-    \item Paper Tables 4--6
+    \item Paper Tables 4--6 (awaiting B6)
     \item Conjectures 1--4 verification
     \item Appendix C (decoder validation)
 \end{itemize}
@@ -686,7 +810,7 @@ r(x, y) = \begin{cases}
 
 \vspace{0.3em}
 \begin{center}
-\textbf{Target}: NeurIPS 2026 \quad | \quad \textbf{Timeline}: $\sim$2 weeks to completion
+\textbf{Target}: NeurIPS 2026 \quad | \quad \textbf{Progress}: 12 of 14 weeks (86\%) \quad | \quad \textbf{Blocking}: CURC B1 resubmission
 \end{center}
 \end{frame}
 
@@ -700,6 +824,8 @@ r(x, y) = \begin{cases}
     \item \textbf{Narrative rendering is the universal bottleneck}: 55--70 pp gap between M1 and formal modalities.
     \item \textbf{CoT helps generation, hurts selection}: ``overthinking'' at L2 vs.\ latent reasoning activation at L3.
     \item \textbf{Formal verification enables exact fine-tuning}: polynomial-time verifier as reward signal with no approximation error.
+    \item \textbf{Three complementary evaluation paradigms}: direct evaluation (fixed benchmark), fine-tuning (gradient-based), adversarial debate (competitive MCTS).
+    \item \textbf{KB infrastructure scales to millions}: cross-ontology extraction from 4 decades of publicly funded knowledge engineering.
 \end{enumerate}
 
 \vspace{0.3em}
