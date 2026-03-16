@@ -21,7 +21,7 @@ Date: 2026-02-12
 from blanc.core.theory import Theory
 from .lkif_legal_extracted import create_lkif_legal
 from .legal_instances import add_legal_instances
-from .legal_behavioral_rules import add_legal_behavioral_rules
+from .legal_behavioral_rules import add_legal_behavioral_rules, add_legal_superiority_relations
 
 
 def create_legal_kb(include_instances=True) -> Theory:
@@ -41,6 +41,7 @@ def create_legal_kb(include_instances=True) -> Theory:
         theory = add_legal_instances(theory)
     
     theory = add_legal_behavioral_rules(theory)
+    add_legal_superiority_relations(theory)
     
     return theory
 

@@ -22,7 +22,7 @@ Date: 2026-02-12
 from blanc.core.theory import Theory
 from .matonto_materials_extracted import create_matonto_materials
 from .materials_instances import add_materials_instances
-from .materials_behavioral_rules import add_materials_behavioral_rules
+from .materials_behavioral_rules import add_materials_behavioral_rules, add_materials_superiority_relations
 
 
 def create_materials_kb(include_instances=True) -> Theory:
@@ -44,6 +44,7 @@ def create_materials_kb(include_instances=True) -> Theory:
         theory = add_materials_instances(theory)
     
     theory = add_materials_behavioral_rules(theory)
+    add_materials_superiority_relations(theory)
     
     return theory
 
