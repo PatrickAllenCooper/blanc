@@ -11,6 +11,10 @@ from blanc.reasoning.derivation_tree import (
     DerivationNode,
     NodeType,
     build_derivation_tree,
+    get_critical_subtree,
+    enumerate_permutations,
+    tree_overlap,
+    extract_support_path,
 )
 
 __all__ = [
@@ -22,4 +26,8 @@ __all__ = [
     "DerivationNode",
     "NodeType",
     "build_derivation_tree",
+    "get_critical_subtree",
+    "enumerate_permutations",
+    "tree_overlap",
+    "extract_support_path",
 ]

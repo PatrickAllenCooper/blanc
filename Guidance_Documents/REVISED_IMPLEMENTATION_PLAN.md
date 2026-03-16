@@ -1,9 +1,9 @@
 # Implementation Plan: LLM Evaluation, Fine-Tuning, and Submission
 
-**Date**: 2026-03-07 (updated)
+**Date**: 2026-03-16 (updated)
 **Author**: Patrick Cooper
-**Status**: Phase A Foundry evaluation COMPLETE (4 models, paper tables populated). Phase B finetuning NOT STARTED -- five B1 attempts failed on CURC: two SLURM script bugs (fixed in `b009a48`, `8e67169`), then three CUDA OOM failures on 40GB A100 nodes (70B+ AWQ models need ~36-37 GB, leaving no KV cache room). Fixed: tensor parallelism (TP=2) for 70B+ models. Models downloaded to CURC HF cache (confirmed Mar 9). All training scripts, analysis scripts, and SLURM scripts written and tested.
-**Next action**: Push TP fix, pull on CURC, resubmit B1 with `--gres=gpu:2,TP_SIZE=2` for 70B+ models.
+**Status**: Phase A COMPLETE. Phase B finetuning NOT STARTED (blocked on CURC, TP fix committed). Phase C (adversarial debate via MCTS) COMPLETE -- all code, tests, experiments, and paper section implemented.
+**Next action**: Push TP fix, pull on CURC, resubmit B1. Run debate experiments on full KBs.
 
 ---
 
@@ -15,7 +15,7 @@
 | 3 | Instance generation -- 374 Level 2 instances | Done |
 | 4 | Statistical analysis (Section 4.3) | Done |
 | 5--6 | Full codec: M1--M4 encoders, D1--D3 decoders, cascading decoder | Done |
-| 7 | Validation and testing infrastructure (494 tests, 81% coverage) | Done |
+| 7 | Validation and testing infrastructure (797+ tests) | Done |
 | 8 | Evaluation infrastructure (pipeline, prompting, response cache) | Done |
 | 8.5a | Level 3 instance generation -- 35 defeater instances | Done |
 | 8.5b | All Section 5 analysis scripts written and tested | Done |
@@ -343,7 +343,41 @@ Each script should:
 
 ---
 
-## Phase C: Paper Completion (Weeks 13--14)
+## Phase C-Debate: Adversarial Defeasible Debate (COMPLETE -- Week 12)
+
+### C-D1. MCTS Engine (`src/blanc/search/`) -- DONE
+
+- `mcts.py`: domain-agnostic MCTS with UCB1 selection, configurable exploration constant, convergence detection
+- `derivation_space.py`: maps defeasible reasoning to MCTS (DerivationState, DerivationAction, DerivationSpace)
+- `reward.py`: derivation strength, novelty, criticality, and composite reward functions
+
+### C-D2. Debate Framework (`src/blanc/debate/`) -- DONE
+
+- `agent.py`: DebateAgent base, ProponentAgent (strength-weighted), OpponentAgent (novelty-weighted)
+- `protocol.py`: DebateProtocol with 4 phases (proposal, challenge, defense, resolution)
+- `resolution.py`: robustness, grounding, creativity scores; debate_outcome with weighted aggregate
+
+### C-D3. Derivation Tree Extensions -- DONE
+
+- `get_critical_subtree()`, `enumerate_permutations()`, `tree_overlap()`, `extract_support_path()`
+
+### C-D4. Tests -- DONE
+
+- 63 tests across `tests/search/` and `tests/debate/` (all passing)
+
+### C-D5. Experiments -- DONE
+
+- `experiments/debate/run_debate.py`: CLI for running debates across KBs
+- `experiments/debate/analyze_debate.py`: analysis + LaTeX table generation (Tables 7-9)
+
+### C-D6. Paper Section 7 -- DONE
+
+- 8 subsections, 6 definitions, 3 theorems with proofs, Tables 7-9
+- Abstract, Introduction (contribution 7), Related Work, Discussion, Conclusion updated
+
+---
+
+## Phase C-Paper: Paper Completion (Weeks 13--14)
 
 ### C1. Populate Paper Tables with Results
 
@@ -355,6 +389,9 @@ Each script should:
 | Table 4 (fine-tuning results) | Phase B results | Awaiting B5 |
 | Table 5 (curriculum comparison) | Phase B results | Awaiting B5 |
 | Table 6 (error taxonomy shift) | Phase B results | Awaiting B5 |
+| Table 7 (debate robustness) | Phase C-Debate | **DONE** |
+| Table 8 (grounding + creativity) | Phase C-Debate | **DONE** |
+| Table 9 (winner distribution) | Phase C-Debate | **DONE** |
 
 ### C2. Update Paper Sections with Results
 

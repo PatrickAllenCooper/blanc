@@ -1,10 +1,55 @@
 # BLANC Development Handoff
 
 **Author**: Patrick Cooper
-**Date**: 2026-02-24 (session 2)
-**Branch**: `main` (in sync with origin)
-**Tests**: 494 passing, 30 skipped, 81% coverage
-**Timeline**: Week 10.5 of 14.5 — ON TRACK
+**Date**: 2026-03-16 (session 3)
+**Branch**: `main`
+**Tests**: 797+ passing (63 new search/debate tests)
+**Timeline**: Week 12 of 14 -- Phase A and C complete, Phase B pending
+
+---
+
+## What Was Built in Session 3 (2026-03-16)
+
+### Phase C: Adversarial Defeasible Debate via MCTS
+
+Complete implementation of competitive agent debate over defeasible derivation spaces:
+
+#### New Modules
+
+| Module | Files | Purpose |
+|--------|-------|---------|
+| `src/blanc/search/` | `mcts.py`, `derivation_space.py`, `reward.py` | Domain-agnostic MCTS engine with UCB1, defeasible derivation space adapter, composite reward functions |
+| `src/blanc/debate/` | `agent.py`, `protocol.py`, `resolution.py` | Proponent/Opponent agents, 4-phase debate protocol with Author Algorithm proof permutation, robustness/grounding/creativity scoring |
+| `experiments/debate/` | `run_debate.py`, `analyze_debate.py` | CLI experiment runner and analysis with LaTeX table generation (Tables 7-9) |
+| `tests/search/` | `test_mcts.py`, `test_derivation_space.py` | 35 tests for MCTS core, derivation space, reward functions |
+| `tests/debate/` | `test_protocol.py` | 28 tests for agents, protocol, resolution, tree extensions |
+
+#### Extensions to Existing Modules
+
+- `src/blanc/reasoning/derivation_tree.py`: added `get_critical_subtree()`, `enumerate_permutations()`, `tree_overlap()`, `extract_support_path()`
+- `src/blanc/reasoning/__init__.py`: exports new tree utilities
+
+#### Paper Additions
+
+- New Section 7 (Adversarial Defeasible Debate) with 8 subsections, 6 formal definitions, 3 theorems with proofs
+- Tables 7-9 (debate robustness, grounding/creativity, winner distribution)
+- Abstract updated with debate contribution
+- Introduction contribution list extended (item 7)
+- Related Work expanded with debate and MCTS literature
+- Discussion: new paragraph on debate as third evaluation paradigm
+- Conclusion: updated to reference debate protocol
+- `references.bib`: added Kocsis & Szepesvari 2006, Irving et al. 2018, Du et al. 2023, Yao et al. 2024
+
+#### Architecture
+
+The debate protocol is a closed loop:
+1. Two agents independently run MCTS over the derivation search space
+2. Each proposes a statement with a proof tree (via `build_derivation_tree`)
+3. The Author Algorithm's `full_theory_criticality()` ablates critical elements from each proof
+4. Agents must select the correct hypothesis from candidates to restore derivability
+5. Resolution scores measure robustness (defense rate), grounding (proposal legitimacy), creativity (novel predicates)
+
+Key design: debate instances are standard `AbductiveInstance` objects, so the entire existing codec, prompting, and evaluation pipeline can be reused.
 
 ---
 

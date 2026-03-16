@@ -8,7 +8,7 @@ Date: 2026-02-11
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Set
+from typing import Dict, FrozenSet, List, Optional, Set, Tuple
 from enum import Enum
 
 from blanc.core.theory import Rule
@@ -208,3 +208,132 @@ def _build_node(engine: 'DefeasibleEngine', literal: str) -> DerivationNode:
         node_type=NodeType.FACT,
         tag="defeasible"
     )
+
+
+# ---------------------------------------------------------------------------
+# Debate-oriented tree utilities
+# ---------------------------------------------------------------------------
+
+def get_critical_subtree(
+    tree: DerivationTree,
+    target_literal: str,
+) -> Optional[DerivationTree]:
+    """
+    Extract the subtree rooted at the node matching *target_literal*.
+
+    Useful for isolating the proof fragment that supports a specific
+    intermediate conclusion inside a larger derivation.
+    """
+    node = _find_node(tree.root, target_literal)
+    if node is None:
+        return None
+    return DerivationTree(root=node)
+
+
+def enumerate_permutations(
+    tree: DerivationTree,
+    theory: 'Theory',
+    target: str,
+    k: int = 5,
+) -> List[Tuple['Element', 'Theory']]:
+    """
+    Generate up to *k* ablated theory variants by removing one critical
+    element from the derivation at a time.
+
+    Each returned pair is ``(removed_element, ablated_theory)``.
+    This directly invokes the author algorithm's criticality computation
+    (Definition 18) scoped to the rules that appear in *tree*.
+    """
+    from blanc.author.support import full_theory_criticality, _remove_element
+
+    try:
+        crit = full_theory_criticality(theory, target)
+    except ValueError:
+        return []
+
+    rules_in_tree = tree.get_rules_used()
+    rule_labels_in_tree = {r.label for r in rules_in_tree if r.label}
+    facts_in_tree = _collect_literals(tree.root)
+
+    relevant_crit = [
+        e for e in crit
+        if (isinstance(e, str) and e in facts_in_tree)
+        or (hasattr(e, 'label') and getattr(e, 'label', None) in rule_labels_in_tree)
+    ]
+
+    if not relevant_crit:
+        relevant_crit = list(crit)
+
+    results = []
+    for elem in relevant_crit[:k]:
+        d_minus = _remove_element(theory, elem)
+        results.append((elem, d_minus))
+    return results
+
+
+def tree_overlap(tree_a: DerivationTree, tree_b: DerivationTree) -> float:
+    """
+    Jaccard similarity of the literal sets of two derivation trees.
+
+    Returns a value in [0, 1] measuring structural agreement between
+    two agents' proofs -- 1.0 means identical literal coverage.
+    """
+    lits_a = _collect_literals(tree_a.root)
+    lits_b = _collect_literals(tree_b.root)
+    if not lits_a and not lits_b:
+        return 1.0
+    intersection = lits_a & lits_b
+    union = lits_a | lits_b
+    return len(intersection) / len(union)
+
+
+def extract_support_path(
+    tree: DerivationTree,
+    target: Optional[str] = None,
+) -> List[str]:
+    """
+    Linearise the AND-OR tree into an ordered list of literals
+    from leaves (facts) up to the root (or *target* node).
+
+    The resulting list is suitable for rendering as a step-by-step
+    derivation trace for LLM prompts.
+    """
+    start = tree.root
+    if target:
+        found = _find_node(tree.root, target)
+        if found is not None:
+            start = found
+
+    path: List[str] = []
+    _postorder(start, path)
+    return path
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+def _find_node(
+    node: DerivationNode, literal: str
+) -> Optional[DerivationNode]:
+    if node.literal == literal:
+        return node
+    for child in node.children:
+        found = _find_node(child, literal)
+        if found is not None:
+            return found
+    return None
+
+
+def _collect_literals(node: DerivationNode) -> Set[str]:
+    lits: Set[str] = {node.literal}
+    for child in node.children:
+        lits |= _collect_literals(child)
+    return lits
+
+
+def _postorder(node: DerivationNode, acc: List[str]) -> None:
+    for child in node.children:
+        _postorder(child, acc)
+    if node.literal not in acc:
+        acc.append(node.literal)

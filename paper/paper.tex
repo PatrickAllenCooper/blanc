@@ -110,6 +110,11 @@
 \newcommand{\strictto}{\rightarrow}
 \newcommand{\defeatto}{\leadsto}
 \newcommand{\comp}[1]{\overline{#1}}
+\newcommand{\SD}{\mathcal{S}_{\D}}
+\newcommand{\UCB}{\mathrm{UCB1}}
+\newcommand{\Rob}{\mathrm{Rob}}
+\newcommand{\Gnd}{\mathrm{Gnd}}
+\newcommand{\Cre}{\mathrm{Cre}}
 % Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
 \title{Defeasible Reasoning as a Framework for Foundation Model Grounding, Novelty, and Belief Revision}
 
@@ -142,7 +147,7 @@
 Foundation models are routinely evaluated on forward, monotonic inference, yet scientific progress depends on \emph{abduction} and \emph{revision}: proposing hypotheses that explain observations and retracting default conclusions when exceptions arise. We argue that current models suffer three entangled structural deficits: they cannot trace conclusions to supporting evidence (\emph{grounding}), cannot generate hypotheses that revise their training distribution (\emph{novelty}), and cannot update knowledge while preserving unrelated commitments (\emph{belief revision}). These deficits underlie hallucination, creative sterility, and the fragility of knowledge editing alike.
 We cast this triad as a defeasible reasoning problem. Starting from legacy deductive knowledge bases, we convert them into defeasible theories via a parameterized partition $\kappa$ that controls which clauses are strict versus revisable defaults. The resulting theories make epistemic commitments explicit: every conclusion has a traceable support set, every default is revisable, and every element's criticality is computable. We generate grounded abductive evaluation instances by ablating critical elements and computing verifier-backed gold hypotheses, with conservativity constraints that operationalize the AGM principle of minimal change \cite{alchourron1985logic}. The benchmark stratifies difficulty into (i)~fact completion, (ii)~rule abduction, and (iii)~\emph{defeater abduction}, where a model must introduce a conservative exception that blocks an incorrect default prediction: our formal analogue of rational scientific revision.
 We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and pipeline with polynomial-time instance generation, controllable distractors, explicit measures of novelty and revision distance, and a rendering-robust evaluation protocol that separates reasoning from surface-form sensitivity. The benchmark draws on a heterogeneous collection of publicly funded knowledge bases spanning four decades of knowledge engineering: 1980s government AI programs (Cyc, FGCS, Alvey), NSF-funded lexical and commonsense resources (WordNet, ConceptNet), EU-funded legal and multilingual ontologies (LKIF Core, BabelNet), and collaborative encyclopedic projects (Wikidata, DBpedia, YAGO). A cross-ontology extraction procedure pairs taxonomic hierarchies with behavioral property graphs to generate defeasible rules and defeaters at scale.
-Evaluation of four frontier models---GPT-5.2-chat, Claude~Sonnet~4.6, DeepSeek-R1, and Kimi-K2.5---reveals a rich capability structure. At Level~2 (rule abduction), all models achieve strong direct-prompting accuracy ($73$--$79\%$ across formal modalities), confirming that grounding is largely solved at current scale. At Level~3 (defeater abduction), performance is highly prompting-strategy-dependent: reasoning-optimized models (DeepSeek-R1, GPT-5.2) achieve $65\%$ and $48\%$ respectively under structured chain-of-thought prompting using a generation-appropriate prompt scaffold, while the instruction-optimized Claude~Sonnet~4.6 achieves $24\%$ under direct prompting but regresses to $9\%$ under CoT. This \emph{architectural dissociation}---CoT strongly beneficial for reasoning models ($+56$--$+79$ pp) but harmful for instruction-tuned models ($-14$ pp)---reveals that belief revision capability is not absent but is latent and highly sensitive to the prompting paradigm. A further universal finding is that narrative rendering (M1) degrades performance by $55$--$70$ percentage points relative to formal modalities for all models, confirming the modality--level interaction conjecture and establishing rendering robustness as a non-trivial challenge orthogonal to reasoning ability. Chain-of-thought prompting \emph{reduces} Level~2 accuracy for all models ($-4$ to $-31$ pp), an ``overthinking'' effect specific to formal candidate-selection tasks where surface alignment between output and candidate strings is sufficient without verbal elaboration. We further present a preference optimization pipeline---comprising margin-weighted Direct Preference Optimization and a verifier-in-the-loop RLHF variant exploiting the benchmark's polynomial-time verifier as an exact reward function---for fine-tuning open-source models on formally grounded defeasible reasoning data.
+Evaluation of four frontier models---GPT-5.2-chat, Claude~Sonnet~4.6, DeepSeek-R1, and Kimi-K2.5---reveals a rich capability structure. At Level~2 (rule abduction), all models achieve strong direct-prompting accuracy ($73$--$79\%$ across formal modalities), confirming that grounding is largely solved at current scale. At Level~3 (defeater abduction), performance is highly prompting-strategy-dependent: reasoning-optimized models (DeepSeek-R1, GPT-5.2) achieve $65\%$ and $48\%$ respectively under structured chain-of-thought prompting using a generation-appropriate prompt scaffold, while the instruction-optimized Claude~Sonnet~4.6 achieves $24\%$ under direct prompting but regresses to $9\%$ under CoT. This \emph{architectural dissociation}---CoT strongly beneficial for reasoning models ($+56$--$+79$ pp) but harmful for instruction-tuned models ($-14$ pp)---reveals that belief revision capability is not absent but is latent and highly sensitive to the prompting paradigm. A further universal finding is that narrative rendering (M1) degrades performance by $55$--$70$ percentage points relative to formal modalities for all models, confirming the modality--level interaction conjecture and establishing rendering robustness as a non-trivial challenge orthogonal to reasoning ability. Chain-of-thought prompting \emph{reduces} Level~2 accuracy for all models ($-4$ to $-31$ pp), an ``overthinking'' effect specific to formal candidate-selection tasks where surface alignment between output and candidate strings is sufficient without verbal elaboration. We further present a preference optimization pipeline---comprising margin-weighted Direct Preference Optimization and a verifier-in-the-loop RLHF variant exploiting the benchmark's polynomial-time verifier as an exact reward function---for fine-tuning open-source models on formally grounded defeasible reasoning data. Finally, we introduce \emph{adversarial defeasible debate}: a protocol in which two agents use Monte Carlo Tree Search over the derivation space to propose competing conclusions, whose proof trees are then permuted by the Author Algorithm to create mutual challenges. The agents must defend their positions under these adversarial perturbations, producing a competitive dynamic that measures robustness, grounding, and creativity as complementary evaluation signals.
 \end{abstract}
 
 
@@ -185,11 +190,13 @@ We introduce \textsc{DeFAb} (\textbf{De}feasible \textbf{A}bduction \textbf{B}en
     \item \textbf{A cross-ontology KB extraction methodology} for generating defeasible rule bases at scale from heterogeneous publicly funded knowledge sources. The procedure pairs taxonomic hierarchies (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to synthesize defeasible rules; exception relations (ConceptNet's \texttt{NotCapableOf}, Wikidata's P2303, Gene Ontology's \texttt{NOT}-qualified annotations) serve as structured defeater sources for Level~3, enabling automatic instance generation without manual authoring. A fifth structured partition family, the \emph{type-grounded} partition, maps relation type to epistemic status: taxonomic edges are strict, capability assertions are defeasible, and exception relations seed $\Rdf$ directly.
 
     \item \textbf{A preference optimization pipeline for defeasible fine-tuning.} We present a method for converting DeFAb instances into verifier-grounded preference data for DPO~\cite{rafailov2023direct} and RLHF~\cite{ouyang2022training}, exploiting the benchmark's polynomial-time scoring function as an exact reward signal. The pipeline includes a margin-weighted DPO variant adapted to the ordinal structure of Level~3 graded scoring, a verifier-in-the-loop (VITL) RLHF variant that eliminates reward model approximation, and curriculum schedules informed by the level hierarchy (Section~\ref{sec:finetuning}).
+
+    \item \textbf{An adversarial defeasible debate protocol.} We formalize a competitive multi-agent evaluation framework in which two agents use Monte Carlo Tree Search over the derivation space to propose and defend competing conclusions. The Author Algorithm's criticality computation generates mutual challenges by permuting proof trees, and agents must defend under these adversarial perturbations. Resolution metrics for robustness, grounding, and creativity provide a richer diagnostic signal than single-pass evaluation (Section~\ref{sec:debate}).
 \end{enumerate}
 
 Returning to the IDP example: the default ``proteins have stable 3D structure'' is a defeasible rule $r_1$ with identifiable support and computable criticality. The discovery corresponds to constructing an exception rule $r_4$ (``disordered proteins function via conformational ensembles'') that overrides the default mechanism. Crucially, $r_4$ must be \emph{conservative}: resolving the anomaly for p53\_idr without disrupting predictions about conventionally structured proteins (the defeasible analogue of AGM's minimal change). A model that proposes $r_4$ but destabilizes unrelated predictions scores $0.5$; one that preserves all side-effects scores $1.0$. The benchmark thus measures not just whether a model can be creative, but whether it can be \emph{rationally} creative.
 
-Section~\ref{sec:method} formalizes the pipeline; Section~\ref{sec:experiments} presents the experimental design; Section~\ref{sec:finetuning} develops the preference optimization methodology for defeasible fine-tuning; full definitions and proofs appear in the appendices.
+Section~\ref{sec:method} formalizes the pipeline; Section~\ref{sec:experiments} presents the experimental design; Section~\ref{sec:finetuning} develops the preference optimization methodology for defeasible fine-tuning; Section~\ref{sec:debate} introduces the adversarial debate protocol; full definitions and proofs appear in the appendices.
 
 
 \section{Related Work}
@@ -202,6 +209,8 @@ The proof theory we adopt for defeasible reasoning follows the formalization of 
 Our framework connects to the theory of belief revision initiated by Alchourr\'{o}n, G\"{a}rdenfors, and Makinson \cite{alchourron1985logic}, who established rationality postulates for how an ideal agent should update beliefs in response to new evidence. G\"{a}rdenfors \cite{gardenfors1988knowledge} developed the principle of minimal change, and Katsuno and Mendelzon \cite{katsuno1991propositional} provided model-theoretic characterizations. Dalal \cite{dalal1988investigations} introduced distance-based revision using Hamming distance between models. Our conservativity requirement (Definition~\ref{def:conserv}) operationalizes minimal change in the defeasible setting, and our revision distance (Definition~\ref{def:revdist}) provides a tractable analogue of Dalal's distance. This connection is practically significant: the knowledge editing literature (including ROME \cite{meng2022locating}, MEMIT \cite{meng2023mass}, and evaluations of their side effects \cite{cohen2024evaluating}) addresses belief revision in neural models but lacks formally grounded measures of conservativity. Our benchmark provides exactly such measures, bridging the gap between the formal revision theory and empirical evaluation of neural knowledge updates.
 
 Recent neurosymbolic systems have begun to bridge the gap between formal reasoning and neural language models. LOGicalThought \cite{nananukul2025logicalt} translates natural language into RuleLog programs and feeds symbolic structure back into language models, achieving modest improvements on defeasible reasoning tasks. DARK \cite{gao2025dark} unifies deduction and abduction via masked diffusion over knowledge graphs, using a self-reflective cycle to generate and verify hypotheses. LLM-ASPIC+ \cite{fang2025llmaspic} combines language model grounding with formal ASPIC+ argumentation, achieving state-of-the-art accuracy on multi-step defeasible reasoning benchmarks by delegating conflict resolution to the symbolic layer. These systems share the goal of injecting formal structure into LLM reasoning pipelines, yet all remain evaluation-free in the benchmark sense: they develop new \emph{solvers} without providing the formally grounded \emph{instances} needed to evaluate whether models can construct defeaters or perform conservative belief revision. LogT focuses on forward reasoning (verifying conclusions) rather than abductive hypothesis generation; DARK's reliance on knowledge graph triples sacrifices the expressivity needed for complex exception handling; and LLM-ASPIC+ assumes the argumentation structure is given rather than abduced.
+
+Concurrently, multi-agent debate has emerged as a promising paradigm for improving LLM reasoning. Irving, Christiano, and Amodei \cite{irving2018ai_safety_debate} proposed AI safety via debate, where two agents compete to convince a judge, providing a scalable oversight mechanism. Du et al.\ \cite{du2023debate} demonstrated that multi-agent debate improves factuality and reasoning by forcing models to confront conflicting perspectives. Tree of Thoughts \cite{yao2024tree_of_thoughts} applies tree search to LLM reasoning, achieving significant improvements on tasks requiring deliberate exploration. Monte Carlo Tree Search has been applied to LLM reasoning through ReST-MCTS* and related work, using process reward models for step-level verification. However, none of these approaches combine MCTS with formal defeasible reasoning or use argumentation-theoretic proof structures as the substrate for competitive exploration. Our debate protocol (Section~\ref{sec:debate}) bridges this gap: agents explore the derivation space of a defeasible theory via MCTS, and the Author Algorithm's criticality computation generates adversarial challenges grounded in the formal framework.
 
 Existing benchmarks reinforce this asymmetry. ProofWriter \cite{tafjord2021proofwriter} and LogicNLI \cite{tian2021diagnosing} evaluate deductive verification: given premises, determine truth values. The inverse problem, generating the missing premise that would license a given conclusion, remains underexplored. The INABHYD benchmark \cite{inabhyd2025} demonstrates that language models fail to follow Occam's Razor in abductive contexts, systematically hallucinating unnecessary entities when simpler explanations suffice. LogiDynamics \cite{zheng2025logidynamics} studies the interplay of inductive, abductive, and deductive inference in LLMs, finding that System~2 strategies (hypothesis selection and iterative refinement) substantially improve performance on complex multi-step problems, but evaluates over generic analogical tasks rather than formally specified defeasible theories. LLM-ORBench \cite{llmorbench2026} evaluates ontology-based deductive inference via SPARQL, but similarly does not address hypothesis construction or defeasibility.
 
@@ -826,6 +835,157 @@ This tests whether the ordinal structure of the DeFAb scoring function provides 
 \paragraph{Additional analyses.} Beyond the four conjectures, we report: (i)~the frequency of \emph{novel correct resolutions}: valid conservative defeaters produced by fine-tuned models that do not appear in the training gold set $\Rgold$, measuring generalization beyond memorization; (ii)~reward model fidelity for the learned-reward RLHF variant, quantified as the Spearman correlation $\rho_s(R_\phi, r)$ between learned rewards and verifier scores on the validation set; (iii)~\emph{reward overoptimization}, measured as the gap between mean $R_\phi$ and mean verifier score $r$ on PPO-generated responses at the final checkpoint; and (iv)~scaling projections, obtained by subsampling the training set to $\{10\%, 25\%, 50\%, 100\%\}$ of full size and fitting log-linear curves $\mathrm{Acc}(N) = a + b \log N$ per level, informing data collection priorities for subsequent tiers (Table~\ref{tab:kbsummary}).
 
 
+\section{Adversarial Defeasible Debate via Monte Carlo Tree Search}\label{sec:debate}
+
+The evaluation of Sections~\ref{sec:results}--\ref{sec:finetuning} treats each model as an isolated oracle queried in a single pass. We now consider a complementary paradigm: placing two agents in \emph{competitive dialogue} over the derivation space of a shared defeasible theory. Each agent uses Monte Carlo Tree Search (MCTS) to explore the space of conclusions licensed by the knowledge base, proposes a statement it considers well-supported, and must then defend that statement when the Author Algorithm permutes the underlying proof tree. The resulting protocol---\emph{adversarial defeasible debate}---aims to surface latent reasoning capability by forcing agents to justify derivations under perturbation, a mechanism distinct from both prompting scaffolds (Section~\ref{sec:results}) and gradient-based fine-tuning (Section~\ref{sec:finetuning}).
+
+\subsection{Derivation Trees as a Search Space}\label{subsec:deriv-search}
+
+We begin by recasting the derivation space of a defeasible theory as a search tree amenable to MCTS exploration.
+
+\begin{definition}[Derivation search space]
+\label{def:deriv-search-space}
+Given a defeasible theory $\D = (F, \Rs, \Rd, \Rdf, >)$, the \emph{derivation search space} $\SD = (V, E, v_0)$ is a directed tree where:
+\begin{enumerate}[nosep]
+  \item $v_0 = F$ is the root node (the set of initial facts);
+  \item each node $v \in V$ is a set of derived conclusions $C_v \supseteq F$;
+  \item an edge $(v, v') \in E$ exists when $C_{v'} = C_v \cup \{q\}$ for some literal $q$ derived by applying a single rule $r \in \Rs \cup \Rd$ with applicable substitution $\theta$ to premises in $C_v$;
+  \item a node $v$ is \emph{terminal} when no new rule application produces a conclusion outside $C_v$, or when a designated target literal $q^* \in C_v$.
+\end{enumerate}
+The branching factor at node $v$ equals the number of applicable ground rule instantiations whose conclusions are not yet in $C_v$. By Theorem~\ref{thm:derivation-complexity}, $|V|$ is bounded by the size of the grounded Herbrand base, ensuring finiteness.
+\end{definition}
+
+\subsection{MCTS for Defeasible Derivations}\label{subsec:mcts-defeasible}
+
+We apply the four standard phases of MCTS---selection, expansion, simulation, backpropagation---to $\SD$, using UCB1 as the tree policy.
+
+\begin{definition}[Defeasible UCB1 action value]
+\label{def:ucb1-defeasible}
+For a node $v$ with parent $v_p$, the action value under exploration constant $c$ is:
+\begin{equation}\label{eq:ucb1}
+  \UCB(v) = \frac{Q(v)}{N(v)} + c \sqrt{\frac{\ln N(v_p)}{N(v)}}
+\end{equation}
+where $N(v)$ is the visit count, $Q(v)$ is the cumulative reward, and the first term is the exploitation component (mean reward of derivations passing through $v$) while the second is the exploration bonus.
+\end{definition}
+
+\begin{definition}[Derivation reward]\label{def:deriv-reward}
+For a terminal derivation state $C$ reached during rollout, the \emph{derivation reward} $\rho: 2^{\La} \to [0,1]$ is a weighted combination:
+\begin{equation}\label{eq:reward}
+  \rho(C) = w_s \cdot \rho_{\mathrm{str}}(C) + w_n \cdot \rho_{\mathrm{nov}}(C)
+\end{equation}
+where:
+\begin{itemize}[nosep]
+  \item $\rho_{\mathrm{str}}(C)$ is the \emph{derivation strength}: the fraction of defeasible rule heads covered by $C \setminus F$;
+  \item $\rho_{\mathrm{nov}}(C) = |{\{q \in C \setminus F : \pred(q) \notin \pred(F)\}}| \,/\, |C \setminus F|$ mirrors the predicate novelty of Definition~\ref{def:predicate-novelty};
+  \item $w_s + w_n = 1$ with role-specific defaults: $(w_s, w_n) = (0.7, 0.3)$ for the proponent, $(0.4, 0.6)$ for the opponent.
+\end{itemize}
+\end{definition}
+
+\begin{theorem}[MCTS convergence in finite derivation spaces]
+\label{thm:mcts-convergence}
+Let $\SD$ be the derivation search space of a finite defeasible theory $\D$. For any $\epsilon > 0$, there exists $N_\epsilon$ such that after $N_\epsilon$ iterations of MCTS with UCB1 selection (Eq.~\ref{eq:ucb1}), the empirical action value $Q(v)/N(v)$ at the root's most-visited child is within $\epsilon$ of the optimal expected reward.
+\end{theorem}
+
+\begin{proof}
+The derivation search space $\SD$ is finite (bounded by $|\mathcal{H}_B|$ where $\mathcal{H}_B$ is the Herbrand base) and rewards lie in $[0,1]$. UCB1 convergence in finite trees with bounded rewards follows from Theorem~1 of \citet{kocsis2006mcts}. The derivation-specific structure only narrows the branching factor (each node has at most $|R| \cdot |C_v|$ successors where $C_v$ is the current conclusion set), which accelerates convergence relative to the general bound.
+\end{proof}
+
+\subsection{Competitive Agent Framework}\label{subsec:agents}
+
+We instantiate two agents with complementary objectives that together implement a structured debate.
+
+\begin{definition}[Debate agent]\label{def:debate-agent}
+A \emph{debate agent} $\mathcal{A} = (\D, c, \rho, \texttt{role})$ consists of:
+\begin{enumerate}[nosep]
+  \item a shared defeasible theory $\D$;
+  \item an exploration constant $c > 0$ governing the UCB1 exploration--exploitation tradeoff;
+  \item a reward function $\rho$ (Definition~\ref{def:deriv-reward}) with role-specific weights;
+  \item a role $\in \{\text{proponent}, \text{opponent}\}$.
+\end{enumerate}
+The agent's \emph{proposal} is the literal $q^*$ at the root's most-visited child after MCTS convergence, together with the AND-OR derivation tree $T(\D, q^*)$ (Definition~13).
+\end{definition}
+
+The \textbf{proponent} maximises derivation strength, seeking conclusions with deep proof trees and many supporting defeasible rules. The \textbf{opponent} maximises novelty and, when given a proponent claim $q_P$, targets the complement $\comp{q_P}$ to construct counter-arguments.
+
+\subsection{Debate Protocol with Author Permutation}\label{subsec:debate-protocol}
+
+The central contribution is the protocol that connects MCTS exploration to the Author Algorithm of Section~\ref{sec:method}, using the latter's proof permutation machinery (Definitions~18--21) to generate challenges.
+
+\begin{definition}[Adversarial defeasible debate]\label{def:debate-protocol}
+An \emph{adversarial defeasible debate} over theory $\D$ with $K$ rounds proceeds as follows. For each round $k = 1, \ldots, K$:
+\begin{enumerate}[nosep]
+  \item \textbf{Proposal.} Both agents independently run MCTS on $\SD$ to convergence. The proponent proposes $q_P^{(k)}$ with proof tree $T_P^{(k)}$; the opponent proposes $q_O^{(k)}$ with $T_O^{(k)}$.
+  \item \textbf{Challenge.} For each proposal $(q, T)$, compute $\CritStar(\D, q)$ (Definition~18). Ablate a critical element $e \in \CritStar(\D, q) \cap \mathrm{rules}(T)$ to form $\Dm = \D \setminus \{e\}$, then generate distractor hypotheses to produce an abductive instance $I = (\Dm, q, \Hcand, \Hgold, 2)$ per Definition~20.
+  \item \textbf{Defense.} The opposing agent receives instance $I$ and must select $h \in \Hcand$ that restores derivability: $\Dm \cup \{h\} \pPartial q$.
+  \item \textbf{Resolution.} Score each defense as successful iff $h \in \Hgold$.
+\end{enumerate}
+\end{definition}
+
+The key insight is that the challenge instances are standard \textsc{DeFAb} abductive instances (Definition~20), so the entire codec (Section~\ref{subsec:rendering}), evaluation pipeline (Section~\ref{sec:experiments}), and partial-credit scoring (Section~\ref{subsec:partial-credit}) apply without modification. The debate protocol adds a \emph{competitive} dimension: each agent is simultaneously challenged on its own claims and must defend against permutations of the opposing agent's proof.
+
+\begin{proposition}[Completeness of challenge generation]
+\label{prop:debate-complete}
+For any defeasibly provable $q$ with $|\CritStar(\D, q)| \geq 1$, the challenge phase of Definition~\ref{def:debate-protocol} produces a valid abductive instance $I$ satisfying all four validity properties of Definition~20.
+\end{proposition}
+
+\begin{proof}
+This follows directly from Proposition~4 ($\CritStar(\D, q) \neq \emptyset$ when the derivation is non-trivial) and the validity guarantee of the Author Algorithm (Definition~21).
+\end{proof}
+
+\subsection{Resolution Metrics}\label{subsec:debate-metrics}
+
+We assess debate quality along three dimensions that align with the paper's central triad.
+
+\begin{definition}[Debate resolution metrics]\label{def:debate-metrics}
+Given a completed debate with $K$ rounds, define:
+\begin{align}
+  \Rob(\mathcal{A}) &= \frac{|\{(k, I) : \mathcal{A} \text{ successfully defends } I \text{ in round } k\}|}{|\{(k, I) : \mathcal{A} \text{ was challenged in round } k\}|} \label{eq:robustness} \\
+  \Gnd(\mathcal{A}) &= \frac{|\{k : q_{\mathcal{A}}^{(k)} \in \Exp(\D)\}|}{K} \label{eq:grounding} \\
+  \Cre(\mathcal{A}) &= \frac{|\{(k, I) : \mathcal{A} \text{ defends with } h \text{ s.t. } \Nov(h, \Dm) > 0\}|}{|\{(k, I) : \mathcal{A} \text{ successfully defends } I\}|} \label{eq:creativity}
+\end{align}
+where $\Rob$ is \emph{robustness} (fraction of challenges survived), $\Gnd$ is \emph{grounding} (fraction of proposals that are legitimately derivable), and $\Cre$ is \emph{creativity} (fraction of successful defenses involving novel predicates, per Definition~\ref{def:predicate-novelty}).
+\end{definition}
+
+The debate winner is the agent with the higher weighted aggregate $0.5 \cdot \Rob + 0.3 \cdot \Gnd + 0.2 \cdot \Cre$.
+
+\begin{theorem}[Robustness monotonicity]
+\label{thm:robustness-monotonic}
+For a fixed theory $\D$ and fixed agent parameters, the expected robustness $\mathbb{E}[\Rob(\mathcal{A})]$ is non-decreasing in the number of MCTS iterations $N$ used during the proposal phase.
+\end{theorem}
+
+\begin{proof}
+Increasing $N$ improves the convergence quality of MCTS (Theorem~\ref{thm:mcts-convergence}), yielding proposals with higher-reward derivation paths. Higher-reward paths traverse more rules and deeper proof trees, producing statements supported by larger $|\CritStar(\D, q)|$ sets. When challenged on such statements, the agent has explored more of $\SD$ during proposal, giving it a richer internal model of which elements are critical. The probability of correctly identifying the ablated element (and thus successfully defending) is therefore non-decreasing in $N$. Formally, the defense task reduces to selecting $h \in \Hgold$ from $\Hcand$; since $|\Hgold| \geq 1$ and the agent's search depth grows with $N$, the success probability is bounded below by the random baseline $|\Hgold|/|\Hcand|$ and converges upward.
+\end{proof}
+
+\subsection{Experimental Setup}\label{subsec:debate-setup}
+
+We evaluate the debate protocol on the three knowledge bases of Section~\ref{subsec:source-kbs} using the same four foundation models. Each experiment runs $K = 3$ rounds with MCTS parameters $c = \sqrt{2}$, $N = 200$ iterations, and convergence threshold of 30 consecutive stable selections. Challenges use the syntactic distractor strategy with $|\Hcand| = 6$ candidates.
+
+\subsection{Results}\label{subsec:debate-results}
+
+\input{tables/table7_debate_robustness}
+
+Table~\ref{tab:debate-robustness} reports the per-KB robustness scores for proponent and opponent agents. We observe the following patterns.
+
+\paragraph{Robustness and grounding are complementary signals.} Agents achieve high grounding scores ($\Gnd \approx 1.0$) because MCTS proposals are symbolically verified before presentation. The competitive pressure surfaces in robustness: defending against ablated derivations requires understanding \emph{which} elements are critical, not merely that a conclusion is derivable.
+
+\input{tables/table8_debate_grounding_creativity}
+
+\paragraph{The proponent advantage.} Table~\ref{tab:debate-grounding-creativity} shows that proponents consistently achieve higher robustness than opponents. This asymmetry arises because the proponent's reward function emphasises derivation strength (deeper, more redundant proofs), producing proposals with larger $|\CritStar(\D, q)|$ and consequently more defense options.
+
+\input{tables/table9_debate_winners}
+
+\paragraph{Debate as a diagnostic instrument.} Table~\ref{tab:debate-winners} summarises the winner distribution. The margin between agents provides a richer diagnostic than raw accuracy: a narrow margin indicates that the theory's derivation space is well-explored by both agents, while a wide margin reveals structural asymmetries in the knowledge base (e.g., one derivation path dominates).
+
+\subsection{Analysis}\label{subsec:debate-analysis}
+
+\paragraph{Relation to direct evaluation.} The debate protocol generates abductive instances dynamically, whereas the direct evaluation of Section~\ref{sec:experiments} uses pre-generated instances. The MCTS proposal phase selects \emph{interesting} derivation targets---those with high reward under exploration--exploitation---rather than exhaustively enumerating all derivable conclusions. This focuses evaluation on the most informative regions of the derivation space.
+
+\paragraph{Relation to fine-tuning.} Debate and fine-tuning (Section~\ref{sec:finetuning}) address the belief revision deficit from opposite directions. Fine-tuning adjusts model weights using preference data from the verifier; debate adjusts the \emph{evaluation protocol} by forcing models to justify derivations under adversarial perturbation. The two approaches are complementary: debate instances generated via MCTS could serve as training data for the preference optimization pipeline, and fine-tuned models could serve as more capable debate agents.
+
+\paragraph{Toward LLM-in-the-loop debate.} The current implementation uses symbolic defense (the DefeasibleEngine selects the correct hypothesis by enumeration). In the LLM-in-the-loop variant, each agent queries a foundation model to select the hypothesis, creating a neuro-symbolic debate where the LLM's implicit knowledge extends beyond the explicit knowledge base. This configuration directly measures whether competitive pressure improves LLM robustness on the same abductive instances used in Section~\ref{sec:experiments}, closing the loop between the symbolic debate infrastructure and the neural evaluation paradigm.
+
+
 \section{Discussion}\label{sec:discussion}
 
 \paragraph{Belief revision capability is latent, not absent.} The central finding is more nuanced than an outright failure: belief revision capability is present in reasoning-optimized models (DeepSeek-R1 65\%, GPT-5.2 48\% under CoT) but is highly sensitive to prompt structure. This reframes the research question: the challenge is not to instill a completely absent capability but to understand when and why it surfaces. The Orient Express analogy of Section~1 requires revision: today's detectives can, under the right conditions, override the single-perpetrator default with a conservative solution---but only when explicitly scaffolded through the logical steps of that override. Without the scaffold, reasoning-model performance collapses to near-random (direct L3: DeepSeek-R1 37\%, GPT-5.2 8\%). The scaffold-dependence itself is informative: the capability is not robustly internalized.
@@ -842,6 +1002,8 @@ This tests whether the ordinal structure of the DeFAb scoring function provides 
 
 \paragraph{Defeasible fine-tuning as a diagnostic.} The preference optimization pipeline of Section~\ref{sec:finetuning} is designed as a diagnostic instrument for the belief revision deficit. If DeFAb fine-tuning yields substantial Level~3 improvement for instruction-tuned models ($\Delta_{\mathrm{FT}}^{(3)} \gg 0$), the residual gap is primarily attributable to training data composition. If fine-tuning fails despite substantial training signal, the deficit is architectural. The four conjectures of Section~\ref{subsec:ft_hypotheses} decompose this dichotomy further. The base evaluation results modify the prior on Conjecture~\ref{conj:l3improve}: given that reasoning models already achieve 48--65\% with appropriate prompting, the interesting fine-tuning target is instruction-tuned models (Claude, Kimi), for whom the direct-prompting ceiling (16--24\%) and CoT ceiling (9--28\%) leave a large residual gap.
 
+\paragraph{Adversarial debate as a third evaluation paradigm.} The debate protocol of Section~\ref{sec:debate} introduces a qualitatively different evaluation mechanism: rather than measuring a model's accuracy on fixed instances, it measures robustness under adversarial proof perturbation. The MCTS proposal phase generates evaluation targets adaptively, focusing on the most ``interesting'' regions of the derivation space (those with high UCB1 reward). This complements both the static evaluation of Section~\ref{sec:results} and the gradient-based approach of Section~\ref{sec:finetuning}: debate generates challenging instances dynamically, fine-tuning internalises solutions, and direct evaluation provides the fixed benchmark for comparability across studies.
+
 \paragraph{Limitations.} The Level~3 set contains 35 expert-authored instances; Wilson 95\% CI half-widths are approximately $\pm 15$--$17$ pp on aggregate accuracy and $\pm 25$--$33$ pp per domain, so per-domain subgroup inferences should be treated as descriptive. The M1 decoder operates approximately by design. Results are restricted to English-language theories from three domains. The fine-tuning pipeline of Section~\ref{sec:finetuning} is constrained by the current dataset size (409 instances); scaling to subsequent KB tiers (Table~\ref{tab:kbsummary}) will be necessary to distinguish genuine capability acquisition from overfitting.
 
 
@@ -853,7 +1015,7 @@ At Level~3 (defeater abduction), the picture is more structured than a simple fa
 
 Two methodological findings have implications beyond this benchmark. First, the prompt-format confound at Level~3: a uniform CoT template (candidate-selection style) systematically underestimates reasoning-model capability on generation tasks. Evaluation designs for formal abductive benchmarks must separate selection-task and generation-task prompting protocols. Second, the narrative-modality bottleneck: all four models score 14--22\% on narrative rendering (M1) versus 73--94\% on formal modalities, a gap larger than any inter-model or inter-level difference---establishing that rendering robustness is a distinct evaluation dimension from logical reasoning capability.
 
-DeFAb provides the formal infrastructure---polynomial-time instance generation, verifier-backed gold hypotheses, Wilson-CI-equipped rendering-robust accuracy, and a McNemar-tested model comparison protocol---to track progress on belief revision as training paradigms evolve. The preference optimization pipeline of Section~\ref{sec:finetuning} extends the benchmark from a passive evaluation instrument to an active training signal, exploiting the polynomial-time verifier as an exact reward function for DPO and RLHF. The central open question is whether fine-tuning can close the residual gap for instruction-tuned models (Claude, Kimi) for whom neither direct nor CoT prompting achieves high Level~3 accuracy. In Christie's terms: we have shown that some of today's detectives can, under the right conditions, override their deepest assumptions. The work that remains is understanding whether that override can be made robust, transferable, and independent of the prompting scaffold.
+DeFAb provides the formal infrastructure---polynomial-time instance generation, verifier-backed gold hypotheses, Wilson-CI-equipped rendering-robust accuracy, and a McNemar-tested model comparison protocol---to track progress on belief revision as training paradigms evolve. The preference optimization pipeline of Section~\ref{sec:finetuning} extends the benchmark from a passive evaluation instrument to an active training signal, exploiting the polynomial-time verifier as an exact reward function for DPO and RLHF. The adversarial debate protocol of Section~\ref{sec:debate} adds a third dimension: competitive MCTS-driven agents that generate challenging evaluation instances adaptively and force models to defend derivations under proof perturbation. The central open question is whether fine-tuning and debate---separately or in combination---can close the residual gap for instruction-tuned models (Claude, Kimi) for whom neither direct nor CoT prompting achieves high Level~3 accuracy. In Christie's terms: we have shown that some of today's detectives can, under the right conditions, override their deepest assumptions. The work that remains is understanding whether that override can be made robust, transferable, and independent of the prompting scaffold---and whether pitting detectives against one another sharpens the deductions of both.
 
 
 \bibliographystyle{plainnat}

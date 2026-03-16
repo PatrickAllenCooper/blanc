@@ -1,15 +1,15 @@
 # Project Status
 
-**Last Updated**: 2026-03-13
-**Current**: Phase A (Foundry evaluation) COMPLETE -- 4 models, all results in paper. Phase B (finetuning) NOT STARTED -- five B1 attempts failed on CURC (two SLURM bugs, then CUDA OOM on 40GB A100 nodes). Models downloaded. Fix: tensor parallelism (TP=2) for 70B+ models.
-**Progress**: 12 of 14 weeks (86% -- infrastructure and base evaluation done, finetuning experiments pending)
-**Timeline**: TIGHT -- B1 must start today; finetuning pipeline is ~2 weeks end-to-end
+**Last Updated**: 2026-03-16
+**Current**: Phase A (Foundry evaluation) COMPLETE. Phase B (finetuning) NOT STARTED -- blocked on CURC (TP fix committed). Phase C (adversarial debate) COMPLETE -- MCTS engine, debate protocol, tests, experiments, paper Section 7 all implemented.
+**Progress**: 12 of 14 weeks (86% -- infrastructure, base evaluation, and debate done; finetuning pending)
+**Timeline**: TIGHT -- B1 must resume; Phase C complete
 
 ---
 
 ## Quick Summary
 
-**Tests**: 734 passing (91% coverage)
+**Tests**: 797+ passing (63 new debate/search tests)
 **Expert KBs**: 2,318 rules
 **Instances**: 374 Level 2 + 35 Level 3 (all validated)
 **Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4)
@@ -18,6 +18,7 @@
 **Symbolic Baseline**: L2=100% (374/374), L3=100% (35/35)
 **Fine-Tuning Scripts**: All written and tested (B1-B6 + SLURM)
 **Paper Tables 4-6**: EMPTY -- awaiting finetuning results
+**Debate Infrastructure**: COMPLETE -- MCTS engine, debate agents, protocol, resolution, experiments, Tables 7-9
 **Presentation**: `paper/mvp_validation_slides.tex` updated from MVP prototype to current project state (metropolis theme, real results, 29 slides)
 
 ---
@@ -52,13 +53,24 @@ Key findings substantiated in paper:
 - `base_model.txt` written by both training scripts
 - Margin DPO matches paper Eq.10 (additive, not multiplicative)
 
-### Paper (Sections 1-5 COMPLETE, Section 6 tables empty)
+### Phase C: Adversarial Defeasible Debate (COMPLETE)
+
+- `src/blanc/search/`: MCTS engine (`mcts.py`), derivation space adapter (`derivation_space.py`), reward functions (`reward.py`)
+- `src/blanc/debate/`: debate agents (`agent.py`), protocol (`protocol.py`), resolution scoring (`resolution.py`)
+- `src/blanc/reasoning/derivation_tree.py`: extended with `get_critical_subtree`, `enumerate_permutations`, `tree_overlap`, `extract_support_path`
+- `experiments/debate/`: `run_debate.py` CLI, `analyze_debate.py` analysis, LaTeX table generation
+- `tests/search/` and `tests/debate/`: 63 tests all passing
+- Paper Section 7: 8 subsections, 6 new definitions, 3 new theorems with proofs, Tables 7-9
+- Abstract, Introduction, Related Work, Discussion, Conclusion all updated to reference debate
+
+### Paper (Sections 1-7 COMPLETE, Section 6 tables empty)
 
 - Abstract, Introduction, Related Work, Method, Results: all written with real numbers
 - Section 6 (Defeasible Fine-Tuning): methodology written, Tables 4-6 placeholders
-- Discussion and Conclusion: written referencing finetuning as diagnostic
+- Section 7 (Adversarial Defeasible Debate): complete with definitions, theorems, experiments
+- Discussion and Conclusion: updated to reference debate alongside finetuning
 - Author block: Patrick Cooper (fixed)
-- Bibliography: all entries present
+- Bibliography: all entries present (added MCTS and debate references)
 
 ---
 

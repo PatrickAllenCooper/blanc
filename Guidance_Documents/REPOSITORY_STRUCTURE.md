@@ -1,7 +1,7 @@
 # BLANC Repository Structure
 
-**Last Updated**: 2026-02-18
-**Status**: Pre-evaluation — infrastructure complete, awaiting cloud/CURC evaluation runs
+**Last Updated**: 2026-03-16
+**Status**: Phase A complete, Phase C (debate) complete, Phase B (finetuning) pending
 
 ---
 
@@ -32,7 +32,17 @@ src/blanc/
 │
 ├── reasoning/
 │   ├── defeasible.py      # D ⊢∂ q engine (Definition 7, paper.tex)
-│   └── derivation_tree.py # AND-OR proof trees (Definition 13)
+│   └── derivation_tree.py # AND-OR proof trees (Definition 13) + debate utilities
+│
+├── search/
+│   ├── mcts.py            # Domain-agnostic Monte Carlo Tree Search (UCB1)
+│   ├── derivation_space.py # Defeasible derivation as MCTS search space
+│   └── reward.py          # Reward functions (strength, novelty, criticality, composite)
+│
+├── debate/
+│   ├── agent.py           # Proponent/Opponent agents with MCTS-driven proposals
+│   ├── protocol.py        # Multi-round debate protocol with Author Algorithm permutation
+│   └── resolution.py      # Robustness, grounding, creativity scoring
 │
 ├── author/
 │   ├── generation.py      # AbductiveInstance; L2/L3 generation (Defs 20-21)
@@ -114,6 +124,11 @@ experiments/
     ├── data/                          # Preference datasets (gitignored)
     └── checkpoints/                   # LoRA checkpoints (gitignored)
 
+# Debate experiments (Section 7)
+├── debate/
+│   ├── run_debate.py              # CLI: --kb {biology,legal,materials,tweety,all} --rounds N
+│   └── analyze_debate.py          # Robustness/grounding/creativity analysis, Tables 7-9
+│
 # Local runner (no SLURM)
 ├── run_foundry_local.py           # Full 4-model Foundry evaluation, runs locally
 ```
@@ -122,7 +137,7 @@ experiments/
 
 ## Tests (`tests/`)
 
-494 tests, 81% coverage (new modules included). Run with `python -m pytest tests/ -q`.
+797+ tests (63 new search/debate tests). Run with `python -m pytest tests/ -q`.
 
 ```
 tests/
@@ -139,6 +154,13 @@ tests/
 │       ├── test_m1_encoder.py … test_m4_encoder.py
 │       ├── test_d1_decoder.py … test_d3_decoder.py
 │       └── test_cascading_decoder.py
+│
+├── search/                 # MCTS and derivation space tests
+│   ├── test_mcts.py             # UCB1, convergence, determinism (17 tests)
+│   └── test_derivation_space.py # DerivationState, space adapter, rewards (18 tests)
+│
+├── debate/                 # Debate agent, protocol, resolution tests
+│   └── test_protocol.py         # Agents, protocol, resolution, tree extensions (28 tests)
 │
 └── experiments/            # Experiment module tests
     ├── test_model_interface.py   # Includes CURCInterface (mocked)
