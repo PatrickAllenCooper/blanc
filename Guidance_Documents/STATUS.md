@@ -9,8 +9,8 @@
 
 ## Quick Summary
 
-**Tests**: 797+ passing (63 new debate/search tests)
-**Expert KBs**: 2,318 rules
+**Tests**: 797+ passing (63 new debate/search tests) + new ontology/behavioral/integration tests
+**Expert KBs**: 2,318 strict taxonomic rules + ~280 defeasible behavioral rules + ~90 defeaters across 3 domains
 **Instances**: 374 Level 2 + 35 Level 3 (all validated)
 **Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4)
 **Base Evaluation**: COMPLETE -- 4 Foundry models, all instances, all modalities
@@ -20,7 +20,7 @@
 **Paper Tables 4-6**: EMPTY -- awaiting finetuning results
 **Debate Infrastructure**: COMPLETE -- MCTS engine, debate agents, protocol, resolution, experiments, Tables 7-9
 **Comprehensive Orchestrator**: `hpc/run_all_experiments.sh` -- single script submits ALL phases (A0-A4, B0-B6, C) with SLURM dependency chains
-**Presentation**: `paper/mvp_validation_slides.tex` updated from MVP prototype to current project state (metropolis theme, real results, 29 slides)
+**Presentation**: `paper/mvp_validation_slides.tex` fully updated to current project state (metropolis theme, real results, 7 contributions, debate section, KB expansion, 947 tests, ~35 slides)
 
 ---
 
@@ -142,9 +142,22 @@ Key findings substantiated in paper:
 - [ ] Update Discussion and Conclusion with finetuning findings
 - [ ] Final polish and submission
 
+### KB Expansion Infrastructure (COMPLETE -- Mar 16)
+- [x] Domain profile system: `src/blanc/ontology/domain_profiles.py` -- 5 domain profiles (biology, legal, materials, chemistry, everyday) with keywords, relation mappings, behavioral predicates, known exceptions
+- [x] Generalized ConceptNet extractor: accepts DomainProfile, supports Causes + UsedFor relations (6 total)
+- [x] Generalized OpenCyc extractor: accepts DomainProfile for multi-domain extraction with OWL property extraction
+- [x] Cross-ontology combiner: `src/blanc/ontology/cross_ontology.py` -- taxonomy + property combination, property inheritance, defeater detection
+- [x] Biology behavioral rules expanded: 9 -> ~150 rules (defeasible defaults + defeaters across locomotion, morphology, thermoregulation, reproduction, diet, habitat, behavior, respiration)
+- [x] Legal behavioral rules created: ~100 rules (capacity, liability, procedural, property, normative defaults + defeaters)
+- [x] Materials behavioral rules created: ~120 rules (electrical, thermal, mechanical, corrosion, optical, magnetic, structural, processing, biocompatibility defaults + defeaters)
+- [x] Rule validation framework: `src/blanc/ontology/rule_validator.py` -- depth estimation, deduplication, consistency, anomaly detection, coverage stats
+- [x] KB composers updated to integrate behavioral rules
+- [x] Comprehensive tests for all new modules
+
 ### Optional (if time permits)
 - [ ] CURC base evaluation (Qwen-72B, Qwen-32B, DS-R1-70B) for scaling analysis
 - [ ] M1 decoder 200-failure manual audit
+- [ ] Run cross-ontology extraction with downloaded OpenCyc + ConceptNet data (100K-350K rules)
 
 **Total CURC GPU budget**: ~158 GPU-days (free for CU Boulder researchers)
 **Total API cost**: ~$26 (Foundry eval already spent)

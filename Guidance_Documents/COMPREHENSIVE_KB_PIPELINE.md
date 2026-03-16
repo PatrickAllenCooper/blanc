@@ -80,8 +80,8 @@ For each concept C in OpenCyc taxonomy:
 - **Total Tier 1**: ~195,000–460,000 rules, ~20,000–44,000 defeaters
 - **Instances**: 30,000–75,000 (Levels 1–3)
 
-**Implementation status**: Validation script exists (`scripts/validate_cross_ontology_scale.py`)  
-**Next action**: Run proof-of-concept, then full extraction if it passes
+**Implementation status**: Domain-generic extractors and cross-ontology combiner implemented in `src/blanc/ontology/`. Validation script at `scripts/validate_cross_ontology_scale.py`. Domain profiles for all 5 domains in `src/blanc/ontology/domain_profiles.py`.
+**Next action**: Download data files, run cross-ontology extraction for all domains
 
 #### 1B. Full YAGO 4.5 (Supplement to Current Usage)
 
@@ -352,10 +352,14 @@ where V conflicts with C's primary classification:
 
 ## Phased Implementation Timeline
 
-### Phase 0: Current State (Week 8, DONE)
+### Phase 0: Current State (Week 12, DONE)
 - Sources: YAGO, WordNet, LKIF, MatOnto
-- Rules: 2,318
-- Instances: 374 (Level 2 only)
+- Strict taxonomic rules: 2,318
+- Defeasible behavioral rules: ~280 (biology ~150, legal ~100, materials ~120 -- all three domains)
+- Defeaters: ~90 across all three domains
+- Total rules: ~2,690
+- Instances: 374 (Level 2) + 35 (Level 3)
+- Infrastructure: domain profiles (5 domains), generalized extractors (ConceptNet + OpenCyc), cross-ontology combiner, rule validation framework
 
 ### Phase 1a: Cross-Ontology Proof (Day 8.5a, 1 day)
 - Script: `scripts/validate_cross_ontology_scale.py`
@@ -496,9 +500,11 @@ This is a fifth structured partition family alongside the four defined in Defini
 
 ```
 src/blanc/ontology/
-  opencyc_extractor.py          # Tier 1 - existing, enhance
-  conceptnet_extractor.py       # Tier 1 - existing, enhance
-  cross_ontology.py             # Tier 1 - create
+  domain_profiles.py            # DONE - 5 domain profiles (biology, legal, materials, chemistry, everyday)
+  opencyc_extractor.py          # DONE - domain-generic, accepts DomainProfile
+  conceptnet_extractor.py       # DONE - domain-generic, 6 relation types (IsA, CapableOf, NotCapableOf, HasProperty, Causes, UsedFor)
+  cross_ontology.py             # DONE - taxonomy + property combination, inheritance, defeater detection
+  rule_validator.py             # DONE - depth, dedup, consistency, anomaly, coverage
   yago_full_extractor.py        # Tier 1 supplement - create
   umls_extractor.py             # Tier 2 - create (post-NeurIPS)
   snomed_extractor.py           # Tier 2 - create (post-NeurIPS)
