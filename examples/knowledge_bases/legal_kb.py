@@ -21,6 +21,7 @@ Date: 2026-02-12
 from blanc.core.theory import Theory
 from .lkif_legal_extracted import create_lkif_legal
 from .legal_instances import add_legal_instances
+from .legal_behavioral_rules import add_legal_behavioral_rules
 
 
 def create_legal_kb(include_instances=True) -> Theory:
@@ -28,28 +29,18 @@ def create_legal_kb(include_instances=True) -> Theory:
     Create legal reasoning KB from expert sources.
     
     Uses:
-    - LKIF Core: 201 legal rules covering:
-      - Legal norms (obligations, permissions, prohibitions)
-      - Legal actions (statutes, contracts, treaties)
-      - Legal roles (jurisdictional hierarchies)
-      - Legal documents (regulations, decrees)
-    
-    Total: 201 expert-curated inference rules
+    - LKIF Core: 201 legal rules (strict taxonomic)
+    - Legal behavioral rules: defeasible defaults and defeaters
     
     Returns:
         Theory with legal knowledge
     """
-    # LKIF Core is primary source
     theory = create_lkif_legal()
     
-    # Future: Can add DAPRECO GDPR rules when parser is complete
-    # dapreco_theory = create_dapreco_legal()
-    # for rule in dapreco_theory.rules:
-    #     theory.add_rule(rule)
-    
-    # Add legal entity instances
     if include_instances:
         theory = add_legal_instances(theory)
+    
+    theory = add_legal_behavioral_rules(theory)
     
     return theory
 

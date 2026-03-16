@@ -22,6 +22,7 @@ Date: 2026-02-12
 from blanc.core.theory import Theory
 from .matonto_materials_extracted import create_matonto_materials
 from .materials_instances import add_materials_instances
+from .materials_behavioral_rules import add_materials_behavioral_rules
 
 
 def create_materials_kb(include_instances=True) -> Theory:
@@ -29,26 +30,20 @@ def create_materials_kb(include_instances=True) -> Theory:
     Create materials science KB from expert sources.
     
     Uses:
-    - MatOnto: 1,190 materials science rules covering:
-      - Material classes (alloys, crystals, polymers, compounds)
-      - Chemical elements and groups
-      - Material properties (band_gap, elastic_modulus, etc.)
-      - Chemical reactions (addition, acid-base, etc.)
-      - Structural concepts
-    
-    Total: 1,190 expert-curated inference rules
+    - MatOnto: 1,190 materials science rules (strict taxonomic)
+    - Materials behavioral rules: defeasible defaults and defeaters
     
     NOTE: Requires domain expert validation per paper requirements.
     
     Returns:
         Theory with materials science knowledge
     """
-    # MatOnto is primary (and only) source
     theory = create_matonto_materials()
     
-    # Add material instances
     if include_instances:
         theory = add_materials_instances(theory)
+    
+    theory = add_materials_behavioral_rules(theory)
     
     return theory
 

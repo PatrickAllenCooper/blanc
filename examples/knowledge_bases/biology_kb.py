@@ -32,10 +32,9 @@ def create_biology_kb(include_instances=True) -> Theory:
     Create unified biology KB from expert sources.
     
     Combines:
-    - YAGO 4.5: 584 taxonomic rules (depth 7)
-    - WordNet 3.0: 334 taxonomic rules + 8 behavioral predicates
-    
-    Total: 918 expert-curated inference rules
+    - YAGO 4.5: 584 taxonomic rules (strict)
+    - WordNet 3.0: 334 taxonomic rules (strict)
+    - Behavioral defaults: defeasible rules and defeaters
     
     Returns:
         Theory with combined biology knowledge
