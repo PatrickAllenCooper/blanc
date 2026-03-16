@@ -1,429 +1,320 @@
 """
 Comprehensive tests for ConceptNet5 extractor.
 
-Tests all extraction logic to achieve >90% coverage.
+Tests extraction logic across multiple domains with all supported
+relation types.
+
 Author: Patrick Cooper
-Date: 2026-02-11
 """
 
-import pytest
-from pathlib import Path
-import tempfile
 import gzip
 import json
+import tempfile
+from pathlib import Path
 
+import pytest
+
+from blanc.core.theory import RuleType
 from blanc.ontology.conceptnet_extractor import (
     ConceptNetExtractor,
     extract_biology_from_conceptnet,
+    extract_from_conceptnet,
 )
-from blanc.core.theory import RuleType
+from blanc.ontology.domain_profiles import BIOLOGY, LEGAL, MATERIALS
 
 
-class TestConceptNetExtractor:
-    """Test ConceptNet5 extraction functionality."""
-    
-    def test_extractor_initialization(self):
-        """Test extractor can be initialized."""
-        cn_path = Path("D:/datasets/conceptnet5/conceptnet-assertions-5.7.0.csv.gz")
-        
-        if not cn_path.exists():
-            pytest.skip("ConceptNet5 file not available")
-        
-        extractor = ConceptNetExtractor(cn_path, weight_threshold=2.0)
-        assert extractor.conceptnet_path == cn_path
-        assert extractor.weight_threshold == 2.0
-        assert extractor.edges == []
-        assert extractor.biological_edges == []
-    
-    def test_extract_concept_from_uri(self):
-        """Test concept extraction from ConceptNet URI."""
-        cn_path = Path("D:/datasets/conceptnet5/conceptnet-assertions-5.7.0.csv.gz")
-        
-        if not cn_path.exists():
-            pytest.skip("ConceptNet5 file not available")
-        
-        extractor = ConceptNetExtractor(cn_path)
-        
-        # Test various URI formats
-        assert extractor._extract_concept("/c/en/bird") == "bird"
-        assert extractor._extract_concept("/c/en/bird/n") == "bird"
-        assert extractor._extract_concept("/c/en/fly") == "fly"
-    
-    def test_extract_relation_from_uri(self):
-        """Test relation extraction from URI."""
-        cn_path = Path("D:/datasets/conceptnet5/conceptnet-assertions-5.7.0.csv.gz")
-        
-        if not cn_path.exists():
-            pytest.skip("ConceptNet5 file not available")
-        
-        extractor = ConceptNetExtractor(cn_path)
-        
-        # Test relation URIs
-        assert extractor._extract_relation("/r/CapableOf") == "CapableOf"
-        assert extractor._extract_relation("/r/IsA") == "IsA"
-        assert extractor._extract_relation("/r/NotCapableOf") == "NotCapableOf"
-        assert extractor._extract_relation("/r/HasProperty") == "HasProperty"
-    
-    def test_normalization(self):
-        """Test Prolog normalization."""
-        cn_path = Path("D:/datasets/conceptnet5/conceptnet-assertions-5.7.0.csv.gz")
-        
-        if not cn_path.exists():
-            pytest.skip("ConceptNet5 file not available")
-        
-        extractor = ConceptNetExtractor(cn_path)
-        
-        # Test normalization
-        assert extractor._normalize("Bird Species") == "bird_species"
-        assert extractor._normalize("Can-Fly") == "can_fly"
-        assert extractor._normalize("Has Property") == "has_property"
-        assert extractor._normalize("Bird123") == "bird123"
-    
-    def test_action_to_predicate(self):
-        """Test action conversion to predicate."""
-        cn_path = Path("D:/datasets/conceptnet5/conceptnet-assertions-5.7.0.csv.gz")
-        
-        if not cn_path.exists():
-            pytest.skip("ConceptNet5 file not available")
-        
-        extractor = ConceptNetExtractor(cn_path)
-        
-        # Actions should be normalized
-        assert extractor._action_to_predicate("fly") == "fly"
-        assert extractor._action_to_predicate("swim fast") == "swim_fast"
+def _make_edge(relation, start, end, weight=5.0):
+    meta = json.dumps({"weight": weight})
+    return (
+        f"/a/[/r/{relation}]/[/c/en/{start}]/[/c/en/{end}]/\t"
+        f"/r/{relation}\t/c/en/{start}\t/c/en/{end}\t{meta}"
+    )
 
 
-class TestConceptNetExtractionOnSample:
-    """Test extraction on sample ConceptNet data."""
-    
-    def test_extract_from_sample_data(self):
-        """Test extraction with sample ConceptNet edges."""
-        # Create sample ConceptNet data
-        sample_data = [
-            # High-weight biological edge (should be extracted)
-            "/a/[/r/CapableOf]/[/c/en/bird]/[/c/en/fly]/\t/r/CapableOf\t/c/en/bird\t/c/en/fly\t"
-            + json.dumps({"weight": 8.3, "dataset": "/d/conceptnet/4/en"}),
-            
-            # IsA edge
-            "/a/[/r/IsA]/[/c/en/penguin]/[/c/en/bird]/\t/r/IsA\t/c/en/penguin\t/c/en/bird\t"
-            + json.dumps({"weight": 9.1}),
-            
-            # NotCapableOf (exception)
-            "/a/[/r/NotCapableOf]/[/c/en/penguin]/[/c/en/fly]/\t/r/NotCapableOf\t/c/en/penguin\t/c/en/fly\t"
-            + json.dumps({"weight": 7.2}),
-            
-            # Low weight (should be filtered)
-            "/a/[/r/CapableOf]/[/c/en/rock]/[/c/en/fly]/\t/r/CapableOf\t/c/en/rock\t/c/en/fly\t"
-            + json.dumps({"weight": 0.5}),
-            
-            # Non-English (should be filtered)
-            "/a/[/r/CapableOf]/[/c/fr/oiseau]/[/c/fr/voler]/\t/r/CapableOf\t/c/fr/oiseau\t/c/fr/voler\t"
-            + json.dumps({"weight": 5.0}),
-        ]
-        
-        # Create temporary file
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
+def _write_sample(lines):
+    f = tempfile.NamedTemporaryFile(
+        mode="wb", suffix=".csv.gz", delete=False
+    )
+    with gzip.open(f.name, "wt", encoding="utf-8") as gz:
+        for line in lines:
+            gz.write(line + "\n")
+    return Path(f.name)
+
+
+class TestConceptNetExtractorInit:
+
+    def test_missing_file_raises(self, tmp_path):
+        with pytest.raises(FileNotFoundError):
+            ConceptNetExtractor(tmp_path / "nope.csv.gz")
+
+    def test_default_profile_is_biology(self):
+        path = _write_sample([_make_edge("IsA", "bird", "animal")])
         try:
-            # Extract
-            extractor = ConceptNetExtractor(temp_path, weight_threshold=2.0)
-            extractor.extract_biology(max_edges=10)
-            
-            # Should have 3 biological edges (bird fly, penguin bird, penguin ~fly)
-            assert len(extractor.biological_edges) == 3
-            
-            # Check relations
-            relations = [e['relation'] for e in extractor.biological_edges]
-            assert 'CapableOf' in relations
-            assert 'IsA' in relations
-            assert 'NotCapableOf' in relations
-            
+            ext = ConceptNetExtractor(path)
+            assert ext.profile.name == "biology"
         finally:
-            # Cleanup
-            temp_path.unlink()
-    
-    def test_conversion_to_theory(self):
-        """Test conversion of edges to Theory object."""
-        # Create sample data
-        sample_data = [
-            "/a/[/r/CapableOf]/[/c/en/bird]/[/c/en/fly]/\t/r/CapableOf\t/c/en/bird\t/c/en/fly\t"
-            + json.dumps({"weight": 8.3}),
-            
-            "/a/[/r/IsA]/[/c/en/penguin]/[/c/en/bird]/\t/r/IsA\t/c/en/penguin\t/c/en/bird\t"
-            + json.dumps({"weight": 9.1}),
-            
-            "/a/[/r/NotCapableOf]/[/c/en/penguin]/[/c/en/fly]/\t/r/NotCapableOf\t/c/en/penguin\t/c/en/fly\t"
-            + json.dumps({"weight": 7.2}),
-        ]
-        
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
-        try:
-            # Extract and convert
-            extractor = ConceptNetExtractor(temp_path, weight_threshold=2.0)
-            extractor.extract_biology()
-            theory = extractor.to_theory()
-            
-            # Should have facts (IsA)
-            assert len(theory.facts) > 0
-            assert "isa(penguin, bird)" in theory.facts
-            
-            # Should have defeasible rules (CapableOf)
-            defeasible_rules = theory.get_rules_by_type(RuleType.DEFEASIBLE)
-            assert len(defeasible_rules) > 0
-            
-            # Should have defeaters (NotCapableOf)
-            defeaters = theory.get_rules_by_type(RuleType.DEFEATER)
-            assert len(defeaters) > 0
-            
-        finally:
-            temp_path.unlink()
-    
-    def test_weight_filtering(self):
-        """Test that weight threshold filters correctly."""
-        sample_data = [
-            # High weight (should pass)
-            "/a/[/r/CapableOf]/[/c/en/bird]/[/c/en/fly]/\t/r/CapableOf\t/c/en/bird\t/c/en/fly\t"
-            + json.dumps({"weight": 8.0}),
-            
-            # Low weight (should be filtered)
-            "/a/[/r/CapableOf]/[/c/en/bird]/[/c/en/teleport]/\t/r/CapableOf\t/c/en/bird\t/c/en/teleport\t"
-            + json.dumps({"weight": 0.1}),
-        ]
-        
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
-        try:
-            # Extract with threshold 2.0
-            extractor = ConceptNetExtractor(temp_path, weight_threshold=2.0)
-            extractor.extract_biology()
-            
-            # Should only have high-weight edge
-            assert len(extractor.biological_edges) == 1
-            assert extractor.biological_edges[0]['weight'] >= 2.0
-            
-        finally:
-            temp_path.unlink()
-    
-    def test_malformed_line_handling(self):
-        """Test that malformed lines are skipped gracefully."""
-        sample_data = [
-            # Good line
-            "/a/[/r/IsA]/[/c/en/bird]/[/c/en/animal]/\t/r/IsA\t/c/en/bird\t/c/en/animal\t"
-            + json.dumps({"weight": 5.0}),
-            
-            # Malformed (missing tabs)
-            "malformed line without tabs",
-            
-            # Invalid JSON
-            "/a/test\t/r/IsA\t/c/en/bird\t/c/en/animal\t{invalid json}",
-            
-            # Another good line
-            "/a/[/r/CapableOf]/[/c/en/bird]/[/c/en/fly]/\t/r/CapableOf\t/c/en/bird\t/c/en/fly\t"
-            + json.dumps({"weight": 3.0}),
-        ]
-        
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
-        try:
-            # Should not crash on malformed lines
-            extractor = ConceptNetExtractor(temp_path, weight_threshold=2.0)
-            extractor.extract_biology()
-            
-            # Should have extracted 2 good lines
-            assert len(extractor.biological_edges) == 2
-            
-        finally:
-            temp_path.unlink()
+            path.unlink()
 
 
-class TestConceptNetRuleTypes:
-    """Test different ConceptNet relation types convert correctly."""
-    
-    def test_isa_creates_facts(self):
-        """IsA relations should create facts."""
-        sample_data = [
-            "/a/[/r/IsA]/[/c/en/sparrow]/[/c/en/bird]/\t/r/IsA\t/c/en/sparrow\t/c/en/bird\t"
-            + json.dumps({"weight": 9.0}),
-        ]
-        
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
+class TestHelpers:
+
+    def test_extract_concept(self):
+        path = _write_sample([_make_edge("IsA", "bird", "animal")])
         try:
-            extractor = ConceptNetExtractor(temp_path)
-            extractor.extract_biology()
-            theory = extractor.to_theory()
-            
-            # Should have isa fact
+            ext = ConceptNetExtractor(path)
+            assert ext._extract_concept("/c/en/bird") == "bird"
+            assert ext._extract_concept("/c/en/bird/n") == "bird"
+        finally:
+            path.unlink()
+
+    def test_extract_relation(self):
+        path = _write_sample([_make_edge("IsA", "bird", "animal")])
+        try:
+            ext = ConceptNetExtractor(path)
+            assert ext._extract_relation("/r/CapableOf") == "CapableOf"
+            assert ext._extract_relation("/r/IsA") == "IsA"
+            assert ext._extract_relation("/r/NotCapableOf") == "NotCapableOf"
+            assert ext._extract_relation("/r/Causes") == "Causes"
+            assert ext._extract_relation("/r/UsedFor") == "UsedFor"
+        finally:
+            path.unlink()
+
+    def test_normalize(self):
+        path = _write_sample([_make_edge("IsA", "bird", "animal")])
+        try:
+            ext = ConceptNetExtractor(path)
+            assert ext._normalize("Bird Species") == "bird_species"
+            assert ext._normalize("Can-Fly") == "can_fly"
+        finally:
+            path.unlink()
+
+
+class TestBiologyExtraction:
+
+    def test_biology_edges(self):
+        lines = [
+            _make_edge("CapableOf", "bird", "fly", 8.0),
+            _make_edge("IsA", "penguin", "bird", 9.0),
+            _make_edge("NotCapableOf", "penguin", "fly", 7.0),
+            _make_edge("CapableOf", "rock", "fly", 0.5),  # low weight
+            _make_edge("CapableOf", "car", "drive", 9.0),  # not bio
+        ]
+        path = _write_sample(lines)
+        try:
+            ext = ConceptNetExtractor(path, weight_threshold=2.0)
+            ext.extract_biology()
+            assert len(ext.domain_edges) == 3
+        finally:
+            path.unlink()
+
+    def test_to_theory_isa_facts(self):
+        path = _write_sample([_make_edge("IsA", "sparrow", "bird", 9.0)])
+        try:
+            ext = ConceptNetExtractor(path)
+            ext.extract_biology()
+            theory = ext.to_theory()
             assert "isa(sparrow, bird)" in theory.facts
-            
         finally:
-            temp_path.unlink()
-    
-    def test_capableof_creates_defeasible_rules(self):
-        """CapableOf relations should create defeasible rules."""
-        sample_data = [
-            "/a/[/r/CapableOf]/[/c/en/bird]/[/c/en/fly]/\t/r/CapableOf\t/c/en/bird\t/c/en/fly\t"
-            + json.dumps({"weight": 8.0}),
-        ]
-        
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
+            path.unlink()
+
+    def test_to_theory_defeasible(self):
+        path = _write_sample([_make_edge("CapableOf", "bird", "fly", 8.0)])
         try:
-            extractor = ConceptNetExtractor(temp_path)
-            extractor.extract_biology()
-            theory = extractor.to_theory()
-            
-            # Should have defeasible rule
-            defeasible_rules = theory.get_rules_by_type(RuleType.DEFEASIBLE)
-            assert len(defeasible_rules) > 0
-            
-            # Check structure
-            rule = defeasible_rules[0]
-            assert "fly" in rule.head
-            assert rule.rule_type == RuleType.DEFEASIBLE
-            
+            ext = ConceptNetExtractor(path)
+            ext.extract_biology()
+            theory = ext.to_theory()
+            d = theory.get_rules_by_type(RuleType.DEFEASIBLE)
+            assert len(d) > 0
+            assert "fly" in d[0].head
         finally:
-            temp_path.unlink()
-    
-    def test_notcapableof_creates_defeaters(self):
-        """NotCapableOf relations should create defeater rules."""
-        sample_data = [
-            "/a/[/r/NotCapableOf]/[/c/en/penguin]/[/c/en/fly]/\t/r/NotCapableOf\t/c/en/penguin\t/c/en/fly\t"
-            + json.dumps({"weight": 7.0}),
-        ]
-        
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
+            path.unlink()
+
+    def test_to_theory_defeater(self):
+        path = _write_sample([_make_edge("NotCapableOf", "penguin", "fly", 7.0)])
         try:
-            extractor = ConceptNetExtractor(temp_path)
-            extractor.extract_biology()
-            theory = extractor.to_theory()
-            
-            # Should have defeater
-            defeaters = theory.get_rules_by_type(RuleType.DEFEATER)
-            assert len(defeaters) > 0
-            
-            # Check structure
-            defeater = defeaters[0]
-            assert "~" in defeater.head or "fly" in defeater.head
-            assert defeater.rule_type == RuleType.DEFEATER
-            
+            ext = ConceptNetExtractor(path)
+            ext.extract_biology()
+            theory = ext.to_theory()
+            df = theory.get_rules_by_type(RuleType.DEFEATER)
+            assert len(df) > 0
+            assert "~" in df[0].head
         finally:
-            temp_path.unlink()
-    
-    def test_hasproperty_creates_rules(self):
-        """HasProperty relations should create defeasible rules."""
-        sample_data = [
-            "/a/[/r/HasProperty]/[/c/en/bird]/[/c/en/feathers]/\t/r/HasProperty\t/c/en/bird\t/c/en/feathers\t"
-            + json.dumps({"weight": 6.0}),
-        ]
-        
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
+            path.unlink()
+
+    def test_to_theory_hasproperty(self):
+        path = _write_sample([_make_edge("HasProperty", "bird", "feathers", 6.0)])
         try:
-            extractor = ConceptNetExtractor(temp_path)
-            extractor.extract_biology()
-            theory = extractor.to_theory()
-            
-            # Should have has_property rule
-            defeasible_rules = theory.get_rules_by_type(RuleType.DEFEASIBLE)
-            assert len(defeasible_rules) > 0
-            
-            # Check for has_ prefix
-            rule = defeasible_rules[0]
-            assert "has_" in rule.head or "feather" in rule.head
-            
+            ext = ConceptNetExtractor(path)
+            ext.extract_biology()
+            theory = ext.to_theory()
+            d = theory.get_rules_by_type(RuleType.DEFEASIBLE)
+            assert any("has_" in r.head for r in d)
         finally:
-            temp_path.unlink()
+            path.unlink()
 
 
-class TestConceptNetBiologyKeywords:
-    """Test biological keyword filtering."""
-    
-    def test_bird_keyword_matches(self):
-        """Edges with 'bird' should be extracted."""
-        sample_data = [
-            "/a/[/r/CapableOf]/[/c/en/bird]/[/c/en/fly]/\t/r/CapableOf\t/c/en/bird\t/c/en/fly\t"
-            + json.dumps({"weight": 8.0}),
-        ]
-        
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
+class TestNewRelationTypes:
+
+    def test_causes_produces_defeasible_rule(self):
+        path = _write_sample([_make_edge("Causes", "bird", "noise", 5.0)])
         try:
-            extractor = ConceptNetExtractor(temp_path)
-            extractor.extract_biology()
-            
-            assert len(extractor.biological_edges) == 1
-            
+            ext = ConceptNetExtractor(path, profile=BIOLOGY)
+            ext.extract()
+            theory = ext.to_theory()
+            d = theory.get_rules_by_type(RuleType.DEFEASIBLE)
+            causes = [r for r in d if "causes_" in r.head]
+            assert len(causes) > 0
         finally:
-            temp_path.unlink()
-    
-    def test_non_biological_filtered(self):
-        """Non-biological edges should be filtered."""
-        sample_data = [
-            # Biological
-            "/a/[/r/CapableOf]/[/c/en/bird]/[/c/en/fly]/\t/r/CapableOf\t/c/en/bird\t/c/en/fly\t"
-            + json.dumps({"weight": 8.0}),
-            
-            # Non-biological (should be filtered)
-            "/a/[/r/CapableOf]/[/c/en/car]/[/c/en/drive]/\t/r/CapableOf\t/c/en/car\t/c/en/drive\t"
-            + json.dumps({"weight": 9.0}),
-        ]
-        
-        with tempfile.NamedTemporaryFile(mode='wb', suffix='.csv.gz', delete=False) as f:
-            with gzip.open(f.name, 'wt', encoding='utf-8') as gz:
-                for line in sample_data:
-                    gz.write(line + '\n')
-            temp_path = Path(f.name)
-        
+            path.unlink()
+
+    def test_usedfor_produces_defeasible_rule(self):
+        path = _write_sample([_make_edge("UsedFor", "bird", "companionship", 5.0)])
         try:
-            extractor = ConceptNetExtractor(temp_path)
-            extractor.extract_biology()
-            
-            # Should only have biological edge
-            assert len(extractor.biological_edges) == 1
-            assert 'bird' in extractor.biological_edges[0]['start']
-            
+            ext = ConceptNetExtractor(path, profile=BIOLOGY)
+            ext.extract()
+            theory = ext.to_theory()
+            d = theory.get_rules_by_type(RuleType.DEFEASIBLE)
+            uses = [r for r in d if "used_for_" in r.head]
+            assert len(uses) > 0
         finally:
-            temp_path.unlink()
+            path.unlink()
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+class TestMultiDomainExtraction:
+
+    def test_legal_profile_filters_legal_concepts(self):
+        lines = [
+            _make_edge("CapableOf", "contract", "bind", 8.0),
+            _make_edge("CapableOf", "bird", "fly", 8.0),  # not legal
+        ]
+        path = _write_sample(lines)
+        try:
+            ext = ConceptNetExtractor(path, profile=LEGAL)
+            ext.extract()
+            assert len(ext.domain_edges) == 1
+            assert ext.domain_edges[0]["start"] == "contract"
+        finally:
+            path.unlink()
+
+    def test_materials_profile_filters_materials_concepts(self):
+        lines = [
+            _make_edge("HasProperty", "metal", "conductive", 8.0),
+            _make_edge("HasProperty", "bird", "feathers", 8.0),  # not materials
+        ]
+        path = _write_sample(lines)
+        try:
+            ext = ConceptNetExtractor(path, profile=MATERIALS)
+            ext.extract()
+            assert len(ext.domain_edges) == 1
+            assert ext.domain_edges[0]["start"] == "metal"
+        finally:
+            path.unlink()
+
+    def test_domain_metadata_in_rules(self):
+        path = _write_sample([_make_edge("CapableOf", "contract", "bind", 8.0)])
+        try:
+            ext = ConceptNetExtractor(path, profile=LEGAL)
+            ext.extract()
+            theory = ext.to_theory()
+            for rule in theory.rules:
+                if rule.metadata:
+                    assert rule.metadata.get("domain") == "legal"
+        finally:
+            path.unlink()
+
+
+class TestWeightFiltering:
+
+    def test_below_threshold_filtered(self):
+        lines = [
+            _make_edge("CapableOf", "bird", "fly", 8.0),
+            _make_edge("CapableOf", "bird", "teleport", 0.1),
+        ]
+        path = _write_sample(lines)
+        try:
+            ext = ConceptNetExtractor(path, weight_threshold=2.0)
+            ext.extract_biology()
+            assert len(ext.domain_edges) == 1
+            assert ext.domain_edges[0]["weight"] >= 2.0
+        finally:
+            path.unlink()
+
+
+class TestMalformedData:
+
+    def test_malformed_lines_skipped(self):
+        lines = [
+            _make_edge("IsA", "bird", "animal", 5.0),
+            "malformed line without tabs",
+            "/a/test\t/r/IsA\t/c/en/bird\t/c/en/animal\t{invalid json}",
+            _make_edge("CapableOf", "bird", "fly", 3.0),
+        ]
+        path = _write_sample(lines)
+        try:
+            ext = ConceptNetExtractor(path, weight_threshold=2.0)
+            ext.extract_biology()
+            assert len(ext.domain_edges) == 2
+        finally:
+            path.unlink()
+
+    def test_non_english_filtered(self):
+        meta = json.dumps({"weight": 5.0})
+        line = f"/a/test\t/r/CapableOf\t/c/fr/oiseau\t/c/fr/voler\t{meta}"
+        path = _write_sample([line, _make_edge("IsA", "bird", "animal", 5.0)])
+        try:
+            ext = ConceptNetExtractor(path)
+            ext.extract_biology()
+            assert len(ext.domain_edges) == 1
+        finally:
+            path.unlink()
+
+
+class TestBackwardCompatibility:
+
+    def test_biological_edges_alias(self):
+        path = _write_sample([_make_edge("IsA", "bird", "animal", 5.0)])
+        try:
+            ext = ConceptNetExtractor(path)
+            ext.extract_biology()
+            assert ext.biological_edges is ext.domain_edges
+        finally:
+            path.unlink()
+
+    def test_extract_biology_from_conceptnet_function(self):
+        path = _write_sample([_make_edge("CapableOf", "bird", "fly", 8.0)])
+        try:
+            theory = extract_biology_from_conceptnet(
+                path, weight_threshold=2.0, max_edges=10
+            )
+            assert len(theory.rules) > 0
+        finally:
+            path.unlink()
+
+    def test_extract_from_conceptnet_function(self):
+        path = _write_sample([_make_edge("CapableOf", "bird", "fly", 8.0)])
+        try:
+            theory = extract_from_conceptnet(
+                path, weight_threshold=2.0, max_edges=10, profile=BIOLOGY
+            )
+            assert len(theory.rules) > 0
+        finally:
+            path.unlink()
+
+
+class TestNoDuplicates:
+
+    def test_duplicate_edges_produce_single_rule(self):
+        lines = [
+            _make_edge("CapableOf", "bird", "fly", 8.0),
+            _make_edge("CapableOf", "bird", "fly", 7.0),
+        ]
+        path = _write_sample(lines)
+        try:
+            ext = ConceptNetExtractor(path)
+            ext.extract_biology()
+            theory = ext.to_theory()
+            d = theory.get_rules_by_type(RuleType.DEFEASIBLE)
+            fly_rules = [r for r in d if "fly" in r.head]
+            assert len(fly_rules) == 1
+        finally:
+            path.unlink()
