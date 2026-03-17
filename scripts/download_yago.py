@@ -35,6 +35,7 @@ def download_yago():
     # Using tiny version for development (200MB vs 12GB full)
     urls = {
         "yago-tiny": "https://yago-knowledge.org/data/yago4.5/yago-4.5.0.2-tiny.zip",
+        "yago-full": "https://yago-knowledge.org/data/yago4.5/yago-4.5.0.2.zip",
         "yago-entities": "https://yago-knowledge.org/data/yago4.5/yago-entities.jsonl.zip",
     }
     
