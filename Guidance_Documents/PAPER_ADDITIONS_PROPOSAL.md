@@ -638,6 +638,41 @@ Already in paper (verify these are in references.bib):
 
 ---
 
+---
+
+## Change 12: Synthetic Contamination Control (Comprehensive)
+
+**Location**: Multiple locations throughout paper.tex
+
+**Status**: IMPLEMENTED (2026-03-17)
+
+**Purpose**: Address the epistemic vulnerability that LLM performance on defeasible reasoning tasks grounded in real-world KBs may reflect memorized training-corpus solutions rather than genuine reasoning. Introduces synthetic defeasible theories with invented predicate/entity names as a contamination control.
+
+**Analogy**: If the Orient Express theory uses `passenger(hubbard)` and `murder(X)`, the synthetic counterpart uses `trelnic(vospar)` and `krenthoid(X)`. Same formal structure, zero pretraining-corpus overlap.
+
+**Insertion points (10 total)**:
+1. **Abstract**: Added sentence introducing synthetic contamination control
+2. **Introduction (tautological bottleneck)**: Expanded from 4 to 5 required benchmark properties; added contamination confound paragraph citing GSM1K and LiveCodeBench
+3. **Introduction (contributions)**: Added new contribution item (6) for synthetic contamination control
+4. **Introduction (roadmap)**: Updated section roadmap to mention contamination control
+5. **Related Work**: Added paragraph on benchmark contamination literature (GSM1K, LiveCodeBench, infini-gram)
+6. **Method (new subsection 3.5)**: Added full subsection "Synthetic Theory Generation" with Definition (Synthetic Theory), Definition (Contamination Gap), structural matching procedure, and Orient Express synthetic analogy
+7. **Experiments (Dataset Generation)**: Added "Synthetic contamination control" paragraph with generation procedure and infini-gram verification
+8. **Experiments (Analysis Conditions)**: Added "Contamination analysis" paragraph with hypotheses about naturalistic vs synthetic gap structure
+9. **Results**: Added new subsection "Contamination Analysis: Naturalistic vs. Synthetic Instances" with Table (contamination gap), Conjecture (contamination structure), and interpretation framework
+10. **Discussion**: Added paragraph "The contamination confound and its resolution" with full analysis of implications
+11. **Discussion (Limitations)**: Updated to acknowledge residual structural contamination risk
+12. **Conclusion**: Updated infrastructure list to include synthetic contamination controls
+13. **Appendix (Formal Definitions)**: Added new subsection with Definition (Synthetic Vocabulary), Definition (Synthetic Theory Generation), Definition (Structural Matching), Proposition (Synthetic Instance Validity) with proof
+
+**New references**: zhang2024gsm1k (NeurIPS 2024), jain2025livecodebench (ICLR 2025), liu2024infini (infini-gram)
+
+**Net addition**: ~2,800 words distributed across 13 locations
+
+**What is unchanged**: All existing formal definitions, theorems, proofs, complexity results, the graded scoring function, the error taxonomy, the rendering modalities, the fine-tuning pipeline, the debate protocol, existing results tables --- the entire mathematical core and empirical findings of the paper.
+
+---
+
 **Author**: Patrick Cooper  
-**Status**: Changes 1-11 implemented in paper.tex  
-**Next step**: Continue implementation pipeline, run experiments
+**Status**: Changes 1-12 implemented in paper.tex  
+**Next step**: Generate synthetic instances, run contamination analysis, populate Table contamination gap
