@@ -244,13 +244,13 @@ def main():
         for (child, parent) in opencyc.taxonomic_relations[:SAMPLE_CONCEPTS]:
             taxonomy[child].add(parent)
         
-        print(f"  ✅ Taxonomy extracted:")
+        print(f"  [OK] Taxonomy extracted:")
         print(f"     Concepts: {len(taxonomy)}")
         print(f"     Relations: {sum(len(parents) for parents in taxonomy.values())}")
         print()
         
     except Exception as e:
-        print(f"  ❌ OpenCyc extraction failed: {e}")
+        print(f"  [FAIL] OpenCyc extraction failed: {e}")
         print("  Trying alternative: use existing biology KB taxonomy")
         
         # Fallback: use existing KB
@@ -265,7 +265,7 @@ def main():
                     body_pred = rule.body[0].split('(')[0]
                     taxonomy[body_pred].add(head_pred)
         
-        print(f"  ⚠️ Using fallback taxonomy:")
+        print(f"  [WARN] Using fallback taxonomy:")
         print(f"     Concepts: {len(taxonomy)}")
         print()
     
@@ -287,7 +287,7 @@ def main():
             if relation in ['CapableOf', 'NotCapableOf', 'HasProperty']:
                 properties[concept].append((relation, prop))
         
-        print(f"  ✅ Properties extracted:")
+        print(f"  [OK] Properties extracted:")
         print(f"     Edges processed: {SAMPLE_EDGES:,}")
         print(f"     Biological edges: {len(conceptnet.biological_edges)}")
         print(f"     Concepts with properties: {len(properties)}")
@@ -297,7 +297,7 @@ def main():
         print()
         
     except Exception as e:
-        print(f"  ❌ ConceptNet extraction failed: {e}")
+        print(f"  [FAIL] ConceptNet extraction failed: {e}")
         print("  Creating mock properties for proof-of-concept")
         
         # Mock for testing
@@ -307,7 +307,7 @@ def main():
             'mammal': [('CapableOf', 'walk'), ('HasProperty', 'hair')],
             'fish': [('CapableOf', 'swim'), ('HasProperty', 'gills')],
         }
-        print(f"  ⚠️ Using mock properties for demonstration")
+        print(f"  [WARN] Using mock properties for demonstration")
         print()
     
     # Step 3: Combine to generate rules
@@ -316,7 +316,7 @@ def main():
     
     combined_theory = combine_taxonomy_properties(taxonomy, properties, verbose=True)
     
-    print(f"\n  ✅ Combined theory generated:")
+    print(f"\n  [OK] Combined theory generated:")
     print(f"     Total facts: {len(combined_theory.facts)}")
     print(f"     Total rules: {len(combined_theory.rules)}")
     
@@ -336,7 +336,7 @@ def main():
     
     try:
         targets = test_instance_generation(combined_theory, sample_size=50)
-        print(f"  ✅ Found {len(targets)} derivable targets")
+        print(f"  [OK] Found {len(targets)} derivable targets")
         
         # Test criticality on sample
         converted = phi_kappa(combined_theory, partition_random(0.5))
@@ -355,7 +355,7 @@ def main():
         print()
         
     except Exception as e:
-        print(f"  ⚠️ Instance generation test failed: {e}")
+        print(f"  [WARN] Instance generation test failed: {e}")
         print()
     
     # Step 5: Calculate scale multipliers

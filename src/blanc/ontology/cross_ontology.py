@@ -82,12 +82,39 @@ def _normalize(text: str) -> str:
     return "".join(c for c in text if c.isalnum() or c == "_")
 
 
+def _transitive_ancestors(
+    taxonomy: Dict[str, Set[str]],
+) -> Dict[str, Set[str]]:
+    """Compute transitive closure: concept -> all ancestors (parents, grandparents, ...)."""
+    ancestors: Dict[str, Set[str]] = {}
+
+    def _get_ancestors(concept: str, visited: Set[str]) -> Set[str]:
+        if concept in ancestors:
+            return ancestors[concept]
+        if concept in visited:
+            return set()
+        visited.add(concept)
+        result: Set[str] = set()
+        for parent in taxonomy.get(concept, set()):
+            result.add(parent)
+            result |= _get_ancestors(parent, visited)
+        ancestors[concept] = result
+        return result
+
+    for concept in taxonomy:
+        _get_ancestors(concept, set())
+    return ancestors
+
+
 def combine_taxonomy_properties(
     taxonomy: Dict[str, Set[str]],
     properties: Dict[str, List[Tuple[str, str]]],
     profile: Optional[DomainProfile] = None,
 ) -> Tuple[Theory, CombinationStats]:
     """Combine a taxonomy with a property source into a defeasible theory.
+
+    Traverses the full ancestor chain so that properties propagate
+    transitively (penguin inherits from bird, animal, organism, etc.).
 
     Args:
         taxonomy: concept -> {parent1, parent2, ...}
@@ -107,11 +134,14 @@ def combine_taxonomy_properties(
     stats.property_concepts = len(properties)
     stats.property_edges = sum(len(es) for es in properties.values())
 
+    all_ancestors = _transitive_ancestors(taxonomy)
+
     for concept in taxonomy:
         theory.add_fact(f"concept({concept})")
+        # Ground each concept with an instance so rule chains can fire
+        theory.add_fact(f"{concept}({concept})")
 
     for concept, parents in taxonomy.items():
-        # Strict taxonomic rules
         for parent in parents:
             key = ("tax", concept, parent)
             if key not in rules_added:
@@ -124,10 +154,10 @@ def combine_taxonomy_properties(
                 rules_added.add(key)
                 stats.strict_rules += 1
 
-        # Inherited properties from ancestors
+        # Inherited properties from ALL ancestors (full transitive closure)
         inherited: Set[Tuple[str, str]] = set()
-        for parent in parents:
-            for (rel, prop) in properties.get(parent, []):
+        for ancestor in all_ancestors.get(concept, set()):
+            for (rel, prop) in properties.get(ancestor, []):
                 inherited.add((rel, prop))
 
         for (rel, prop) in inherited:

@@ -1,17 +1,19 @@
 # Project Status
 
-**Last Updated**: 2026-03-16
-**Current**: Phase A (Foundry evaluation) COMPLETE. Phase B (finetuning) NOT STARTED -- blocked on CURC (TP fix committed). Phase C (adversarial debate) COMPLETE -- MCTS engine, debate protocol, tests, experiments, paper Section 7 all implemented.
-**Progress**: 12 of 14 weeks (86% -- infrastructure, base evaluation, and debate done; finetuning pending)
-**Timeline**: TIGHT -- B1 must resume; Phase C complete
+**Last Updated**: 2026-03-17
+**Current**: Phase A (Foundry evaluation) COMPLETE. Phase B (finetuning) NOT STARTED -- blocked on CURC (TP fix committed). Phase C (adversarial debate) COMPLETE. Tier 1 cross-ontology extraction and instance generation COMPLETE (313,314 instances from 290,576 rules across 4 domains).
+**Progress**: 12 of 14 weeks (86% -- infrastructure, base evaluation, debate, and Tier 1 dataset done; finetuning pending)
+**Timeline**: TIGHT -- B1 must resume; Tier 1 dataset ready for evaluation
 
 ---
 
 ## Quick Summary
 
-**Tests**: 797+ passing (63 new debate/search tests) + new ontology/behavioral/integration tests
-**Expert KBs**: 2,318 strict taxonomic rules + ~280 defeasible behavioral rules + ~90 defeaters across 3 domains
-**Instances**: 374 Level 2 + 35 Level 3 (all validated)
+**Tests**: 947+ passing (63 new debate/search tests) + new ontology/behavioral/integration tests
+**Expert KBs (Tier 0)**: 2,318 strict taxonomic rules + 482 defeasible behavioral rules + 244 defeaters + 55 superiority relations + 70 multi-body compound rules across 3 domains (3,044 total rules)
+**Tier 0 Instances**: 374 Level 2 + 35 Level 3 (all validated)
+**Tier 1 Rules**: 290,576 cross-ontology rules (125.4x Tier 0) across 5 domains from OpenCyc + ConceptNet
+**Tier 1 Instances**: 313,314 total (176,982 L1 + 136,332 L2) across 4 domains (766x multiplier). Chemistry pending (process memory limit).
 **Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4)
 **Base Evaluation**: COMPLETE -- 4 Foundry models, all instances, all modalities
 **Paper Tables 1-3**: Populated with real results
@@ -142,17 +144,46 @@ Key findings substantiated in paper:
 - [ ] Update Discussion and Conclusion with finetuning findings
 - [ ] Final polish and submission
 
+### Tier 1: Cross-Ontology Dataset (COMPLETE -- Mar 17)
+
+**Extraction**: 290,576 rules from OpenCyc (taxonomy) + ConceptNet (behavioral properties) via `scripts/extract_cross_ontology_all.py`:
+- Biology: 40,728 rules (10,712 defeasible, 56 defeaters)
+- Legal: 34,724 rules (809 defeasible)
+- Materials: 13,776 rules (278 defeasible)
+- Chemistry: 72,306 rules (8,276 defeasible)
+- Everyday: 129,042 rules (87,062 defeasible)
+
+**Instance Generation**: 313,314 instances from `scripts/generate_tier1_instances.py`:
+- Biology: 56,634 (L1=31,239, L2=25,395)
+- Everyday: 212,365 (L1=122,758, L2=89,607)
+- Legal: 29,618 (L1=14,848, L2=14,770)
+- Materials: 14,697 (L1=8,137, L2=6,560)
+- Chemistry: pending (process memory limit on local machine; run on CURC)
+
+**Infrastructure fixes applied**:
+- Full ancestor chain traversal in `cross_ontology.py` (transitive closure)
+- Concept name normalization for OpenCyc/ConceptNet alignment
+- Self-typed grounding facts for derivation chains
+- Sub-theory partitioning by taxonomy subtree (hard cap 100 rules)
+- Fast ablation (random element removal) instead of full Crit* computation
+- Forward-chaining target discovery instead of full defeasible proof
+- Automated Level 3 generation from NotCapableOf defeaters
+
 ### KB Expansion Infrastructure (COMPLETE -- Mar 16)
 - [x] Domain profile system: `src/blanc/ontology/domain_profiles.py` -- 5 domain profiles (biology, legal, materials, chemistry, everyday) with keywords, relation mappings, behavioral predicates, known exceptions
 - [x] Generalized ConceptNet extractor: accepts DomainProfile, supports Causes + UsedFor relations (6 total)
 - [x] Generalized OpenCyc extractor: accepts DomainProfile for multi-domain extraction with OWL property extraction
 - [x] Cross-ontology combiner: `src/blanc/ontology/cross_ontology.py` -- taxonomy + property combination, property inheritance, defeater detection
-- [x] Biology behavioral rules expanded: 9 -> ~150 rules (defeasible defaults + defeaters across locomotion, morphology, thermoregulation, reproduction, diet, habitat, behavior, respiration)
-- [x] Legal behavioral rules created: ~100 rules (capacity, liability, procedural, property, normative defaults + defeaters)
-- [x] Materials behavioral rules created: ~120 rules (electrical, thermal, mechanical, corrosion, optical, magnetic, structural, processing, biocompatibility defaults + defeaters)
-- [x] Rule validation framework: `src/blanc/ontology/rule_validator.py` -- depth estimation, deduplication, consistency, anomaly detection, coverage stats
-- [x] KB composers updated to integrate behavioral rules
+- [x] Rule validation framework: `src/blanc/ontology/rule_validator.py` -- depth, deduplication, consistency, anomaly, superiority, multi-body tracking
+- [x] KB composers updated to integrate behavioral rules and superiority relations
 - [x] Comprehensive tests for all new modules
+
+### Maximal Behavioral Rule Expansion (COMPLETE -- Mar 16)
+- [x] Biology: 314 behavioral rules (220 defeasible + 94 defeaters) across 14 categories (locomotion, morphology, thermoregulation, reproduction, diet, habitat, behavior, respiration, sensory, social, development, communication, defense, ecology) + 30 multi-body compound rules + 25 superiority relations
+- [x] Legal: 194 behavioral rules (118 defeasible + 76 defeaters) across 11 categories (capacity, liability, procedural, property, normative, constitutional, criminal, corporate, family, employment, administrative) + 20 multi-body compound rules + 15 superiority relations
+- [x] Materials: 218 behavioral rules (144 defeasible + 74 defeaters) across 15 categories (electrical, thermal, mechanical, corrosion, optical, magnetic, structural, processing, biocompatibility, phase transitions, failure modes, surface, composites, semiconductors, recyclability) + 20 multi-body compound rules + 15 superiority relations
+- [x] Entity instances expanded: biology 85 -> 135 organisms, legal 40 -> 61 entities, materials 43 -> 65 materials
+- [x] All five components of Def 3.2 quintet now populated: F, R_s, R_d, R_df, and succ (previously succ was empty)
 
 ### Optional (if time permits)
 - [ ] CURC base evaluation (Qwen-72B, Qwen-32B, DS-R1-70B) for scaling analysis

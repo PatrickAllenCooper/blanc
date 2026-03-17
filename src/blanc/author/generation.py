@@ -291,6 +291,178 @@ def generate_level2_instance(
     )
 
 
+def generate_level3_instance(
+    theory: Theory,
+    anomaly: str,
+    gold_defeater: Rule,
+    k_distractors: int = 5,
+) -> AbductiveInstance:
+    """Generate Level 3 instance (defeater abduction) from a known defeater.
+
+    Given a theory containing both the defeasible rule that predicts the
+    anomaly and a defeater that blocks it, this function:
+      1. Removes the defeater from the theory to produce D^-.
+      2. Verifies the anomaly is derivable in D^- (the prediction holds).
+      3. Verifies adding the defeater blocks the anomaly.
+      4. Checks conservativity: all other expectations are preserved.
+      5. Generates distractor defeaters.
+
+    Args:
+        theory: Complete theory containing both the rule and defeater.
+        anomaly: The literal whose complement is incorrectly derivable
+                 without the defeater (e.g. ``"flies(opus)"``).
+        gold_defeater: The defeater rule to ablate.
+        k_distractors: Number of distractor defeaters to generate.
+
+    Returns:
+        Level 3 AbductiveInstance, or raises ValueError if preconditions fail.
+    """
+    from blanc.author.support import _remove_element
+    from blanc.reasoning.defeasible import defeasible_provable, DefeasibleEngine
+    from blanc.core.theory import RuleType
+
+    if gold_defeater.rule_type != RuleType.DEFEATER:
+        raise ValueError(
+            f"Gold element must be a DEFEATER, got {gold_defeater.rule_type}"
+        )
+
+    D_minus = _remove_element(theory, gold_defeater)
+
+    if not defeasible_provable(D_minus, anomaly):
+        raise ValueError(
+            f"Anomaly '{anomaly}' is not derivable in D^- -- "
+            f"not a valid anomaly for defeater abduction"
+        )
+
+    theory_with_defeater = _add_element(D_minus, gold_defeater)
+    if defeasible_provable(theory_with_defeater, anomaly):
+        raise ValueError(
+            f"Gold defeater does not block the anomaly '{anomaly}'"
+        )
+
+    engine_before = DefeasibleEngine(D_minus)
+    engine_after = DefeasibleEngine(theory_with_defeater)
+    preserved = []
+    for fact in D_minus.facts:
+        if defeasible_provable(D_minus, fact):
+            if fact != anomaly:
+                preserved.append(fact)
+                if not defeasible_provable(theory_with_defeater, fact):
+                    raise ValueError(
+                        f"Conservativity violated: '{fact}' lost after adding defeater"
+                    )
+
+    distractors = _generate_defeater_distractors(
+        D_minus, gold_defeater, anomaly, k_distractors
+    )
+
+    candidates = [gold_defeater] + distractors
+    gold = [gold_defeater]
+
+    nov_predicates = set()
+    theory_preds = set()
+    for r in D_minus.rules:
+        theory_preds.add(r.head.split("(")[0].lstrip("~"))
+        for b in r.body:
+            theory_preds.add(b.split("(")[0].lstrip("~"))
+    for f in D_minus.facts:
+        theory_preds.add(f.split("(")[0].lstrip("~"))
+
+    defeater_preds = {gold_defeater.head.split("(")[0].lstrip("~")}
+    for b in gold_defeater.body:
+        defeater_preds.add(b.split("(")[0].lstrip("~"))
+    novel = defeater_preds - theory_preds
+    nov = len(novel) / max(len(defeater_preds), 1)
+
+    return AbductiveInstance(
+        D_minus=D_minus,
+        target=anomaly,
+        candidates=candidates,
+        gold=gold,
+        level=3,
+        metadata={
+            "anomaly": anomaly,
+            "gold_defeater": str(gold_defeater),
+            "defeater_type": "weak",
+            "preserved_expectations": preserved[:20],
+            "nov": round(nov, 4),
+            "d_rev": 1,
+            "conservative": True,
+            "distractor_strategy": "synthetic",
+        },
+    )
+
+
+def _generate_defeater_distractors(
+    theory: Theory,
+    gold_defeater: Rule,
+    anomaly: str,
+    k: int,
+) -> List[Rule]:
+    """Generate distractor defeaters for Level 3 instances.
+
+    Strategies:
+      - Too-broad: defeat a parent predicate instead of the specific one.
+      - Wrong-head: defeat a different predicate entirely.
+      - Wrong-body: use a different condition predicate.
+      - Reversed: swap head and body predicates.
+    """
+    from blanc.core.theory import RuleType
+    import random
+
+    distractors: List[Rule] = []
+    seen: set = set()
+    theory_preds = list({
+        r.head.split("(")[0].lstrip("~")
+        for r in theory.rules
+        if r.head.split("(")[0].lstrip("~") != gold_defeater.head.split("(")[0].lstrip("~")
+    })
+
+    gold_head_pred = gold_defeater.head.split("(")[0].lstrip("~")
+    gold_body_preds = [b.split("(")[0] for b in gold_defeater.body]
+
+    for pred in theory_preds[:k]:
+        head = f"~{pred}(X)"
+        body = gold_defeater.body
+        sig = (head, body)
+        if sig not in seen:
+            distractors.append(Rule(
+                head=head, body=body,
+                rule_type=RuleType.DEFEATER,
+                label=f"dist_wronghead_{pred}",
+            ))
+            seen.add(sig)
+
+    if len(gold_defeater.body) == 1:
+        body_pred = gold_body_preds[0]
+        for pred in theory_preds[:k]:
+            if pred != body_pred and len(distractors) < k:
+                head = gold_defeater.head
+                body = (f"{pred}(X)",)
+                sig = (head, body)
+                if sig not in seen:
+                    distractors.append(Rule(
+                        head=head, body=body,
+                        rule_type=RuleType.DEFEATER,
+                        label=f"dist_wrongbody_{pred}",
+                    ))
+                    seen.add(sig)
+
+    if gold_body_preds and len(distractors) < k:
+        head = f"~{gold_body_preds[0]}(X)"
+        body = (f"{gold_head_pred}(X)",)
+        sig = (head, body)
+        if sig not in seen:
+            distractors.append(Rule(
+                head=head, body=body,
+                rule_type=RuleType.DEFEATER,
+                label=f"dist_reversed",
+            ))
+            seen.add(sig)
+
+    return distractors[:k]
+
+
 # Helper functions
 
 def _add_element(theory: Theory, element: Element) -> Theory:

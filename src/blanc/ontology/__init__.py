@@ -27,6 +27,12 @@ from blanc.ontology.domain_profiles import (
     CHEMISTRY,
     EVERYDAY,
 )
+from blanc.ontology.rule_validator import (
+    ValidationReport,
+    validate_theory,
+    deduplicate_theory,
+    save_report,
+)
 
 __all__ = [
     "OpenCycExtractor",
@@ -48,4 +54,8 @@ __all__ = [
     "MATERIALS",
     "CHEMISTRY",
     "EVERYDAY",
+    "ValidationReport",
+    "validate_theory",
+    "deduplicate_theory",
+    "save_report",
 ]
