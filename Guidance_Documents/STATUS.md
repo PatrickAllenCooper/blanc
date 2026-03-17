@@ -1,9 +1,9 @@
 # Project Status
 
 **Last Updated**: 2026-03-17
-**Current**: Phase A (Foundry evaluation) COMPLETE. Phase B (finetuning) NOT STARTED -- blocked on CURC (TP fix committed). Phase C (adversarial debate) COMPLETE. Tier 1 cross-ontology extraction and instance generation COMPLETE (313,314 instances from 290,576 rules across 4 domains).
-**Progress**: 12 of 14 weeks (86% -- infrastructure, base evaluation, debate, and Tier 1 dataset done; finetuning pending)
-**Timeline**: TIGHT -- B1 must resume; Tier 1 dataset ready for evaluation
+**Current**: Phase A (Foundry evaluation) COMPLETE. Phase B (finetuning) NOT STARTED -- blocked on CURC. Phase C (adversarial debate) COMPLETE. Multi-tier KB extraction COMPLETE: 4.23M rules from 7 sources (YAGO, OpenCyc+ConceptNet, SUMO, Gene Ontology, MeSH, FrameNet, Wikidata).
+**Progress**: 12 of 14 weeks (86% -- infrastructure, base evaluation, debate, multi-tier dataset done; finetuning pending)
+**Timeline**: TIGHT -- B1 must resume; multi-million rule dataset ready
 
 ---
 
@@ -13,7 +13,15 @@
 **Expert KBs (Tier 0)**: 2,318 strict taxonomic rules + 482 defeasible behavioral rules + 244 defeaters + 55 superiority relations + 70 multi-body compound rules across 3 domains (3,044 total rules)
 **Tier 0 Instances**: 374 Level 2 + 35 Level 3 (all validated)
 **Tier 1 Rules**: 290,576 cross-ontology rules (125.4x Tier 0) across 5 domains from OpenCyc + ConceptNet
-**Tier 1 Instances**: 313,314 total (176,982 L1 + 136,332 L2) across 4 domains (766x multiplier). Chemistry pending (process memory limit).
+**Tier 1 Instances**: 313,314 total (176,982 L1 + 136,332 L2) across 4 domains (766x multiplier)
+**Multi-Tier Rules (Tiers 2-4)**: 3,934,480 additional rules from 6 new sources:
+  - YAGO 4.5 full: 3,457,940 rules (166K strict, 3.29M defeasible)
+  - Gene Ontology: 350,580 rules (349K defeasible, 1,250 defeaters)
+  - MeSH: 76,650 rules (76K strict medical taxonomy)
+  - Wikidata: 23,228 rules (11,555 defeaters -- highest defeater density)
+  - SUMO: 13,317 rules (3,465 defeasible, 792 defeaters)
+  - FrameNet: 12,765 rules (781 strict, 11,984 defeasible)
+**Grand Total Rules**: 4,227,374 across all tiers (1,826x Tier 0)
 **Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4)
 **Base Evaluation**: COMPLETE -- 4 Foundry models, all instances, all modalities
 **Paper Tables 1-3**: Populated with real results
