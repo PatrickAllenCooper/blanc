@@ -1,0 +1,45 @@
+{
+  "total_instances": 313314,
+  "level_breakdown": {
+    "L1": 176982,
+    "L2": 136332,
+    "L3": 0,
+    "total": 313314
+  },
+  "domain_breakdown": {
+    "biology": {
+      "total": 56634,
+      "L1": 31239,
+      "L2": 25395,
+      "L3": 0
+    },
+    "everyday": {
+      "total": 212365,
+      "L1": 122758,
+      "L2": 89607,
+      "L3": 0
+    },
+    "legal": {
+      "total": 29618,
+      "L1": 14848,
+      "L2": 14770,
+      "L3": 0
+    },
+    "materials": {
+      "total": 14697,
+      "L1": 8137,
+      "L2": 6560,
+      "L3": 0
+    }
+  },
+  "domains_completed": [
+    "biology",
+    "everyday",
+    "legal",
+    "materials"
+  ],
+  "tier0_instances": 409,
+  "multiplier": 766.0,
+  "rules_extracted": 290576,
+  "rule_multiplier": 125.4
+}
