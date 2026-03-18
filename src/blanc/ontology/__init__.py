@@ -56,6 +56,26 @@ from blanc.ontology.yago_full_extractor import (
     YagoFullExtractor,
     extract_from_yago_full,
 )
+from blanc.ontology.dbpedia_extractor import (
+    DbpediaExtractor,
+    extract_from_dbpedia,
+)
+from blanc.ontology.freebase_extractor import (
+    FreebaseExtractor,
+    extract_from_freebase,
+)
+from blanc.ontology.umls_extractor import (
+    UmlsExtractor,
+    extract_from_umls,
+)
+from blanc.ontology.snomed_extractor import (
+    SnomedExtractor,
+    extract_from_snomed,
+)
+from blanc.ontology.babelnet_extractor import (
+    BabelNetExtractor,
+    extract_from_babelnet,
+)
 from blanc.ontology.rule_validator import (
     ValidationReport,
     validate_theory,
@@ -98,6 +118,16 @@ __all__ = [
     "WIKIDATA_DOMAIN_CLASSES",
     "YagoFullExtractor",
     "extract_from_yago_full",
+    "DbpediaExtractor",
+    "extract_from_dbpedia",
+    "FreebaseExtractor",
+    "extract_from_freebase",
+    "UmlsExtractor",
+    "extract_from_umls",
+    "SnomedExtractor",
+    "extract_from_snomed",
+    "BabelNetExtractor",
+    "extract_from_babelnet",
     "ValidationReport",
     "validate_theory",
     "deduplicate_theory",

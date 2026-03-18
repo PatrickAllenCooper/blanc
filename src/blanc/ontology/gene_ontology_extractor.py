@@ -88,6 +88,8 @@ class GeneOntologyExtractor:
                 line = raw_line.strip()
 
                 if line == "[Term]":
+                    if current and not current["is_obsolete"] and current["id"]:
+                        self._commit_term(current)
                     current = {
                         "id": "",
                         "name": "",

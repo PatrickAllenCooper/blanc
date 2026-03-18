@@ -345,32 +345,44 @@ def generate_from_subtheory(
                     except Exception:
                         pass
 
-    # Level 3: from defeaters
+    # Level 3: from defeaters grounded with concrete entities
     defeaters = [r for r in subtheory.rules if r.rule_type == RuleType.DEFEATER]
     l3_count = 0
 
-    for defeater in defeaters[:MAX_L3_PER_SUBTHEORY]:
-        head_pred = defeater.head.lstrip("~").split("(")[0]
+    for defeater in defeaters:
+        if l3_count >= MAX_L3_PER_SUBTHEORY:
+            break
         if not defeater.body:
             continue
-        body_arg = defeater.body[0].split("(")
-        if len(body_arg) <= 1:
-            continue
-        entity = body_arg[1].rstrip(")")
-        anomaly = f"{head_pred}({entity})"
 
-        try:
-            inst = generate_level3_instance(
-                subtheory, anomaly, defeater, k_distractors=5,
-            )
-            d = inst.to_dict()
-            d["domain"] = domain
-            d["partition"] = "type_grounded"
-            d["subtheory_idx"] = subtheory_idx
-            instances.append(d)
-            l3_count += 1
-        except (ValueError, Exception):
-            continue
+        head_pred = defeater.head.lstrip("~").split("(")[0]
+        body_pred = defeater.body[0].split("(")[0]
+
+        # Find concrete entities from facts that match the body predicate
+        matching_entities = []
+        for fact in subtheory.facts:
+            fp = fact.split("(")[0]
+            if fp == body_pred and "(" in fact:
+                ent = fact.split("(", 1)[1].rstrip(")")
+                if ent and ent != "X" and "," not in ent:
+                    matching_entities.append(ent)
+
+        for entity in matching_entities[:3]:
+            if l3_count >= MAX_L3_PER_SUBTHEORY:
+                break
+            anomaly = f"{head_pred}({entity})"
+            try:
+                inst = generate_level3_instance(
+                    subtheory, anomaly, defeater, k_distractors=5,
+                )
+                d = inst.to_dict()
+                d["domain"] = domain
+                d["partition"] = "type_grounded"
+                d["subtheory_idx"] = subtheory_idx
+                instances.append(d)
+                l3_count += 1
+            except (ValueError, Exception):
+                continue
 
     return instances
 

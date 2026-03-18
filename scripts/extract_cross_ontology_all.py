@@ -144,7 +144,14 @@ def extract_conceptnet_multipass(
 
 
 def _normalize_key(s: str) -> str:
-    """Lowercase, underscores, strip non-alnum for cross-source matching."""
+    """Normalize for cross-source matching.
+
+    Handles CamelCase splitting (DomesticCat -> domestic_cat),
+    hyphens, spaces, and strips non-alphanumeric characters.
+    """
+    import re
+    # Split CamelCase: insert underscore before uppercase letters
+    s = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "_", s)
     return s.lower().replace(" ", "_").replace("-", "_")
 
 

@@ -45,6 +45,8 @@ class ValidationReport:
     domain_coverage: Dict[str, int] = field(default_factory=dict)
 
     anomaly_pairs: int = 0
+    superiority_count: int = 0
+    multi_body_rules: int = 0
 
     @property
     def is_healthy(self) -> bool:
@@ -70,6 +72,8 @@ class ValidationReport:
             "predicate_count": self.predicate_count,
             "domain_coverage": self.domain_coverage,
             "anomaly_pairs": self.anomaly_pairs,
+            "superiority_count": self.superiority_count,
+            "multi_body_rules": self.multi_body_rules,
             "is_healthy": self.is_healthy,
         }
 
@@ -82,6 +86,8 @@ class ValidationReport:
             f"Facts:       {self.total_facts}",
             f"Predicates:  {self.predicate_count}",
             f"Max depth:   {self.max_depth}",
+            f"Superiority: {self.superiority_count}",
+            f"Multi-body:  {self.multi_body_rules}",
             f"Duplicates:  {self.duplicate_count}",
             f"Contradictions (intended): {self.contradiction_count}",
             f"Anomaly pairs:            {self.anomaly_pairs}",
@@ -233,6 +239,18 @@ def validate_theory(theory: Theory) -> ValidationReport:
 
     report.rules_at_depth_lt2 = sum(
         count for depth, count in histogram.items() if depth < 2
+    )
+
+    # ── Superiority relations ────────────────────────────────────
+
+    report.superiority_count = sum(
+        len(infs) for infs in theory.superiority.values()
+    )
+
+    # ── Multi-body rules ─────────────────────────────────────────
+
+    report.multi_body_rules = sum(
+        1 for rule in theory.rules if len(rule.body) >= 2
     )
 
     return report

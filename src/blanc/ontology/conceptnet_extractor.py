@@ -44,10 +44,13 @@ class ConceptNetExtractor:
     compatibility.
     """
 
+    _DEFEATER_RELATIONS = frozenset({"NotCapableOf"})
+
     def __init__(
         self,
         conceptnet_path: Path,
         weight_threshold: float = 2.0,
+        defeater_weight_threshold: float = 1.0,
         profile: Optional[DomainProfile] = None,
     ):
         if not conceptnet_path.exists():
@@ -57,6 +60,7 @@ class ConceptNetExtractor:
 
         self.conceptnet_path = conceptnet_path
         self.weight_threshold = weight_threshold
+        self.defeater_weight_threshold = defeater_weight_threshold
         self.profile: DomainProfile = profile or BIOLOGY
         self.edges: List[dict] = []
         self.domain_edges: List[dict] = []
@@ -94,11 +98,16 @@ class ConceptNetExtractor:
                     metadata = json.loads(metadata_json)
                     weight = metadata.get("weight", 0.0)
 
-                    if weight < self.weight_threshold:
-                        continue
-
                     rel_name = self._extract_relation(relation)
                     if rel_name not in _SUPPORTED_RELATIONS:
+                        continue
+
+                    threshold = (
+                        self.defeater_weight_threshold
+                        if rel_name in self._DEFEATER_RELATIONS
+                        else self.weight_threshold
+                    )
+                    if weight < threshold:
                         continue
 
                     start_concept = self._extract_concept(start)
