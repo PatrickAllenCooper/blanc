@@ -21,7 +21,9 @@
   - Wikidata: 23,228 rules (11,555 defeaters -- highest defeater density)
   - SUMO: 13,317 rules (3,465 defeasible, 792 defeaters)
   - FrameNet: 12,765 rules (781 strict, 11,984 defeasible)
-**Grand Total Rules**: 4,227,374 across all tiers (1,826x Tier 0)
+**YAGO Full (yago-facts.ttl only)**: 77,082,529 defeasible rules from 312M triples (Theory too large for local memory -- requires CURC sharded materialization). Plus yago-beyond-wikipedia.ttl (65 GB) not yet processed.
+**Grand Total Rules (materialized)**: 4,227,374 across all tiers (1,826x Tier 0)
+**Grand Total Rules (extracted, verified counts)**: 81,144,903 including full YAGO facts (35,024x Tier 0)
 **Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4)
 **Base Evaluation**: COMPLETE -- 4 Foundry models, all instances, all modalities
 **Paper Tables 1-3**: Populated with real results
