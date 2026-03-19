@@ -173,6 +173,10 @@ class MeshExtractor:
             if fact not in facts_added:
                 theory.add_fact(fact)
                 facts_added.add(fact)
+            self_fact = f"{norm}({norm})"
+            if self_fact not in facts_added:
+                theory.add_fact(self_fact)
+                facts_added.add(self_fact)
 
         for child_id, parent_id in self.parent_child:
             child_norm = self._resolve_norm(child_id)

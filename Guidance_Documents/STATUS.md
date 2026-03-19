@@ -1,29 +1,32 @@
 # Project Status
 
-**Last Updated**: 2026-03-17
-**Current**: Phase A (Foundry evaluation) COMPLETE. Phase B (finetuning) NOT STARTED -- blocked on CURC. Phase C (adversarial debate) COMPLETE. Multi-tier KB extraction COMPLETE: 4.23M rules from 7 sources (YAGO, OpenCyc+ConceptNet, SUMO, Gene Ontology, MeSH, FrameNet, Wikidata).
-**Progress**: 12 of 14 weeks (86% -- infrastructure, base evaluation, debate, multi-tier dataset done; finetuning pending)
-**Timeline**: TIGHT -- B1 must resume; multi-million rule dataset ready
+**Last Updated**: 2026-03-19
+**Current**: Phase A (Foundry evaluation) COMPLETE. Phase B (finetuning) B1 QUEUED on CURC (3 jobs). Phase C (adversarial debate) COMPLETE. Multi-tier extraction complete with 8 sources; BabelNet API extraction operational.
+**Progress**: 12 of 14 weeks (86% -- infrastructure, base evaluation, debate, multi-tier dataset done; finetuning in progress)
+**Timeline**: B1 jobs queued; awaiting completion for B2/B3
 
 ---
 
 ## Quick Summary
 
-**Tests**: 947+ passing (63 new debate/search tests) + new ontology/behavioral/integration tests
+**Tests**: 481+ passing across all modules (306 ontology + 175 author/codec/reasoning/search/debate)
 **Expert KBs (Tier 0)**: 2,318 strict taxonomic rules + 482 defeasible behavioral rules + 244 defeaters + 55 superiority relations + 70 multi-body compound rules across 3 domains (3,044 total rules)
 **Tier 0 Instances**: 374 Level 2 + 35 Level 3 (all validated)
-**Tier 1 Rules**: 290,576 cross-ontology rules (125.4x Tier 0) across 5 domains from OpenCyc + ConceptNet
-**Tier 1 Instances**: 313,314 total (176,982 L1 + 136,332 L2) across 4 domains (766x multiplier)
-**Multi-Tier Rules (Tiers 2-4)**: 3,934,480 additional rules from 6 new sources:
-  - YAGO 4.5 full: 3,457,940 rules (166K strict, 3.29M defeasible)
-  - Gene Ontology: 350,580 rules (349K defeasible, 1,250 defeaters)
+**Tier 1 Rules**: 289,305 cross-ontology rules (124.8x Tier 0) across 5 domains from OpenCyc + ConceptNet
+**Tier 1 Instances**: 324,511 total (182,652 L1 + 141,859 L2 + 0 L3) across all 5 domains including chemistry (793.4x)
+**Multi-Tier Extracted Rules (verified on-disk theory.pkl)**:
+  - YAGO 4.5 tiny: 3,457,940 rules (166K strict, 3.29M defeasible)
+  - Gene Ontology: 409,378 rules (58,799 strict, 349,329 defeasible, 1,250 defeaters)
   - MeSH: 76,650 rules (76K strict medical taxonomy)
-  - Wikidata: 23,228 rules (11,555 defeaters -- highest defeater density)
+  - Wikidata: 23,224 rules (11,555 defeaters)
   - SUMO: 13,317 rules (3,465 defeasible, 792 defeaters)
   - FrameNet: 12,765 rules (781 strict, 11,984 defeasible)
-**YAGO Full (yago-facts.ttl only)**: 77,082,529 defeasible rules from 312M triples (Theory too large for local memory -- requires CURC sharded materialization). Plus yago-beyond-wikipedia.ttl (65 GB) not yet processed.
-**Grand Total Rules (materialized)**: 4,227,374 across all tiers (1,826x Tier 0)
-**Grand Total Rules (extracted, verified counts)**: 81,144,903 including full YAGO facts (35,024x Tier 0)
+  - BabelNet: 231 rules (2 strict, 228 defeasible, 1 defeater) -- rate-limited API extraction
+  - YAGO Full facts: 77,082,529 rules counted (too large for local Theory materialization)
+**Multi-Tier Instances (verified on-disk)**: 26,693 total (FrameNet 22,883 + SUMO 3,810)
+**L3 Gap**: 0 automated L3 instances generated. Only 35 hand-authored Tier 0 L3 exist. GO (1,250 defeaters) and Wikidata (11,555 defeaters) need CURC for instance generation.
+**Grand Total Rules (materialized, verified)**: 4,282,810 across all tiers
+**Grand Total Instances (verified)**: 351,613 (Tier 0: 409, Tier 1: 324,511, Multi-tier: 26,693)
 **Codec**: ALL 4 modalities + 3 decoders, 100% round-trip (M2-M4)
 **Base Evaluation**: COMPLETE -- 4 Foundry models, all instances, all modalities
 **Paper Tables 1-3**: Populated with real results

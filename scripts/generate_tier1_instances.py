@@ -45,7 +45,7 @@ _TIER1_DIR = _PROJECT_ROOT / "data" / "tier1"
 _OUTPUT_DIR = _PROJECT_ROOT / "instances" / "tier1"
 
 MAX_SUBTHEORY_SIZE = 80
-MIN_SUBTHEORY_SIZE = 5
+MIN_SUBTHEORY_SIZE = 2
 MAX_INSTANCES_PER_PARTITION = 8
 MAX_TARGETS_PER_SUBTHEORY = 15
 MAX_L3_PER_SUBTHEORY = 3
@@ -62,14 +62,14 @@ def partition_into_subtheories(theory: Theory) -> list[Theory]:
     """
     concept_rules: dict[str, list[Rule]] = defaultdict(list)
     concept_facts: dict[str, set[str]] = defaultdict(set)
-    unassigned_rules: list[Rule] = []
 
     for rule in theory.rules:
         if rule.body:
             body_pred = rule.body[0].split("(")[0].lstrip("~")
             concept_rules[body_pred].append(rule)
         else:
-            unassigned_rules.append(rule)
+            head_pred = rule.head.split("(")[0].lstrip("~")
+            concept_rules[head_pred].append(rule)
 
     for fact in theory.facts:
         pred = fact.split("(")[0]
@@ -96,6 +96,16 @@ def partition_into_subtheories(theory: Theory) -> list[Theory]:
         if len(rules) < MIN_SUBTHEORY_SIZE:
             current_rules.extend(rules)
             current_facts |= facts
+            if len(current_rules) >= MAX_SUBTHEORY_SIZE:
+                st = Theory()
+                for f in current_facts:
+                    st.add_fact(f)
+                for r in current_rules:
+                    st.add_rule(r)
+                if len(st.rules) >= MIN_SUBTHEORY_SIZE:
+                    subtheories.append(st)
+                current_rules = []
+                current_facts = set()
             continue
 
         if len(rules) > MAX_SUBTHEORY_SIZE:
@@ -129,8 +139,6 @@ def partition_into_subtheories(theory: Theory) -> list[Theory]:
         current_facts |= facts
 
     if current_rules:
-        for r in unassigned_rules:
-            current_rules.append(r)
         st = Theory()
         for f in current_facts:
             st.add_fact(f)
@@ -156,17 +164,32 @@ def partition_into_subtheories(theory: Theory) -> list[Theory]:
                 if len(sub.rules) >= MIN_SUBTHEORY_SIZE:
                     final.append(sub)
 
-    # Trim facts in all sub-theories to only those relevant to rules
-    trimmed = []
+    # For sub-theories containing defeaters, pull in rules that derive
+    # the defeated predicate so that anomalies are actually derivable.
+    all_rules_by_head: dict[str, list[Rule]] = defaultdict(list)
+    for r in theory.rules:
+        hp = r.head.split("(")[0].lstrip("~")
+        all_rules_by_head[hp].append(r)
+
+    enriched = []
+    all_facts = set(theory.facts)
     for st in final:
+        defeaters = [r for r in st.rules if r.rule_type == RuleType.DEFEATER]
+        if defeaters:
+            needed_preds = {d.head.split("(")[0].lstrip("~") for d in defeaters}
+            for pred in needed_preds:
+                for r in all_rules_by_head.get(pred, []):
+                    if r not in st.rules:
+                        st.add_rule(r)
+
         trimmed_st = Theory()
         for r in st.rules:
             trimmed_st.add_rule(r)
-        _add_relevant_facts(trimmed_st, st.facts)
+        _add_relevant_facts(trimmed_st, all_facts)
         if len(trimmed_st.rules) >= MIN_SUBTHEORY_SIZE:
-            trimmed.append(trimmed_st)
+            enriched.append(trimmed_st)
 
-    return trimmed
+    return enriched
 
 
 def _add_relevant_facts(theory: Theory, all_facts: set[str]) -> None:

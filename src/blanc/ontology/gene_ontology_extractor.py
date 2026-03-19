@@ -300,6 +300,18 @@ class GeneOntologyExtractor:
                 },
             ))
 
+        for go_id in self.terms:
+            norm = self._normalize_go_id(go_id)
+            theory.add_fact(f"{norm}({norm})")
+
+        grounded_genes: Set[str] = set()
+        for gene, _, _ in self.positive_annotations:
+            grounded_genes.add(self._normalize_name(gene))
+        for gene, _, _ in self.negative_annotations:
+            grounded_genes.add(self._normalize_name(gene))
+        for gene_norm in sorted(grounded_genes):
+            theory.add_fact(f"{gene_norm}({gene_norm})")
+
         return theory
 
     def get_taxonomy(self) -> Dict[str, Set[str]]:

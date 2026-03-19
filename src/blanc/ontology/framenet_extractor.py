@@ -181,6 +181,7 @@ class FrameNetExtractor:
 
         for frame_data in self.frames:
             frame_norm = _normalize(frame_data["name"])
+            theory.add_fact(f"{frame_norm}({frame_norm})")
             for fe in frame_data["fes"]:
                 fe_norm = _normalize(fe["name"])
                 core_type = fe["core_type"]
