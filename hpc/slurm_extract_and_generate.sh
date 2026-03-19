@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=128G
 #SBATCH --partition=amilan
+#SBATCH --qos=normal
 
 # DeFAb Dataset Generation on CURC Alpine
 #

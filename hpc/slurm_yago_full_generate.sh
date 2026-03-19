@@ -2,12 +2,13 @@
 #SBATCH --job-name=defab_yago
 #SBATCH --output=logs/yago_full_%j.out
 #SBATCH --error=logs/yago_full_%j.err
-#SBATCH --time=48:00:00
+#SBATCH --time=7-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=32
-#SBATCH --mem=256G
-#SBATCH --partition=amilan
+#SBATCH --cpus-per-task=48
+#SBATCH --mem=1000000M
+#SBATCH --partition=amem
+#SBATCH --qos=mem
 
 # DeFAb YAGO Full Instance Generation on CURC Alpine
 #
