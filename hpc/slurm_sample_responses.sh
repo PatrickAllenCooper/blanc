@@ -119,18 +119,27 @@ python -m vllm.entrypoints.openai.api_server \
 VLLM_PID=$!
 
 echo "vLLM PID: $VLLM_PID"
-echo "Waiting for server to be ready..."
+echo "Waiting for server to be ready (up to 30 min for large models)..."
 
-for i in $(seq 1 60); do
+SERVER_READY=0
+for i in $(seq 1 360); do
     if curl -sf "http://localhost:$VLLM_PORT/health" >/dev/null 2>&1; then
-        echo "Server ready after ${i}s"
+        echo "Server ready after $((i * 5))s"
+        SERVER_READY=1
         break
+    fi
+    if ! kill -0 $VLLM_PID 2>/dev/null; then
+        echo "ERROR: vLLM process died during startup"
+        exit 1
+    fi
+    if [ $((i % 12)) -eq 0 ]; then
+        echo "  Still waiting... ($((i * 5))s elapsed)"
     fi
     sleep 5
 done
 
-if ! curl -sf "http://localhost:$VLLM_PORT/health" >/dev/null 2>&1; then
-    echo "ERROR: vLLM server did not start in time"
+if [ $SERVER_READY -eq 0 ]; then
+    echo "ERROR: vLLM server did not start in 30 minutes"
     kill $VLLM_PID 2>/dev/null || true
     exit 1
 fi
