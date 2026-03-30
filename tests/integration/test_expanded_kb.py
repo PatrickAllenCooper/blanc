@@ -204,27 +204,33 @@ class TestComposedKBValidation:
         clean = deduplicate_theory(theory)
         report = validate_theory(clean)
         assert report.is_healthy
-        assert report.defeasible_rules >= 80
-        assert report.defeaters >= 30
+        assert report.defeasible_rules >= 150
+        assert report.defeaters >= 70
         assert report.strict_rules >= 900
+        assert report.superiority_count >= 20
+        assert report.multi_body_rules >= 25
 
     def test_legal_kb_validates_healthy(self):
         from examples.knowledge_bases.legal_kb import create_legal_kb
         theory = create_legal_kb(include_instances=False)
         report = validate_theory(theory)
         assert report.is_healthy
-        assert report.defeasible_rules >= 40
-        assert report.defeaters >= 25
+        assert report.defeasible_rules >= 90
+        assert report.defeaters >= 55
+        assert report.superiority_count >= 10
+        assert report.multi_body_rules >= 15
 
     def test_materials_kb_validates_healthy(self):
         from examples.knowledge_bases.materials_kb import create_materials_kb
         theory = create_materials_kb(include_instances=False)
         report = validate_theory(theory)
         assert report.is_healthy
-        assert report.defeasible_rules >= 50
-        assert report.defeaters >= 25
+        assert report.defeasible_rules >= 90
+        assert report.defeaters >= 55
+        assert report.superiority_count >= 10
+        assert report.multi_body_rules >= 15
 
-    def test_combined_rule_count_exceeds_2500(self):
+    def test_combined_rule_count_exceeds_3000(self):
         from examples.knowledge_bases.biology_kb import create_biology_kb
         from examples.knowledge_bases.legal_kb import create_legal_kb
         from examples.knowledge_bases.materials_kb import create_materials_kb
@@ -234,4 +240,4 @@ class TestComposedKBValidation:
         mat = create_materials_kb(include_instances=False)
 
         total = len(bio.rules) + len(legal.rules) + len(mat.rules)
-        assert total >= 2500
+        assert total >= 3000

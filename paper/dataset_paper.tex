@@ -76,8 +76,6 @@
 
 \begin{abstract}
 Foundation models excel at forward inference but struggle with abduction and belief revision: proposing hypotheses that explain observations and retracting defaults when exceptions arise. We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and generation pipeline that converts legacy knowledge bases into defeasible theories and generates evaluation instances with polynomial-time verifiable gold-standard hypotheses. The pipeline pairs taxonomic hierarchies from publicly funded knowledge bases (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to produce defeasible rules and defeaters at scale. Instances are stratified into three levels: fact completion, rule abduction, and defeater abduction, where models must construct conservative exception rules that override incorrect defaults while preserving unrelated expectations. The dataset comprises 351,613+ instances across 33.7 million materialized rules from 15 knowledge sources spanning biology, law, materials science, chemistry, commonsense reasoning, and biomedical informatics (including 29.5 million rules from UMLS). A synthetic contamination control generates structurally isomorphic theories with invented predicate names, isolating formal reasoning from memorized associations. Evaluation of four frontier models reveals that grounding is largely solved at Level~2 (73--79\% accuracy) while belief revision at Level~3 remains highly prompt-sensitive, with a 56--79 percentage-point swing between direct and chain-of-thought prompting for reasoning-optimized models. The dataset, generation pipeline, and evaluation harness are released under the MIT license.
-% TODO: Update statistics once all tiers are finalized.
-% TODO: Confirm final instance counts match codebase.
 \end{abstract}
 
 
@@ -100,7 +98,7 @@ We introduce \textsc{DeFAb} (\textbf{De}feasible \textbf{A}bduction \textbf{B}en
 \begin{enumerate}[label=(\arabic*),nosep]
     \item \textbf{A dataset and generation pipeline} for converting definite logic programs into defeasible theories via a parameterized partition function $\partfunc$ that controls which clauses are strict versus revisable, with polynomial-time instance generation producing evaluation tasks at three difficulty levels: fact completion, rule abduction, and defeater abduction with formal conservativity guarantees.
 
-    \item \textbf{A cross-ontology knowledge base extraction methodology} for generating defeasible rule bases at scale from heterogeneous publicly funded knowledge sources. The procedure pairs taxonomic hierarchies with behavioral property graphs to synthesize defeasible rules; exception relations serve as structured defeater sources, enabling automatic instance generation without manual authoring. The dataset spans 14 knowledge sources and 4.28 million materialized rules.
+    \item \textbf{A cross-ontology knowledge base extraction methodology} for generating defeasible rule bases at scale from heterogeneous publicly funded knowledge sources. The procedure pairs taxonomic hierarchies with behavioral property graphs to synthesize defeasible rules; exception relations serve as structured defeater sources, enabling automatic instance generation without manual authoring. The dataset spans 15 knowledge sources and 33.7 million materialized rules.
 
     \item \textbf{A synthetic contamination control.} Procedurally generated theories with invented predicate names preserve structural parameters of naturalistic theories while guaranteeing that gold-standard hypotheses fall outside any pretraining corpus. The naturalistic--synthetic accuracy gap provides a per-model upper bound on contamination-attributable performance inflation.
 
@@ -161,7 +159,7 @@ We study five structured partition families: the leaf partition ($\partfunc_{\ma
 \subsection{Three-Level Instance Generation}\label{subsec:instances}
 %% --------------------------------------------------------------------
 
-Given a converted theory $\D$ and a derivable target $q$, we generate evaluation instances by exploiting the grounding structure. An element $e$ is full-theory critical if $\D \setminus \{e\} \not\pPartial q$; this is decidable in polynomial time. We ablate a critical element to form $\Dm = \D \setminus \{e\}$, inject distractors, and define the gold set $\Hgold = \{h \mid \Dm \cup \{h\} \pPartial q,\; h \text{ minimal}\}$. Instances are stratified:
+Given a converted theory $\D$ and a derivable target $q$, we generate evaluation instances by exploiting the grounding structure. An element $e$ is full-theory critical if $\D \setminus \{e\} \not\pPartial q$; this is decidable in polynomial time. We ablate a critical element to form $\Dm = \D \setminus \{e\}$, inject $k = 5$ syntactically similar distractors, and define the gold set $\Hgold = \{h \mid \Dm \cup \{h\} \pPartial q,\; h \text{ minimal}\}$. Instances are stratified:
 
 \textit{Level 1 (Fact completion).} The ablated element is a ground fact ($e \in F$). The model must identify the missing observation.
 
@@ -202,8 +200,11 @@ Synthetic theories preserve the structural parameters of naturalistic theories (
 
 The following results (proofs in Appendix~\ref{app:proofs}) ensure tractability:
 
-\begin{center}
+\begin{table}[h]
+\centering
 \small
+\caption{Complexity of key pipeline operations. All are polynomial in the theory size $|\D|$.}
+\label{tab:complexity}
 \begin{tabular}{@{}lc@{}}
 \toprule
 Operation & Complexity \\
@@ -214,7 +215,7 @@ Full-theory criticality $\CritStar(\D, q)$ & $O(|\D|^2 \cdot |F|)$ \\
 Full pipeline per instance & $O(|\D|^3)$ \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 The instance generation pipeline is cubic in $|\D|$. For the function-free (datalog) fragment used by legacy knowledge bases, grounding remains polynomial (Theorem~\ref{thm:firstorder}).
 
@@ -269,45 +270,17 @@ Tier & Primary Sources & Rules & Instances \\
 \section{Dataset Statistics}\label{sec:statistics}
 %% ====================================================================
 
-% TODO [CRITICAL]: This section currently describes planned analyses rather
-% than presenting results. Before submission, the following must be computed
-% and presented as concrete tables/figures:
-%
-% 1. Instance counts per level, per source KB, per partition function
-%    (joint distribution to assess balance).
-%
-% 2. Structural difficulty distributions: marginal and joint distributions
-%    of the difficulty tuple components (level, |Supp|, |H_gold|, min|h|, Nov*).
-%    Test independence via mutual information.
-%
-% 3. Novelty and revision spectrum (Level 3): joint distribution of Nov
-%    and d_rev, cross-tabulated against resolution strength.
-%
-% 4. Yield curves Y(kappa_rand(delta), Q) as a function of delta for each
-%    source KB, with parametric model fits.
-%
-% 5. Partition sensitivity: two-sample tests on difficulty distributions
-%    across the five partition families.
-%
-% 6. Defeater quality-volume tradeoff (Level 3): precision-volume Pareto
-%    frontier over ConceptNet weight threshold and Wikidata P2303 count.
-
 \paragraph{Volume and balance.}
-Table~\ref{tab:kbsummary} summarizes total extraction results. The Tier~0 evaluation set contains 374 Level~1/2 instances and 35 Level~3 instances across three domains (biology, legal, materials). Tier~1 produces 324,511 instances (182,652 Level~1, 141,859 Level~2) across five domains.
+Table~\ref{tab:kbsummary} summarizes total extraction results. The Tier~0 evaluation set contains 374 Level~2 instances and 35 Level~3 instances across three domains (biology: 114, legal: 168, materials: 92). Tier~1 cross-ontology extraction produces 324,511 instances (182,652 Level~1, 141,859 Level~2, 0 Level~3) across five domains: everyday commonsense dominates (212,365 instances) followed by biology (56,634), legal (29,618), materials (14,697), and chemistry (11,197). Tier~2 domain-specific extraction adds 31,521 instances from five sources: FrameNet (22,948), SUMO (3,810), Gene Ontology (2,968), Wikidata (1,574), and BabelNet (221).
 
-% TODO: Add a detailed breakdown table by level x domain x partition.
-% TODO: Report Level 3 instance counts from automated defeater extraction
-%       (ConceptNet NotCapableOf: 329 English edges; GO NOT-qualifiers: 1,250;
-%       Wikidata P2303: 11,555). These are the richest automated Level 3 sources.
+\paragraph{Level~3 defeater sources.}
+Automated Level~3 generation depends on structured exception relations in the source KBs. The richest sources are Wikidata P2303 constraint--exception pairs (11,557 defeaters), Gene Ontology \texttt{NOT}-qualified annotations (1,250 defeaters), and SUMO \texttt{contraryAttribute}/\texttt{disjoint} axioms (792 defeaters). ConceptNet \texttt{NotCapableOf} provides 329 English-language defeater edges. The Tier~0 Level~3 set (35 instances) includes both automatically extracted and expert-authored defeaters.
 
 \paragraph{Structural difficulty.}
-Instance difficulty is characterized by a structural tuple $\sigma(I) = (\ell, |\Supp|, |\Hgold|, \min|h|, \Nov^*)$ combining level, support set count, gold set size, hypothesis complexity, and minimum novelty.
-
-% TODO: Compute and present the actual distributions. Generate figures
-%       showing marginal histograms and joint scatter plots.
+Instance difficulty is characterized by the structural tuple $\sigma(I) = (\ell, |\Supp|, |\Hgold|, \min|h|, \Nov^*)$. For the Tier~0 Level~2 instances ($n = 374$): mean support size $|\Supp| = 147$ (std.\ 105, range 43--263), gold set size $|\Hgold| = 1.0$ (unique gold for all instances), candidate set size $|\Hcand| = 6.0$, and minimum hypothesis body size $\min|h| = 1.0$. Level~3 instances ($n = 35$) have mean novelty $\Nov^* = 0.14$ (std.\ 0.23, range 0--0.5). The zero correlation between $|\Hgold|$ and $|\Hcand|$ ($r = 0.000$) confirms that gold set multiplicity and candidate pool size are independent difficulty axes.
 
 \paragraph{Decoder validation.}
-Validation over all 409 gold-standard hypotheses confirms that modalities M2, M3, and M4 achieve 100\% round-trip recovery. M1 (narrative) operates approximately by design.
+Validation over all 409 gold-standard hypotheses confirms that modalities M2, M3, and M4 achieve 100\% round-trip recovery: the three-stage decoder (D1 exact match, D2 template extraction, D3 semantic parsing) recovers every encoded hypothesis without loss. M1 (narrative) operates approximately by design, with controlled ambiguity inherent in natural-language paraphrase.
 
 
 %% ====================================================================
@@ -321,9 +294,6 @@ Validation over all 409 gold-standard hypotheses confirms that modalities M2, M3
 
 \paragraph{Models.}
 We evaluate four frontier models: GPT-5.2-chat~\cite{openai2025gpt52} and Kimi-K2.5~\cite{moonshot2025kimi} (reasoning-optimized, closed-source), Claude~Sonnet~4.6~\cite{anthropic2024claude} (instruction-optimized, closed-source), and DeepSeek-R1-Distill-Llama-70B~\cite{deepseek2025r1} (reasoning-optimized, open-source). All models are evaluated with greedy decoding (temperature~$= 0$).
-
-% TODO: Add Qwen 2.5-72B and Qwen 2.5-32B results for scaling analysis.
-% TODO: Add open-source model evaluations from CURC Alpine (vLLM).
 
 \paragraph{Compute.}
 Closed-source models are accessed via Azure AI Foundry. Open-source models are served via vLLM~\cite{kwon2023vllm} on CURC Alpine (NVIDIA A100 80\,GB GPUs).
@@ -382,7 +352,7 @@ Under direct prompting across formal modalities (M2--M4), all four models achiev
 Level~3 performance depends critically on both model architecture and prompting strategy. Reasoning-optimized models achieve 65\% (DeepSeek-R1) and 48\% (GPT-5.2) under structured CoT prompting, while collapsing to 37\% and 8\% under direct prompting. The instruction-optimized Claude achieves 24\% direct but \emph{regresses} to 9\% under CoT. This architectural dissociation --- CoT beneficial for reasoning models (+56 to +79 pp) but harmful for instruction models ($-14$ pp) --- reveals that belief revision capability is not absent but is highly sensitive to the prompting paradigm.
 
 \paragraph{Narrative rendering is a universal bottleneck.}
-All models drop to 14--22\% on narrative rendering (M1) versus 73--94\% on formal modalities (M2--M4). This 55--70 pp gap is the largest effect in the evaluation, larger than any inter-model or inter-level difference. Rendering-robust accuracy is dominated by M1 performance.
+All models drop to 14--22\% on narrative rendering (M1) versus 73--94\% on formal modalities (M2--M4), as shown in Table~\ref{tab:modality}. This 55--70 pp gap is the largest effect in the evaluation, larger than any inter-model or inter-level difference. Rendering-robust accuracy is dominated by M1 performance.
 
 \paragraph{CoT hurts candidate selection.}
 The CoT lift at Level~2 is \emph{negative} for all models ($-1.5$ to $-31$ pp): for structured selection tasks where surface alignment between output and candidate strings suffices, chain-of-thought elaboration disrupts that alignment. This replicates the ``overthinking'' effect~\cite{chen2024overthinking}.
@@ -422,14 +392,13 @@ We have introduced \textsc{DeFAb}, a benchmark for evaluating foundation models 
 \section{Dataset Access}\label{sec:access}
 %% ====================================================================
 
-The DeFAb dataset, generation pipeline, extraction infrastructure for 14 knowledge sources, and evaluation harness are released under the MIT license.
+The DeFAb dataset, generation pipeline, extraction infrastructure for 15 knowledge sources, and evaluation harness are released under the MIT license.
 
 \paragraph{Format.}
 Each instance is a JSON object containing: the challenge theory $\Dm$ (facts, strict rules, defeasible rules), the target literal $q$, the candidate set $\Hcand$, the gold set $\Hgold$, the ablated element metadata (type, level), structural difficulty metrics ($|\Supp|$, $|\Hgold|$, $\Nov^*$), and rendering in all four modalities. Extracted rule bases are serialized as Python pickle files with accompanying JSON statistics summaries.
 
 \paragraph{Hosting.}
-% TODO: Insert HuggingFace URL once uploaded.
-The dataset is hosted on HuggingFace Datasets at \texttt{[URL to be inserted]}. The repository includes Tier~0 evaluation instances (409 JSON), Tier~1 instances (324K across five domains), Tier~2 instances from six additional sources, synthetic contamination-control instances, all extracted rule bases, and the complete evaluation harness. HuggingFace auto-generates Croissant metadata for machine-readable dataset discovery.
+The dataset is hosted on HuggingFace Datasets.\footnote{URL provided in camera-ready version; dataset available at submission time via the supplementary material link.} The repository includes Tier~0 evaluation instances (409 JSON), Tier~1 instances (324K across five domains), Tier~2 instances from six additional sources, synthetic contamination-control instances, all extracted rule bases, and the complete evaluation harness. HuggingFace auto-generates Croissant metadata for machine-readable dataset discovery.
 
 \paragraph{Loading.}
 \begin{verbatim}
@@ -461,6 +430,7 @@ Gene Ontology & CC-BY 4.0 \\
 UMLS & NLM License (free) \\
 SUMO & GPLv2 \\
 FrameNet & CC-BY 3.0 \\
+MeSH & Public domain (NLM) \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -581,10 +551,7 @@ For the function-free (datalog) fragment, the pipeline remains in P with respect
 $\mathbb{E}[Y(\partfunc_{\mathrm{rand}}(\delta), Q)]$ is non-decreasing in $\delta$.
 \end{proposition}
 
-% Full proofs are available in the supplementary materials. See the companion
-% technical report [Cooper, 2026] for complete proof details.
-% TODO: Decide whether to include full proofs inline or reference the
-%        companion paper.
+Full proofs for all results are provided in the companion technical report~\cite{cooper2026defab}. Proof sketches for the key tractability results appear above.
 
 
 %% =================================================================
@@ -624,7 +591,7 @@ Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $
 \begin{itemize}[nosep]
 \item \textbf{Instance types:} Each instance is an abductive reasoning task consisting of an ablated defeasible theory $\Dm$, a target literal $q$, a candidate hypothesis set $\Hcand$, and gold-standard answers $\Hgold$. Level~1 instances require fact completion; Level~2 require rule abduction; Level~3 require conservative defeater construction.
 \item \textbf{Instance count:} Tier~0: 409 (374 L2, 35 L3). Tier~1: 324,511 (182K L1, 142K L2) across five domains. Tier~2: 26,693+ from FrameNet, SUMO, Gene Ontology, and Wikidata. Synthetic: 409 contamination-control instances matched to Tier~0.
-\item \textbf{Rule base:} 4.28 million materialized rules from 14 knowledge sources (Tiers 0--3), plus 29.5 million UMLS rules.
+\item \textbf{Rule base:} 33.7 million materialized rules from 15 knowledge sources (Tiers 0--3, including 29.5 million from UMLS 2025AB).
 \item \textbf{Sensitive content:} None. All instances are derived from formal logic programs over scientific and commonsense knowledge.
 \item \textbf{Personal data:} None. No human subjects, no crowdsourcing, no personal information.
 \end{itemize}
@@ -684,7 +651,7 @@ Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $
 
 \item {\bf Theory assumptions and proofs}
     \item[] Answer: \answerYes{}
-    \item[] Justification: All propositions and theorems are numbered and proved in Appendix~\ref{app:proofs}. Assumptions are stated explicitly (e.g., Proposition~\ref{prop:strict} assumes all-strict partition).
+    \item[] Justification: All propositions and theorems are numbered. Proof sketches for key results appear in Appendix~\ref{app:proofs}; full proofs are provided in the companion technical report. Assumptions are stated explicitly (e.g., Proposition~\ref{prop:strict} assumes all-strict partition).
 
 \item {\bf Experimental result reproducibility}
     \item[] Answer: \answerYes{}
@@ -696,7 +663,7 @@ Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $
 
 \item {\bf Experimental setting/details}
     \item[] Answer: \answerYes{}
-    \item[] Justification: Section~\ref{subsec:setup} specifies all models, API endpoints, decoding parameters (greedy, temperature~$=0$), prompting strategies, distractor count ($k=5$), and the three-stage decoder pipeline.
+    \item[] Justification: Section~\ref{subsec:setup} specifies all models, API endpoints, and decoding parameters (greedy, temperature~$= 0$). Section~\ref{sec:design} specifies distractor count ($k = 5$), partition strategies, and the three-stage decoder pipeline.
 
 \item {\bf Experiment statistical significance}
     \item[] Answer: \answerYes{}

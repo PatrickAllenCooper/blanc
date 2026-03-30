@@ -1,175 +1,131 @@
-# BLANC: Defeasible Abduction Benchmark
+# DeFAb: Defeasible Abduction Benchmark
 
-Expert-curated knowledge bases for evaluating foundation models on grounded abductive reasoning.
+A dataset and generation pipeline for evaluating foundation models on grounded abductive reasoning, belief revision, and creative hypothesis generation.
 
-[![Tests](https://img.shields.io/badge/tests-343%20passing-brightgreen)]()
-[![Coverage](https://img.shields.io/badge/coverage-80%25-green)]()
-[![Python](https://img.shields.io/badge/python-3.11%2B-blue)]()
+**Author**: Patrick Cooper, University of Colorado Boulder
+
+**Target venue**: NeurIPS 2026 Evaluations & Datasets Track
 
 ---
 
-## Status
+## Overview
 
-**Progress**: Week 8 of 14.5 complete (55%) ✅  
-**Phase**: Evaluation infrastructure complete  
-**Tests**: 343 passing ✅  
-**Coverage**: 80% ✅
+Foundation models excel at forward inference but struggle with abduction and belief revision: proposing hypotheses that explain observations and retracting defaults when exceptions arise. DeFAb converts legacy knowledge bases into defeasible theories and generates evaluation instances with polynomial-time verifiable gold-standard hypotheses at three difficulty levels:
 
-**Current**: Week 8.5a - Cross-ontology scale validation (1 day)  
-**Major Opportunity**: 10-100x scale via OpenCyc + ConceptNet  
-**See**: [Guidance_Documents/CURRENT_STATUS_AND_PLAN.md](Guidance_Documents/CURRENT_STATUS_AND_PLAN.md)
+- **Level 1 (Fact completion)**: Identify a missing observation.
+- **Level 2 (Rule abduction)**: Reconstruct a missing generalization.
+- **Level 3 (Defeater abduction)**: Construct a conservative exception rule that overrides an incorrect default while preserving unrelated expectations.
+
+### Scale
+
+- **33.7 million materialized rules** from 15 knowledge sources
+- **356,000+ evaluation instances** across Tiers 0--2
+- **4 frontier models evaluated**: GPT-5.2-chat, Claude Sonnet 4.6, DeepSeek-R1, Kimi-K2.5
+- **Synthetic contamination control** with invented predicate names
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install dependencies
+git clone https://github.com/PatrickAllenCooper/blanc.git
+cd blanc
 pip install -r requirements.txt
-
-# Run tests
-python -m pytest tests/
-
-# Validate everything works
-python -m pytest tests/ --cov=src/blanc
-
-# When you have API keys:
-cp .env.template .env  # Add your keys
-python experiments/validate_api_keys.py
-python experiments/run_pilot_evaluation.py
+python -m pytest tests/ --tb=no -q
 ```
 
----
-
-## Key Features
-
-### Expert-Curated Knowledge
-
-**2,318 rules from 4 institutions**:
-- YAGO 4.5 (Télécom Paris, SIGIR 2024)
-- WordNet 3.0 (Princeton, Miller 1995)
-- LKIF Core (U Amsterdam, ESTRELLA)
-- MatOnto (MatPortal, MGI ecosystem)
-
-**Policy**: Expert-only (see `KNOWLEDGE_BASE_POLICY.md`)
-
-### Complete Codec Framework
-
-**All 4 Modalities**: M1-M4 (narrative to formal)  
-**All 3 Decoders**: D1-D3 (exact, template, semantic)  
-**Validation**: 75% (3 of 4 perfect)
-
-### Development Dataset
-
-**374 instances** for local iteration  
-**Production**: Millions via HPC (Weeks 13-14)
-
----
-
-## Documentation
-
-### Start Here
-- **[Guidance_Documents/CURRENT_STATUS_AND_PLAN.md](Guidance_Documents/CURRENT_STATUS_AND_PLAN.md)** - ⭐ Current status and next steps
-- **[Guidance_Documents/INTUITIVE_GUIDE.md](Guidance_Documents/INTUITIVE_GUIDE.md)** - What BLANC tests (with examples)
-
-### Implementation
-- **[Guidance_Documents/REVISED_IMPLEMENTATION_PLAN.md](Guidance_Documents/REVISED_IMPLEMENTATION_PLAN.md)** - Complete roadmap (Weeks 8.5-14)
-- **[Guidance_Documents/CROSS_ONTOLOGY_PLAN.md](Guidance_Documents/CROSS_ONTOLOGY_PLAN.md)** - 10-100x scale expansion plan
-- **[Guidance_Documents/CONTINUE_DEVELOPMENT.md](Guidance_Documents/CONTINUE_DEVELOPMENT.md)** - Development procedures
-
-### Policies
-- **[Guidance_Documents/KNOWLEDGE_BASE_POLICY.md](Guidance_Documents/KNOWLEDGE_BASE_POLICY.md)** - Expert-only KB policy (mandatory)
-
-### Archives
-- `docs/session_reports/` - Session summaries and PI reports
-- `docs/completed_weeks/` - Weekly completion reports
-
----
-
-## Testing
+### LLM Evaluation
 
 ```bash
-python -m pytest tests/              # 310+ tests
-python -m pytest tests/ --cov        # 77-80% coverage
+cp .env.template .env       # Add API keys (Azure AI Foundry, etc.)
+python experiments/validate_api_keys.py
+python experiments/run_evaluation.py --provider foundry-claude --modalities M4 M2
+```
+
+### Instance Generation
+
+```bash
+python scripts/generate_tier1_instances.py          # Tier 1 cross-ontology (324K instances)
+python scripts/generate_multitier_instances.py       # Tier 2 domain-specific
+python scripts/generate_synthetic_instances.py       # Synthetic contamination control
 ```
 
 ---
 
-## Structure
+## Knowledge Base Sources
+
+| Tier | Sources | Rules | Instances |
+|------|---------|-------|-----------|
+| 0 (baseline) | YAGO, WordNet, LKIF Core, MatOnto | 2,318 | 409 |
+| 1 (cross-ontology) | OpenCyc + ConceptNet | 289,305 | 324,511 |
+| 2 (domain-specific) | GO, MeSH, SUMO, FrameNet, Wikidata | 535,565 | 31,500+ |
+| 2+ (biomedical) | UMLS 2025AB | 29,465,582 | pending |
+| 3 (encyclopedic) | YAGO 4.5 full | 3,457,940 | pending |
+
+Source knowledge bases span 1984 (Cyc) to 2025 (UMLS 2025AB, YAGO 4.5) and include government-funded AI programs (DARPA, NSF, NIH, EU ESTRELLA), encyclopedic projects (Wikidata, DBpedia), and domain ontologies (Gene Ontology, SNOMED CT, LKIF Core).
+
+---
+
+## Baseline Evaluation Results
+
+Accuracy (%) by model and task level (formal modalities, best prompting strategy):
+
+| Model | Level 2 (Rule Abduction) | Level 3 (Defeater Abduction) |
+|-------|--------------------------|------------------------------|
+| DeepSeek-R1 | 73.7 | 65.0 (CoT: 92.9) |
+| GPT-5.2-chat | 78.5 | 47.5 (CoT: 87.1) |
+| Claude Sonnet 4.6 | 79.3 | 23.6 (direct) |
+| Kimi-K2.5 | 71.9 | 27.6 (CoT) |
+
+Key finding: Grounding is largely solved at Level 2 (73--79%). Belief revision at Level 3 is latent and highly prompt-sensitive, with a 56--79 pp swing between direct and chain-of-thought prompting for reasoning-optimized models.
+
+---
+
+## Project Structure
 
 ```
-src/blanc/          # Production code (1,712 lines)
-tests/              # 310+ tests
-examples/           # Expert KBs
-instances/          # 374 development instances
-experiments/        # Analysis and validation
-scripts/            # Reproducibility
-hpc/                # HPC infrastructure (Weeks 13-14)
+src/blanc/              Core library
+  core/                   Theory representation, rule types
+  author/                 Instance generation pipeline (the "Author Algorithm")
+  generation/             Partition functions, distractors, synthetic generator
+  ontology/               KB extractors (YAGO, GO, UMLS, Wikidata, SNOMED, etc.)
+  reasoning/              Defeasible derivation engine
+  codec/                  Rendering codecs (M1--M4 modalities)
+paper/                  LaTeX papers
+  dataset_paper.tex       NeurIPS 2026 E&D track submission
+  paper.tex               Full technical paper (includes fine-tuning + debate)
+experiments/            Evaluation pipeline, model interfaces, analysis
+instances/              Generated evaluation instances by tier
+scripts/                Data download, extraction, generation scripts
+hpc/                    SLURM scripts for CURC Alpine HPC
+tests/                  Test suite
+Guidance_Documents/     Project planning and documentation
 ```
 
 ---
 
-## Progress
+## Papers
 
-**Complete** (Weeks 1-8):
-- ✅ Expert KBs (2,318 rules from 4 peer-reviewed institutions)
-- ✅ Development dataset (374 Level 2 instances - grounding)
-- ✅ Complete codec (M1-M4 encoders, D1-D3 decoders, 75% validation)
-- ✅ Statistical analysis (Section 4.3 complete)
-- ✅ LLM evaluation infrastructure (5 models, 2 strategies, 4 modalities, caching)
-- ✅ All metrics implemented (novelty, conservativity, revision distance)
-- ✅ 343 tests passing, 80% coverage
+- **`paper/dataset_paper.tex`** -- NeurIPS 2026 Evaluations & Datasets track submission. Focused on the DeFAb dataset: generation pipeline, cross-ontology extraction, contamination control, and baseline evaluation.
 
-**Current** (Week 8.5 - CRITICAL):
-- ⏳ Level 3 instance generation (3-5 days)
-- Why: Tests novelty & belief revision (currently 0% dataset coverage)
-- Goal: 35-50 defeater abduction instances
-- See: [OBJECTIVE_ACCOUNTING.md](OBJECTIVE_ACCOUNTING.md)
-
-**Remaining** (Weeks 9-14.5):
-- Week 9: Pilot evaluation (all 3 levels)
-- Week 10: Full evaluation (grounding + novelty + belief revision)
-- Week 11-12: Advanced analyses
-- Week 13-14: HPC production + NeurIPS submission
-
-**Timeline**: ON TRACK (added 3-5 days for Level 3)
+- **`paper/paper.tex`** -- Full technical paper including fine-tuning via preference optimization (DPO, RLHF, GRPO) and adversarial defeasible debate via Monte Carlo Tree Search.
 
 ---
 
-## Citations
+## HPC (CURC Alpine)
 
-1. Suchanek et al. (2024). YAGO 4.5. SIGIR 2024.
-2. Miller, G. A. (1995). WordNet. CACM.
-3. Hoekstra et al. LKIF Core. U Amsterdam.
-4. Bryan Miller. MatOnto. matportal.org/ontologies/MATONTO
+Open-source model evaluations and large-scale instance generation run on the University of Colorado Research Computing Alpine cluster. See `hpc/` for SLURM submission scripts:
+
+- `slurm_evaluate_curc_vllm.sh` -- vLLM-based evaluation of DeepSeek-R1, Qwen 2.5
+- `slurm_gen_go.sh` -- Gene Ontology instance generation (409K rules)
+- `slurm_gen_wikidata.sh` -- Wikidata L3 defeater generation (11K defeaters)
+- `slurm_gen_umls.sh` -- UMLS subsampled generation (29.5M rules)
+- `slurm_yago_full_generate.sh` -- Full YAGO 4.5 generation (3.5M rules)
 
 ---
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
 
----
-
-## Current Focus: Level 3 Instance Generation
-
-### Week 8: Evaluation Infrastructure ✅ COMPLETE
-- 5 model interfaces (GPT-4o, Claude 3.5, Gemini 1.5, Llama 3)
-- Complete prompting (Direct + CoT for all 4 modalities)
-- Response caching and evaluation pipeline
-- 50 new tests, all passing
-
-### Week 8.5: Level 3 Instances ⏳ IN PROGRESS (Critical)
-**What**: Generate defeater abduction instances  
-**Why**: Test novelty and belief revision (paper's core claims)  
-**Goal**: 35-50 instances across 3 domains  
-**Timeline**: 3-5 days
-
-**Current gap**: 
-- Paper claims: "Grounding, Novelty, and Belief Revision"
-- Dataset coverage: Grounding (100%), Novelty (0%), Belief Revision (0%)
-- Solution: Add Level 3 instances
-
----
-
-**All details**: See [Guidance_Documents/CURRENT_STATUS_AND_PLAN.md](Guidance_Documents/CURRENT_STATUS_AND_PLAN.md)
+Source knowledge base licenses: YAGO (CC-BY 4.0), WordNet (Princeton License), LKIF Core (Apache 2.0), MatOnto (CC-BY 4.0), Wikidata (CC0 1.0), ConceptNet (CC-BY-SA 4.0), Gene Ontology (CC-BY 4.0), UMLS (NLM License), SUMO (GPLv2), FrameNet (CC-BY 3.0), MeSH (public domain).

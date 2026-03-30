@@ -26,6 +26,7 @@
 \newcommand{\Dm}{\mathcal{D}^{-}}
 \newcommand{\Dfull}{\mathcal{D}^{\mathrm{full}}}
 \newcommand{\Hgold}{\mathcal{H}^{*}}
+\newcommand{\Hcand}{\mathcal{H}_{\mathrm{cand}}}
 \newcommand{\partfunc}{\kappa}
 \newcommand{\pPartial}{\vdash_{\partial}}
 \newcommand{\pDelta}{\vdash_{\Delta}}
@@ -41,7 +42,7 @@
 \newcommand{\Cre}{\mathrm{Cre}}
 
 \title{DeFAb: Defeasible Abduction Benchmark}
-\subtitle{Grounding, Novelty, Belief Revision, and Adversarial Debate in Foundation Models}
+\subtitle{Grounding, Novelty, and Belief Revision in Foundation Models}
 \author{Patrick Cooper}
 \institute{University of Colorado Boulder}
 \date{March 2026}
@@ -136,7 +137,7 @@ The creative act requires not merely asserting the exception, but doing so via a
     \item \textbf{Facts} $F$ -- ground observations
     \item \textbf{Strict rules} $R_s$ -- invariable ($A \strictto B$)
     \item \textbf{Defeasible rules} $R_d$ -- revisable defaults ($A \defto B$)
-    \item \textbf{Defeaters} $R_{df}$ -- block but cannot support ($A \defeatto \neg B$)
+    \item \textbf{Defeaters} $R_{df}$ -- prevent a defeasible conclusion from being drawn without themselves establishing the opposite; they inject doubt, not proof ($A \defeatto \neg B$)
     \item \textbf{Superiority} $\succ$ -- acyclic priority over conflicting rules
 \end{itemize}
 \end{frame}
@@ -166,8 +167,8 @@ The creative act requires not merely asserting the exception, but doing so via a
 
     \node[lbl, below=0.1cm of kb] {YAGO, WordNet, LKIF, MatOnto + behavioral};
     \node[lbl, below=0.1cm of conv] {5 partition families};
-    \node[lbl, below=0.1cm of gen] {409 instances, 3 levels};
-    \node[lbl, below=0.1cm of eval] {4 models, 4 modalities, debate};
+    \node[lbl, below=0.1cm of gen] {1.6M--7M instances, 3 levels};
+    \node[lbl, below=0.1cm of eval] {4 models, 4 modalities};
 \end{tikzpicture}
 \end{center}
 
@@ -184,11 +185,11 @@ The creative act requires not merely asserting the exception, but doing so via a
 \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
-\textbf{Current scale}:
+\textbf{Full scale} (Tiers 0--5):
 \begin{itemize}\setlength\itemsep{1pt}
-    \item 2,318 strict + ${\sim}$280 defeasible + ${\sim}$90 defeaters
-    \item 374 Level 2 + 35 Level 3 instances
-    \item 3 domains (biology, legal, materials)
+    \item 10M--43M rules across all tiers
+    \item 1.6M--7M benchmark instances
+    \item 7+ domains (bio, legal, materials, chemistry, everyday, biomedical, encyclopedic)
     \item 4 rendering modalities (M1--M4)
 \end{itemize}
 \end{column}
@@ -302,33 +303,6 @@ Round-trip: 100\% recovery on M2--M4 over all 409 gold hypotheses.
 \section{Results: Four Frontier Models}
 % ==============================================================================
 
-\begin{frame}{Primary Accuracy Results}
-
-\small
-Four frontier models, 374 L2 + 35 L3 instances, 4 modalities, 2 strategies.
-
-\vspace{0.3em}
-\footnotesize
-\begin{tabular}{@{}lcccccc@{}}
-\toprule
-\textbf{Model} & \textbf{L2} & \textbf{L2 Direct} & \textbf{L3} & \textbf{L3 Direct} & \textbf{L3 CoT} & \textbf{Rend.-Rob.} \\
-\midrule
-DeepSeek-R1         & 73.0\% & 73.7\% & \textbf{65.0\%} & 37.1\% & \textbf{92.9\%} & \textbf{23.5\%} \\
-GPT-5.2-chat        & 62.8\% & 78.5\% & 47.5\% & 7.9\% & 87.1\% & 9.1\% \\
-Claude Sonnet 4.6   & \textbf{77.2\%} & \textbf{79.3\%} & 16.4\% & 23.6\% & 9.3\% & 15.5\% \\
-Kimi-K2.5           & 65.5\% & 71.9\% & 14.2\% & 0.8\% & 27.6\% & 7.8\% \\
-\bottomrule
-\end{tabular}
-
-\small
-\vspace{0.4em}
-\begin{itemize}\setlength\itemsep{2pt}
-    \item All McNemar tests significant ($p < 0.001$) except Claude vs.\ Kimi at L3
-    \item Symbolic solver ceiling: L2 = 100\%, L3 = 100\%
-    \item Wilson 95\% CI half-widths: $\pm$4 pp (L2), $\pm$15--17 pp (L3)
-\end{itemize}
-\end{frame}
-
 
 \begin{frame}{Finding 1: Architectural Dissociation}
 
@@ -437,28 +411,26 @@ Grounding and belief revision are \textit{distinct capabilities} not jointly acq
 
 \begin{frame}{Level 3 Graded Scoring}
 
-\small
-Five tiers decompose along stages of rational belief revision:
-\vspace{-0.1em}
 \footnotesize
-\begin{tabular}{@{}clp{6.5cm}@{}}
+Five tiers decompose along stages of rational belief revision:
+
+\vspace{0.3em}
+\begin{columns}[T]
+\begin{column}{0.55\textwidth}
+\begin{tabular}{@{}clp{4.2cm}@{}}
 \toprule
-\textbf{Score} & \textbf{Stage} & \textbf{Orient Express interpretation} \\
+\textbf{Score} & \textbf{Stage} & \textbf{Orient Express} \\
 \midrule
-0.00 & No credit & Does not block single-perpetrator conclusion \\
-0.25 & Minimal & Blocks default but violates language bias \\
-0.50 & Partial & Resolves anomaly but disrupts other facts \\
-0.75 & Substantial & Conservative weak resolution (agnostic) \\
-1.00 & Full & Conservative strong resolution (conspiracy) \\
+0.00 & No credit & Does not block single-perp. \\
+0.25 & Minimal & Blocks but violates lang.\ bias \\
+0.50 & Partial & Resolves but disrupts others \\
+0.75 & Substantial & Conservative weak (agnostic) \\
+1.00 & Full & Conservative strong (conspiracy) \\
 \bottomrule
 \end{tabular}
-
-\small
-\vspace{0.2em}
-\begin{columns}[T]
-\begin{column}{0.32\textwidth}
-\textbf{Mean graded scores}:\\[2pt]
-\footnotesize
+\end{column}
+\begin{column}{0.40\textwidth}
+\textbf{Mean graded scores}:\\[4pt]
 \begin{tabular}{@{}lc@{}}
 \toprule
 Model & Score \\
@@ -470,17 +442,153 @@ Kimi-K2.5   & 0.139 \\
 \bottomrule
 \end{tabular}
 \end{column}
-\begin{column}{0.63\textwidth}
+\end{columns}
+
+\vspace{0.5em}
 \small
 Bimodal distribution: nearly all responses score 0.0 or 1.0. Models either fully solve or completely fail --- no partial progress through intermediate stages.
-\end{column}
-\end{columns}
 \end{frame}
 
 
 % ==============================================================================
 \section{Formal Foundations}
 % ==============================================================================
+
+\begin{frame}{How Defeasible Derivation Works}
+
+\small
+Two proof modes reflect two levels of epistemic commitment:
+
+\vspace{0.3em}
+\begin{columns}[T]
+\begin{column}{0.46\textwidth}
+\textbf{\textcolor{defabblue}{Definite provability}} ($+\Delta q$)\\[3pt]
+\footnotesize
+Uses \textit{only} facts and strict rules.\\[2pt]
+Cannot be overridden by any evidence.\\[4pt]
+\textit{A penguin is a bird.}\\[2pt]
+$\texttt{penguin}(X) \strictto \texttt{bird}(X)$\\[4pt]
+\small Monotonic, certain, invariable.
+\end{column}
+\begin{column}{0.46\textwidth}
+\textbf{\textcolor{defabgold}{Defeasible provability}} ($+\partial q$)\\[3pt]
+\footnotesize
+Can use defeasible rules, but every\\counter-argument must be neutralized.\\[4pt]
+\textit{Birds typically fly.}\\[2pt]
+$\texttt{bird}(X) \defto \texttt{flies}(X)$\\[4pt]
+\small Non-monotonic, revisable, subject to defeat.
+\end{column}
+\end{columns}
+
+\vspace{0.5em}
+\textbf{Team defeat} (condition 2c of the derivation): to defeasibly prove $q$, \textit{every} attacking rule for $\neg q$ must be individually neutralized --- either its antecedent fails, or a superior rule for $q$ overrides it:
+\vspace{-0.2em}
+\[
+\forall\, s \in R_d \cup R_{df} \text{ with } C(s) = \neg q: \quad
+\bigl(\exists\, a \in A(s)\!: -\partial\, a\bigr)
+\;\lor\;
+\bigl(\exists\, t \succ s\!: +\partial\, A(t)\bigr)
+\]
+
+\vspace{-0.3em}
+\footnotesize
+This is the formal mechanism that makes belief revision tractable: the engine knows exactly which rules support which conclusions and which attacks must be overcome.
+\end{frame}
+
+
+\begin{frame}{Derivation in Action: The Penguin Problem}
+
+\small
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Theory $\D$}:\\[3pt]
+\footnotesize
+\textit{Facts}: $\texttt{penguin(tweety)}$\\[2pt]
+\textit{Strict}: $r_s\!: \texttt{penguin}(X) \strictto \texttt{bird}(X)$\\[2pt]
+\textit{Defeasible}: $r_d\!: \texttt{bird}(X) \defto \texttt{flies}(X)$\\[2pt]
+\textit{Defeater}: $r_{df}\!: \texttt{penguin}(X) \defeatto \neg\texttt{flies}(X)$\\[2pt]
+\textit{Superiority}: $r_{df} \succ r_d$\\[6pt]
+
+\small
+\textbf{Query}: Does Tweety fly?
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Derivation trace}:\\[3pt]
+\footnotesize
+\begin{enumerate}\setlength\itemsep{1pt}
+    \item $+\Delta\; \texttt{penguin(tweety)}$ \hfill [fact]
+    \item $+\Delta\; \texttt{bird(tweety)}$ \hfill [$r_s$ fires]
+    \item Try $+\partial\; \texttt{flies(tweety)}$ via $r_d$\ldots
+    \item Attack: $r_{df}$ supports $\neg\texttt{flies}$
+    \item $r_{df} \succ r_d$ --- no superior rule for \texttt{flies} overrides $r_{df}$
+    \item $-\partial\; \texttt{flies(tweety)}$ \hfill [\textbf{blocked}]
+\end{enumerate}
+
+\vspace{0.3em}
+\small
+The defeater \textit{prevents} the conclusion without \textit{establishing} $\neg\texttt{flies}$. The theory becomes agnostic.
+\end{column}
+\end{columns}
+
+\vspace{0.5em}
+\begin{center}
+\small
+Remove $r_{df}$ and its superiority $\to$ now $+\partial\; \texttt{flies(tweety)}$ succeeds.\\[2pt]
+This is exactly a \textbf{Level 3 instance}: the model must reconstruct the missing defeater.
+\end{center}
+\end{frame}
+
+
+\begin{frame}{From Theory to Mystery: The Ablation Process}
+
+\small
+Instance generation exploits the theory's grounding structure to construct evaluation puzzles:
+
+\vspace{0.3em}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=0.25cm and 0.8cm,
+    box/.style={draw, rounded corners=3pt, minimum width=2.2cm, minimum height=0.7cm, font=\scriptsize, text centered, thick},
+    arr/.style={-{Stealth[length=5pt]}, thick, defabblue},
+    lbl/.style={font=\tiny, text=gray}
+]
+    \node[box, fill=defabgreen!20] (full) {Complete $\D$};
+    \node[box, fill=defabgold!20, right=of full] (crit) {Find $\CritStar(\D, q)$};
+    \node[box, fill=defabredish!20, right=of crit] (abl) {Ablate $e$};
+    \node[box, fill=defabblue!20, right=of abl] (dist) {Add distractors};
+    \node[box, fill=defabblue!40, text=white, right=of dist] (inst) {Instance $I$};
+
+    \draw[arr] (full) -- (crit);
+    \draw[arr] (crit) -- (abl);
+    \draw[arr] (abl) -- (dist);
+    \draw[arr] (dist) -- (inst);
+
+    \node[lbl, below=0.1cm of full] {all derivations succeed};
+    \node[lbl, below=0.1cm of crit] {which elements are necessary?};
+    \node[lbl, below=0.1cm of abl] {$\Dm = \D \setminus \{e\}$};
+    \node[lbl, below=0.1cm of dist] {syntactically similar $h \notin \Hgold$};
+    \node[lbl, below=0.1cm of inst] {$(\Dm, q, \Hcand)$};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.2em}
+\begin{columns}[T]
+\begin{column}{0.48\textwidth}
+\textbf{Criticality} ($\CritStar$):\\[2pt]
+\footnotesize
+Element $e$ is critical for conclusion $q$ if removing $e$ alone breaks the derivation: $\D \setminus \{e\} \not\pPartial q$.\\[4pt]
+Decidable in $O(|\D|^2 \cdot |F|)$ --- polynomial because the defeasible theory makes its dependency structure explicit.
+\end{column}
+\begin{column}{0.48\textwidth}
+\textbf{Gold set} ($\Hgold$):\\[2pt]
+\footnotesize
+All minimal hypotheses that restore derivability:\\[2pt]
+$\Hgold = \{h \mid \Dm \cup \{h\} \pPartial q,\; h \text{ minimal}\}$\\[4pt]
+By construction, the ablated element $e \in \Hgold$. Additional valid solutions may exist (verified by the polynomial-time engine).
+\end{column}
+\end{columns}
+\end{frame}
+
 
 \begin{frame}{Defeasible Conversion and Criticality}
 
@@ -645,117 +753,15 @@ r(x, y) = \begin{cases}
 \end{frame}
 
 
-% ==============================================================================
-\section{Adversarial Defeasible Debate}
-% ==============================================================================
-
-\begin{frame}{Phase C: Adversarial Debate via MCTS}
-
-\small
-A third evaluation paradigm: place two agents in \textbf{competitive dialogue} over the derivation space of a shared defeasible theory.
-
-\vspace{0.3em}
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{Derivation search space} $\SD$:
-\begin{itemize}\setlength\itemsep{1pt}
-    \item Root = facts $F$; edges = single rule applications
-    \item UCB1 tree policy for exploration--exploitation
-    \item Finite by Herbrand base bound
-    \item MCTS with $N{=}200$ iterations, $c{=}\sqrt{2}$
-\end{itemize}
-\end{column}
-\begin{column}{0.48\textwidth}
-\textbf{Derivation reward} $\rho(C)$:
-\[
-\rho(C) = w_s \cdot \rho_{\mathrm{str}} + w_n \cdot \rho_{\mathrm{nov}}
-\]
-\begin{itemize}\setlength\itemsep{1pt}
-    \item Proponent: $(w_s, w_n) = (0.7, 0.3)$
-    \item Opponent: $(w_s, w_n) = (0.4, 0.6)$
-    \item Strength $\times$ novelty tradeoff
-\end{itemize}
-\end{column}
-\end{columns}
-
-\vspace{0.5em}
-\textbf{Key insight}: MCTS proposals are verified; challenges are standard DeFAb instances (same codec, scoring, pipeline).
-\end{frame}
-
-
-\begin{frame}{Debate Protocol and Resolution}
-
-\small
-\textbf{$K$-round adversarial debate} (Definition in paper Section 7.4):
-
-\vspace{0.3em}
-\begin{enumerate}\setlength\itemsep{3pt}
-    \item \textbf{Proposal}: Both agents run MCTS independently; proponent proposes $q_P$ with proof tree $T_P$, opponent proposes $q_O$ with $T_O$.
-    \item \textbf{Challenge}: Compute $\CritStar(\D, q)$, ablate critical element $e$, generate distractor hypotheses $\to$ standard abductive instance $I$.
-    \item \textbf{Defense}: Opposing agent receives $I$, selects $h \in \Hcand$ to restore derivability.
-    \item \textbf{Resolution}: Score defense as successful iff $h \in \Hgold$.
-\end{enumerate}
-
-\vspace{0.5em}
-\textbf{Three resolution metrics} (parallel to the paper's central triad):
-
-\vspace{0.2em}
-\footnotesize
-\begin{tabular}{@{}lp{8cm}@{}}
-\toprule
-\textbf{Metric} & \textbf{Definition} \\
-\midrule
-$\mathrm{Rob}(\mathcal{A})$ & Fraction of challenges survived (robustness) \\
-$\mathrm{Gnd}(\mathcal{A})$ & Fraction of proposals that are legitimately derivable (grounding) \\
-$\mathrm{Cre}(\mathcal{A})$ & Fraction of successful defenses with novel predicates (creativity) \\
-\bottomrule
-\end{tabular}
-
-\small
-\vspace{0.3em}
-Winner: agent with higher $0.5 \cdot \mathrm{Rob} + 0.3 \cdot \mathrm{Gnd} + 0.2 \cdot \mathrm{Cre}$.
-\end{frame}
-
-
-\begin{frame}{Debate: Formal Properties}
-
-\small
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{Theoretical results}:
-\begin{itemize}\setlength\itemsep{3pt}
-    \item \textbf{MCTS convergence}: In finite $\SD$, action values converge to optimal reward ($\epsilon$-optimality after $N_\epsilon$ iterations)
-    \item \textbf{Challenge completeness}: Any defeasibly provable $q$ with $|\CritStar| \geq 1$ yields a valid abductive instance
-    \item \textbf{Robustness monotonicity}: $\mathbb{E}[\mathrm{Rob}]$ is non-decreasing in MCTS iterations $N$
-\end{itemize}
-\end{column}
-\begin{column}{0.48\textwidth}
-\textbf{Three evaluation paradigms}:
-\begin{itemize}\setlength\itemsep{3pt}
-    \item \textbf{Direct evaluation} (Sec.~5): Fixed instances, single-pass accuracy
-    \item \textbf{Fine-tuning} (Sec.~6): Gradient-based, verifier as reward
-    \item \textbf{Debate} (Sec.~7): Competitive MCTS, adversarial perturbation
-\end{itemize}
-
-\vspace{0.3em}
-Complementary: debate generates challenging instances adaptively; fine-tuning internalizes solutions; direct evaluation provides the fixed benchmark.
-\end{column}
-\end{columns}
-
-\vspace{0.5em}
-\small
-\textbf{Toward LLM-in-the-loop debate}: Replace symbolic defense with foundation model selection $\to$ neuro-symbolic debate measuring competitive pressure on LLM robustness.
-\end{frame}
-
 
 % ==============================================================================
-\section{Contributions and Status}
+\section{Contributions}
 % ==============================================================================
 
-\begin{frame}{Seven Contributions}
+\begin{frame}{Six Contributions}
 
 \small
-\begin{enumerate}\setlength\itemsep{1pt}
+\begin{enumerate}\setlength\itemsep{4pt}
     \item \textbf{Formal grounding framework}: parameterized conversion $\phi_\partfunc$ from logic programs to defeasible theories with explicit epistemic commitments.
 
     \item \textbf{Three-level evaluation hierarchy}: fact completion $\to$ rule abduction $\to$ defeater abduction, testing grounding, novelty, and revision.
@@ -767,68 +773,25 @@ Complementary: debate generates challenging instances adaptively; fine-tuning in
     \item \textbf{Cross-ontology KB extraction}: taxonomic hierarchies paired with behavioral property graphs for rules and defeaters at scale.
 
     \item \textbf{Preference optimization pipeline}: margin DPO and VITL-RLHF exploiting the polynomial-time verifier as exact reward.
-
-    \item \textbf{Adversarial defeasible debate}: MCTS-driven competitive agents that propose, challenge, and defend derivations under adversarial proof perturbation, measuring robustness, grounding, and creativity.
 \end{enumerate}
 \end{frame}
 
 
-\begin{frame}{Project Status}
-
-\footnotesize
-\begin{columns}[T]
-\begin{column}{0.48\textwidth}
-\textbf{\textcolor{defabgreen}{Complete}}
-\begin{itemize}\setlength\itemsep{1pt}
-    \item 947 tests passing (27\% line coverage)
-    \item 409 validated instances (3 domains)
-    \item Full codec: M1--M4, D1--D3
-    \item Base evaluation: 4 frontier models
-    \item Paper Sections 1--7 with real data
-    \item Phase C: adversarial debate (MCTS, agents, protocol, Tables 7--9)
-    \item KB expansion: behavioral rules (${\sim}$370) + cross-ontology extractors
-    \item All analysis + fine-tuning scripts
-    \item SLURM orchestrator (65 jobs, dependency chains)
-\end{itemize}
-\end{column}
-\begin{column}{0.48\textwidth}
-\textbf{\textcolor{defabredish}{Remaining}}
-\begin{itemize}\setlength\itemsep{1pt}
-    \item Phase B: Fine-tuning on CURC (blocked $\to$ TP fix committed)
-        \begin{itemize}\setlength\itemsep{0pt}
-            \item B1: Response sampling (TP=2 for 70B+)
-            \item B2: DPO training (12 jobs)
-            \item B3: RLHF training (4 jobs)
-            \item B5: Checkpoint evaluation
-        \end{itemize}
-    \item Paper Tables 4--6 (awaiting B6)
-    \item Conjectures 1--4 verification
-    \item Appendix C (decoder validation)
-\end{itemize}
-\end{column}
-\end{columns}
-
-\vspace{0.3em}
-\begin{center}
-\textbf{Target}: NeurIPS 2026 \quad | \quad \textbf{Progress}: 12 of 14 weeks (86\%) \quad | \quad \textbf{Blocking}: CURC B1 resubmission
-\end{center}
-\end{frame}
 
 
 \begin{frame}{Key Takeaways}
 
 \small
-\begin{enumerate}\setlength\itemsep{1pt}
+\begin{enumerate}\setlength\itemsep{4pt}
     \item \textbf{Grounding is largely solved}: 73--79\% L2 across formal modalities.
     \item \textbf{Belief revision is latent, not absent}: reasoning models reach 65--93\% L3 under CoT; instruction models peak at 24\%.
     \item \textbf{Narrative rendering is the universal bottleneck}: 55--70 pp gap between M1 and formal modalities.
     \item \textbf{CoT helps generation, hurts selection}: ``overthinking'' at L2 vs.\ latent reasoning activation at L3.
     \item \textbf{Formal verification enables exact fine-tuning}: polynomial-time verifier as reward signal with no approximation error.
-    \item \textbf{Three complementary evaluation paradigms}: direct evaluation (fixed benchmark), fine-tuning (gradient-based), adversarial debate (competitive MCTS).
     \item \textbf{KB infrastructure scales to millions}: cross-ontology extraction from 4 decades of publicly funded knowledge engineering.
 \end{enumerate}
 
-\vspace{0.3em}
+\vspace{0.5em}
 \begin{center}
 \textbf{DeFAb measures not just whether a model can be creative,\\but whether it can be \textit{rationally} creative.}
 \end{center}

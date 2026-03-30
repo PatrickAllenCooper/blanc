@@ -71,6 +71,10 @@ venv.bak/
 dmypy.json
 .ruff_cache/
 
+# Large serialized files
+*.pkl
+*.pickle
+
 # Temporary files
 *.tmp
 *.bak
@@ -80,7 +84,10 @@ htmlcov/
 data/
 cache/
 *.json
-!instances/**/*.json
+!instances/*.json
+!instances/level3_instances.json
+!instances/instance_statistics.json
+!instances/minimal_test_instance.json
 !experiments/finetuning/ds_config_zero2.json
 !experiments/results/symbolic_baseline_*.json
 !experiments/results/partition_sensitivity.json
