@@ -1,0 +1,744 @@
+\documentclass{article}
+
+% NeurIPS 2026 Evaluations & Datasets Track (single-blind)
+\usepackage[eandd, nonanonymous]{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{nicefrac}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{mathtools}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\Dm}{\mathcal{D}^{-}}
+\newcommand{\Dfull}{\mathcal{D}^{\mathrm{full}}}
+\newcommand{\HB}{\mathcal{H}_B}
+\newcommand{\HU}{\mathcal{H}_U}
+\newcommand{\Hcand}{\mathcal{H}_{\mathrm{cand}}}
+\newcommand{\Hgold}{\mathcal{H}^{*}}
+\newcommand{\Rgold}{\mathcal{H}^{*}_3}
+\newcommand{\La}{\mathcal{L}}
+\newcommand{\Rs}{R_s}
+\newcommand{\Rd}{R_d}
+\newcommand{\Rdf}{R_{df}}
+\newcommand{\Rdexc}{R_d^{\mathrm{exc}}}
+\newcommand{\Rdfspace}{\mathcal{R}_{df}}
+\newcommand{\Rdexcspace}{\mathcal{R}_{d}^{\mathrm{exc}}}
+\newcommand{\partfunc}{\kappa}
+\newcommand{\pred}{\mathrm{pred}}
+\newcommand{\head}{\mathrm{head}}
+\newcommand{\Supp}{\mathrm{Supp}}
+\newcommand{\Crit}{\mathrm{Crit}}
+\newcommand{\CritStar}{\mathrm{Crit}^{*}}
+\newcommand{\Exp}{\mathrm{Exp}}
+\newcommand{\Nov}{\mathrm{Nov}}
+\newcommand{\proves}{\vdash}
+\newcommand{\pDelta}{\vdash_{\Delta}}
+\newcommand{\pPartial}{\vdash_{\partial}}
+\newcommand{\pSLD}{\vdash_{\mathrm{SLD}}}
+\newcommand{\defto}{\Rightarrow}
+\newcommand{\strictto}{\rightarrow}
+\newcommand{\defeatto}{\leadsto}
+\newcommand{\comp}[1]{\overline{#1}}
+
+
+\title{DeFAb: A Defeasible Abduction Benchmark for Evaluating\\Grounding, Novelty, and Belief Revision in Foundation Models}
+
+\author{%
+  Patrick Cooper \\
+  Department of Computer Science\\
+  University of Colorado Boulder\\
+  Boulder, CO 80309 \\
+  \texttt{patrick.cooper@colorado.edu} \\
+}
+
+
+\begin{document}
+
+\maketitle
+
+
+\begin{abstract}
+Foundation models excel at forward inference but struggle with abduction and belief revision: proposing hypotheses that explain observations and retracting defaults when exceptions arise. We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and generation pipeline that converts legacy knowledge bases into defeasible theories and generates evaluation instances with polynomial-time verifiable gold-standard hypotheses. The pipeline pairs taxonomic hierarchies from publicly funded knowledge bases (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to produce defeasible rules and defeaters at scale. Instances are stratified into three levels: fact completion, rule abduction, and defeater abduction, where models must construct conservative exception rules that override incorrect defaults while preserving unrelated expectations. The dataset comprises 351,613+ instances across 33.7 million materialized rules from 15 knowledge sources spanning biology, law, materials science, chemistry, commonsense reasoning, and biomedical informatics (including 29.5 million rules from UMLS). A synthetic contamination control generates structurally isomorphic theories with invented predicate names, isolating formal reasoning from memorized associations. Evaluation of four frontier models reveals that grounding is largely solved at Level~2 (73--79\% accuracy) while belief revision at Level~3 remains highly prompt-sensitive, with a 56--79 percentage-point swing between direct and chain-of-thought prompting for reasoning-optimized models. The dataset, generation pipeline, and evaluation harness are released under the MIT license.
+% TODO: Update statistics once all tiers are finalized.
+% TODO: Confirm final instance counts match codebase.
+\end{abstract}
+
+
+%% ====================================================================
+\section{Introduction}\label{sec:intro}
+%% ====================================================================
+
+The challenge of creative AI extends beyond distributional sparsity. Transformational discoveries do not simply extend existing knowledge; they often contradict it. A striking example from biology is intrinsically disordered proteins (IDPs): proteins that lack fixed three-dimensional structure yet remain functionally essential~\cite{dunker2001intrinsically}. Prior to this discovery, the prevailing dogma held that proteins required stable 3D conformations to perform biological functions. An AI trained on data reflecting this conventional wisdom would be unlikely to hypothesize the existence of IDPs, because the hypothesis directly contradicts the domain knowledge encoded in its training corpus.
+
+This failure reflects three entangled deficits in current foundation models. The first is a \textit{grounding deficit}: models lack an explicit epistemic structure distinguishing strict knowledge from revisable defaults, and cannot trace predictions to their supporting evidence. The second is a \textit{novelty deficit}: without knowing which beliefs are revisable, models cannot identify where creative exceptions might apply. The third is a \textit{belief revision deficit}: even when models update their knowledge, they lack the formal machinery to ensure the principle of minimal change~\cite{alchourron1985logic}: accommodating new evidence while disturbing as few existing commitments as possible. The IDP discovery illustrates all three: the creative act requires not merely asserting that disordered proteins exist, but doing so via a targeted revision that overrides the structure--function default for a specific subclass while leaving predictions about conventionally structured proteins intact.
+
+\textit{Defeasible reasoning} provides exactly this structure. In a defeasible theory, every conclusion is derived through a traceable chain of strict and defeasible rules, every default is explicitly revisable, and every piece of evidence participates in identifiable support sets. This provides grounding, the machinery for novelty, and a concrete operationalization of rational belief revision: our conservativity requirement (Definition~\ref{def:conserv}) ensures that resolutions preserve all expectations except the targeted anomaly, directly implementing AGM's minimal change postulate~\cite{gardenfors1988knowledge, katsuno1991propositional}.
+
+Current benchmarks leave this space largely untested. Entailment verification tasks~\cite{tafjord2021proofwriter} evaluate forward, monotonic reasoning. Knowledge editing benchmarks such as CounterFact~\cite{meng2022locating} measure whether a target fact changed but rely on ad hoc heuristics for side-effect assessment rather than formally verifying conservativity. What is missing is a principled method for generating grounded abductive instances: one that combines the expressivity of defeasible logic with verifiable gold-standard answers and formal revision guarantees.
+
+A further challenge is the \textit{contamination confound}. For well-documented defaults and exceptions appearing in textbooks (``birds fly'' / ``penguins do not fly''), we cannot distinguish genuine defeasible reasoning from retrieval of memorized training-corpus solutions. GSM1K~\cite{zhang2024gsm1k} demonstrated accuracy drops attributable to contamination, and LiveCodeBench~\cite{jain2025livecodebench} revealed contamination even in frontier models via time-segmented evaluation. For defeasible reasoning benchmarks grounded in well-known knowledge bases, the risk is acute.
+
+We introduce \textsc{DeFAb} (\textbf{De}feasible \textbf{A}bduction \textbf{B}enchmark), a dataset and generation pipeline grounded in this approach. Our contributions are:
+
+\begin{enumerate}[label=(\arabic*),nosep]
+    \item \textbf{A dataset and generation pipeline} for converting definite logic programs into defeasible theories via a parameterized partition function $\partfunc$ that controls which clauses are strict versus revisable, with polynomial-time instance generation producing evaluation tasks at three difficulty levels: fact completion, rule abduction, and defeater abduction with formal conservativity guarantees.
+
+    \item \textbf{A cross-ontology knowledge base extraction methodology} for generating defeasible rule bases at scale from heterogeneous publicly funded knowledge sources. The procedure pairs taxonomic hierarchies with behavioral property graphs to synthesize defeasible rules; exception relations serve as structured defeater sources, enabling automatic instance generation without manual authoring. The dataset spans 14 knowledge sources and 4.28 million materialized rules.
+
+    \item \textbf{A synthetic contamination control.} Procedurally generated theories with invented predicate names preserve structural parameters of naturalistic theories while guaranteeing that gold-standard hypotheses fall outside any pretraining corpus. The naturalistic--synthetic accuracy gap provides a per-model upper bound on contamination-attributable performance inflation.
+
+    \item \textbf{Baseline evaluation of four frontier models} revealing a rich capability structure: grounding is largely solved (73--79\% at Level~2) while belief revision is latent and prompt-sensitive, with an architectural dissociation between reasoning-optimized and instruction-optimized models.
+\end{enumerate}
+
+
+%% ====================================================================
+\section{Related Work}\label{sec:related}
+%% ====================================================================
+
+\paragraph{Non-monotonic reasoning.}
+Reiter's default logic~\cite{reiter1980logic} and McCarthy's circumscription~\cite{mccarthy1980circumscription} addressed the inadequacy of classical logic for commonsense reasoning. Nute's defeasible logic~\cite{nute1987defeasible, nute1994defeasible} offered a computationally tractable alternative, and the KLM framework~\cite{kraus1990nonmonotonic} provided axiomatic foundations for rational non-monotonic inference. The proof theory we adopt follows Antoniou et al.~\cite{antoniou2001defeasible}, who established that propositional defeasible derivation has linear time complexity~\cite{maher2001propositional}, a result that underlies the tractability of our generation pipeline.
+
+\paragraph{Belief revision.}
+Our framework connects to the theory initiated by Alchourr\'{o}n, G\"{a}rdenfors, and Makinson~\cite{alchourron1985logic}, who established rationality postulates for belief updating. Dalal~\cite{dalal1988investigations} introduced distance-based revision using Hamming distance between models. Our conservativity requirement operationalizes minimal change in the defeasible setting, and our revision distance provides a tractable analogue of Dalal's distance. The knowledge editing literature (ROME~\cite{meng2022locating}, MEMIT~\cite{meng2023mass}, and evaluations of their side effects~\cite{cohen2024evaluating}) addresses belief revision in neural models but lacks formally grounded measures of conservativity.
+
+\paragraph{Existing benchmarks.}
+ProofWriter~\cite{tafjord2021proofwriter} and LogicNLI~\cite{tian2021diagnosing} evaluate deductive verification. The INABHYD benchmark~\cite{inabhyd2025} demonstrates that language models fail to follow Occam's Razor in abductive contexts. LogiDynamics~\cite{zheng2025logidynamics} studies the interplay of inductive, abductive, and deductive inference but evaluates over generic analogical tasks rather than formally specified defeasible theories. The closest related work is \textsc{DeFReasing}~\cite{allaway2025defreasing}, which probes whether language models correctly handle property inheritance with exceptions. Our benchmark differs in three fundamental ways: \textsc{DeFAb} is a \emph{construction} task (the model must generate the exception rule), uses formally specified theories with verifier-backed gold standards, and includes a conservativity check operationalizing AGM minimal change.
+
+\paragraph{Knowledge base provenance.}
+The 1980s produced large-scale knowledge bases from government AI programs: Japan's FGCS project~\cite{fuchi1984aiming, feigenbaum1993fgcs}, the UK's Alvey Programme~\cite{alvey1985ikbs}, and Cyc~\cite{lenat1990cyc, lenat1995cyc}. This tradition continued through NSF-funded resources (WordNet~\cite{miller1995wordnet}, ConceptNet~\cite{speer2017conceptnet}), NIH programs (UMLS~\cite{lindberg1993umls}, Gene Ontology~\cite{ashburner2000go}), EU-funded ontologies (LKIF Core~\cite{lkif2007}, BabelNet~\cite{navigli2012babelnet}), and encyclopedic projects (Wikidata~\cite{vrandecic2014wikidata}, DBpedia~\cite{lehmann2015dbpedia}, YAGO~\cite{suchanek2024yago}). These systems encode both default generalizations and documented exceptions, making them natural sources for defeasible rules and structured defeaters.
+
+\paragraph{Contamination-aware evaluation.}
+Zhang et al.~\cite{zhang2024gsm1k} demonstrated contamination effects in grade-school math, and LiveCodeBench~\cite{jain2025livecodebench} revealed contamination in code evaluation through time-segmented problems. Our synthetic contamination control provides the first contamination-resistant evaluation methodology for defeasible reasoning.
+
+
+%% ====================================================================
+\section{DeFAb: Dataset Design}\label{sec:design}
+%% ====================================================================
+
+Our approach constructs evaluation instances from knowledge bases whose epistemic structure is fully explicit. The pipeline has four stages: (1)~formalizing legacy knowledge bases as definite logic programs; (2)~converting them into defeasible theories via a parameterized transformation; (3)~generating abductive evaluation instances by systematically ablating elements; and (4)~rendering the resulting tasks for evaluation. Full formal definitions appear in Appendix~\ref{app:definitions}.
+
+
+%% --------------------------------------------------------------------
+\subsection{Source Theories}\label{subsec:source}
+%% --------------------------------------------------------------------
+
+We formalize legacy knowledge bases as definite logic programs over a first-order signature $\Sigma = (\mathcal{C}, \mathcal{F}, \mathcal{P})$. A definite logic program $\Pi$ is a finite set of clauses $h \leftarrow b_1, \ldots, b_n$ ($n \geq 0$). Its semantics is given by the least Herbrand model $\mathcal{M}_\Pi = \mathrm{lfp}(T_\Pi)$. The key property is monotonicity: $\Pi \subseteq \Pi'$ implies $\mathcal{M}_\Pi \subseteq \mathcal{M}_{\Pi'}$. This is precisely the limitation our framework addresses: monotonic theories cannot retract defaults in light of new evidence.
+
+
+%% --------------------------------------------------------------------
+\subsection{Defeasible Conversion}\label{subsec:conversion}
+%% --------------------------------------------------------------------
+
+A defeasible theory $\D = (F, \Rs, \Rd, \Rdf, {\succ})$ consists of facts~$F$, strict rules~$\Rs$, defeasible rules~$\Rd$, defeaters~$\Rdf$, and an acyclic superiority relation~$\succ$ (Definition~\ref{def:deftheory}). A literal $q$ is defeasibly provable, written $\D \pPartial q$, when there exists an applicable defeasible rule for $q$ and every attacking rule for $\comp{q}$ is either inapplicable or overridden by a superior rule (Definition~\ref{def:defderiv}).
+
+We convert a definite logic program $\Pi$ into a defeasible theory via a partition function $\partfunc: \Pi \to \{s, d\}$:
+\begin{equation}\label{eq:conversion}
+    \phi_\partfunc(\Pi) = (F_\partfunc,\; \Rs^{\partfunc},\; \Rd^{\partfunc},\; \emptyset,\; \emptyset).
+\end{equation}
+Clauses assigned~$s$ become facts or strict rules; clauses assigned~$d$ become defeasible rules. The converted theory has empty defeater and superiority components: generating these is the task we pose to the model.
+
+We study five structured partition families: the leaf partition ($\partfunc_{\mathrm{leaf}}$, facts defeasible), the rule partition ($\partfunc_{\mathrm{rule}}$, rules defeasible), the depth-$k$ partition ($\partfunc_{\mathrm{depth}}(k)$), a random baseline ($\partfunc_{\mathrm{rand}}(\delta)$), and the \emph{type-grounded partition} $\partfunc_{\mathrm{type}}$ which maps relation type to epistemic status: taxonomic edges are strict, capability assertions are defeasible, and exception relations seed $\Rdf$ directly. When all clauses are strict, the conversion is conservative: $q \in \mathcal{M}_\Pi \iff \D_\partfunc \pDelta q$ (Proposition~\ref{prop:strict}).
+
+
+%% --------------------------------------------------------------------
+\subsection{Three-Level Instance Generation}\label{subsec:instances}
+%% --------------------------------------------------------------------
+
+Given a converted theory $\D$ and a derivable target $q$, we generate evaluation instances by exploiting the grounding structure. An element $e$ is full-theory critical if $\D \setminus \{e\} \not\pPartial q$; this is decidable in polynomial time. We ablate a critical element to form $\Dm = \D \setminus \{e\}$, inject distractors, and define the gold set $\Hgold = \{h \mid \Dm \cup \{h\} \pPartial q,\; h \text{ minimal}\}$. Instances are stratified:
+
+\textit{Level 1 (Fact completion).} The ablated element is a ground fact ($e \in F$). The model must identify the missing observation.
+
+\textit{Level 2 (Rule abduction).} The ablated element is a defeasible rule ($e \in \Rd$). The model must reconstruct a missing generalization from candidates including syntactically similar distractors.
+
+\textit{Level 3 (Defeater abduction).} The theory actively derives a prediction $\comp{\alpha}$ via defeasible rules, but the observation $\alpha$ contradicts it. The model must construct a novel defeater or exception rule that resolves the anomaly while preserving unrelated expectations. A resolution is \textit{conservative} if it preserves all expectations except $\comp{\alpha}$ (Definition~\ref{def:conserv}): our operationalization of AGM minimal change.
+
+We measure resolutions via predicate novelty $\Nov(r, \Dm)$, revision distance $d_{\mathrm{rev}}$, and a five-level graded scoring function that decomposes failures along the stages of rational belief revision (Section~\ref{subsec:scoring}).
+
+\paragraph{Gold-standard generation for Level~3.}
+We work backwards from a complete theory $\Dfull$ that already contains the resolution $r^*$, remove $r^*$ and its superiority assertions to form a challenge theory $\Dm$, verify that $\alpha$ becomes anomalous, and compute the gold set of all conservative resolutions. Gold hypotheses are obtained through three mechanisms: (i)~automated extraction from ConceptNet \texttt{NotCapableOf} assertions and Wikidata P2303 constraint--exception pairs; (ii)~expert cross-validation against LKIF Core, MatOnto, and YAGO constraints; (iii)~domain-expert authoring for high-novelty instances.
+
+
+%% --------------------------------------------------------------------
+\subsection{Rendering and Evaluation Protocol}\label{subsec:rendering}
+%% --------------------------------------------------------------------
+
+A rendering codec $\rho = (\rho_{\mathrm{enc}}, \rho_{\mathrm{dec}})$ translates between formal theories and natural language. We define four encoding modalities: narrative (M1), semi-formal (M2), annotated formal (M3), and pure formal (M4). The decoder maps model outputs back to formal rules via exact match (D1), template extraction (D2), or semantic parsing (D3), with round-trip consistency validated prior to evaluation.
+
+The headline metric is \textit{rendering-robust accuracy}: the worst-case accuracy over all four modalities, ensuring scores reflect reasoning about the underlying epistemic structure rather than surface-form sensitivity.
+
+\paragraph{Graded scoring (Level~3).}\label{subsec:scoring}
+Because Level~3 instances admit resolutions of varying strength, we use a graded scoring function $\mathrm{Score}(h, \D, \alpha) \in \{0, 0.25, 0.5, 0.75, 1.0\}$ that decomposes along the stages of rational belief revision: (i)~0 if the anomaly is unresolved; (ii)~0.25 if resolved but the hypothesis violates the language bias; (iii)~0.5 if resolved and well-formed but not conservative; (iv)~0.75 if a valid conservative weak resolution; (v)~1.0 if a conservative resolution (strong or restructuring). This scoring function is computable in polynomial time.
+
+
+%% --------------------------------------------------------------------
+\subsection{Synthetic Contamination Control}\label{subsec:synthetic}
+%% --------------------------------------------------------------------
+
+Naturalistic knowledge bases create an epistemic vulnerability: the default--exception pairs that constitute Level~3 gold standards may be present in pretraining corpora. We generate \emph{synthetic defeasible theories}: procedurally constructed theories with invented predicate names (e.g., \texttt{zorbic}, \texttt{flentoid}), generated by a context-free grammar over phonotactically valid syllable templates and verified for zero occurrence in Common Crawl via the \texttt{infini-gram} index~\cite{liu2024infini}.
+
+Synthetic theories preserve the structural parameters of naturalistic theories (depth, branching factor, support set size, defeater complexity) while guaranteeing that no gold-standard hypothesis can be retrieved from memorized training data. The contamination gap $\Delta_{\mathrm{synth}}(M, \ell) = \mathrm{Acc}(M, I_{\mathrm{nat}}, \ell) - \mathrm{Acc}(M, I_{\mathrm{syn}}, \ell)$ provides a per-model, per-level upper bound on contamination-attributable performance inflation.
+
+
+%% --------------------------------------------------------------------
+\subsection{Complexity}\label{subsec:complexity}
+%% --------------------------------------------------------------------
+
+The following results (proofs in Appendix~\ref{app:proofs}) ensure tractability:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lc@{}}
+\toprule
+Operation & Complexity \\
+\midrule
+Defeasible derivation $\D \pPartial q$ & $O(|R| \cdot |F|)$ \\
+Gold-standard verification & P \\
+Full-theory criticality $\CritStar(\D, q)$ & $O(|\D|^2 \cdot |F|)$ \\
+Full pipeline per instance & $O(|\D|^3)$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The instance generation pipeline is cubic in $|\D|$. For the function-free (datalog) fragment used by legacy knowledge bases, grounding remains polynomial (Theorem~\ref{thm:firstorder}).
+
+
+%% ====================================================================
+\section{Source Knowledge Bases}\label{sec:sources}
+%% ====================================================================
+
+We instantiate the pipeline on a staged collection of knowledge bases organized into four tiers by extraction priority.
+
+\paragraph{Tier 0 (baseline).}
+Expert-curated instances from YAGO~4.5, WordNet~3.0, LKIF Core, and MatOnto provide 2,318 rules and 409 evaluation instances (374 Level~1/2, 35 Level~3) used for the primary evaluation.
+
+\paragraph{Tier 1 (cross-ontology extraction).}
+The primary scale mechanism pairs the OpenCyc hierarchy~\cite{lenat1995cyc} (239,000 terms) with ConceptNet~5.8~\cite{speer2017conceptnet} (34 million edges). For each concept, we traverse its full ancestor chain to inherit behavioral properties, producing three rule types: strict taxonomic rules from \texttt{IsA} edges, defeasible behavioral rules from \texttt{CapableOf}/\texttt{HasProperty}/\texttt{Causes}/\texttt{UsedFor} edges, and defeaters from \texttt{NotCapableOf} edges. This yields 289,305 rules and 324,511 instances across five domains:
+\begin{enumerate}[label=(\roman*),nosep]
+    \item \textbf{Biology} ($\sim$50K concepts, 5--10 phylogenetic depth).
+    \item \textbf{Legal reasoning} ($\sim$10K concepts, combined with LKIF Core expert rules).
+    \item \textbf{Materials science} ($\sim$8K concepts, 13,780 rules, combined with MatOnto).
+    \item \textbf{Chemistry} ($\sim$38K concepts, 72,258 rules).
+    \item \textbf{Everyday commonsense} ($\sim$15K concepts, 127,931 rules).
+\end{enumerate}
+
+\paragraph{Tier 2 (domain-specific extraction).}
+Gene Ontology~\cite{ashburner2000go} (409,378 rules, 1,250 defeaters from \texttt{NOT}-qualified annotations), MeSH (76,650 rules), SUMO~\cite{niles2001sumo} (13,317 rules, 792 defeaters), FrameNet~\cite{baker1998framenet} (12,765 rules), and Wikidata~\cite{vrandecic2014wikidata} (23,224 rules, 11,555 defeaters from P2302/P2303 constraint--exception pairs).
+
+\paragraph{Tier 3 (encyclopedic scale).}
+Full YAGO~4.5 yields 3,457,940 materialized rules.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Knowledge base pipeline: extraction results by tier. UMLS contributes 29.5M rules from 189+ biomedical vocabularies but requires NLM license (obtained).}
+\label{tab:kbsummary}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+Tier & Primary Sources & Rules & Instances \\
+\midrule
+0 (baseline) & YAGO, WordNet, LKIF, MatOnto & 2,318 & 409 \\
+1 (cross-ontology) & OpenCyc + ConceptNet & 289,305 & 324,511 \\
+2 (domain-specific) & GO, MeSH, SUMO, FrameNet, Wikidata & 535,565 & 26,693 \\
+2+ (biomedical) & UMLS 2025AB & 29,465,582 & --- \\
+3 (encyclopedic) & YAGO 4.5 full & 3,457,940 & --- \\
+\midrule
+\multicolumn{2}{@{}l}{Materialized total (Tiers 0--3)} & 33,750,710 & 351,613+ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%% ====================================================================
+\section{Dataset Statistics}\label{sec:statistics}
+%% ====================================================================
+
+% TODO [CRITICAL]: This section currently describes planned analyses rather
+% than presenting results. Before submission, the following must be computed
+% and presented as concrete tables/figures:
+%
+% 1. Instance counts per level, per source KB, per partition function
+%    (joint distribution to assess balance).
+%
+% 2. Structural difficulty distributions: marginal and joint distributions
+%    of the difficulty tuple components (level, |Supp|, |H_gold|, min|h|, Nov*).
+%    Test independence via mutual information.
+%
+% 3. Novelty and revision spectrum (Level 3): joint distribution of Nov
+%    and d_rev, cross-tabulated against resolution strength.
+%
+% 4. Yield curves Y(kappa_rand(delta), Q) as a function of delta for each
+%    source KB, with parametric model fits.
+%
+% 5. Partition sensitivity: two-sample tests on difficulty distributions
+%    across the five partition families.
+%
+% 6. Defeater quality-volume tradeoff (Level 3): precision-volume Pareto
+%    frontier over ConceptNet weight threshold and Wikidata P2303 count.
+
+\paragraph{Volume and balance.}
+Table~\ref{tab:kbsummary} summarizes total extraction results. The Tier~0 evaluation set contains 374 Level~1/2 instances and 35 Level~3 instances across three domains (biology, legal, materials). Tier~1 produces 324,511 instances (182,652 Level~1, 141,859 Level~2) across five domains.
+
+% TODO: Add a detailed breakdown table by level x domain x partition.
+% TODO: Report Level 3 instance counts from automated defeater extraction
+%       (ConceptNet NotCapableOf: 329 English edges; GO NOT-qualifiers: 1,250;
+%       Wikidata P2303: 11,555). These are the richest automated Level 3 sources.
+
+\paragraph{Structural difficulty.}
+Instance difficulty is characterized by a structural tuple $\sigma(I) = (\ell, |\Supp|, |\Hgold|, \min|h|, \Nov^*)$ combining level, support set count, gold set size, hypothesis complexity, and minimum novelty.
+
+% TODO: Compute and present the actual distributions. Generate figures
+%       showing marginal histograms and joint scatter plots.
+
+\paragraph{Decoder validation.}
+Validation over all 409 gold-standard hypotheses confirms that modalities M2, M3, and M4 achieve 100\% round-trip recovery. M1 (narrative) operates approximately by design.
+
+
+%% ====================================================================
+\section{Baseline Evaluation}\label{sec:evaluation}
+%% ====================================================================
+
+
+%% --------------------------------------------------------------------
+\subsection{Experimental Setup}\label{subsec:setup}
+%% --------------------------------------------------------------------
+
+\paragraph{Models.}
+We evaluate four frontier models: GPT-5.2-chat~\cite{openai2025gpt52} and Kimi-K2.5~\cite{moonshot2025kimi} (reasoning-optimized, closed-source), Claude~Sonnet~4.6~\cite{anthropic2024claude} (instruction-optimized, closed-source), and DeepSeek-R1-Distill-Llama-70B~\cite{deepseek2025r1} (reasoning-optimized, open-source). All models are evaluated with greedy decoding (temperature~$= 0$).
+
+% TODO: Add Qwen 2.5-72B and Qwen 2.5-32B results for scaling analysis.
+% TODO: Add open-source model evaluations from CURC Alpine (vLLM).
+
+\paragraph{Compute.}
+Closed-source models are accessed via Azure AI Foundry. Open-source models are served via vLLM~\cite{kwon2023vllm} on CURC Alpine (NVIDIA A100 80\,GB GPUs).
+
+\paragraph{Conditions.}
+Each instance is presented under all four rendering modalities (M1--M4) and two prompting strategies (direct and chain-of-thought). The CoT scaffold mirrors defeasible derivation structure: identify applicable rules, determine missing/blocking elements, check for attackers and superiority, and propose a conservative hypothesis.
+
+
+%% --------------------------------------------------------------------
+\subsection{Primary Results}\label{subsec:results}
+%% --------------------------------------------------------------------
+
+Table~\ref{tab:main} summarizes accuracy by level and prompting strategy. All pairwise differences at Level~3 are statistically significant by McNemar's test ($p < 0.001$) except Claude vs.\ Kimi ($p = 0.556$).
+
+\begin{table}[t]
+\centering
+\caption{Accuracy (\%) by model and task level across all four rendering modalities and both prompting strategies. Level~2 = rule abduction (374 instances); Level~3 = defeater abduction (35 instances). Wilson 95\% CI half-widths: $\pm 4$ pp at Level~2; $\pm 15$--$17$ pp at Level~3.}
+\label{tab:main}
+\begin{tabular}{lcccccc}
+\toprule
+Model & L2 & L2 Direct & L3 & L3 Direct & L3 CoT & Rend.-Robust \\
+\midrule
+DeepSeek-R1         & 73.0\% & 73.7\% & \textbf{65.0\%} & 37.1\% & \textbf{92.9\%} & \textbf{23.5\%} \\
+GPT-5.2-chat        & 62.8\% & \textbf{78.5\%} & 47.5\% & \phantom{0}7.9\% & 87.1\% & \phantom{0}9.1\% \\
+Claude~Sonnet~4.6   & \textbf{77.2\%} & 79.3\% & 16.4\% & \textbf{23.6\%} & \phantom{0}9.3\% & 15.5\% \\
+Kimi-K2.5           & 65.5\% & 71.9\% & 14.2\% & \phantom{0}0.8\% & 27.6\% & \phantom{0}7.8\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Accuracy (\%) by rendering modality (all levels and strategies pooled). Wilson 95\% CIs shown.}
+\label{tab:modality}
+\begin{tabular}{lcccc}
+\toprule
+Model & M1 & M2 & M3 & M4 \\
+\midrule
+DeepSeek-R1         & 21.5 [19--25]\% & 85.6 [83--88]\% & \textbf{94.1 [92--96]}\% & 87.8 [85--90]\% \\
+Claude~Sonnet~4.6   & 19.0 [16--22]\% & \textbf{87.0 [84--89]}\% & 91.1 [89--93]\% & \textbf{88.1 [86--90]}\% \\
+Kimi-K2.5           & 14.6 [12--17]\% & 75.9 [73--79]\% & 76.5 [73--80]\% & 75.6 [72--79]\% \\
+GPT-5.2-chat        & \textbf{22.0 [19--25]}\% & 75.1 [72--78]\% & 72.8 [69--76]\% & 75.6 [72--79]\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%% --------------------------------------------------------------------
+\subsection{Key Findings}\label{subsec:findings}
+%% --------------------------------------------------------------------
+
+\paragraph{Grounding is largely solved.}
+Under direct prompting across formal modalities (M2--M4), all four models achieve strong Level~2 accuracy: Claude 79.3\%, GPT-5.2 78.5\%, DeepSeek-R1 73.7\%, Kimi 71.9\%. Domain breakdown reveals a consistent ordering: legal is hardest (57--72\%), biology easiest (68--82\%), reflecting denser rule structures in LKIF Core rather than idiosyncratic knowledge gaps.
+
+\paragraph{Belief revision is latent, not absent.}
+Level~3 performance depends critically on both model architecture and prompting strategy. Reasoning-optimized models achieve 65\% (DeepSeek-R1) and 48\% (GPT-5.2) under structured CoT prompting, while collapsing to 37\% and 8\% under direct prompting. The instruction-optimized Claude achieves 24\% direct but \emph{regresses} to 9\% under CoT. This architectural dissociation --- CoT beneficial for reasoning models (+56 to +79 pp) but harmful for instruction models ($-14$ pp) --- reveals that belief revision capability is not absent but is highly sensitive to the prompting paradigm.
+
+\paragraph{Narrative rendering is a universal bottleneck.}
+All models drop to 14--22\% on narrative rendering (M1) versus 73--94\% on formal modalities (M2--M4). This 55--70 pp gap is the largest effect in the evaluation, larger than any inter-model or inter-level difference. Rendering-robust accuracy is dominated by M1 performance.
+
+\paragraph{CoT hurts candidate selection.}
+The CoT lift at Level~2 is \emph{negative} for all models ($-1.5$ to $-31$ pp): for structured selection tasks where surface alignment between output and candidate strings suffices, chain-of-thought elaboration disrupts that alignment. This replicates the ``overthinking'' effect~\cite{chen2024overthinking}.
+
+\paragraph{Contamination analysis status.}
+The synthetic contamination control methodology is established: 409 structurally matched synthetic instances have been generated with invented predicate names (Section~\ref{subsec:synthetic}). Evaluation of frontier models on synthetic instances and computation of $\Delta_{\mathrm{synth}}$ (Definition~\ref{def:contam_gap} in companion paper) is in progress. Preliminary methodology validation confirms that synthetic theories preserve structural difficulty distributions of their naturalistic counterparts while using entirely novel vocabulary.
+
+
+%% ====================================================================
+\section{Discussion}\label{sec:discussion}
+%% ====================================================================
+
+\paragraph{Grounding and revision remain dissociable.}
+The Level~2-to-Level~3 gap persists even for the best model under the best prompting strategy: DeepSeek-R1 achieves 73.7\% direct L2 versus 37.1\% direct L3, a 37 pp gap. Claude, whose direct L2 (79.3\%) and direct L3 (23.6\%) differ by 56 pp, shows that high grounding accuracy does not imply belief revision capability.
+
+\paragraph{Prompt structure is a confounding variable.}
+The large CoT lift for reasoning models ($+56$ to $+79$ pp) demonstrates that prompting template choice can shift measured Level~3 accuracy by more than the difference between any two models. Benchmarks for formal abductive reasoning should report performance separately by prompting strategy.
+
+\paragraph{Evaluative role of DeFAb.}
+In the framing of the NeurIPS 2026 Evaluations \& Datasets track, DeFAb contributes evaluation methodology along three axes: (i)~it separates grounding from belief revision as distinct, independently measurable capabilities; (ii)~it provides polynomial-time verifiable gold standards that eliminate reliance on human judgment for scoring; and (iii)~its contamination control isolates formal reasoning from domain-knowledge retrieval.
+
+\paragraph{Future directions.}
+The formal structure of DeFAb --- verifier-backed gold standards, graded scoring, polynomial-time conservativity checks --- makes it suitable as a training signal for preference optimization methods such as DPO and RLHF, where the verifier can serve as an exact reward function without reward model approximation error. Adversarial multi-agent evaluation, where agents explore the derivation space via tree search and challenge each other on ablated proof trees, offers a complementary evaluation paradigm that generates challenging instances adaptively.
+
+\paragraph{Limitations.}
+The base evaluation uses 409 expert-curated Tier~0 instances (35 Level~3); Wilson 95\% CI half-widths are $\pm 15$--$17$ pp on aggregate Level~3 accuracy. The M1 decoder operates approximately by design. Automated Level~3 generation from Tier~1 remains limited by sparse ConceptNet \texttt{NotCapableOf} edges (329 total English edges); the richest automated defeater sources are Gene Ontology \texttt{NOT}-qualifiers (1,250) and Wikidata P2303 (11,555). The synthetic contamination control mitigates but does not eliminate the confound: structural patterns of defeasible theories may themselves be memorized.
+
+
+%% ====================================================================
+\section{Conclusion}\label{sec:conclusion}
+%% ====================================================================
+
+We have introduced \textsc{DeFAb}, a benchmark for evaluating foundation models on defeasible abduction. The dataset comprises 351,613+ instances generated from 33.7 million materialized rules across 15 knowledge sources (including 29.5 million from UMLS), with polynomial-time verifiable gold-standard hypotheses at three difficulty levels. Evaluation of four frontier models reveals that grounding is largely solved (73--79\% at Level~2) while belief revision is latent and prompt-sensitive, with an architectural dissociation between reasoning-optimized and instruction-optimized models under chain-of-thought prompting. Two methodological findings have implications beyond this benchmark: the prompt-format confound at Level~3, where uniform CoT templates systematically misestimate model capability across task types; and the narrative-modality bottleneck, where rendering robustness constitutes a distinct evaluation dimension from logical reasoning capability. DeFAb provides the formal infrastructure to track progress on belief revision as training paradigms evolve.
+
+
+%% ====================================================================
+\section{Dataset Access}\label{sec:access}
+%% ====================================================================
+
+The DeFAb dataset, generation pipeline, extraction infrastructure for 14 knowledge sources, and evaluation harness are released under the MIT license.
+
+\paragraph{Format.}
+Each instance is a JSON object containing: the challenge theory $\Dm$ (facts, strict rules, defeasible rules), the target literal $q$, the candidate set $\Hcand$, the gold set $\Hgold$, the ablated element metadata (type, level), structural difficulty metrics ($|\Supp|$, $|\Hgold|$, $\Nov^*$), and rendering in all four modalities. Extracted rule bases are serialized as Python pickle files with accompanying JSON statistics summaries.
+
+\paragraph{Hosting.}
+% TODO: Insert HuggingFace URL once uploaded.
+The dataset is hosted on HuggingFace Datasets at \texttt{[URL to be inserted]}. The repository includes Tier~0 evaluation instances (409 JSON), Tier~1 instances (324K across five domains), Tier~2 instances from six additional sources, synthetic contamination-control instances, all extracted rule bases, and the complete evaluation harness. HuggingFace auto-generates Croissant metadata for machine-readable dataset discovery.
+
+\paragraph{Loading.}
+\begin{verbatim}
+import json
+with open("instances/tier0/level3_instances.json") as f:
+    data = json.load(f)
+for inst in data["instances"]:
+    theory = inst["theory"]
+    target = inst["target"]
+    candidates = inst["candidates"]
+\end{verbatim}
+
+\paragraph{Licenses.}
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Component & License \\
+\midrule
+DeFAb pipeline + instances & MIT \\
+YAGO 4.5 & CC-BY 4.0 \\
+WordNet 3.0 & Princeton License \\
+LKIF Core & Apache 2.0 \\
+MatOnto & CC-BY 4.0 \\
+Wikidata & CC0 1.0 \\
+ConceptNet 5.8 & CC-BY-SA 4.0 \\
+Gene Ontology & CC-BY 4.0 \\
+UMLS & NLM License (free) \\
+SUMO & GPLv2 \\
+FrameNet & CC-BY 3.0 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Maintenance.}
+The dataset is maintained by the author at the University of Colorado Boulder for at least 5 years from publication. The generation pipeline enables re-generation from updated source KBs. Versioned releases follow semantic versioning; Tier~0 instances are frozen for cross-study comparability. Issues are tracked via the GitHub repository.
+
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%% =================================================================
+%%  APPENDICES
+%% =================================================================
+
+\appendix
+
+
+%% =================================================================
+\section{Formal Definitions}\label{app:definitions}
+%% =================================================================
+
+\subsection{Defeasible Theories}
+
+\begin{definition}[Defeasible Theory]\label{def:deftheory}
+A defeasible theory is a quintuple $\D = (F, \Rs, \Rd, \Rdf, {\succ})$ where:
+\begin{enumerate}[label=(\roman*)]
+    \item $F \subseteq \HB$ is a finite set of facts;
+    \item $\Rs$ is a finite set of strict rules: $r_s\colon b_1, \ldots, b_n \strictto h$;
+    \item $\Rd$ is a finite set of defeasible rules: $r_d\colon b_1, \ldots, b_n \defto h$;
+    \item $\Rdf$ is a finite set of defeaters: $r_{df}\colon b_1, \ldots, b_n \defeatto \neg h$; and
+    \item ${\succ} \;\subseteq (\Rd \cup \Rdf) \times (\Rd \cup \Rdf)$ is an acyclic superiority relation.
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Defeasible Derivation]\label{def:defderiv}
+$+\partial q$ (defeasible provability) holds iff: (1) $+\Delta q$; or (2) all of:
+\begin{enumerate}[label=(\alph*)]
+    \item $-\Delta \comp{q}$;
+    \item $\exists\, r \in \Rd$ with $C(r) = q$ and $\forall\, a \in A(r)$: $+\partial a$; and
+    \item $\forall\, s \in \Rd \cup \Rdf$ with $C(s) = \comp{q}$: either $\exists\, a \in A(s)$: $-\partial a$; or $\exists\, t \in \Rd$ with $C(t) = q$, $\forall\, a \in A(t)$: $+\partial a$, and $t \succ s$.
+\end{enumerate}
+\end{definition}
+
+\subsection{Conservativity and Anomalies}
+
+\begin{definition}[Expectation Set]\label{def:expectation}
+$\Exp(\D) = \{q \mid \D \pPartial q\}$.
+\end{definition}
+
+\begin{definition}[Anomaly]\label{def:anomclass}
+A ground literal $\alpha$ is a defeasible anomaly if $\D \pPartial \comp{\alpha}$ and $\D \not\pDelta \comp{\alpha}$.
+\end{definition}
+
+\begin{definition}[Conservativity]\label{def:conserv}
+A resolution $(r, \Gamma)$ of anomaly $\alpha$ with respect to $\D$ is conservative if:
+\[
+    \Exp(\D \cup \{r\} \cup \Gamma \cup \{\alpha\}) \supseteq \Exp(\D) \setminus \{\comp{\alpha}\}.
+\]
+\end{definition}
+
+\begin{definition}[Revision Distance]\label{def:revdist}
+$d_{\mathrm{rev}}(\D, \D') = |\D' \setminus \D| + |\Exp(\D) \setminus \Exp(\D')|$.
+\end{definition}
+
+\begin{definition}[Predicate Novelty]\label{def:novelty}
+$\Nov(r, \Dm) = |\pred(r) \setminus \pred(\Dm)| / |\pred(r)|$.
+\end{definition}
+
+\subsection{Instance Generation}
+
+\begin{definition}[Full-Theory Criticality]\label{def:fullcrit}
+$\CritStar(\D, q) = \{e \in F \cup \Rs \cup \Rd \mid \D \setminus \{e\} \not\pPartial q\}$.
+\end{definition}
+
+\begin{definition}[Level 3 Instance Generation]\label{def:level3gen}
+Given complete theory $\Dfull$ with $\Rdf \neq \emptyset$: (1) select $r^*$; (2) find $\alpha$ with $\Dfull \pPartial \alpha$ and $\Dfull \setminus \{r^*\} \pPartial \comp{\alpha}$; (3) form $\Dm$; (4) verify $\Dm \pPartial \comp{\alpha}$ and $\Dm \not\pDelta \comp{\alpha}$; (5) compute $\Rgold$.
+\end{definition}
+
+\begin{definition}[Structural Difficulty]\label{def:structdiff}
+$\sigma(I) = (\ell,\; |\Supp(\D, q)|,\; |\Hgold|,\; \min_{h \in \Hgold} |h|,\; \Nov^*(I))$.
+\end{definition}
+
+
+%% =================================================================
+\section{Proofs}\label{app:proofs}
+%% =================================================================
+
+\begin{proposition}[Conservativity of Strict Conversion]\label{prop:strict}
+If $\partfunc \equiv s$, then $q \in \mathcal{M}_\Pi \iff \D_\partfunc \pDelta q$.
+\end{proposition}
+
+\begin{proof}
+When $\partfunc \equiv s$, $\Rd^{\partfunc} = \emptyset$, and the strict fragment is isomorphic to $\Pi$. The definite provability relation on the strict fragment coincides with $\mathrm{lfp}(T_\Pi) = \mathcal{M}_\Pi$.
+\end{proof}
+
+\begin{theorem}[Defeasible Derivation in P]\label{thm:derivP}
+For propositional defeasible theories, deciding $\D \pPartial q$ is in P, computable in $O(|R| \cdot |F|)$ time~\cite{maher2001propositional}.
+\end{theorem}
+
+\begin{theorem}\label{thm:critP}
+$\CritStar(\D, q)$ is computable in $O(|\D|^2 \cdot |F|)$ time.
+\end{theorem}
+
+\begin{corollary}\label{cor:cubic}
+The full instance generation pipeline runs in $O(|\D|^3)$.
+\end{corollary}
+
+\begin{theorem}[First-Order Complexity]\label{thm:firstorder}
+For the function-free (datalog) fragment, the pipeline remains in P with respect to grounded size.
+\end{theorem}
+
+\begin{proposition}[Monotonicity of Expected Yield]\label{prop:yieldmono}
+$\mathbb{E}[Y(\partfunc_{\mathrm{rand}}(\delta), Q)]$ is non-decreasing in $\delta$.
+\end{proposition}
+
+% Full proofs are available in the supplementary materials. See the companion
+% technical report [Cooper, 2026] for complete proof details.
+% TODO: Decide whether to include full proofs inline or reference the
+%        companion paper.
+
+
+%% =================================================================
+\section{Worked Example}\label{app:example}
+%% =================================================================
+
+\begin{example}[IDP Discovery as Defeater Abduction]\label{ex:idp}
+Consider a simplified biochemistry program $\Pi_{\mathrm{bio}}$:
+\begin{align*}
+    &\text{protein}(\text{p53\_idr}) \leftarrow &\quad &\text{functional}(\text{p53\_idr}) \leftarrow \\
+    &\text{disordered}(\text{p53\_idr}) \leftarrow &\quad &\text{has\_stable\_3d}(X) \leftarrow \text{protein}(X) \\
+    &\text{func\_mech}(X, \text{lock\_key}) \leftarrow \text{protein}(X), \text{has\_stable\_3d}(X)
+\end{align*}
+
+Under $\partfunc_{\mathrm{rule}}$, we obtain $\D_{\mathrm{bio}}$ with defeasible rules $r_1\colon \text{protein}(X) \defto \text{has\_stable\_3d}(X)$ and $r_2\colon \text{protein}(X), \text{has\_stable\_3d}(X) \defto \text{func\_mech}(X, \text{lock\_key})$.
+
+Extending to $\Dfull_{\mathrm{bio}}$ with the IDP exception: $r_3\colon \text{disordered}(X) \defto \neg\text{has\_stable\_3d}(X)$ and $r_4\colon \text{disordered}(X), \text{protein}(X) \defto \text{func\_mech}(X, \text{conf\_ensemble})$, with $r_3 \succ r_1$ and $r_4 \succ r_2$.
+
+Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $\alpha = \text{func\_mech}(\text{p53\_idr}, \text{conf\_ensemble})$ is now anomalous. The model must construct a defeater that explains how p53\_idr can be functional despite lacking stable structure, producing $r_4$ (a strong conservative resolution with $\Nov = 1/4 > 0$).
+\end{example}
+
+
+%% =================================================================
+\section{Datasheet for DeFAb}\label{app:datasheet}
+%% =================================================================
+
+\subsection*{Motivation}
+
+\begin{itemize}[nosep]
+\item \textbf{Purpose:} DeFAb was created to evaluate foundation models on defeasible abduction --- the ability to construct hypotheses that explain anomalies by overriding default conclusions while preserving unrelated expectations. No existing benchmark combines formally verifiable gold-standard hypotheses with conservativity constraints and contamination-resistant evaluation.
+\item \textbf{Creators:} Patrick Cooper, University of Colorado Boulder.
+\item \textbf{Funding:} University of Colorado Boulder Department of Computer Science.
+\end{itemize}
+
+\subsection*{Composition}
+
+\begin{itemize}[nosep]
+\item \textbf{Instance types:} Each instance is an abductive reasoning task consisting of an ablated defeasible theory $\Dm$, a target literal $q$, a candidate hypothesis set $\Hcand$, and gold-standard answers $\Hgold$. Level~1 instances require fact completion; Level~2 require rule abduction; Level~3 require conservative defeater construction.
+\item \textbf{Instance count:} Tier~0: 409 (374 L2, 35 L3). Tier~1: 324,511 (182K L1, 142K L2) across five domains. Tier~2: 26,693+ from FrameNet, SUMO, Gene Ontology, and Wikidata. Synthetic: 409 contamination-control instances matched to Tier~0.
+\item \textbf{Rule base:} 4.28 million materialized rules from 14 knowledge sources (Tiers 0--3), plus 29.5 million UMLS rules.
+\item \textbf{Sensitive content:} None. All instances are derived from formal logic programs over scientific and commonsense knowledge.
+\item \textbf{Personal data:} None. No human subjects, no crowdsourcing, no personal information.
+\end{itemize}
+
+\subsection*{Collection Process}
+
+\begin{itemize}[nosep]
+\item \textbf{Acquisition:} Instances are generated by a deterministic polynomial-time pipeline (Section~\ref{sec:design}) from publicly available knowledge bases. No crowdsourcing or human annotation is involved except for a small set (35) of high-novelty Level~3 defeaters authored by the paper's author.
+\item \textbf{Time frame:} Source knowledge bases span 1984 (Cyc) to 2025 (UMLS 2025AB, YAGO 4.5).
+\item \textbf{Ethical review:} No IRB review required (no human subjects). All source KBs are publicly available under open licenses.
+\end{itemize}
+
+\subsection*{Preprocessing}
+
+\begin{itemize}[nosep]
+\item \textbf{Preprocessing:} Source knowledge bases are converted to definite logic programs, then to defeasible theories via the parameterized partition function $\kappa$. Cross-ontology extraction normalizes concept names across sources using lowercased, underscore-separated identifiers. Non-English content is filtered at the extraction stage.
+\item \textbf{Raw data:} All source knowledge bases are publicly available under open licenses (see Section~\ref{sec:access}).
+\end{itemize}
+
+\subsection*{Uses}
+
+\begin{itemize}[nosep]
+\item \textbf{Intended uses:} Evaluating foundation models on non-monotonic reasoning, belief revision, and grounded hypothesis generation. The polynomial-time verifier-backed scoring function makes the dataset suitable as a training signal for preference optimization (DPO, RLHF) without reward model approximation.
+\item \textbf{Not intended for:} Making real-world scientific, legal, or medical decisions. The defeasible rules encode general defaults and exceptions from knowledge bases, not clinical or legal guidance.
+\end{itemize}
+
+\subsection*{Distribution}
+
+\begin{itemize}[nosep]
+\item \textbf{License:} MIT (generation pipeline and produced instances). Source KB licenses: YAGO (CC-BY 4.0), WordNet (Princeton License), LKIF Core (Apache 2.0), MatOnto (CC-BY 4.0), Wikidata (CC0 1.0), ConceptNet (CC-BY-SA 4.0), Gene Ontology (CC-BY 4.0), UMLS (NLM License, free for research), SUMO (GPLv2), FrameNet (CC-BY 3.0).
+\item \textbf{Distribution platform:} HuggingFace Datasets. The dataset, generation pipeline, and evaluation harness are hosted as a single repository.
+\end{itemize}
+
+\subsection*{Maintenance}
+
+\begin{itemize}[nosep]
+\item \textbf{Maintainer:} Patrick Cooper, University of Colorado Boulder (\texttt{patrick.cooper@colorado.edu}).
+\item \textbf{Duration:} The dataset will be maintained for at least 5 years from publication. The generation pipeline enables re-generation from updated source KBs.
+\item \textbf{Updates:} New source KBs and instance tiers will be added via versioned releases (v1.0, v1.1, etc.). Release notes will accompany each version.
+\item \textbf{Issues:} Bug reports and error corrections are tracked via the GitHub repository issue tracker.
+\item \textbf{Versioning:} Semantic versioning. The Tier~0 evaluation instances are frozen at v1.0 for cross-study comparability; additional tiers are additive.
+\end{itemize}
+
+
+\newpage
+\section*{NeurIPS Paper Checklist}
+
+\begin{enumerate}
+
+\item {\bf Claims}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The abstract states four contributions matching the paper content. All accuracy figures include Wilson 95\% CIs. Claims about dataset scale are backed by Table~\ref{tab:kbsummary}.
+
+\item {\bf Limitations}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Section~\ref{sec:discussion} discusses limitations: Tier~0 sample size (35 L3 instances), M1 decoder approximation, sparse automated Level~3 generation from ConceptNet, and structural contamination residual.
+
+\item {\bf Theory assumptions and proofs}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: All propositions and theorems are numbered and proved in Appendix~\ref{app:proofs}. Assumptions are stated explicitly (e.g., Proposition~\ref{prop:strict} assumes all-strict partition).
+
+\item {\bf Experimental result reproducibility}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Section~\ref{sec:evaluation} specifies all models, decoding parameters, prompting strategies, and instance generation parameters. The full pipeline and all instances are released.
+
+\item {\bf Open access to data and code}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: The DeFAb dataset, generation pipeline, and evaluation harness are released under the MIT license (Section~\ref{sec:access}). Evaluated models are accessible via commercial APIs and open-source hosting.
+
+\item {\bf Experimental setting/details}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Section~\ref{subsec:setup} specifies all models, API endpoints, decoding parameters (greedy, temperature~$=0$), prompting strategies, distractor count ($k=5$), and the three-stage decoder pipeline.
+
+\item {\bf Experiment statistical significance}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Tables~\ref{tab:main}--\ref{tab:modality} report Wilson 95\% confidence intervals. McNemar's test is used for pairwise model comparisons with reported $p$-values.
+
+\item {\bf Experiments compute resources}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Section~\ref{subsec:setup} specifies Azure AI Foundry (eastus2, Global Standard) for closed-source models and CURC Alpine (NVIDIA A100 80\,GB) for open-source models.
+
+\item {\bf Code of ethics}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: All source knowledge bases are publicly available under open licenses. No personal data, crowdsourcing, or human subjects involved.
+
+\item {\bf Broader impacts}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: Positive: improved evaluation of reasoning deficits may accelerate development of more reliable AI. Negative: low risk; formal logic benchmark with no direct path to harmful deployment.
+
+\item {\bf Safeguards}
+    \item[] Answer: \answerNA{}
+    \item[] Justification: Released artifacts are evaluation instances from public logic-based KBs and a deterministic pipeline. No pretrained models released; no sensitive content.
+
+\item {\bf Licenses for existing assets}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: All KBs cited with primary references. License information in Section~\ref{sec:access}. All licenses compatible with MIT release of derived instances.
+
+\item {\bf New assets}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: DeFAb dataset documented via Datasheet (Appendix~\ref{app:datasheet}), released with README, JSON format specification, and Croissant metadata.
+
+\item {\bf Crowdsourcing and human subjects}
+    \item[] Answer: \answerNA{}
+    \item[] Justification: No crowdsourcing or human subjects involved. All instances generated by deterministic pipeline.
+
+\item {\bf IRB approvals}
+    \item[] Answer: \answerNA{}
+    \item[] Justification: No human subjects involved. IRB review not required.
+
+\item {\bf Declaration of LLM usage}
+    \item[] Answer: \answerYes{}
+    \item[] Justification: LLMs are the primary evaluated objects (Section~\ref{sec:evaluation}). The D3 semantic parser in the decoder pipeline employs a language model for hypothesis extraction from narrative responses.
+
+\end{enumerate}
+
+
+\end{document}

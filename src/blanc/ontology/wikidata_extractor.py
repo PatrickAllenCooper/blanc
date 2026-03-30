@@ -298,28 +298,30 @@ LIMIT {limit}
                     ))
                     added.add(key)
 
+        seen_facts: Set[str] = set()
         for prop_uri, prop_label, ct_uri, ct_label, ex_uri, ex_label in self.constraint_exceptions:
             prop_norm = _normalize(prop_label or _qid(prop_uri))
-            ct_norm = _normalize(ct_label or _qid(ct_uri))
             ex_norm = _normalize(ex_label or _qid(ex_uri))
             if prop_norm:
-                theory.add_fact(f"{prop_norm}({prop_norm})")
-            if ct_norm:
-                theory.add_fact(f"{ct_norm}({ct_norm})")
+                f = f"has_property({prop_norm}, {prop_norm})"
+                if f not in seen_facts:
+                    theory.add_fact(f)
+                    seen_facts.add(f)
             if ex_norm:
-                theory.add_fact(f"{ex_norm}({ex_norm})")
+                f = f"isa({ex_norm}, {ex_norm})"
+                if f not in seen_facts:
+                    theory.add_fact(f)
+                    seen_facts.add(f)
 
         for qid, assertions in self.domain_assertions.items():
+            class_name = self._resolve_class_name(qid)
             for assertion in assertions:
                 item_norm = _normalize(assertion["itemLabel"] or _qid(assertion["item"]))
-                prop_norm = _normalize(assertion["propLabel"] or _qid(assertion["prop"]))
-                val_norm = _normalize(assertion["valLabel"] or _qid(assertion["val"]))
-                if item_norm:
-                    theory.add_fact(f"{item_norm}({item_norm})")
-                if prop_norm:
-                    theory.add_fact(f"{prop_norm}({prop_norm})")
-                if val_norm:
-                    theory.add_fact(f"{val_norm}({val_norm})")
+                if item_norm and class_name:
+                    f = f"isa({item_norm}, {class_name})"
+                    if f not in seen_facts:
+                        theory.add_fact(f)
+                        seen_facts.add(f)
 
         return theory
 

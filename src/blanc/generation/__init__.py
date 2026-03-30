@@ -13,6 +13,12 @@ from blanc.generation.distractor import (
     sample_fact_distractors,
     sample_rule_distractors,
 )
+from blanc.generation.synthetic import (
+    generate_synthetic_theory,
+    generate_matched_synthetic,
+    generate_vocabulary,
+    SyntheticTheoryParams,
+)
 
 __all__ = [
     "PartitionFunction",
@@ -24,4 +30,8 @@ __all__ = [
     "compute_dependency_depths",
     "sample_fact_distractors",
     "sample_rule_distractors",
+    "generate_synthetic_theory",
+    "generate_matched_synthetic",
+    "generate_vocabulary",
+    "SyntheticTheoryParams",
 ]

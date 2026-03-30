@@ -270,7 +270,7 @@ class GeneOntologyExtractor:
 
             theory.add_rule(Rule(
                 head=f"has_function({gene_norm}, {go_norm})",
-                body=(),
+                body=(f"is_gene({gene_norm})",),
                 rule_type=RuleType.DEFEASIBLE,
                 label=f"go_fn_{gene_norm}_{go_norm}",
                 metadata={
@@ -290,7 +290,7 @@ class GeneOntologyExtractor:
 
             theory.add_rule(Rule(
                 head=f"~has_function({gene_norm}, {go_norm})",
-                body=(),
+                body=(f"is_gene({gene_norm})",),
                 rule_type=RuleType.DEFEATER,
                 label=f"go_dfn_{gene_norm}_{go_norm}",
                 metadata={
@@ -302,7 +302,7 @@ class GeneOntologyExtractor:
 
         for go_id in self.terms:
             norm = self._normalize_go_id(go_id)
-            theory.add_fact(f"{norm}({norm})")
+            theory.add_fact(f"go_term({norm})")
 
         grounded_genes: Set[str] = set()
         for gene, _, _ in self.positive_annotations:
@@ -310,7 +310,7 @@ class GeneOntologyExtractor:
         for gene, _, _ in self.negative_annotations:
             grounded_genes.add(self._normalize_name(gene))
         for gene_norm in sorted(grounded_genes):
-            theory.add_fact(f"{gene_norm}({gene_norm})")
+            theory.add_fact(f"is_gene({gene_norm})")
 
         return theory
 

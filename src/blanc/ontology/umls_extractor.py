@@ -333,7 +333,7 @@ class UmlsExtractor:
             concept_name = self.concepts.get(cui, cui)
             theory.add_rule(Rule(
                 head=f"has_semantic_type({cui_norm}, {sty_norm})",
-                body=(),
+                body=(f"umls_concept({cui_norm})",),
                 rule_type=RuleType.DEFEASIBLE,
                 label=f"umls_sty_{cui_norm}_{sty_norm}",
                 metadata={
@@ -367,7 +367,7 @@ class UmlsExtractor:
 
             theory.add_rule(Rule(
                 head=f"{mapped_rel}({cui1_norm}, {cui2_norm})",
-                body=(),
+                body=(f"umls_concept({cui1_norm})",),
                 rule_type=rule_type,
                 label=f"umls_rel_{cui1_norm}_{mapped_rel}_{cui2_norm}",
                 metadata={
@@ -403,7 +403,7 @@ class UmlsExtractor:
 
             theory.add_rule(Rule(
                 head=f"~{mapped_a}({cui1_norm}, {cui2_norm})",
-                body=(),
+                body=(f"umls_concept({cui1_norm})",),
                 rule_type=RuleType.DEFEATER,
                 label=defeater_label,
                 metadata={
@@ -412,6 +412,12 @@ class UmlsExtractor:
                 },
             ))
             theory.add_superiority(defeater_label, target_label)
+
+        concept_cuis: Set[str] = set()
+        for cui in self.concepts:
+            concept_cuis.add(_cui_id(cui))
+        for cui_norm in concept_cuis:
+            theory.add_fact(f"umls_concept({cui_norm})")
 
         return theory
 

@@ -1,7 +1,7 @@
 # Comprehensive Knowledge Base Pipeline
 
 **Author**: Patrick Cooper  
-**Date**: 2026-02-18  
+**Date**: 2026-03-22  
 **Purpose**: Master plan for ingesting all government-sponsored, encyclopedic, and domain-specific knowledge bases into the DeFAb benchmark pipeline  
 **Replaces**: Partial coverage in CROSS_ONTOLOGY_PLAN.md, ALL_GOVERNMENT_KBS.md, SCALE_OPPORTUNITY.md
 
@@ -12,6 +12,40 @@
 The DeFAb benchmark is grounded in decades of publicly funded knowledge engineering. This document defines the complete KB sourcing strategy: what each source provides, how to extract defeasible rules and defeaters from it, and when to do so relative to the NeurIPS submission timeline.
 
 The core argument for the paper: a vast infrastructure of structured knowledge — spanning 1980s government AI initiatives, modern biomedical informatics programs, and global encyclopedic projects — already encodes both default generalizations and documented exceptions. DeFAb provides the first systematic pipeline for converting this infrastructure into formally grounded defeasible abduction benchmarks.
+
+---
+
+## Dataset Paper Status
+
+**Target venue**: NeurIPS 2026 Evaluations & Datasets Track (renamed from "Datasets & Benchmarks")  
+**Deadlines**: Abstract May 4, 2026; Full paper May 6, 2026  
+**Paper file**: `paper/dataset_paper.tex` (dedicated dataset paper, separate from `paper/paper.tex`)
+
+The original `paper/paper.tex` contains three papers in one (dataset, fine-tuning methods, adversarial debate). The dedicated dataset paper (`dataset_paper.tex`) focuses exclusively on the DeFAb dataset contribution with four contributions: (1) the generation pipeline, (2) the cross-ontology KB extraction, (3) the synthetic contamination control, and (4) baseline evaluation results. Fine-tuning (DPO/RLHF/GRPO) and adversarial debate (MCTS) are mentioned as future directions only.
+
+### Remaining TODOs for Dataset Paper Submission
+
+**Critical (must complete before submission):**
+- Generate and present dataset statistics tables (instance counts by level/domain/partition, difficulty distributions, novelty/revision spectra)
+- Either complete the contamination analysis (generate matched synthetic instances, compute Delta_synth) or reframe as methodology-only with results pending
+- Upload dataset to HuggingFace and obtain stable URL
+- Generate Croissant metadata JSON-LD file
+- Complete the Dataset Access section (hosting URL, loading instructions, maintenance plan)
+- Complete the Datasheet for Datasets appendix (Gebru et al. framework)
+- Download and integrate the NeurIPS 2026 LaTeX template (`neurips_2026.sty`) from https://neurips.cc/Downloads/2026
+- Complete the NeurIPS 2026 paper checklist
+
+**Important (strengthen the paper):**
+- Add Qwen 2.5-72B and Qwen 2.5-32B results for within-family scaling analysis
+- Fill in Level 3 metrics table (conservativity, novelty, revision distance columns currently placeholder)
+- Fill in error taxonomy table (currently all zeros)
+- Compute and present yield curves, partition sensitivity analysis
+- Add figures (difficulty distribution histograms, yield curves, contamination gap visualization)
+
+**Nice to have:**
+- Complete Tier 3 instance generation from full YAGO 4.5
+- Add Level 3 instances from automated defeater extraction at scale (GO NOT-qualifiers + Wikidata P2303)
+- Symbolic ceiling evaluation via clingo ASP solver
 
 ---
 
@@ -355,10 +389,14 @@ where V conflicts with C's primary classification:
 ### Phase 0: Current State (Week 12, DONE)
 - Sources: YAGO, WordNet, LKIF, MatOnto
 - Strict taxonomic rules: 2,318
-- Defeasible behavioral rules: ~280 (biology ~150, legal ~100, materials ~120 -- all three domains)
-- Defeaters: ~90 across all three domains
-- Total rules: ~2,690
+- Defeasible behavioral rules: 482 (biology 220, legal 118, materials 144)
+- Defeaters: 244 (biology 94, legal 76, materials 74)
+- Superiority relations: 55 (biology 25, legal 15, materials 15) -- lex specialis
+- Multi-body compound rules: 70 (biology 30, legal 20, materials 20) -- derivation depth 2+
+- Total rules: 3,044
+- Entity instances: 261 (biology 135, legal 61, materials 65)
 - Instances: 374 (Level 2) + 35 (Level 3)
+- Full Def 3.2 quintet: F, R_s, R_d, R_df, succ all populated
 - Infrastructure: domain profiles (5 domains), generalized extractors (ConceptNet + OpenCyc), cross-ontology combiner, rule validation framework
 
 ### Phase 1a: Cross-Ontology Proof (Day 8.5a, 1 day)
@@ -566,5 +604,14 @@ Key findings that affect implementation:
 ---
 
 **Maintained by**: Patrick Cooper  
-**Next update**: After Phase 1 proof-of-concept results  
-**See also**: CROSS_ONTOLOGY_PLAN.md, ALL_GOVERNMENT_KBS.md, CURRENT_STATUS_AND_PLAN.md
+**Next update**: After dataset paper submission (May 6, 2026)  
+**See also**: `paper/dataset_paper.tex` (the dedicated NeurIPS 2026 E&D submission)
+
+**Recent progress (2026-03-22)**:
+- UMLS 2025AB license obtained and data verified at `D:\datasets\umls-2025AB-metathesaurus-full\2025AB\META\`
+- Gene Ontology extractor fixed: annotation rules now have body predicates (was all-empty-body, producing 0 instances)
+- Wikidata theory rebuilt: facts now use `isa` and `has_property` predicates matching rule bodies
+- Synthetic theory generator built at `src/blanc/generation/synthetic.py`
+- 409 synthetic instances generated matched to Tier 0
+- `D:\datasets\DeFAb\` canonical directory structure created
+- UMLS extraction and GO/Wikidata instance regeneration running
