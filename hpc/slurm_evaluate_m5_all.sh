@@ -7,10 +7,16 @@
 #   3. CURC vLLM (aa100, 1x GPU): Qwen2.5-VL-7B-Instruct (scaling comparator)
 #
 # Prerequisites:
-#   1. ImageManifest at data/images/manifest.json
+#   1. ImageManifest at data/images/manifest.json (persistent, under /projects/)
+#      and downloaded images at /scratch/alpine/$USER/defab_images/
 #      (run: sbatch hpc/slurm_prepare_m5_images.sh)
 #   2. FOUNDRY_API_KEY exported for Foundry jobs
 #   3. vllm-env conda environment for CURC jobs
+#
+# Storage:
+#   Images        -> /scratch/alpine/$USER/defab_images/ (re-downloadable)
+#   Manifest      -> data/images/manifest.json (persistent in /projects/)
+#   Results/cache -> experiments/results/, experiments/cache/ (persistent in /projects/)
 #
 # Usage (from repo root on CURC login node):
 #   export FOUNDRY_API_KEY=<key>

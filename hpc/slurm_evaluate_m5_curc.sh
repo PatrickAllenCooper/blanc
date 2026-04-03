@@ -21,7 +21,8 @@
 # and request 1 GPU via --gres=gpu:1.
 #
 # Prerequisites:
-#   1. ImageManifest at data/images/manifest.json
+#   1. ImageManifest at data/images/manifest.json (persistent, under /projects/)
+#      and downloaded images at /scratch/alpine/$USER/defab_images/
 #      (run: sbatch hpc/slurm_prepare_m5_images.sh)
 #   2. vllm-env conda environment (CURC LLM Hoster setup)
 #

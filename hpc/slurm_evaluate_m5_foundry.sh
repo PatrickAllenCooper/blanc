@@ -17,7 +17,8 @@
 #
 # Prerequisites:
 #   1. FOUNDRY_API_KEY environment variable set (or pass --api-key)
-#   2. ImageManifest at data/images/manifest.json
+#   2. ImageManifest at data/images/manifest.json (persistent, under /projects/)
+#      and downloaded images at /scratch/alpine/$USER/defab_images/
 #      (run: sbatch hpc/slurm_prepare_m5_images.sh)
 #
 # Usage:
