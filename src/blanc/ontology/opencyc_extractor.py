@@ -188,6 +188,8 @@ class OpenCycExtractor:
 
         return theory
 
+    to_theory = to_definite_lp
+
     def get_taxonomy(self) -> Dict[str, Set[str]]:
         """Return concept -> {parents} mapping for the cross-ontology combiner."""
         taxonomy: Dict[str, Set[str]] = defaultdict(set)

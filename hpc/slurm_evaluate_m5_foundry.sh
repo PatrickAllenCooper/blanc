@@ -128,9 +128,9 @@ python experiments/run_evaluation.py \
     --results-dir   "$RESULTS_GPT" \
     --cache-dir     "$CACHE_GPT" \
     --checkpoint    "$RESULTS_GPT/checkpoint.json" \
-    $LEVEL3_FLAG \
-    && echo "GPT-5.2 M5 evaluation complete." \
-    || echo "GPT-5.2 M5 evaluation failed (exit $?)."
+    $LEVEL3_FLAG
+GPT_EXIT=$?
+echo "GPT-5.2 M5 evaluation exit code: $GPT_EXIT"
 
 echo ""
 
@@ -152,9 +152,9 @@ python experiments/run_evaluation.py \
     --results-dir   "$RESULTS_CLAUDE" \
     --cache-dir     "$CACHE_CLAUDE" \
     --checkpoint    "$RESULTS_CLAUDE/checkpoint.json" \
-    $LEVEL3_FLAG \
-    && echo "Claude M5 evaluation complete." \
-    || echo "Claude M5 evaluation failed (exit $?)."
+    $LEVEL3_FLAG
+CLAUDE_EXIT=$?
+echo "Claude M5 evaluation exit code: $CLAUDE_EXIT"
 
 # ---------------------------------------------------------------------------
 # Summary
@@ -164,5 +164,9 @@ echo "======================================================================="
 echo "M5 Foundry Evaluation Complete"
 echo "======================================================================="
 echo "End     : $(date)"
-echo "GPT-5.2 : $RESULTS_GPT"
-echo "Claude  : $RESULTS_CLAUDE"
+echo "GPT-5.2 : $RESULTS_GPT (exit $GPT_EXIT)"
+echo "Claude  : $RESULTS_CLAUDE (exit $CLAUDE_EXIT)"
+
+if [ "$GPT_EXIT" -ne 0 ] || [ "$CLAUDE_EXIT" -ne 0 ]; then
+    exit 1
+fi

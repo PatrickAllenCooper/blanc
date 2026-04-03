@@ -252,9 +252,13 @@ def _encode_image_base64(img) -> Optional[str]:
     """Read an image file and return its base64 encoding, or None."""
     import base64
     path = img.local_path
-    if path and Path(path).is_file():
-        return base64.b64encode(Path(path).read_bytes()).decode("ascii")
-    return None
+    if not path:
+        logger.warning("Image for entity %r has no local_path; skipping.", getattr(img, "entity", "?"))
+        return None
+    if not Path(path).is_file():
+        logger.warning("Image file not found: %s (entity %r); skipping.", path, getattr(img, "entity", "?"))
+        return None
+    return base64.b64encode(Path(path).read_bytes()).decode("ascii")
 
 
 def _build_openai_multimodal_content(prompt: str, images: List) -> List[Dict[str, Any]]:
@@ -368,8 +372,7 @@ class OpenAIInterface(ModelInterface):
             
             latency = time.time() - start_time
             
-            # Extract response data
-            text = response.choices[0].message.content
+            text = response.choices[0].message.content or ""
             tokens_input = response.usage.prompt_tokens
             tokens_output = response.usage.completion_tokens
             cost = self.calculate_cost(tokens_input, tokens_output)
@@ -394,6 +397,11 @@ class OpenAIInterface(ModelInterface):
             logger.warning("OpenAI API error: %s", e)
             raise
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
     def query_multimodal(
         self,
         prompt: str,
@@ -418,7 +426,7 @@ class OpenAIInterface(ModelInterface):
                 **kwargs,
             )
             latency = time.time() - start_time
-            text = response.choices[0].message.content
+            text = response.choices[0].message.content or ""
             tokens_input = response.usage.prompt_tokens
             tokens_output = response.usage.completion_tokens
             cost = self.calculate_cost(tokens_input, tokens_output)
@@ -553,7 +561,7 @@ class AzureOpenAIInterface(ModelInterface):
 
             latency = time.time() - start_time
 
-            text = response.choices[0].message.content
+            text = response.choices[0].message.content or ""
             tokens_input = response.usage.prompt_tokens
             tokens_output = response.usage.completion_tokens
             cost = self.calculate_cost(tokens_input, tokens_output)
@@ -666,6 +674,11 @@ class AnthropicInterface(ModelInterface):
             logger.warning("Anthropic API error: %s", e)
             raise
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
     def query_multimodal(
         self,
         prompt: str,
@@ -809,6 +822,11 @@ class GoogleInterface(ModelInterface):
             logger.warning("Google AI API error: %s", e)
             raise
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
     def query_multimodal(
         self,
         prompt: str,
@@ -829,13 +847,19 @@ class GoogleInterface(ModelInterface):
         self.rate_limiter.wait_if_needed(estimated_tokens=len(prompt) // 4 + max_tokens)
         start_time = time.time()
 
-        parts = []
+        before_parts = []
+        after_parts = []
         for img in images:
             path = img.local_path
             if path and Path(path).is_file():
                 raw = Path(path).read_bytes()
-                parts.append({"mime_type": img.media_type, "data": raw})
-        parts.append(prompt)
+                part = {"mime_type": img.media_type, "data": raw}
+                placement = getattr(img, "placement", "inline_fact")
+                if placement == "after_theory":
+                    after_parts.append(part)
+                else:
+                    before_parts.append(part)
+        parts = before_parts + [prompt] + after_parts
 
         try:
             generation_config = {
@@ -884,14 +908,16 @@ class GoogleInterface(ModelInterface):
 class OllamaInterface(ModelInterface):
     """Local Llama interface via Ollama."""
     
-    def __init__(self, model: str = "llama3:70b"):
+    def __init__(self, model: str = "llama3:70b", host: str = "http://localhost:11434"):
         """
         Initialize Ollama interface.
         
         Args:
             model: Model name (e.g., "llama3:70b" or "llama3:8b")
+            host: Ollama server URL (default: http://localhost:11434)
         """
         super().__init__(model)
+        self._host = host
         
         # Check if ollama is available
         import subprocess
@@ -1134,6 +1160,9 @@ class CURCInterface(ModelInterface):
         self.update_stats(response)
         return response
 
+    @retry(stop=stop_after_attempt(5),
+           wait=wait_exponential(multiplier=2, min=5, max=60),
+           reraise=True)
     def query_multimodal(
         self,
         prompt: str,
@@ -1301,6 +1330,11 @@ class FoundryGPT52Interface(ModelInterface):
         self.update_stats(result)
         return result
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
     def query_multimodal(
         self,
         prompt: str,
@@ -1324,6 +1358,7 @@ class FoundryGPT52Interface(ModelInterface):
         except Exception as e:
             logger.warning("Foundry GPT-5.2 multimodal error: %s", e)
             raise
+
         latency = time.time() - start
         text = response.choices[0].message.content or ""
         usage = response.usage
@@ -1549,6 +1584,11 @@ class FoundryClaudeInterface(ModelInterface):
         self.update_stats(result)
         return result
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        reraise=True,
+    )
     def query_multimodal(
         self,
         prompt: str,
@@ -1865,7 +1905,7 @@ def create_model_interface(
 
     elif provider == 'ollama':
         model = model or "llama3:8b"
-        return OllamaInterface(model=model)
+        return OllamaInterface(model=model, host=kwargs.get("host", "http://localhost:11434"))
 
     elif provider == 'foundry-gpt':
         if not api_key:

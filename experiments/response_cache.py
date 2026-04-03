@@ -111,6 +111,8 @@ class ResponseCache:
         strategy: str,
         prompt: Optional[str] = None,
         image_hashes: Optional[List[str]] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
     ) -> str:
         """
         Generate deterministic cache key.
@@ -122,17 +124,22 @@ class ResponseCache:
             strategy: Prompting strategy
             prompt: Optional prompt text for extra uniqueness
             image_hashes: Optional list of image identity hashes for M5
+            max_tokens: Generation budget (included when provided to prevent stale hits)
+            temperature: Sampling temperature (included when provided)
             
         Returns:
             SHA256 hash as cache key
         """
-        # Create deterministic key from parameters
         key_components = f"{instance_id}:{model}:{modality}:{strategy}"
         
-        # Optionally include prompt hash for extra safety
         if prompt:
             prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()[:16]
             key_components += f":{prompt_hash}"
+
+        if max_tokens is not None:
+            key_components += f":mt{max_tokens}"
+        if temperature is not None:
+            key_components += f":t{temperature}"
 
         if image_hashes:
             img_hash = hashlib.sha256(
