@@ -1134,6 +1134,53 @@ class CURCInterface(ModelInterface):
         self.update_stats(response)
         return response
 
+    def query_multimodal(
+        self,
+        prompt: str,
+        images: Optional[List] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        if not images:
+            return self.query(prompt, temperature=temperature, max_tokens=max_tokens, **kwargs)
+
+        self._rate_limiter.wait_if_needed(estimated_tokens=len(prompt) // 4 + max_tokens)
+        start = time.time()
+        content = _build_openai_multimodal_content(prompt, images)
+        client = self._get_client()
+
+        completion = client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": content}],
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+
+        latency = time.time() - start
+        raw_text = completion.choices[0].message.content or ""
+        usage = completion.usage
+        visible_text, thinking_text = _strip_thinking_tokens(raw_text)
+
+        response = ModelResponse(
+            text=visible_text,
+            model=self.model_name,
+            tokens_input=usage.prompt_tokens if usage else len(prompt) // 4,
+            tokens_output=usage.completion_tokens if usage else len(raw_text) // 4,
+            cost=0.0,
+            latency=latency,
+            metadata={
+                "provider": "curc_vllm",
+                "base_url": self._base_url,
+                "finish_reason": completion.choices[0].finish_reason,
+                "thinking": thinking_text or None,
+                "multimodal": True,
+                "num_images": len(images),
+            },
+        )
+        self.update_stats(response)
+        return response
+
     @property
     def cost_per_1k_input(self) -> float:
         return 0.0  # Cluster compute, no API cost
