@@ -1,14 +1,19 @@
 """Tests for image harvester utilities."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from blanc.codec.image_manifest import EntityImage, ImageManifest
 from blanc.core.theory import Rule, RuleType, Theory
 from blanc.ontology.image_harvester import (
+    WikidataImageHarvester,
     _commons_thumb_url,
     _extract_qids_from_theory,
     _guess_media_type,
+    _normalize,
     _short_hash,
+    _url_extension,
     download_images,
 )
 
@@ -87,6 +92,75 @@ class TestExtractQidsFromTheory:
         assert _extract_qids_from_theory(theory) == {}
 
 
+class TestNormalize:
+    def test_basic(self):
+        assert _normalize("Emperor Penguin") == "emperor_penguin"
+
+    def test_hyphens(self):
+        assert _normalize("blue-footed") == "blue_footed"
+
+    def test_strips_special(self):
+        result = _normalize("hello@world!")
+        assert "@" not in result
+
+
+class TestUrlExtension:
+    def test_jpg_default(self):
+        assert _url_extension("https://example.com/photo") == ".jpg"
+
+    def test_png(self):
+        assert _url_extension("https://example.com/icon.png?v=1") == ".png"
+
+    def test_gif(self):
+        assert _url_extension("https://example.com/anim.gif") == ".gif"
+
+    def test_webp(self):
+        assert _url_extension("https://example.com/photo.webp") == ".webp"
+
+
+class TestWikidataImageHarvester:
+    def test_init_defaults(self):
+        h = WikidataImageHarvester()
+        assert h.thumb_width == 640
+        assert h.delay == 2.0
+
+    def test_harvest_from_theory_empty(self):
+        h = WikidataImageHarvester()
+        manifest = h.harvest_from_theory(Theory())
+        assert manifest.entity_count() == 0
+
+    def test_harvest_from_theory_with_qid_map(self):
+        h = WikidataImageHarvester()
+        theory = Theory()
+        theory.add_fact("bird(tweety)")
+        with patch.object(h, "harvest_by_qids", return_value=ImageManifest()) as mock:
+            h.harvest_from_theory(theory, qid_map={"bird": "Q5113"})
+            mock.assert_called_once()
+
+    def test_harvest_by_qids_empty(self):
+        h = WikidataImageHarvester()
+        with patch.object(h, "_query", return_value=None):
+            manifest = h.harvest_by_qids({})
+            assert manifest.entity_count() == 0
+
+    def test_harvest_by_qids_parses_results(self):
+        h = WikidataImageHarvester()
+        mock_result = {
+            "results": {
+                "bindings": [
+                    {
+                        "item": {"value": "http://www.wikidata.org/entity/Q9482"},
+                        "itemLabel": {"value": "penguin"},
+                        "image": {"value": "http://commons.wikimedia.org/wiki/Special:FilePath/Penguin.jpg"},
+                    }
+                ]
+            }
+        }
+        with patch.object(h, "_query", return_value=mock_result):
+            manifest = h.harvest_by_qids({"Q9482": "penguin"})
+            assert manifest.has_image("penguin")
+
+
 class TestDownloadImages:
     def test_skips_already_downloaded(self, tmp_path):
         img_file = tmp_path / "existing.jpg"
@@ -113,3 +187,29 @@ class TestDownloadImages:
         ))
         count = download_images(manifest, tmp_path / "out")
         assert count == 0
+
+    def test_respects_max_per_entity(self, tmp_path):
+        manifest = ImageManifest()
+        for i in range(5):
+            manifest.add(EntityImage(
+                entity_id="penguin",
+                source="test",
+                source_id=f"t{i}",
+                url=f"https://example.com/img{i}.jpg",
+            ))
+
+        mock_resp = MagicMock()
+        mock_resp.iter_content.return_value = [b"\xff\xd8"]
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_requests = MagicMock()
+        mock_requests.get.return_value = mock_resp
+
+        import sys
+        sys.modules["requests"] = mock_requests
+        try:
+            count = download_images(manifest, tmp_path / "out", max_per_entity=2)
+            assert count == 2
+        finally:
+            del sys.modules["requests"]
+            import requests  # restore real module
