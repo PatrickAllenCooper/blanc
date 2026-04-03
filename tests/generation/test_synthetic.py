@@ -2,7 +2,7 @@
 
 import pytest
 
-from blanc.core.theory import RuleType
+from blanc.core.theory import Rule, RuleType, Theory
 from blanc.generation.synthetic import (
     SyntheticTheoryParams,
     generate_nonsense_word,
@@ -91,6 +91,33 @@ class TestGenerateSyntheticTheory:
         for fact in theory.facts:
             assert "(" in fact
             assert "X" not in fact
+
+
+class TestGenerateMatchedSynthetic:
+    def test_matches_naturalistic_structure(self):
+        from blanc.generation.synthetic import generate_matched_synthetic
+        nat = Theory()
+        nat.add_fact("bird(tweety)")
+        nat.add_fact("penguin(opus)")
+        nat.add_rule(Rule(head="flies(X)", body=("bird(X)",),
+                          rule_type=RuleType.DEFEASIBLE, label="r1"))
+        nat.add_rule(Rule(head="swims(X)", body=("fish(X)",),
+                          rule_type=RuleType.STRICT, label="s1"))
+        nat.add_rule(Rule(head="~flies(X)", body=("penguin(X)",),
+                          rule_type=RuleType.DEFEATER, label="d1"))
+        syn = generate_matched_synthetic(nat, seed=123)
+        assert len(syn.facts) > 0
+        assert len(syn.rules) > 0
+
+    def test_different_seeds_differ(self):
+        from blanc.generation.synthetic import generate_matched_synthetic
+        nat = Theory()
+        nat.add_fact("a(x)")
+        nat.add_rule(Rule(head="b(X)", body=("a(X)",),
+                          rule_type=RuleType.DEFEASIBLE, label="r1"))
+        s1 = generate_matched_synthetic(nat, seed=1)
+        s2 = generate_matched_synthetic(nat, seed=999)
+        assert str(s1) != str(s2)
 
 
 class TestSyntheticTheoryParams:

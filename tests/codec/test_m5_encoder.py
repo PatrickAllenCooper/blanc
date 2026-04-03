@@ -169,3 +169,61 @@ class TestPromptImage:
     def test_custom_placement(self):
         pi = PromptImage(entity="bird", local_path="/img.jpg", placement="before_theory")
         assert pi.placement == "before_theory"
+
+
+class TestEncodeM5Levels:
+    """Cover Level 1 and Level 3 task descriptions and Rule candidates."""
+
+    def test_level1_task_text(self, instance, empty_manifest):
+        instance.level = 1
+        result = encode_m5(instance, empty_manifest)
+        assert "fact" in result.text.lower()
+
+    def test_level3_task_text(self, instance, empty_manifest):
+        instance.level = 3
+        result = encode_m5(instance, empty_manifest)
+        assert "defeater" in result.text.lower() or "exception" in result.text.lower()
+
+    def test_rule_candidates_encoded(self, empty_manifest):
+        from blanc.core.theory import Rule, RuleType, Theory
+        theory = Theory()
+        theory.add_fact("bird(tweety)")
+        rule_candidate = Rule(
+            head="flies(X)", body=("bird(X)",),
+            rule_type=RuleType.DEFEASIBLE, label="r1",
+        )
+        inst = AbductiveInstance(
+            D_minus=theory, target="flies(tweety)",
+            candidates=[rule_candidate], gold=[rule_candidate], level=2,
+        )
+        inst.id = "rule_test"
+        result = encode_m5(inst, empty_manifest)
+        assert "flies(X)" in result.text
+
+    def test_superiority_in_theory(self, empty_manifest):
+        theory = Theory()
+        theory.add_fact("bird(tweety)")
+        theory.add_rule(Rule(
+            head="flies(X)", body=("bird(X)",),
+            rule_type=RuleType.DEFEASIBLE, label="r1",
+        ))
+        theory.add_rule(Rule(
+            head="~flies(X)", body=("penguin(X)",),
+            rule_type=RuleType.DEFEATER, label="d1",
+        ))
+        theory.add_superiority("d1", "r1")
+        inst = AbductiveInstance(
+            D_minus=theory, target="flies(tweety)",
+            candidates=["bird(tweety)"], gold=["bird(tweety)"], level=2,
+        )
+        inst.id = "sup_test"
+        result = encode_m5(inst, empty_manifest)
+        assert "d1 > r1" in result.text
+
+    def test_fact_entity_name_no_args(self):
+        from blanc.codec.m5_encoder import _fact_entity_name
+        assert _fact_entity_name("simple_fact") is None
+
+    def test_fact_entity_name_uppercase_only(self):
+        from blanc.codec.m5_encoder import _fact_entity_name
+        assert _fact_entity_name("bird(TWEETY)") is None
