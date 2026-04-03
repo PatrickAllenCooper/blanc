@@ -17,7 +17,7 @@ from blanc.author.generation import AbductiveInstance
 from blanc.codec.image_manifest import EntityImage, ImageManifest
 from blanc.codec.m5_encoder import PromptImage
 from blanc.core.theory import Rule, RuleType, Theory
-from model_interface import ModelInterface, ModelResponse
+from model_interface import ModelInterface, ModelResponse, MockModelInterface
 from prompting import RenderedPrompt, render_prompt
 from response_cache import ResponseCache
 
@@ -214,3 +214,74 @@ class TestCacheKeyWithImages:
             image_hashes=["bbb"],
         )
         assert key_a != key_b
+
+
+# -------------------------------------------------------------------
+# End-to-end: EvaluationPipeline + MockModelInterface + M5
+# -------------------------------------------------------------------
+
+
+class TestPipelineM5EndToEnd:
+    """Run M5 through the full EvaluationPipeline with MockModelInterface."""
+
+    def test_m5_pipeline_runs_with_mock(self, instance, manifest_with_image, tmp_path):
+        """M5 evaluation through full pipeline: encode, query_multimodal, decode."""
+        from evaluation_pipeline import EvaluationPipeline
+
+        mock = MockModelInterface("mock-m5")
+        mock.set_responses(["bird(tweety)"])
+
+        pipeline = EvaluationPipeline(
+            instances=[instance],
+            models={"mock-m5": mock},
+            modalities=["M5"],
+            strategies=["direct"],
+            cache_dir=str(tmp_path / "cache"),
+            results_dir=str(tmp_path / "results"),
+            manifest=manifest_with_image,
+            m5_variant="replace",
+        )
+
+        results = pipeline.run()
+        assert len(results.evaluations) == 1
+
+        ev = results.evaluations[0]
+        assert ev.modality == "M5"
+        assert ev.model == "mock-m5"
+
+    def test_m5_and_m4_together(self, instance, manifest_with_image, tmp_path):
+        """Run both M4 and M5 in same pipeline -- M4 uses text, M5 uses images."""
+        from evaluation_pipeline import EvaluationPipeline
+
+        mock = MockModelInterface("mock-combo")
+        mock.set_responses(["bird(tweety)", "bird(tweety)"])
+
+        pipeline = EvaluationPipeline(
+            instances=[instance],
+            models={"mock-combo": mock},
+            modalities=["M4", "M5"],
+            strategies=["direct"],
+            cache_dir=str(tmp_path / "cache"),
+            results_dir=str(tmp_path / "results"),
+            manifest=manifest_with_image,
+        )
+
+        results = pipeline.run()
+        assert len(results.evaluations) == 2
+        modalities_used = {ev.modality for ev in results.evaluations}
+        assert "M4" in modalities_used
+        assert "M5" in modalities_used
+
+    def test_mock_query_multimodal_records_images(self, tmp_path):
+        """MockModelInterface.query_multimodal records image metadata."""
+        from blanc.codec.m5_encoder import PromptImage
+
+        mock = MockModelInterface("mock-mm")
+        mock.set_responses(["answer"])
+        images = [
+            PromptImage(entity="tweety", local_path=str(tmp_path / "x.jpg")),
+        ]
+        resp = mock.query_multimodal("test prompt", images=images)
+        assert resp.metadata["multimodal"] is True
+        assert resp.metadata["num_images"] == 1
+        assert "tweety" in resp.metadata["image_entities"]

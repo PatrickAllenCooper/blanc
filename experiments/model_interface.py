@@ -248,42 +248,73 @@ class ModelInterface(ABC):
         }
 
 
-def _build_openai_multimodal_content(prompt: str, images: List) -> List[Dict[str, Any]]:
-    """Build an OpenAI-format content array with text and base64 images."""
+def _encode_image_base64(img) -> Optional[str]:
+    """Read an image file and return its base64 encoding, or None."""
     import base64
-    content: List[Dict[str, Any]] = []
+    path = img.local_path
+    if path and Path(path).is_file():
+        return base64.b64encode(Path(path).read_bytes()).decode("ascii")
+    return None
+
+
+def _build_openai_multimodal_content(prompt: str, images: List) -> List[Dict[str, Any]]:
+    """Build an OpenAI-format content array with text and base64 images.
+
+    Respects ``PromptImage.placement``:
+    - ``before_theory``: image block appears before the text block
+    - ``inline_fact``: image block appears before the text block
+      (correlates with ``[IMAGE:...]`` placeholders inside the text)
+    - ``after_theory``: image block appears after the text block
+    """
+    import base64
+    before: List[Dict[str, Any]] = []
+    after: List[Dict[str, Any]] = []
+
     for img in images:
-        path = img.local_path
-        if path and Path(path).is_file():
-            raw = Path(path).read_bytes()
-            b64 = base64.b64encode(raw).decode("ascii")
-            content.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:{img.media_type};base64,{b64}"},
-            })
-    content.append({"type": "text", "text": prompt})
-    return content
+        b64 = _encode_image_base64(img)
+        if b64 is None:
+            continue
+        block = {
+            "type": "image_url",
+            "image_url": {"url": f"data:{img.media_type};base64,{b64}"},
+        }
+        placement = getattr(img, "placement", "inline_fact")
+        if placement == "after_theory":
+            after.append(block)
+        else:
+            before.append(block)
+
+    return before + [{"type": "text", "text": prompt}] + after
 
 
 def _build_anthropic_multimodal_content(prompt: str, images: List) -> List[Dict[str, Any]]:
-    """Build an Anthropic-format content array with text and base64 images."""
+    """Build an Anthropic-format content array with text and base64 images.
+
+    Respects ``PromptImage.placement`` (same ordering as the OpenAI builder).
+    """
     import base64
-    content: List[Dict[str, Any]] = []
+    before: List[Dict[str, Any]] = []
+    after: List[Dict[str, Any]] = []
+
     for img in images:
-        path = img.local_path
-        if path and Path(path).is_file():
-            raw = Path(path).read_bytes()
-            b64 = base64.b64encode(raw).decode("ascii")
-            content.append({
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": img.media_type,
-                    "data": b64,
-                },
-            })
-    content.append({"type": "text", "text": prompt})
-    return content
+        b64 = _encode_image_base64(img)
+        if b64 is None:
+            continue
+        block = {
+            "type": "image",
+            "source": {
+                "type": "base64",
+                "media_type": img.media_type,
+                "data": b64,
+            },
+        }
+        placement = getattr(img, "placement", "inline_fact")
+        if placement == "after_theory":
+            after.append(block)
+        else:
+            before.append(block)
+
+    return before + [{"type": "text", "text": prompt}] + after
 
 
 class OpenAIInterface(ModelInterface):
@@ -777,7 +808,68 @@ class GoogleInterface(ModelInterface):
         except Exception as e:
             logger.warning("Google AI API error: %s", e)
             raise
-    
+
+    def query_multimodal(
+        self,
+        prompt: str,
+        images: Optional[List] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        if not images:
+            return self.query(prompt, temperature=temperature, max_tokens=max_tokens, **kwargs)
+
+        import base64
+        try:
+            from google.generativeai.types import content_types
+        except ImportError:
+            pass
+
+        self.rate_limiter.wait_if_needed(estimated_tokens=len(prompt) // 4 + max_tokens)
+        start_time = time.time()
+
+        parts = []
+        for img in images:
+            path = img.local_path
+            if path and Path(path).is_file():
+                raw = Path(path).read_bytes()
+                parts.append({"mime_type": img.media_type, "data": raw})
+        parts.append(prompt)
+
+        try:
+            generation_config = {
+                'temperature': temperature,
+                'max_output_tokens': max_tokens,
+            }
+            response = self.genai_model.generate_content(
+                parts, generation_config=generation_config,
+            )
+            latency = time.time() - start_time
+            text = response.text
+            if hasattr(response, 'usage_metadata'):
+                tokens_input = response.usage_metadata.prompt_token_count
+                tokens_output = response.usage_metadata.candidates_token_count
+            else:
+                tokens_input = len(prompt) // 4
+                tokens_output = len(text) // 4
+            cost = self.calculate_cost(tokens_input, tokens_output)
+            result = ModelResponse(
+                text=text, model=self.model_name,
+                tokens_input=tokens_input, tokens_output=tokens_output,
+                cost=cost, latency=latency,
+                metadata={
+                    'finish_reason': (response.candidates[0].finish_reason
+                                      if response.candidates else None),
+                    'multimodal': True, 'num_images': len(images),
+                },
+            )
+            self.update_stats(result)
+            return result
+        except Exception as e:
+            logger.warning("Google AI multimodal error: %s", e)
+            raise
+
     @property
     def cost_per_1k_input(self) -> float:
         """Gemini 1.5 Pro pricing (using current estimate)."""
@@ -1614,7 +1706,41 @@ class MockModelInterface(ModelInterface):
         
         self.update_stats(result)
         return result
-    
+
+    def query_multimodal(
+        self,
+        prompt: str,
+        images: Optional[List] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        """Mock multimodal query -- records image metadata, returns canned response."""
+        if self.responses:
+            text = self.responses.pop(0)
+        else:
+            text = f"Mock response to: {prompt[:50]}..."
+
+        tokens_input = len(prompt) // 4
+        tokens_output = len(text) // 4
+
+        result = ModelResponse(
+            text=text,
+            model=self.model_name,
+            tokens_input=tokens_input,
+            tokens_output=tokens_output,
+            cost=0.0,
+            latency=0.001,
+            metadata={
+                'mock': True,
+                'multimodal': bool(images),
+                'num_images': len(images) if images else 0,
+                'image_entities': [img.entity for img in images] if images else [],
+            },
+        )
+        self.update_stats(result)
+        return result
+
     @property
     def cost_per_1k_input(self) -> float:
         return 0.0

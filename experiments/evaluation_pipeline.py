@@ -150,7 +150,9 @@ class EvaluationPipeline:
         modalities: List[str] = ['M4', 'M2'],
         strategies: List[str] = ['direct'],
         cache_dir: str = "cache/responses",
-        results_dir: str = "results/evaluations"
+        results_dir: str = "results/evaluations",
+        manifest=None,
+        m5_variant: str = 'replace',
     ):
         """
         Initialize evaluation pipeline.
@@ -162,11 +164,15 @@ class EvaluationPipeline:
             strategies: List of prompting strategies (default: direct)
             cache_dir: Directory for response cache
             results_dir: Directory for evaluation results
+            manifest: ImageManifest for M5 modality (optional)
+            m5_variant: 'replace' or 'supplement' for M5 (default: replace)
         """
         self.instances = instances
         self.models = models
         self.modalities = modalities
         self.strategies = strategies
+        self.manifest = manifest
+        self.m5_variant = m5_variant
         
         self.cache = ResponseCache(cache_dir)
         self.results_dir = Path(results_dir)

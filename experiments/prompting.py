@@ -313,22 +313,29 @@ def batch_render_prompts(
     instances: List[AbductiveInstance],
     modality: str,
     strategy: str = 'direct',
-    domain: str = 'biology'
+    domain: str = 'biology',
+    manifest=None,
+    m5_variant: str = 'replace',
 ) -> List[RenderedPrompt]:
     """
     Render multiple instances at once.
     
     Args:
         instances: List of instances to render
-        modality: Modality (M1-M4)
+        modality: Modality (M1-M5)
         strategy: Prompting strategy
         domain: Domain for NL mapping
+        manifest: ImageManifest for M5 modality (optional)
+        m5_variant: 'replace' or 'supplement' for M5
         
     Returns:
         List of RenderedPrompt objects
     """
     return [
-        render_prompt(instance, modality, strategy, domain)
+        render_prompt(
+            instance, modality, strategy, domain,
+            manifest=manifest, m5_variant=m5_variant,
+        )
         for instance in instances
     ]
 
