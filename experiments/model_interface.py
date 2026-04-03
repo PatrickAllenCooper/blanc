@@ -147,6 +147,42 @@ class ModelInterface(ABC):
         """
         pass
     
+    def query_multimodal(
+        self,
+        prompt: str,
+        images: Optional[List] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        """Query the model with text and optional images.
+
+        Default implementation falls back to text-only ``query()`` when
+        no images are provided.  Subclasses that support multimodal
+        input should override this method with provider-specific logic.
+
+        Args:
+            prompt: Text prompt.
+            images: List of ``PromptImage`` objects (from M5 encoder).
+            temperature: Sampling temperature.
+            max_tokens: Maximum tokens to generate.
+
+        Returns:
+            ModelResponse.
+
+        Raises:
+            NotImplementedError: If *images* is non-empty and the
+                subclass has not implemented multimodal support.
+        """
+        if not images:
+            return self.query(
+                prompt, temperature=temperature, max_tokens=max_tokens, **kwargs,
+            )
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support multimodal input. "
+            "Use a vision-capable model for M5 evaluation."
+        )
+
     def batch_query(
         self,
         prompts: List[str],
@@ -210,6 +246,44 @@ class ModelInterface(ABC):
             'avg_cost_per_query': self._total_cost / max(1, self._query_count),
             'avg_tokens_per_query': (self._total_tokens_input + self._total_tokens_output) / max(1, self._query_count)
         }
+
+
+def _build_openai_multimodal_content(prompt: str, images: List) -> List[Dict[str, Any]]:
+    """Build an OpenAI-format content array with text and base64 images."""
+    import base64
+    content: List[Dict[str, Any]] = []
+    for img in images:
+        path = img.local_path
+        if path and Path(path).is_file():
+            raw = Path(path).read_bytes()
+            b64 = base64.b64encode(raw).decode("ascii")
+            content.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:{img.media_type};base64,{b64}"},
+            })
+    content.append({"type": "text", "text": prompt})
+    return content
+
+
+def _build_anthropic_multimodal_content(prompt: str, images: List) -> List[Dict[str, Any]]:
+    """Build an Anthropic-format content array with text and base64 images."""
+    import base64
+    content: List[Dict[str, Any]] = []
+    for img in images:
+        path = img.local_path
+        if path and Path(path).is_file():
+            raw = Path(path).read_bytes()
+            b64 = base64.b64encode(raw).decode("ascii")
+            content.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": img.media_type,
+                    "data": b64,
+                },
+            })
+    content.append({"type": "text", "text": prompt})
+    return content
 
 
 class OpenAIInterface(ModelInterface):
@@ -288,7 +362,52 @@ class OpenAIInterface(ModelInterface):
         except Exception as e:
             logger.warning("OpenAI API error: %s", e)
             raise
-    
+
+    def query_multimodal(
+        self,
+        prompt: str,
+        images: Optional[List] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        if not images:
+            return self.query(prompt, temperature=temperature, max_tokens=max_tokens, **kwargs)
+
+        self.rate_limiter.wait_if_needed(estimated_tokens=len(prompt) // 4 + max_tokens)
+        start_time = time.time()
+        content = _build_openai_multimodal_content(prompt, images)
+
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": content}],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs,
+            )
+            latency = time.time() - start_time
+            text = response.choices[0].message.content
+            tokens_input = response.usage.prompt_tokens
+            tokens_output = response.usage.completion_tokens
+            cost = self.calculate_cost(tokens_input, tokens_output)
+            result = ModelResponse(
+                text=text, model=self.model_name,
+                tokens_input=tokens_input, tokens_output=tokens_output,
+                cost=cost, latency=latency,
+                metadata={
+                    'finish_reason': response.choices[0].finish_reason,
+                    'model_version': response.model,
+                    'multimodal': True,
+                    'num_images': len(images),
+                },
+            )
+            self.update_stats(result)
+            return result
+        except Exception as e:
+            logger.warning("OpenAI multimodal API error: %s", e)
+            raise
+
     @property
     def cost_per_1k_input(self) -> float:
         """GPT-4o pricing."""
@@ -515,7 +634,52 @@ class AnthropicInterface(ModelInterface):
         except Exception as e:
             logger.warning("Anthropic API error: %s", e)
             raise
-    
+
+    def query_multimodal(
+        self,
+        prompt: str,
+        images: Optional[List] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        if not images:
+            return self.query(prompt, temperature=temperature, max_tokens=max_tokens, **kwargs)
+
+        self.rate_limiter.wait_if_needed(estimated_tokens=len(prompt) // 4 + max_tokens)
+        start_time = time.time()
+        content = _build_anthropic_multimodal_content(prompt, images)
+
+        try:
+            response = self.client.messages.create(
+                model=self.model_name,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                messages=[{"role": "user", "content": content}],
+                **kwargs,
+            )
+            latency = time.time() - start_time
+            text = response.content[0].text
+            tokens_input = response.usage.input_tokens
+            tokens_output = response.usage.output_tokens
+            cost = self.calculate_cost(tokens_input, tokens_output)
+            result = ModelResponse(
+                text=text, model=self.model_name,
+                tokens_input=tokens_input, tokens_output=tokens_output,
+                cost=cost, latency=latency,
+                metadata={
+                    'stop_reason': response.stop_reason,
+                    'model_version': response.model,
+                    'multimodal': True,
+                    'num_images': len(images),
+                },
+            )
+            self.update_stats(result)
+            return result
+        except Exception as e:
+            logger.warning("Anthropic multimodal API error: %s", e)
+            raise
+
     @property
     def cost_per_1k_input(self) -> float:
         """Claude 3.5 Sonnet pricing."""
@@ -998,6 +1162,49 @@ class FoundryGPT52Interface(ModelInterface):
         self.update_stats(result)
         return result
 
+    def query_multimodal(
+        self,
+        prompt: str,
+        images: Optional[List] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        if not images:
+            return self.query(prompt, temperature=temperature, max_tokens=max_tokens, **kwargs)
+        self.rate_limiter.wait_if_needed(len(prompt) // 4 + max_tokens)
+        start = time.time()
+        content = _build_openai_multimodal_content(prompt, images)
+        try:
+            response = self._client.chat.completions.create(
+                model=self._deployment,
+                messages=[{"role": "user", "content": content}],
+                max_completion_tokens=max_tokens,
+                reasoning_effort=self._reasoning_effort,
+            )
+        except Exception as e:
+            logger.warning("Foundry GPT-5.2 multimodal error: %s", e)
+            raise
+        latency = time.time() - start
+        text = response.choices[0].message.content or ""
+        usage = response.usage
+        tokens_in  = usage.prompt_tokens     if usage else len(prompt) // 4
+        tokens_out = usage.completion_tokens if usage else len(text) // 4
+        cost = self.calculate_cost(tokens_in, tokens_out)
+        result = ModelResponse(
+            text=text, model=self.model_name,
+            tokens_input=tokens_in, tokens_output=tokens_out,
+            cost=cost, latency=latency,
+            metadata={
+                "finish_reason": response.choices[0].finish_reason,
+                "deployment": self._deployment,
+                "provider": "foundry-gpt",
+                "multimodal": True, "num_images": len(images),
+            },
+        )
+        self.update_stats(result)
+        return result
+
     @property
     def cost_per_1k_input(self) -> float:
         return self._COST_PER_1K_INPUT
@@ -1198,6 +1405,47 @@ class FoundryClaudeInterface(ModelInterface):
             metadata={
                 "stop_reason": response.stop_reason,
                 "provider": "foundry-claude",
+            },
+        )
+        self.update_stats(result)
+        return result
+
+    def query_multimodal(
+        self,
+        prompt: str,
+        images: Optional[List] = None,
+        temperature: float = 0.0,
+        max_tokens: int = 512,
+        **kwargs,
+    ) -> ModelResponse:
+        if not images:
+            return self.query(prompt, temperature=temperature, max_tokens=max_tokens, **kwargs)
+        self.rate_limiter.wait_if_needed(len(prompt) // 4 + max_tokens)
+        start = time.time()
+        content = _build_anthropic_multimodal_content(prompt, images)
+        try:
+            response = self._client.messages.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": content}],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        except Exception as e:
+            logger.warning("Foundry Claude multimodal error: %s", e)
+            raise
+        latency = time.time() - start
+        text = response.content[0].text
+        tokens_in  = response.usage.input_tokens
+        tokens_out = response.usage.output_tokens
+        cost = self.calculate_cost(tokens_in, tokens_out)
+        result = ModelResponse(
+            text=text, model=self.model_name,
+            tokens_input=tokens_in, tokens_output=tokens_out,
+            cost=cost, latency=latency,
+            metadata={
+                "stop_reason": response.stop_reason,
+                "provider": "foundry-claude",
+                "multimodal": True, "num_images": len(images),
             },
         )
         self.update_stats(result)

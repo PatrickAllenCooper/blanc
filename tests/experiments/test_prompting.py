@@ -85,7 +85,7 @@ class TestRenderPrompt:
     def test_render_invalid_modality_raises_error(self, simple_instance):
         """Test that invalid modality raises error."""
         with pytest.raises(ValueError, match="Unknown modality"):
-            render_prompt(simple_instance, 'M5', 'direct')
+            render_prompt(simple_instance, 'M99', 'direct')
     
     def test_render_invalid_strategy_raises_error(self, simple_instance):
         """Test that invalid strategy raises error."""

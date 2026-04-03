@@ -273,16 +273,29 @@ class EvaluationPipeline:
         # Get instance ID
         instance_id = getattr(instance, 'id', 'unknown')
         
-        # Render prompt
-        rendered = render_prompt(instance, modality, strategy)
-        
-        # Check cache first
+        # Render prompt (M5 requires self.manifest)
+        m5_kwargs = {}
+        if modality.upper() == 'M5':
+            m5_kwargs['manifest'] = getattr(self, 'manifest', None)
+            m5_kwargs['m5_variant'] = getattr(self, 'm5_variant', 'replace')
+        rendered = render_prompt(instance, modality, strategy, **m5_kwargs)
+
+        # Build cache key -- include image hashes for M5
+        img_hashes = None
+        if rendered.images:
+            import hashlib as _hl
+            img_hashes = [
+                _hl.sha256(img.local_path.encode()).hexdigest()[:16]
+                for img in rendered.images
+                if img.local_path
+            ]
         cache_key = self.cache.make_key(
             instance_id=instance_id,
             model=model_name,
             modality=modality,
             strategy=strategy,
-            prompt=rendered.prompt
+            prompt=rendered.prompt,
+            image_hashes=img_hashes,
         )
         
         cached_response = self.cache.get(cache_key)
@@ -328,11 +341,19 @@ class EvaluationPipeline:
             else:
                 max_tokens = 512
 
-            response = model.query(
-                prompt=rendered.prompt,
-                temperature=0.0,
-                max_tokens=max_tokens
-            )
+            if rendered.images:
+                response = model.query_multimodal(
+                    prompt=rendered.prompt,
+                    images=rendered.images,
+                    temperature=0.0,
+                    max_tokens=max_tokens,
+                )
+            else:
+                response = model.query(
+                    prompt=rendered.prompt,
+                    temperature=0.0,
+                    max_tokens=max_tokens,
+                )
             
             # Cache response
             self.cache.set(cache_key, response)
