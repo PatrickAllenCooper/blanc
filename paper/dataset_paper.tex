@@ -75,7 +75,7 @@
 
 
 \begin{abstract}
-Foundation models excel at forward inference but struggle with abduction and belief revision: proposing hypotheses that explain observations and retracting defaults when exceptions arise. We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and generation pipeline that converts legacy knowledge bases into defeasible theories and generates evaluation instances with polynomial-time verifiable gold-standard hypotheses. The pipeline pairs taxonomic hierarchies from publicly funded knowledge bases (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to produce defeasible rules and defeaters at scale. Instances are stratified into three levels: fact completion, rule abduction, and defeater abduction, where models must construct conservative exception rules that override incorrect defaults while preserving unrelated expectations. The dataset comprises 351,613+ instances across 33.7 million materialized rules from 15 knowledge sources spanning biology, law, materials science, chemistry, commonsense reasoning, and biomedical informatics (including 29.5 million rules from UMLS). A synthetic contamination control generates structurally isomorphic theories with invented predicate names, isolating formal reasoning from memorized associations. Evaluation of four frontier models reveals that grounding is largely solved at Level~2 (73--79\% accuracy) while belief revision at Level~3 remains highly prompt-sensitive, with a 56--79 percentage-point swing between direct and chain-of-thought prompting for reasoning-optimized models. The dataset, generation pipeline, and evaluation harness are released under the MIT license.
+Foundation models excel at forward inference but struggle with abduction and belief revision: proposing hypotheses that explain observations and retracting defaults when exceptions arise. We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and generation pipeline that converts legacy knowledge bases into defeasible theories and generates evaluation instances with polynomial-time verifiable gold-standard hypotheses. The pipeline pairs taxonomic hierarchies from publicly funded knowledge bases (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to produce defeasible rules and defeaters at scale. Instances are stratified into three levels: fact completion, rule abduction, and defeater abduction, where models must construct conservative exception rules that override incorrect defaults while preserving unrelated expectations. The dataset comprises 369,822 instances across 33.7 million materialized rules from 15 knowledge sources spanning biology, law, materials science, chemistry, commonsense reasoning, and biomedical informatics (including 29.5 million rules from UMLS). A synthetic contamination control generates structurally isomorphic theories with invented predicate names, isolating formal reasoning from memorized associations. Evaluation of four frontier models reveals that grounding is largely solved at Level~2 (73--79\% accuracy) while belief revision at Level~3 remains highly prompt-sensitive, with a 56--79 percentage-point swing between direct and chain-of-thought prompting for reasoning-optimized models. The dataset, generation pipeline, and evaluation harness are released under the MIT license.
 \end{abstract}
 
 
@@ -256,11 +256,11 @@ Tier & Primary Sources & Rules & Instances \\
 \midrule
 0 (baseline) & YAGO, WordNet, LKIF, MatOnto & 2,318 & 409 \\
 1 (cross-ontology) & OpenCyc + ConceptNet & 289,305 & 324,511 \\
-2 (domain-specific) & GO, MeSH, SUMO, FrameNet, Wikidata & 535,565 & 26,693 \\
-2+ (biomedical) & UMLS 2025AB & 29,465,582 & --- \\
-3 (encyclopedic) & YAGO 4.5 full & 3,457,940 & --- \\
+2 (domain-specific) & GO, MeSH, SUMO, FrameNet, Wikidata, BabelNet & 535,565 & 31,477 \\
+2+ (biomedical) & UMLS 2025AB & 29,465,582 & 13,425 \\
+3 (encyclopedic) & YAGO 4.5 full & 3,457,940 & pending \\
 \midrule
-\multicolumn{2}{@{}l}{Materialized total (Tiers 0--3)} & 33,750,710 & 351,613+ \\
+\multicolumn{2}{@{}l}{Materialized total (Tiers 0--3)} & 33,750,710 & 369,822+ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -271,7 +271,7 @@ Tier & Primary Sources & Rules & Instances \\
 %% ====================================================================
 
 \paragraph{Volume and balance.}
-Table~\ref{tab:kbsummary} summarizes total extraction results. The Tier~0 evaluation set contains 374 Level~2 instances and 35 Level~3 instances across three domains (biology: 114, legal: 168, materials: 92). Tier~1 cross-ontology extraction produces 324,511 instances (182,652 Level~1, 141,859 Level~2, 0 Level~3) across five domains: everyday commonsense dominates (212,365 instances) followed by biology (56,634), legal (29,618), materials (14,697), and chemistry (11,197). Tier~2 domain-specific extraction adds 31,521 instances from five sources: FrameNet (22,948), SUMO (3,810), Gene Ontology (2,968), Wikidata (1,574), and BabelNet (221).
+Table~\ref{tab:kbsummary} summarizes total extraction results. The Tier~0 evaluation set contains 374 Level~2 instances and 35 Level~3 instances across three domains (biology: 114, legal: 168, materials: 92). Tier~1 cross-ontology extraction produces 324,511 instances (182,652 Level~1, 141,859 Level~2, 0 Level~3) across five domains: everyday commonsense dominates (212,365 instances) followed by biology (56,634), legal (29,618), materials (14,697), and chemistry (11,197). Tier~2 domain-specific extraction adds 44,902 instances from seven sources: FrameNet (22,948), UMLS (13,425), SUMO (3,810), Gene Ontology (2,905), Wikidata (1,593), and BabelNet (221). MeSH (76,650 strict rules) cannot produce defeasible instances by design.
 
 \paragraph{Level~3 defeater sources.}
 Automated Level~3 generation depends on structured exception relations in the source KBs. The richest sources are Wikidata P2303 constraint--exception pairs (11,557 defeaters), Gene Ontology \texttt{NOT}-qualified annotations (1,250 defeaters), and SUMO \texttt{contraryAttribute}/\texttt{disjoint} axioms (792 defeaters). ConceptNet \texttt{NotCapableOf} provides 329 English-language defeater edges. The Tier~0 Level~3 set (35 instances) includes both automatically extracted and expert-authored defeaters.
@@ -385,7 +385,7 @@ The base evaluation uses 409 expert-curated Tier~0 instances (35 Level~3); Wilso
 \section{Conclusion}\label{sec:conclusion}
 %% ====================================================================
 
-We have introduced \textsc{DeFAb}, a benchmark for evaluating foundation models on defeasible abduction. The dataset comprises 351,613+ instances generated from 33.7 million materialized rules across 15 knowledge sources (including 29.5 million from UMLS), with polynomial-time verifiable gold-standard hypotheses at three difficulty levels. Evaluation of four frontier models reveals that grounding is largely solved (73--79\% at Level~2) while belief revision is latent and prompt-sensitive, with an architectural dissociation between reasoning-optimized and instruction-optimized models under chain-of-thought prompting. Two methodological findings have implications beyond this benchmark: the prompt-format confound at Level~3, where uniform CoT templates systematically misestimate model capability across task types; and the narrative-modality bottleneck, where rendering robustness constitutes a distinct evaluation dimension from logical reasoning capability. DeFAb provides the formal infrastructure to track progress on belief revision as training paradigms evolve.
+We have introduced \textsc{DeFAb}, a benchmark for evaluating foundation models on defeasible abduction. The dataset comprises 369,822 instances generated from 33.7 million materialized rules across 15 knowledge sources (including 29.5 million from UMLS), with polynomial-time verifiable gold-standard hypotheses at three difficulty levels. Evaluation of four frontier models reveals that grounding is largely solved (73--79\% at Level~2) while belief revision is latent and prompt-sensitive, with an architectural dissociation between reasoning-optimized and instruction-optimized models under chain-of-thought prompting. Two methodological findings have implications beyond this benchmark: the prompt-format confound at Level~3, where uniform CoT templates systematically misestimate model capability across task types; and the narrative-modality bottleneck, where rendering robustness constitutes a distinct evaluation dimension from logical reasoning capability. DeFAb provides the formal infrastructure to track progress on belief revision as training paradigms evolve.
 
 
 %% ====================================================================
@@ -590,7 +590,7 @@ Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $
 
 \begin{itemize}[nosep]
 \item \textbf{Instance types:} Each instance is an abductive reasoning task consisting of an ablated defeasible theory $\Dm$, a target literal $q$, a candidate hypothesis set $\Hcand$, and gold-standard answers $\Hgold$. Level~1 instances require fact completion; Level~2 require rule abduction; Level~3 require conservative defeater construction.
-\item \textbf{Instance count:} Tier~0: 409 (374 L2, 35 L3). Tier~1: 324,511 (182K L1, 142K L2) across five domains. Tier~2: 26,693+ from FrameNet, SUMO, Gene Ontology, and Wikidata. Synthetic: 409 contamination-control instances matched to Tier~0.
+\item \textbf{Instance count:} Tier~0: 409 (374 L2, 35 L3). Tier~1: 324,511 (182K L1, 142K L2) across five domains. Tier~2: 44,902 from FrameNet, UMLS, SUMO, Gene Ontology, Wikidata, and BabelNet. Synthetic: 409 contamination-control instances matched to Tier~0. Total: 369,822.
 \item \textbf{Rule base:} 33.7 million materialized rules from 15 knowledge sources (Tiers 0--3, including 29.5 million from UMLS 2025AB).
 \item \textbf{Sensitive content:} None. All instances are derived from formal logic programs over scientific and commonsense knowledge.
 \item \textbf{Personal data:} None. No human subjects, no crowdsourcing, no personal information.

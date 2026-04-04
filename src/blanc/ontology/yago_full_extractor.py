@@ -388,6 +388,7 @@ class YagoFullExtractor:
             if fact not in theory.facts:
                 theory.add_fact(fact)
 
+        entities_with_facts: Set[str] = set()
         for subj, prop, obj in self.schema_properties:
             sn = _normalize(subj)
             pn = _normalize(prop)
@@ -398,7 +399,7 @@ class YagoFullExtractor:
             if key not in added:
                 theory.add_rule(Rule(
                     head=f"{pn}({sn}, {on})",
-                    body=(),
+                    body=(f"yago_entity({sn})",),
                     rule_type=RuleType.DEFEASIBLE,
                     label=f"yago_schema_{pn}_{sn}_{on}",
                     metadata={
@@ -407,6 +408,7 @@ class YagoFullExtractor:
                     },
                 ))
                 added.add(key)
+                entities_with_facts.add(sn)
 
         for subj, prop, obj in self.yago_properties:
             sn = _normalize(subj)
@@ -418,7 +420,7 @@ class YagoFullExtractor:
             if key not in added:
                 theory.add_rule(Rule(
                     head=f"{pn}({sn}, {on})",
-                    body=(),
+                    body=(f"yago_entity({sn})",),
                     rule_type=RuleType.DEFEASIBLE,
                     label=f"yago_prop_{pn}_{sn}_{on}",
                     metadata={
@@ -427,6 +429,10 @@ class YagoFullExtractor:
                     },
                 ))
                 added.add(key)
+                entities_with_facts.add(sn)
+
+        for entity in entities_with_facts:
+            theory.add_fact(f"yago_entity({entity})")
 
         return theory
 
