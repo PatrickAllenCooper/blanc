@@ -103,6 +103,8 @@ We introduce \textsc{DeFAb} (\textbf{De}feasible \textbf{A}bduction \textbf{B}en
     \item \textbf{A synthetic contamination control.} Procedurally generated theories with invented predicate names preserve structural parameters of naturalistic theories while guaranteeing that gold-standard hypotheses fall outside any pretraining corpus. The naturalistic--synthetic accuracy gap provides a per-model upper bound on contamination-attributable performance inflation.
 
     \item \textbf{Baseline evaluation of four frontier models} revealing a rich capability structure: grounding is largely solved (73--79\% at Level~2) while belief revision is latent and prompt-sensitive, with an architectural dissociation between reasoning-optimized and instruction-optimized models.
+
+    \item \textbf{A multimodal visual grounding modality (M5)} that extends the rendering protocol to vision-language evaluation, replacing or supplementing textual entity identification with images harvested from linked knowledge bases (Wikidata P18, VisualSem, BabelNet). This provides the first defeasible reasoning benchmark with formally verified gold standards for vision-language models, connecting to recent findings that VLMs systematically fail on atypical instances~\cite{park2025visage}---precisely the entities governed by defeater rules.
 \end{enumerate}
 
 
@@ -177,12 +179,35 @@ We work backwards from a complete theory $\Dfull$ that already contains the reso
 \subsection{Rendering and Evaluation Protocol}\label{subsec:rendering}
 %% --------------------------------------------------------------------
 
-A rendering codec $\rho = (\rho_{\mathrm{enc}}, \rho_{\mathrm{dec}})$ translates between formal theories and natural language. We define four encoding modalities: narrative (M1), semi-formal (M2), annotated formal (M3), and pure formal (M4). The decoder maps model outputs back to formal rules via exact match (D1), template extraction (D2), or semantic parsing (D3), with round-trip consistency validated prior to evaluation.
+A rendering codec $\rho = (\rho_{\mathrm{enc}}, \rho_{\mathrm{dec}})$ translates between formal theories and natural language. We define five encoding modalities: narrative (M1), semi-formal (M2), annotated formal (M3), pure formal (M4), and visual grounding (M5, Section~\ref{subsec:m5}). M1--M4 are text-only modalities trading naturalness against faithfulness; M5 introduces a cross-modal dimension that grounds entity identification in images while retaining M4 formal syntax for theory rules, target, and candidates. The decoder maps model outputs back to formal rules via exact match (D1), template extraction (D2), or semantic parsing (D3), with round-trip consistency validated prior to evaluation.
 
-The headline metric is \textit{rendering-robust accuracy}: the worst-case accuracy over all four modalities, ensuring scores reflect reasoning about the underlying epistemic structure rather than surface-form sensitivity.
+The headline metric is \textit{rendering-robust accuracy}: the worst-case accuracy over the text modalities (M1--M4), ensuring scores reflect reasoning about the underlying epistemic structure rather than surface-form sensitivity. M5 accuracy is reported separately for vision-capable models.
 
 \paragraph{Graded scoring (Level~3).}\label{subsec:scoring}
 Because Level~3 instances admit resolutions of varying strength, we use a graded scoring function $\mathrm{Score}(h, \D, \alpha) \in \{0, 0.25, 0.5, 0.75, 1.0\}$ that decomposes along the stages of rational belief revision: (i)~0 if the anomaly is unresolved; (ii)~0.25 if resolved but the hypothesis violates the language bias; (iii)~0.5 if resolved and well-formed but not conservative; (iv)~0.75 if a valid conservative weak resolution; (v)~1.0 if a conservative resolution (strong or restructuring). This scoring function is computable in polynomial time.
+
+
+%% --------------------------------------------------------------------
+\subsection{Visual Grounding Modality (M5)}\label{subsec:m5}
+%% --------------------------------------------------------------------
+
+The M5 modality extends \textsc{DeFAb} from a text-only benchmark to a multimodal evaluation of defeasible reasoning. The core observation is that the entities governed by defeater rules---atypical class members that violate inherited default properties---are precisely the entities on which vision-language models fail most dramatically. VISaGE~\cite{park2025visage} demonstrated that VLMs degrade significantly when presented with atypical images (e.g., a flightless bird), and the Black Swan benchmark~\cite{chinchure2025blackswan} showed VLMs trailing human performance by up to 32 percentage points on abductive reasoning about unexpected visual events. Yet both evaluate via crowdsourced annotations rather than formally specified defeasible theories. M5 bridges this gap: the same verifier-backed gold standards that govern M1--M4 evaluation apply to M5, since the model's textual output is decoded and verified against the same defeasible theory regardless of input modality.
+
+\paragraph{Design.} M5 retains M4 pure formal syntax for all theory rules, superiority relations, target queries, and candidate hypotheses. Only entity-grounding facts are modified. Two sub-variants isolate different aspects of the perception--reasoning interaction:
+\begin{itemize}[nosep]
+\item \textbf{M5-replace}: entity names in ground facts are replaced by image references. The model sees \texttt{bird([IMAGE:TWEETY]).} and receives an image of the entity; it must identify the entity from the image, activate relevant defaults, and recognize applicable exceptions.
+\item \textbf{M5-supplement}: entity names are retained alongside co-presented images: \texttt{bird(tweety). \% [IMAGE:TWEETY]}. This tests whether visual context helps or hurts formal reasoning, paralleling the M1 narrative interaction finding.
+\end{itemize}
+
+\paragraph{Image sourcing.} Images are harvested from three linked knowledge bases already in the \textsc{DeFAb} extraction pipeline:
+\begin{itemize}[nosep]
+\item \textbf{Wikidata P18}: the ``image'' property links entities to Wikimedia Commons photographs, queryable via SPARQL against entity Q-IDs already stored in rule metadata. Thumbnails at configurable resolution (default 640px).
+\item \textbf{VisualSem}~\cite{geigle2024babelimagenet}: approximately 938,000 images across 90,000 nodes bridging WordNet synsets and BabelNet, providing direct mappings for entities in the Tier~0 and Tier~1 theories.
+\item \textbf{BabelNet 5.3}: 61.4 million images across 23 million synsets, accessible via REST API.
+\end{itemize}
+An \texttt{ImageManifest} indexes entity-to-image associations with source-priority selection (Wikidata $>$ VisualSem $>$ BabelNet). The coverage ratio $c(\D, \mathcal{I}) = |\{e \in \mathrm{entities}(\D) : \mathcal{I}(e) \neq \emptyset\}| / |\mathrm{entities}(\D)|$ measures the fraction of theory entities with available images; M5 instances require $c \geq \theta$ for a configurable threshold~$\theta$.
+
+\paragraph{VLM evaluation panel.} M5 evaluation uses four vision-language models spanning closed-source and open-source families. The \emph{closed-source} tier comprises GPT-5.2-chat~\cite{openai2025gpt52} and Claude~Sonnet~4.6~\cite{anthropic2024claude}, both accessed via Azure AI Foundry with multimodal content blocks. The \emph{open-source} tier comprises Qwen2.5-VL-72B-Instruct-AWQ (2$\times$A100 80\,GB, tensor parallel 2) and Qwen2.5-VL-7B-Instruct (1$\times$A100 80\,GB, within-family scaling comparator), served via vLLM on CURC Alpine with OpenAI-compatible multimodal API.
 
 
 %% --------------------------------------------------------------------
@@ -299,7 +324,7 @@ We evaluate four frontier models: GPT-5.2-chat~\cite{openai2025gpt52} and Kimi-K
 Closed-source models are accessed via Azure AI Foundry. Open-source models are served via vLLM~\cite{kwon2023vllm} on CURC Alpine (NVIDIA A100 80\,GB GPUs).
 
 \paragraph{Conditions.}
-Each instance is presented under all four rendering modalities (M1--M4) and two prompting strategies (direct and chain-of-thought). The CoT scaffold mirrors defeasible derivation structure: identify applicable rules, determine missing/blocking elements, check for attackers and superiority, and propose a conservative hypothesis.
+Each instance is presented under all four text rendering modalities (M1--M4) and two prompting strategies (direct and chain-of-thought). The CoT scaffold mirrors defeasible derivation structure: identify applicable rules, determine missing/blocking elements, check for attackers and superiority, and propose a conservative hypothesis. M5 visual grounding (Section~\ref{subsec:m5}) is evaluated separately on vision-capable models (GPT-5.2, Claude~Sonnet~4.6, Qwen2.5-VL-72B, Qwen2.5-VL-7B) using instances with image coverage $c \geq 0.5$.
 
 
 %% --------------------------------------------------------------------
@@ -373,6 +398,9 @@ The large CoT lift for reasoning models ($+56$ to $+79$ pp) demonstrates that pr
 
 \paragraph{Evaluative role of DeFAb.}
 In the framing of the NeurIPS 2026 Evaluations \& Datasets track, DeFAb contributes evaluation methodology along three axes: (i)~it separates grounding from belief revision as distinct, independently measurable capabilities; (ii)~it provides polynomial-time verifiable gold standards that eliminate reliance on human judgment for scoring; and (iii)~its contamination control isolates formal reasoning from domain-knowledge retrieval.
+
+\paragraph{Visual grounding introduces a perception--reasoning interaction.}
+The M5 modality (Section~\ref{subsec:m5}) extends \textsc{DeFAb} beyond text, testing whether defeasible reasoning capabilities transfer to multimodal settings where entity identification requires visual perception. Research on visual generics and exceptions~\cite{park2025visage} demonstrates that VLMs systematically fail on atypical instances---precisely the entities governed by defeater rules in defeasible logic. If M5-replace accuracy tracks M1 narrative degradation (both require the model to bridge from a non-formal representation to logical structure), this suggests a shared bottleneck in grounding formal reasoning in perceptual input. If M5 accuracy diverges from M1, the visual and linguistic grounding deficits are dissociable, with distinct implications for multimodal training. The formally verified gold standards of \textsc{DeFAb} distinguish this evaluation from crowdsourced multimodal benchmarks~\cite{chinchure2025blackswan, chang2026abductivemllm}: the polynomial-time verifier provides exact correctness judgments regardless of input modality.
 
 \paragraph{Future directions.}
 The formal structure of DeFAb --- verifier-backed gold standards, graded scoring, polynomial-time conservativity checks --- makes it suitable as a training signal for preference optimization methods such as DPO and RLHF, where the verifier can serve as an exact reward function without reward model approximation error. Adversarial multi-agent evaluation, where agents explore the derivation space via tree search and challenge each other on ablated proof trees, offers a complementary evaluation paradigm that generates challenging instances adaptively.

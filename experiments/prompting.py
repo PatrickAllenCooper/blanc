@@ -141,7 +141,12 @@ class RenderedPrompt:
     strategy: str
     instance_id: str
     metadata: Dict = None
-    
+    images: List = None
+
+    def __post_init__(self):
+        if self.images is None:
+            self.images = []
+
     def __str__(self) -> str:
         return self.prompt
 
@@ -150,16 +155,20 @@ def render_prompt(
     instance: AbductiveInstance,
     modality: str,
     strategy: str = 'direct',
-    domain: str = 'biology'
+    domain: str = 'biology',
+    manifest=None,
+    m5_variant: str = 'replace',
 ) -> RenderedPrompt:
     """
     Render an abductive instance into a model prompt.
     
     Args:
         instance: AbductiveInstance to render
-        modality: One of 'M1', 'M2', 'M3', 'M4'
+        modality: One of 'M1', 'M2', 'M3', 'M4', 'M5'
         strategy: One of 'direct', 'cot' (chain-of-thought)
         domain: Domain for NL mapping (for M1/M2)
+        manifest: ImageManifest for M5 modality (required when modality='M5')
+        m5_variant: 'replace' or 'supplement' (only used when modality='M5')
         
     Returns:
         RenderedPrompt object
@@ -167,12 +176,32 @@ def render_prompt(
     modality = modality.upper()
     strategy = strategy.lower()
     
-    if modality not in ['M1', 'M2', 'M3', 'M4']:
-        raise ValueError(f"Unknown modality: {modality}. Use M1, M2, M3, or M4")
+    if modality not in ['M1', 'M2', 'M3', 'M4', 'M5']:
+        raise ValueError(f"Unknown modality: {modality}. Use M1, M2, M3, M4, or M5")
     
     if strategy not in ['direct', 'cot']:
         raise ValueError(f"Unknown strategy: {strategy}. Use 'direct' or 'cot'")
-    
+
+    if modality == 'M5':
+        from blanc.codec.m5_encoder import encode_m5
+        if manifest is None:
+            raise ValueError("M5 modality requires a manifest (ImageManifest) argument.")
+        mm_prompt = encode_m5(instance, manifest, variant=m5_variant, domain=domain)
+        instance_id = getattr(instance, 'id', 'unknown')
+        return RenderedPrompt(
+            prompt=mm_prompt.text,
+            modality='M5',
+            strategy=strategy,
+            instance_id=instance_id,
+            metadata={
+                'domain': domain,
+                'level': instance.level,
+                'num_candidates': len(instance.candidates),
+                'm5_variant': m5_variant,
+            },
+            images=mm_prompt.images,
+        )
+
     # Select template.  Level 3 uses a generation-specific CoT template that
     # instructs the model to construct a formal defeater rule with an explicit
     # syntax example, rather than selecting from a candidate list.
@@ -284,22 +313,29 @@ def batch_render_prompts(
     instances: List[AbductiveInstance],
     modality: str,
     strategy: str = 'direct',
-    domain: str = 'biology'
+    domain: str = 'biology',
+    manifest=None,
+    m5_variant: str = 'replace',
 ) -> List[RenderedPrompt]:
     """
     Render multiple instances at once.
     
     Args:
         instances: List of instances to render
-        modality: Modality (M1-M4)
+        modality: Modality (M1-M5)
         strategy: Prompting strategy
         domain: Domain for NL mapping
+        manifest: ImageManifest for M5 modality (optional)
+        m5_variant: 'replace' or 'supplement' for M5
         
     Returns:
         List of RenderedPrompt objects
     """
     return [
-        render_prompt(instance, modality, strategy, domain)
+        render_prompt(
+            instance, modality, strategy, domain,
+            manifest=manifest, m5_variant=m5_variant,
+        )
         for instance in instances
     ]
 

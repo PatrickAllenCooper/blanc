@@ -14,7 +14,7 @@ Date: 2026-02-13
 import json
 import hashlib
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import List, Optional, Dict, Any
 from dataclasses import dataclass, asdict
 from datetime import datetime
 
@@ -109,7 +109,10 @@ class ResponseCache:
         model: str,
         modality: str,
         strategy: str,
-        prompt: Optional[str] = None
+        prompt: Optional[str] = None,
+        image_hashes: Optional[List[str]] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
     ) -> str:
         """
         Generate deterministic cache key.
@@ -117,21 +120,33 @@ class ResponseCache:
         Args:
             instance_id: Instance identifier
             model: Model name
-            modality: Modality (M1-M4)
+            modality: Modality (M1-M5)
             strategy: Prompting strategy
             prompt: Optional prompt text for extra uniqueness
+            image_hashes: Optional list of image identity hashes for M5
+            max_tokens: Generation budget (included when provided to prevent stale hits)
+            temperature: Sampling temperature (included when provided)
             
         Returns:
             SHA256 hash as cache key
         """
-        # Create deterministic key from parameters
         key_components = f"{instance_id}:{model}:{modality}:{strategy}"
         
-        # Optionally include prompt hash for extra safety
         if prompt:
             prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()[:16]
             key_components += f":{prompt_hash}"
-        
+
+        if max_tokens is not None:
+            key_components += f":mt{max_tokens}"
+        if temperature is not None:
+            key_components += f":t{temperature}"
+
+        if image_hashes:
+            img_hash = hashlib.sha256(
+                "|".join(sorted(image_hashes)).encode()
+            ).hexdigest()[:16]
+            key_components += f":{img_hash}"
+
         # Generate SHA256 hash
         cache_key = hashlib.sha256(key_components.encode()).hexdigest()
         return cache_key

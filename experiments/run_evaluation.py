@@ -149,7 +149,7 @@ def _build_placeholder_theory(item: dict) -> Theory:
                 rule_type=RuleType(r.get("rule_type", "defeasible")),
                 label=r.get("label"),
             ))
-    return Theory(facts=facts, rules=rules, superiority=[])
+    return Theory(facts=set(facts), rules=rules, superiority={})
 
 
 def _reconstruct_theory_from_level3(item: dict) -> Theory:
@@ -180,7 +180,7 @@ def _reconstruct_theory_from_level3(item: dict) -> Theory:
         body_atoms = tuple(b.strip() for b in body_part.split(",") if b.strip())
         rules.append(Rule(head=head_part.strip(), body=body_atoms, rule_type=rule_type, label=label))
 
-    return Theory(facts=facts, rules=rules, superiority=[])
+    return Theory(facts=set(facts), rules=rules, superiority={})
 
 
 # ---------------------------------------------------------------------------
@@ -215,9 +215,16 @@ def parse_args() -> argparse.Namespace:
 
     # Evaluation config
     p.add_argument("--modalities", nargs="+", default=["M4"],
-                   help="Encoding modalities to evaluate (M1-M4).")
+                   help="Encoding modalities to evaluate (M1-M5). "
+                        "M5 requires --manifest.")
     p.add_argument("--strategies", nargs="+", default=["direct"],
                    help="Prompting strategies (direct, cot).")
+    p.add_argument("--manifest", default=None,
+                   help="Path to ImageManifest JSON for M5 modality.")
+    p.add_argument("--m5-variant", default="replace",
+                   choices=["replace", "supplement"],
+                   help="M5 variant: 'replace' hides entity names, "
+                        "'supplement' shows names alongside images.")
     p.add_argument("--instance-limit", type=int, default=50,
                    help="Max instances per domain.")
     p.add_argument("--include-level3", action="store_true",
@@ -333,6 +340,24 @@ def main() -> int:
         return 1
 
     # ---------------------------------------------------------------------------
+    # Load M5 manifest (if needed)
+    # ---------------------------------------------------------------------------
+    manifest = None
+    if "M5" in [m.upper() for m in args.modalities]:
+        if not args.manifest:
+            print("ERROR: M5 modality requires --manifest <path>.")
+            return 1
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_file():
+            print(f"ERROR: Manifest file not found: {manifest_path}")
+            return 1
+        from blanc.codec.image_manifest import ImageManifest
+        manifest = ImageManifest.load(manifest_path)
+        print(f"M5 manifest : {manifest.entity_count()} entities, "
+              f"{manifest.image_count()} images")
+        print(f"M5 variant  : {args.m5_variant}")
+
+    # ---------------------------------------------------------------------------
     # Run pipeline
     # ---------------------------------------------------------------------------
     pipeline = EvaluationPipeline(
@@ -342,6 +367,8 @@ def main() -> int:
         strategies=args.strategies,
         cache_dir=args.cache_dir,
         results_dir=args.results_dir,
+        manifest=manifest,
+        m5_variant=args.m5_variant,
     )
 
     results = pipeline.run(checkpoint_file=args.checkpoint)

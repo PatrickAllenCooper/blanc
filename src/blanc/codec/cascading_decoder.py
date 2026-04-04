@@ -8,11 +8,14 @@ Author: Patrick Cooper
 Date: 2026-02-12
 """
 
+import logging
 from typing import List, Union, Optional, Tuple
 from blanc.core.theory import Rule
 from .decoder import ExactMatchDecoder
 from .d2_decoder import decode_d2
 from .d3_decoder import decode_d3
+
+logger = logging.getLogger(__name__)
 
 
 class CascadingDecoder:
@@ -55,24 +58,24 @@ class CascadingDecoder:
             result = self._d1_exact_match(text, candidates)
             if result is not None:
                 return result, 'D1'
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("D1 exact-match failed: %s", exc)
         
         # Stage 2: D2 (Template Extraction)
         try:
             result = decode_d2(text, candidates)
             if result is not None:
                 return result, 'D2'
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("D2 template extraction failed: %s", exc)
         
         # Stage 3: D3 (Semantic Parsing)
         try:
             result = decode_d3(text, candidates)
             if result is not None:
                 return result, 'D3'
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("D3 semantic parsing failed: %s", exc)
         
         # All stages failed
         return None, None

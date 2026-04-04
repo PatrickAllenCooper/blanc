@@ -120,6 +120,18 @@ class Theory:
     superiority: Dict[str, Set[str]] = field(default_factory=dict)
     metadata: Dict[str, Any] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        """Coerce types that callers sometimes pass incorrectly."""
+        if isinstance(self.facts, list):
+            object.__setattr__(self, "facts", set(self.facts))
+        if isinstance(self.superiority, (list, tuple)):
+            coerced: Dict[str, Set[str]] = {}
+            for pair in self.superiority:
+                if isinstance(pair, (list, tuple)) and len(pair) == 2:
+                    sup, inf = pair
+                    coerced.setdefault(sup, set()).add(inf)
+            object.__setattr__(self, "superiority", coerced)
+
     def add_rule(self, rule: Rule) -> None:
         """Add a rule to the theory."""
         if rule.is_fact:
@@ -165,6 +177,8 @@ class Theory:
             for pair in self.superiority:
                 if isinstance(pair, (list, tuple)) and len(pair) == 2:
                     dup.add_superiority(pair[0], pair[1])
+        if self.metadata:
+            dup.metadata = dict(self.metadata)
         return dup
 
     def get_rules_by_type(self, rule_type: RuleType) -> List[Rule]:

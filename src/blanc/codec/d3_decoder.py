@@ -134,16 +134,12 @@ def decode_d3(text: str, candidates: List[Union[str, Rule]]) -> Optional[Union[s
         tree = logic_parser.parse(text)
         result = transformer.transform(tree)
         
-        # Validate against candidates if provided
         if candidates:
-            # Check if parsed result matches any candidate
             result_str = str(result)
             for candidate in candidates:
                 if str(candidate) == result_str:
                     return candidate
-            
-            # If no exact match, return parsed result anyway
-            return result
+            return None
         
         return result
     

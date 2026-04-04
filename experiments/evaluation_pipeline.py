@@ -150,7 +150,9 @@ class EvaluationPipeline:
         modalities: List[str] = ['M4', 'M2'],
         strategies: List[str] = ['direct'],
         cache_dir: str = "cache/responses",
-        results_dir: str = "results/evaluations"
+        results_dir: str = "results/evaluations",
+        manifest=None,
+        m5_variant: str = 'replace',
     ):
         """
         Initialize evaluation pipeline.
@@ -162,11 +164,15 @@ class EvaluationPipeline:
             strategies: List of prompting strategies (default: direct)
             cache_dir: Directory for response cache
             results_dir: Directory for evaluation results
+            manifest: ImageManifest for M5 modality (optional)
+            m5_variant: 'replace' or 'supplement' for M5 (default: replace)
         """
         self.instances = instances
         self.models = models
         self.modalities = modalities
         self.strategies = strategies
+        self.manifest = manifest
+        self.m5_variant = m5_variant
         
         self.cache = ResponseCache(cache_dir)
         self.results_dir = Path(results_dir)
@@ -273,66 +279,65 @@ class EvaluationPipeline:
         # Get instance ID
         instance_id = getattr(instance, 'id', 'unknown')
         
-        # Render prompt
-        rendered = render_prompt(instance, modality, strategy)
-        
-        # Check cache first
+        # Render prompt (M5 requires self.manifest)
+        m5_kwargs = {}
+        if modality.upper() == 'M5':
+            m5_kwargs['manifest'] = getattr(self, 'manifest', None)
+            m5_kwargs['m5_variant'] = getattr(self, 'm5_variant', 'replace')
+        rendered = render_prompt(instance, modality, strategy, **m5_kwargs)
+
+        # Compute token budget before cache key so it is part of the key.
+        # Reasoning models need larger budgets for internal chain-of-thought.
+        model_name_lower = model.model_name.lower()
+        is_deepseek = "deepseek-r1" in model_name_lower or "r1-distill" in model_name_lower
+        is_kimi     = "kimi" in model_name_lower
+        if is_deepseek:
+            max_tokens = 8192
+        elif is_kimi:
+            max_tokens = 4096
+        else:
+            max_tokens = 512
+
+        # Build cache key -- include image hashes for M5 and generation params
+        img_hashes = None
+        if rendered.images:
+            import hashlib as _hl
+            img_hashes = [
+                _hl.sha256(img.local_path.encode()).hexdigest()[:16]
+                for img in rendered.images
+                if img.local_path
+            ]
         cache_key = self.cache.make_key(
             instance_id=instance_id,
             model=model_name,
             modality=modality,
             strategy=strategy,
-            prompt=rendered.prompt
+            prompt=rendered.prompt,
+            image_hashes=img_hashes,
+            max_tokens=max_tokens,
         )
         
         cached_response = self.cache.get(cache_key)
         cached = False
         
         if cached_response and cached_response.text.strip():
-            # Use cached response (only if it contains non-empty text; empty
-            # cached responses indicate a prior failure and should be retried
-            # because the issue may have been insufficient max_tokens).
             response = cached_response
             cached = True
         else:
-            # Token budget strategy:
-            #
-            # Reasoning models (DeepSeek-R1, Kimi) spend a large fraction of
-            # their output budget on internal chain-of-thought before emitting
-            # the visible answer.  With only 1024 tokens the model exhausts the
-            # budget during thinking and returns an empty string -- confirmed by
-            # finish_reason='length' on 48% of DeepSeek and 70% of Kimi
-            # responses in the initial evaluation run.
-            #
-            # Empirical minimums after analysis (2026-02-26):
-            #   DeepSeek-R1 : 4096  (L3 thinking can exceed 3000 tokens)
-            #   Kimi-K2.5   : 2048  (CoT reasoning hits 1024 limit on ~70%)
-            #   GPT-5.2     :  512  (reasoning_effort=none → no thinking tokens)
-            #   Claude      :  512  (no internal reasoning tokens)
-            #   CURC models :  512  (direct-serving, no thinking prefix)
-            #
-            # L3 instances additionally need extra headroom because conservative
-            # defeater reasoning is substantially more verbose than rule selection.
-            model_name_lower = model.model_name.lower()
-            is_deepseek = "deepseek-r1" in model_name_lower or "r1-distill" in model_name_lower
-            is_kimi     = "kimi" in model_name_lower
-            level       = getattr(instance, "level", 2)
 
-            if is_deepseek:
-                # 4096 left 16.9% of responses still truncated (finish_reason=length).
-                # Increase to 8192 to clear the residual tail.
-                max_tokens = 8192
-            elif is_kimi:
-                # 2048 left 52.7% still truncated; increase to 4096.
-                max_tokens = 4096
+            if rendered.images:
+                response = model.query_multimodal(
+                    prompt=rendered.prompt,
+                    images=rendered.images,
+                    temperature=0.0,
+                    max_tokens=max_tokens,
+                )
             else:
-                max_tokens = 512
-
-            response = model.query(
-                prompt=rendered.prompt,
-                temperature=0.0,
-                max_tokens=max_tokens
-            )
+                response = model.query(
+                    prompt=rendered.prompt,
+                    temperature=0.0,
+                    max_tokens=max_tokens,
+                )
             
             # Cache response
             self.cache.set(cache_key, response)

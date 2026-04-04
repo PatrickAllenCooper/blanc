@@ -565,11 +565,62 @@ scripts/
   extract_wikidata_p2303.py             # Tier 3 defeaters - create later
   extract_umls_medical.py               # Tier 2 - create later
 
+src/blanc/codec/
+  image_manifest.py              # DONE - EntityImage, ImageManifest data model for M5
+  m5_encoder.py                  # DONE - M5 visual grounding encoder (replace + supplement variants)
+
+src/blanc/ontology/
+  image_harvester.py             # DONE - Wikidata P18, VisualSem, BabelNet image harvesters
+
+scripts/
+  download_entity_images.py      # DONE - multi-source image download orchestrator
+  analyze_image_coverage.py      # DONE - per-domain image coverage analysis
+
 Guidance_Documents/
   COMPREHENSIVE_KB_PIPELINE.md   # THIS DOCUMENT
   CROSS_ONTOLOGY_PLAN.md         # Tier 1 detail (existing)
   ALL_GOVERNMENT_KBS.md          # Full inventory (existing, update)
 ```
+
+---
+
+## M5 Visual Grounding Modality (Implemented 2026-04-03)
+
+DeFAb now supports a fifth rendering modality (M5) that presents defeasible reasoning instances with visual entity grounding. This is a strictly additive extension: M1-M4 behavior is unchanged.
+
+### Design
+
+M5 keeps theory rules, target, and candidates in M4 (pure formal) textual format. The extension is that entity-grounding facts can be paired with or replaced by images sourced from external knowledge bases. Two variants:
+
+- **M5-replace**: Entity facts use images instead of names. The model must perceive and classify the entity from the image alone.
+- **M5-supplement**: Entity facts retain textual names alongside images as supporting context.
+
+### Image Sources
+
+1. **Wikidata P18** (property "image"): SPARQL-queryable, broadest entity coverage. Thumbnail URLs at configurable resolution.
+2. **VisualSem** (iacercalixto/visualsem): 938K images across 90K nodes bridging WordNet and BabelNet synsets. Downloadable.
+3. **BabelNet 5.3** (REST API): 61.4M images, requires API key. Lower priority.
+
+### Infrastructure
+
+- `ImageManifest` (`src/blanc/codec/image_manifest.py`): JSON-serializable index mapping entity names to images with source preference ranking and Theory coverage computation.
+- `WikidataImageHarvester`, `VisualSemBridge`, `BabelNetImageHarvester` (`src/blanc/ontology/image_harvester.py`): Source-specific harvesters producing ImageManifest output.
+- `encode_m5` (`src/blanc/codec/m5_encoder.py`): Encoder producing `MultimodalPrompt` with text and `PromptImage` references.
+- `query_multimodal` (`experiments/model_interface.py`): Non-abstract method on `ModelInterface` base class with provider-specific overrides for OpenAI, Anthropic, and Foundry endpoints.
+- `ResponseCache.make_key` extended with optional `image_hashes` parameter.
+- `render_prompt` and `evaluate_single` updated to route M5 instances through multimodal pipeline.
+
+### Backward Compatibility
+
+All changes are strictly additive. Existing M1-M4 evaluation, text-only model queries, cache keys, and decoder behavior are byte-for-byte unchanged. The `[vision]` optional dependency group in pyproject.toml keeps image libraries (Pillow, requests, sparqlwrapper) separate from core requirements. 58 new tests verify M5 functionality; all 1301 pre-existing tests continue to pass.
+
+### Related Work
+
+- **VISaGE** (EMNLP 2025): Visual generics and exceptions -- VLMs fail on atypical instances, exactly the defeasible case. DeFAb-M5 provides formally verified complement.
+- **Black Swan** (CVPR 2025, Chinchure et al.): Abductive and defeasible video reasoning with crowdsourced evaluation. DeFAb-M5 offers verifier-backed gold standards.
+- **AbductiveMLLM** (AAAI 2026 Oral): Cross-modal causal alignment for visual abduction. Complementary architecture.
+- **PhenoLIP** (2026): Phenotype ontology grounding for medical VLMs. Validates the KB-to-vision bridge for biomedical domain.
+- **Babel-ImageNet** (ACL 2024): BabelNet/WordNet synset to ImageNet mapping. Infrastructure DeFAb leverages directly.
 
 ---
 

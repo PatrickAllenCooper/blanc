@@ -767,6 +767,38 @@ Final Answer: bird(owl)
 
 ---
 
+## M5: Visual Grounding Modality
+
+In addition to the four text modalities (M1-M4), DeFAb supports an M5 modality that tests whether vision-language models can combine visual perception with defeasible reasoning.
+
+### How it works
+
+M5 keeps the same formal theory, target, and candidates as M4. The difference is that entity-grounding facts -- the facts that identify what specific entities are in the theory -- can be presented as images rather than text.
+
+**Example**: Instead of telling the model "penguin(opus)", M5 shows an image of a penguin. The model must:
+1. Recognize that the image shows a penguin (perception)
+2. Know that penguins are birds (taxonomic reasoning)
+3. Know that birds typically fly (default rule)
+4. Recognize that penguins are an exception (defeater identification)
+
+### Two variants
+
+- **Replace**: Entity names are hidden; only images are shown. This is the hardest test -- the model must do perception and reasoning together.
+- **Supplement**: Entity names are shown alongside images. This tests whether visual context helps or hurts formal reasoning.
+
+### Why this matters
+
+Research on visual generics and exceptions (VISaGE, EMNLP 2025) has shown that vision-language models systematically fail on atypical instances -- precisely the defeasible case. M5 provides the first formally verified benchmark for this phenomenon: unlike crowdsourced evaluations, every DeFAb-M5 instance has a verifier-backed gold standard.
+
+### Image sources
+
+Images are harvested from the same knowledge bases DeFAb already uses:
+- Wikidata entities link to Wikimedia Commons images via P18
+- VisualSem provides 938K images bridging WordNet/BabelNet synsets
+- BabelNet 5.3 contains 61.4M images across synsets
+
+---
+
 ## Next Steps
 
 With API keys, we can run the full evaluation:

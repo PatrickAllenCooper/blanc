@@ -36,7 +36,7 @@ def _build_placeholder_theory(item: dict) -> Theory:
                 rule_type=RuleType(r.get("rule_type", "defeasible")),
                 label=r.get("label"),
             ))
-    return Theory(facts=facts, rules=rules, superiority=[])
+    return Theory(facts=set(facts), rules=rules, superiority={})
 
 
 def _reconstruct_theory_from_level3(item: dict) -> Theory:
@@ -66,7 +66,7 @@ def _reconstruct_theory_from_level3(item: dict) -> Theory:
         body_atoms = tuple(b.strip() for b in body_part.split(",") if b.strip())
         rules.append(Rule(head=head_part.strip(), body=body_atoms, rule_type=rule_type, label=label))
 
-    return Theory(facts=facts, rules=rules, superiority=[])
+    return Theory(facts=set(facts), rules=rules, superiority={})
 
 
 # ---------------------------------------------------------------------------

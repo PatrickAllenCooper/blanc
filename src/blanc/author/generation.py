@@ -57,6 +57,7 @@ class AbductiveInstance:
     gold: List[Element]
     level: int
     metadata: Dict[str, Any] = field(default_factory=dict)
+    id: str = ""
     
     def is_valid(self) -> bool:
         """
@@ -98,13 +99,17 @@ class AbductiveInstance:
             return True
             
         elif self.level == 3:
-            # Level 3: Block anomaly
-            # target should be ~anomaly
-            # For MVP: We'll validate that gold blocks the complement
-            
-            # For Level 3, we can't easily validate without knowing the anomaly
-            # For MVP: Trust manual construction
-            # TODO: Add proper Level 3 validation with anomaly tracking
+            if not self.target:
+                return False
+            if not self.gold:
+                return False
+            for g in self.gold:
+                if isinstance(g, Rule):
+                    if not g.head:
+                        return False
+                elif isinstance(g, str):
+                    if not g.strip():
+                        return False
             return True
         
         else:
@@ -113,6 +118,7 @@ class AbductiveInstance:
     def to_dict(self) -> dict:
         """Convert to dictionary for serialization."""
         return {
+            "id": self.id,
             "target": self.target,
             "level": self.level,
             "candidates": [_element_to_str(c) for c in self.candidates],
