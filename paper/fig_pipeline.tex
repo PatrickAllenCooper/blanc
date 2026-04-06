@@ -1,60 +1,59 @@
-% Standalone TikZ pipeline diagram for DeFAb
-% Compile separately or \input{} into dataset_paper.tex
+% DeFAb pipeline diagram -- clean layout for NeurIPS column width
 \begin{tikzpicture}[
-    >=latex,
-    node distance=0.6cm,
-    stage/.style={
-        draw, rounded corners=3pt, minimum height=0.55cm,
-        font=\footnotesize, inner sep=3pt, text centered
+    >=stealth,
+    node distance=0.8cm and 1.0cm,
+    box/.style={
+        draw, rounded corners=2pt, minimum height=0.7cm,
+        font=\small, inner sep=4pt, text centered, align=center
     },
-    stagebox/.style={
-        draw, dashed, rounded corners=5pt, inner sep=5pt,
-        fill=black!3
+    levelbox/.style={
+        draw, rounded corners=2pt, minimum height=0.6cm,
+        font=\small, inner sep=4pt, text centered, align=center,
+        fill=black!4, minimum width=2.0cm
     },
-    arrow/.style={->, thick, >=stealth},
-    lbl/.style={font=\scriptsize, midway, above, text=black!70}
+    modbox/.style={
+        draw, rounded corners=2pt, minimum height=0.6cm,
+        font=\small, inner sep=4pt, text centered, align=center,
+        fill=black!8, minimum width=1.5cm
+    },
+    arr/.style={->, thick},
+    lbl/.style={font=\scriptsize, midway, above, text=black!60},
+    stglbl/.style={font=\scriptsize\bfseries, text=black!50}
 ]
 
-% Stage 1: Source KBs -> Logic Program
-\node[stage, text width=1.75cm] (kb) {Legacy KBs\\[-1pt]{\scriptsize YAGO, GO,}\\[-1pt]{\scriptsize UMLS, \ldots}};
-\node[stage, right=0.7cm of kb, text width=1.6cm] (lp) {Definite Logic\\[-1pt]Program $\Pi$};
-\draw[arrow] (kb) -- node[lbl] {formalize} (lp);
+% --- Stage 1 ---
+\node[box, text width=1.8cm] (kb)
+    {Knowledge\\Bases\\[-1pt]{\scriptsize\itshape YAGO, GO,}\\[-2pt]{\scriptsize\itshape UMLS, \ldots}};
+\node[box, right=1.0cm of kb, text width=1.8cm] (lp)
+    {Logic\\Program $\Pi$};
+\draw[arr] (kb) -- node[lbl] {formalize} (lp);
 
-% Stage 2: Defeasible Theory
-\node[stage, right=0.7cm of lp, text width=1.6cm] (dt) {Defeasible\\[-1pt]Theory $\mathcal{D}$};
-\draw[arrow] (lp) -- node[lbl] {$\kappa$} (dt);
+% --- Stage 2 ---
+\node[box, right=1.0cm of lp, text width=1.8cm] (dt)
+    {Defeasible\\Theory $\mathcal{D}$};
+\draw[arr] (lp) -- node[lbl] {$\kappa$} (dt);
 
-% Stage 3: Three levels (stacked)
-\node[stage, right=1.0cm of dt, yshift=0.55cm, text width=1.4cm, fill=blue!8] (l3) {L3: Defeater\\[-1pt]abduction};
-\node[stage, right=1.0cm of dt, text width=1.4cm, fill=blue!8] (l2) {L2: Rule\\[-1pt]abduction};
-\node[stage, right=1.0cm of dt, yshift=-0.55cm, text width=1.4cm, fill=blue!8] (l1) {L1: Fact\\[-1pt]completion};
-\draw[arrow] (dt.east) ++(0,0) -- ++(0.25,0) |- (l3.west);
-\draw[arrow] (dt.east) -- (l2.west);
-\draw[arrow] (dt.east) ++(0,0) -- ++(0.25,0) |- (l1.west);
+% --- Stage 3: three levels, vertically stacked ---
+\node[levelbox, right=1.2cm of dt, yshift= 0.85cm] (l3) {L3 Defeater};
+\node[levelbox, right=1.2cm of dt]                  (l2) {L2 Rule};
+\node[levelbox, right=1.2cm of dt, yshift=-0.85cm]  (l1) {L1 Fact};
 
-% Stage 4: Rendering modalities (stacked)
-\node[stage, right=0.7cm of l3, yshift=0.27cm, text width=0.9cm, fill=orange!10, font=\tiny] (m5) {M5 Visual};
-\node[stage, right=0.7cm of l3, yshift=-0.27cm, text width=0.9cm, fill=orange!10, font=\tiny] (m4) {M4 Formal};
-\node[stage, right=0.7cm of l2, yshift=0.14cm, text width=0.9cm, fill=orange!10, font=\tiny] (m3) {M3 Annot.};
-\node[stage, right=0.7cm of l2, yshift=-0.40cm, text width=0.9cm, fill=orange!10, font=\tiny] (m2) {M2 Semi};
-\node[stage, right=0.7cm of l1, text width=0.9cm, fill=orange!10, font=\tiny] (m1) {M1 Narr.};
+\draw[arr] (dt.east) -- ++(0.35,0) |- (l3.west);
+\draw[arr] (dt.east) -- (l2.west);
+\draw[arr] (dt.east) -- ++(0.35,0) |- (l1.west);
 
-% Arrows from levels to modalities (fan-out)
-\draw[arrow, thin] (l3.east) -- (m5.west);
-\draw[arrow, thin] (l3.east) -- (m4.west);
-\draw[arrow, thin] (l2.east) -- (m3.west);
-\draw[arrow, thin] (l2.east) -- (m2.west);
-\draw[arrow, thin] (l1.east) -- (m1.west);
+% --- Stage 4: rendering modalities as a single block ---
+\node[modbox, right=1.2cm of l2, text width=1.6cm, minimum height=2.2cm]
+    (render) {M1 Narrative\\[1pt]M2 Semi-formal\\[1pt]M3 Annotated\\[1pt]M4 Formal\\[1pt]M5 Visual};
 
-% Stage labels along the bottom
-\node[below=0.15cm of kb, font=\scriptsize\itshape, text=black!60] {Stage 1};
-\node[below=0.15cm of lp, font=\scriptsize\itshape, text=black!60] {~};
-\node[below=0.15cm of dt, font=\scriptsize\itshape, text=black!60] {Stage 2};
-\node[below=0.22cm of l1, font=\scriptsize\itshape, text=black!60] {Stage 3};
-\node[below=0.22cm of m1, font=\scriptsize\itshape, text=black!60] {Stage 4};
+\draw[arr] (l3.east) -- (render.west |- l3.east);
+\draw[arr] (l2.east) -- (render.west);
+\draw[arr] (l1.east) -- (render.west |- l1.east);
 
-% Brace labels
-\node[above=0.15cm of l3, font=\scriptsize\itshape, text=black!60] {ablate $+$ verify};
-\node[above=0.4cm of m4, font=\scriptsize\itshape, text=black!60] {render};
+% --- Edge annotations ---
+\node[font=\scriptsize\itshape, text=black!50, above=0.08cm of l3]
+    {ablate + verify};
+\node[font=\scriptsize\itshape, text=black!50, above right=-0.1cm and 0.15cm of render.north west]
+    {render};
 
 \end{tikzpicture}
