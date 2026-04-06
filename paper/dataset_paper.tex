@@ -426,7 +426,7 @@ The DeFAb dataset, generation pipeline, extraction infrastructure for 15 knowled
 Each instance is a JSON object containing: the challenge theory $\Dm$ (facts, strict rules, defeasible rules), the target literal $q$, the candidate set $\Hcand$, the gold set $\Hgold$, the ablated element metadata (type, level), structural difficulty metrics ($|\Supp|$, $|\Hgold|$, $\Nov^*$), and rendering in all four modalities. Extracted rule bases are serialized as Python pickle files with accompanying JSON statistics summaries.
 
 \paragraph{Hosting.}
-The dataset is hosted on HuggingFace Datasets.\footnote{URL provided in camera-ready version; dataset available at submission time via the supplementary material link.} The repository includes Tier~0 evaluation instances (409 JSON), Tier~1 instances (324K across five domains), Tier~2 instances from six additional sources, synthetic contamination-control instances, all extracted rule bases, and the complete evaluation harness. HuggingFace auto-generates Croissant metadata for machine-readable dataset discovery.
+The dataset is hosted on HuggingFace Datasets at \url{https://huggingface.co/datasets/PatrickAllenCooper/DeFAb}. The repository includes Tier~0 evaluation instances (409 JSON), Tier~1 instances (324K across five domains), Tier~2 instances from six additional sources, synthetic contamination-control instances, all extracted rule bases, and the complete evaluation harness. HuggingFace auto-generates Croissant metadata for machine-readable dataset discovery.
 
 \paragraph{Loading.}
 \begin{verbatim}
