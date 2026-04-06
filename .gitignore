@@ -64,6 +64,7 @@ venv.bak/
 *.fdb_latexmk
 *.synctex.gz
 *.pdf
+!paper/figures/*.pdf
 
 # Project specific
 .mypy_cache/
