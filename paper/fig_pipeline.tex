@@ -1,0 +1,60 @@
+% Standalone TikZ pipeline diagram for DeFAb
+% Compile separately or \input{} into dataset_paper.tex
+\begin{tikzpicture}[
+    >=latex,
+    node distance=0.6cm,
+    stage/.style={
+        draw, rounded corners=3pt, minimum height=0.55cm,
+        font=\footnotesize, inner sep=3pt, text centered
+    },
+    stagebox/.style={
+        draw, dashed, rounded corners=5pt, inner sep=5pt,
+        fill=black!3
+    },
+    arrow/.style={->, thick, >=stealth},
+    lbl/.style={font=\scriptsize, midway, above, text=black!70}
+]
+
+% Stage 1: Source KBs -> Logic Program
+\node[stage, text width=1.75cm] (kb) {Legacy KBs\\[-1pt]{\scriptsize YAGO, GO,}\\[-1pt]{\scriptsize UMLS, \ldots}};
+\node[stage, right=0.7cm of kb, text width=1.6cm] (lp) {Definite Logic\\[-1pt]Program $\Pi$};
+\draw[arrow] (kb) -- node[lbl] {formalize} (lp);
+
+% Stage 2: Defeasible Theory
+\node[stage, right=0.7cm of lp, text width=1.6cm] (dt) {Defeasible\\[-1pt]Theory $\mathcal{D}$};
+\draw[arrow] (lp) -- node[lbl] {$\kappa$} (dt);
+
+% Stage 3: Three levels (stacked)
+\node[stage, right=1.0cm of dt, yshift=0.55cm, text width=1.4cm, fill=blue!8] (l3) {L3: Defeater\\[-1pt]abduction};
+\node[stage, right=1.0cm of dt, text width=1.4cm, fill=blue!8] (l2) {L2: Rule\\[-1pt]abduction};
+\node[stage, right=1.0cm of dt, yshift=-0.55cm, text width=1.4cm, fill=blue!8] (l1) {L1: Fact\\[-1pt]completion};
+\draw[arrow] (dt.east) ++(0,0) -- ++(0.25,0) |- (l3.west);
+\draw[arrow] (dt.east) -- (l2.west);
+\draw[arrow] (dt.east) ++(0,0) -- ++(0.25,0) |- (l1.west);
+
+% Stage 4: Rendering modalities (stacked)
+\node[stage, right=0.7cm of l3, yshift=0.27cm, text width=0.9cm, fill=orange!10, font=\tiny] (m5) {M5 Visual};
+\node[stage, right=0.7cm of l3, yshift=-0.27cm, text width=0.9cm, fill=orange!10, font=\tiny] (m4) {M4 Formal};
+\node[stage, right=0.7cm of l2, yshift=0.14cm, text width=0.9cm, fill=orange!10, font=\tiny] (m3) {M3 Annot.};
+\node[stage, right=0.7cm of l2, yshift=-0.40cm, text width=0.9cm, fill=orange!10, font=\tiny] (m2) {M2 Semi};
+\node[stage, right=0.7cm of l1, text width=0.9cm, fill=orange!10, font=\tiny] (m1) {M1 Narr.};
+
+% Arrows from levels to modalities (fan-out)
+\draw[arrow, thin] (l3.east) -- (m5.west);
+\draw[arrow, thin] (l3.east) -- (m4.west);
+\draw[arrow, thin] (l2.east) -- (m3.west);
+\draw[arrow, thin] (l2.east) -- (m2.west);
+\draw[arrow, thin] (l1.east) -- (m1.west);
+
+% Stage labels along the bottom
+\node[below=0.15cm of kb, font=\scriptsize\itshape, text=black!60] {Stage 1};
+\node[below=0.15cm of lp, font=\scriptsize\itshape, text=black!60] {~};
+\node[below=0.15cm of dt, font=\scriptsize\itshape, text=black!60] {Stage 2};
+\node[below=0.22cm of l1, font=\scriptsize\itshape, text=black!60] {Stage 3};
+\node[below=0.22cm of m1, font=\scriptsize\itshape, text=black!60] {Stage 4};
+
+% Brace labels
+\node[above=0.15cm of l3, font=\scriptsize\itshape, text=black!60] {ablate $+$ verify};
+\node[above=0.4cm of m4, font=\scriptsize\itshape, text=black!60] {render};
+
+\end{tikzpicture}
