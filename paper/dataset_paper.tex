@@ -199,15 +199,7 @@ The M5 modality extends \textsc{DeFAb} from a text-only benchmark to a multimoda
 \item \textbf{M5-supplement}: entity names are retained alongside co-presented images: \texttt{bird(tweety). \% [IMAGE:TWEETY]}. This tests whether visual context helps or hurts formal reasoning, paralleling the M1 narrative interaction finding.
 \end{itemize}
 
-\paragraph{Image sourcing.} Images are harvested from three linked knowledge bases already in the \textsc{DeFAb} extraction pipeline:
-\begin{itemize}[nosep]
-\item \textbf{Wikidata P18}: the ``image'' property links entities to Wikimedia Commons photographs, queryable via SPARQL against entity Q-IDs already stored in rule metadata. Thumbnails at configurable resolution (default 640px).
-\item \textbf{VisualSem}~\cite{geigle2024babelimagenet}: approximately 938,000 images across 90,000 nodes bridging WordNet synsets and BabelNet, providing direct mappings for entities in the Tier~0 and Tier~1 theories.
-\item \textbf{BabelNet 5.3}: 61.4 million images across 23 million synsets, accessible via REST API.
-\end{itemize}
-An \texttt{ImageManifest} indexes entity-to-image associations with source-priority selection (Wikidata $>$ VisualSem $>$ BabelNet). The coverage ratio $c(\D, \mathcal{I}) = |\{e \in \mathrm{entities}(\D) : \mathcal{I}(e) \neq \emptyset\}| / |\mathrm{entities}(\D)|$ measures the fraction of theory entities with available images; M5 instances require $c \geq \theta$ for a configurable threshold~$\theta$.
-
-\paragraph{VLM evaluation panel.} M5 evaluation uses four vision-language models spanning closed-source and open-source families. The \emph{closed-source} tier comprises GPT-5.2-chat~\cite{openai2025gpt52} and Claude~Sonnet~4.6~\cite{anthropic2024claude}, both accessed via Azure AI Foundry with multimodal content blocks. The \emph{open-source} tier comprises Qwen2.5-VL-72B-Instruct-AWQ (2$\times$A100 80\,GB, tensor parallel 2) and Qwen2.5-VL-7B-Instruct (1$\times$A100 80\,GB, within-family scaling comparator), served via vLLM on CURC Alpine with OpenAI-compatible multimodal API.
+\paragraph{Image sourcing and evaluation panel.} Images are harvested from Wikidata~P18, VisualSem~\cite{geigle2024babelimagenet}, and BabelNet~5.3, indexed by an \texttt{ImageManifest} with source-priority selection. M5 instances require coverage $c(\D, \mathcal{I}) \geq \theta$. M5 evaluation uses four VLMs: GPT-5.2-chat, Claude~Sonnet~4.6 (closed-source, Azure AI Foundry), Qwen2.5-VL-72B and Qwen2.5-VL-7B (open-source, vLLM on CURC Alpine). Full image sourcing details appear in Appendix~\ref{app:m5details}.
 
 
 %% --------------------------------------------------------------------
@@ -255,20 +247,13 @@ We instantiate the pipeline on a staged collection of knowledge bases organized 
 Expert-curated instances from YAGO~4.5, WordNet~3.0, LKIF Core, and MatOnto provide 2,318 rules and 409 evaluation instances (374 Level~1/2, 35 Level~3) used for the primary evaluation.
 
 \paragraph{Tier 1 (cross-ontology extraction).}
-The primary scale mechanism pairs the OpenCyc hierarchy~\cite{lenat1995cyc} (239,000 terms) with ConceptNet~5.8~\cite{speer2017conceptnet} (34 million edges). For each concept, we traverse its full ancestor chain to inherit behavioral properties, producing three rule types: strict taxonomic rules from \texttt{IsA} edges, defeasible behavioral rules from \texttt{CapableOf}/\texttt{HasProperty}/\texttt{Causes}/\texttt{UsedFor} edges, and defeaters from \texttt{NotCapableOf} edges. This yields 289,305 rules and 324,511 instances across five domains:
-\begin{enumerate}[label=(\roman*),nosep]
-    \item \textbf{Biology} ($\sim$50K concepts, 5--10 phylogenetic depth).
-    \item \textbf{Legal reasoning} ($\sim$10K concepts, combined with LKIF Core expert rules).
-    \item \textbf{Materials science} ($\sim$8K concepts, 13,780 rules, combined with MatOnto).
-    \item \textbf{Chemistry} ($\sim$38K concepts, 72,258 rules).
-    \item \textbf{Everyday commonsense} ($\sim$15K concepts, 127,931 rules).
-\end{enumerate}
+The primary scale mechanism pairs the OpenCyc hierarchy~\cite{lenat1995cyc} (239K terms) with ConceptNet~5.8~\cite{speer2017conceptnet} (34M edges), traversing ancestor chains to inherit behavioral properties. This yields strict taxonomic rules (from \texttt{IsA}), defeasible behavioral rules (from \texttt{CapableOf}/\texttt{HasProperty}), and defeaters (from \texttt{NotCapableOf}) across five domains: biology, legal reasoning, materials science, chemistry, and everyday commonsense (Table~\ref{tab:kbsummary}).
 
 \paragraph{Tier 2 (domain-specific extraction).}
-Gene Ontology~\cite{ashburner2000go} (409,378 rules, 1,250 defeaters from \texttt{NOT}-qualified annotations), MeSH (76,650 rules), SUMO~\cite{niles2001sumo} (13,317 rules, 792 defeaters), FrameNet~\cite{baker1998framenet} (12,765 rules), and Wikidata~\cite{vrandecic2014wikidata} (23,224 rules, 11,557 defeaters from P2302/P2303 constraint--exception pairs).
+Gene Ontology~\cite{ashburner2000go}, MeSH, SUMO~\cite{niles2001sumo}, FrameNet~\cite{baker1998framenet}, Wikidata~\cite{vrandecic2014wikidata}, and UMLS provide domain-specific rules and structured defeaters (e.g., GO \texttt{NOT}-qualified annotations, Wikidata P2303 constraint--exception pairs).
 
 \paragraph{Tier 3 (encyclopedic scale).}
-Full YAGO~4.5 yields 3,457,940 materialized rules.
+Full YAGO~4.5 yields 3.5M materialized rules.
 
 \begin{table}[t]
 \centering
@@ -400,7 +385,7 @@ The large CoT lift for reasoning models ($+56$ to $+79$ pp) demonstrates that pr
 In the framing of the NeurIPS 2026 Evaluations \& Datasets track, DeFAb contributes evaluation methodology along three axes: (i)~it separates grounding from belief revision as distinct, independently measurable capabilities; (ii)~it provides polynomial-time verifiable gold standards that eliminate reliance on human judgment for scoring; and (iii)~its contamination control isolates formal reasoning from domain-knowledge retrieval.
 
 \paragraph{Visual grounding introduces a perception--reasoning interaction.}
-The M5 modality (Section~\ref{subsec:m5}) extends \textsc{DeFAb} beyond text, testing whether defeasible reasoning capabilities transfer to multimodal settings where entity identification requires visual perception. Research on visual generics and exceptions~\cite{park2025visage} demonstrates that VLMs systematically fail on atypical instances---precisely the entities governed by defeater rules in defeasible logic. If M5-replace accuracy tracks M1 narrative degradation (both require the model to bridge from a non-formal representation to logical structure), this suggests a shared bottleneck in grounding formal reasoning in perceptual input. If M5 accuracy diverges from M1, the visual and linguistic grounding deficits are dissociable, with distinct implications for multimodal training. The formally verified gold standards of \textsc{DeFAb} distinguish this evaluation from crowdsourced multimodal benchmarks~\cite{chinchure2025blackswan, chang2026abductivemllm}: the polynomial-time verifier provides exact correctness judgments regardless of input modality.
+The M5 modality (Section~\ref{subsec:m5}) tests whether defeasible reasoning transfers to multimodal settings. Research on visual generics~\cite{park2025visage} shows VLMs fail on atypical instances---precisely the entities governed by defeater rules. Whether M5-replace accuracy tracks M1 narrative degradation or diverges from it distinguishes a shared grounding bottleneck from dissociable visual and linguistic deficits.
 
 \paragraph{Future directions.}
 The formal structure of DeFAb --- verifier-backed gold standards, graded scoring, polynomial-time conservativity checks --- makes it suitable as a training signal for preference optimization methods such as DPO and RLHF, where the verifier can serve as an exact reward function without reward model approximation error. Adversarial multi-agent evaluation, where agents explore the derivation space via tree search and challenge each other on ablated proof trees, offers a complementary evaluation paradigm that generates challenging instances adaptively.
@@ -413,7 +398,7 @@ The base evaluation uses 409 expert-curated Tier~0 instances (35 Level~3); Wilso
 \section{Conclusion}\label{sec:conclusion}
 %% ====================================================================
 
-We have introduced \textsc{DeFAb}, a benchmark for evaluating foundation models on defeasible abduction. The dataset comprises 372,402 instances generated from 33.7 million materialized rules across 15 knowledge sources (including 29.5 million from UMLS), with polynomial-time verifiable gold-standard hypotheses at three difficulty levels. Evaluation of four frontier models reveals that grounding is largely solved (73--79\% at Level~2) while belief revision is latent and prompt-sensitive, with an architectural dissociation between reasoning-optimized and instruction-optimized models under chain-of-thought prompting. Two methodological findings have implications beyond this benchmark: the prompt-format confound at Level~3, where uniform CoT templates systematically misestimate model capability across task types; and the narrative-modality bottleneck, where rendering robustness constitutes a distinct evaluation dimension from logical reasoning capability. DeFAb provides the formal infrastructure to track progress on belief revision as training paradigms evolve.
+We have introduced \textsc{DeFAb}, a benchmark for evaluating foundation models on defeasible abduction. The dataset comprises 372,402 instances from 33.7 million materialized rules across 15 knowledge sources, with polynomial-time verifiable gold-standard hypotheses at three difficulty levels. Evaluation of four frontier models reveals that grounding is largely solved (73--79\% at Level~2) while belief revision is latent and prompt-sensitive, with an architectural dissociation between reasoning-optimized and instruction-optimized models. Two methodological findings extend beyond this benchmark: the prompt-format confound, where uniform CoT templates misestimate capability across task types; and the narrative-modality bottleneck, where rendering robustness constitutes a distinct evaluation dimension. DeFAb provides formal infrastructure to track progress on belief revision as training paradigms evolve.
 
 
 %% ====================================================================
@@ -426,45 +411,7 @@ The DeFAb dataset, generation pipeline, extraction infrastructure for 15 knowled
 Each instance is a JSON object containing: the challenge theory $\Dm$ (facts, strict rules, defeasible rules), the target literal $q$, the candidate set $\Hcand$, the gold set $\Hgold$, the ablated element metadata (type, level), structural difficulty metrics ($|\Supp|$, $|\Hgold|$, $\Nov^*$), and rendering in all four modalities. Extracted rule bases are serialized as Python pickle files with accompanying JSON statistics summaries.
 
 \paragraph{Hosting.}
-The dataset is hosted on HuggingFace Datasets at \url{https://huggingface.co/datasets/PatrickAllenCooper/DeFAb}. The repository includes Tier~0 evaluation instances (409 JSON), Tier~1 instances (324K across five domains), Tier~2 instances from six additional sources, synthetic contamination-control instances, all extracted rule bases, and the complete evaluation harness. HuggingFace auto-generates Croissant metadata for machine-readable dataset discovery.
-
-\paragraph{Loading.}
-\begin{verbatim}
-import json
-with open("instances/tier0/level3_instances.json") as f:
-    data = json.load(f)
-for inst in data["instances"]:
-    theory = inst["theory"]
-    target = inst["target"]
-    candidates = inst["candidates"]
-\end{verbatim}
-
-\paragraph{Licenses.}
-
-\begin{center}
-\small
-\begin{tabular}{@{}ll@{}}
-\toprule
-Component & License \\
-\midrule
-DeFAb pipeline + instances & MIT \\
-YAGO 4.5 & CC-BY 4.0 \\
-WordNet 3.0 & Princeton License \\
-LKIF Core & Apache 2.0 \\
-MatOnto & CC-BY 4.0 \\
-Wikidata & CC0 1.0 \\
-ConceptNet 5.8 & CC-BY-SA 4.0 \\
-Gene Ontology & CC-BY 4.0 \\
-UMLS & NLM License (free) \\
-SUMO & GPLv2 \\
-FrameNet & CC-BY 3.0 \\
-MeSH & Public domain (NLM) \\
-\bottomrule
-\end{tabular}
-\end{center}
-
-\paragraph{Maintenance.}
-The dataset is maintained by the author at the University of Colorado Boulder for at least 5 years from publication. The generation pipeline enables re-generation from updated source KBs. Versioned releases follow semantic versioning; Tier~0 instances are frozen for cross-study comparability. Issues are tracked via the GitHub repository.
+The dataset is hosted on HuggingFace Datasets at \url{https://huggingface.co/datasets/PatrickAllenCooper/DeFAb} with Croissant metadata (core and RAI fields). The generation pipeline and evaluation harness are released on GitHub. All source KB licenses are enumerated in the Datasheet (Appendix~\ref{app:datasheet}); derived DeFAb instances and code are MIT-licensed. The dataset will be maintained for at least 5 years; Tier~0 instances are frozen for cross-study comparability.
 
 
 \bibliographystyle{plainnat}
@@ -603,6 +550,32 @@ Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $
 
 
 %% =================================================================
+\section{M5 Implementation Details}\label{app:m5details}
+%% =================================================================
+
+\paragraph{Image sourcing.} Images are harvested from three linked knowledge bases:
+\begin{itemize}[nosep]
+\item \textbf{Wikidata P18}: the ``image'' property links entities to Wikimedia Commons photographs, queryable via SPARQL against entity Q-IDs stored in rule metadata. Thumbnails at configurable resolution (default 640px).
+\item \textbf{VisualSem}~\cite{geigle2024babelimagenet}: approximately 938,000 images across 90,000 nodes bridging WordNet synsets and BabelNet, providing direct mappings for entities in the Tier~0 and Tier~1 theories.
+\item \textbf{BabelNet 5.3}: 61.4 million images across 23 million synsets, accessible via REST API.
+\end{itemize}
+An \texttt{ImageManifest} indexes entity-to-image associations with source-priority selection (Wikidata $>$ VisualSem $>$ BabelNet). The coverage ratio $c(\D, \mathcal{I}) = |\{e \in \mathrm{entities}(\D) : \mathcal{I}(e) \neq \emptyset\}| / |\mathrm{entities}(\D)|$ measures the fraction of theory entities with available images; M5 instances require $c \geq \theta$ for a configurable threshold~$\theta$.
+
+\paragraph{VLM evaluation panel.} The closed-source tier comprises GPT-5.2-chat~\cite{openai2025gpt52} and Claude~Sonnet~4.6~\cite{anthropic2024claude}, both accessed via Azure AI Foundry with multimodal content blocks. The open-source tier comprises Qwen2.5-VL-72B-Instruct-AWQ (2$\times$A100 80\,GB, tensor parallel 2) and Qwen2.5-VL-7B-Instruct (1$\times$A100 80\,GB, within-family scaling comparator), served via vLLM on CURC Alpine with OpenAI-compatible multimodal API.
+
+\paragraph{Loading example.}
+\begin{verbatim}
+import json
+with open("instances/tier0/level3_instances.json") as f:
+    data = json.load(f)
+for inst in data["instances"]:
+    theory = inst["theory"]
+    target = inst["target"]
+    candidates = inst["candidates"]
+\end{verbatim}
+
+
+%% =================================================================
 \section{Datasheet for DeFAb}\label{app:datasheet}
 %% =================================================================
 
@@ -671,7 +644,7 @@ Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $
 
 \item {\bf Claims}
     \item[] Answer: \answerYes{}
-    \item[] Justification: The introduction lists four numbered contributions, each developed in corresponding sections. All accuracy figures include Wilson 95\% CIs. Claims about dataset scale are backed by Table~\ref{tab:kbsummary}.
+    \item[] Justification: The introduction lists five numbered contributions, each developed in corresponding sections (Sections~\ref{sec:design}--\ref{sec:evaluation} and~\ref{subsec:m5}). All accuracy figures include Wilson 95\% CIs. Claims about dataset scale are backed by Table~\ref{tab:kbsummary}.
 
 \item {\bf Limitations}
     \item[] Answer: \answerYes{}
@@ -715,11 +688,11 @@ Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $
 
 \item {\bf Licenses for existing assets}
     \item[] Answer: \answerYes{}
-    \item[] Justification: All KBs cited with primary references. License information in Section~\ref{sec:access}. All licenses compatible with MIT release of derived instances.
+    \item[] Justification: All KBs cited with primary references. License information in Section~\ref{sec:access} and the Datasheet (Appendix~\ref{app:datasheet}). All licenses compatible with MIT release of derived instances.
 
 \item {\bf New assets}
     \item[] Answer: \answerYes{}
-    \item[] Justification: DeFAb dataset documented via Datasheet (Appendix~\ref{app:datasheet}), released with README, JSON format specification, and Croissant metadata.
+    \item[] Justification: DeFAb dataset documented via Datasheet (Appendix~\ref{app:datasheet}), released with README, JSON format specification, and Croissant metadata (core and RAI fields).
 
 \item {\bf Crowdsourcing and human subjects}
     \item[] Answer: \answerNA{}

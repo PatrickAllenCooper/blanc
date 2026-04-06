@@ -21,7 +21,7 @@ The core argument for the paper: a vast infrastructure of structured knowledge â
 **Deadlines**: Abstract May 4, 2026; Full paper May 6, 2026  
 **Paper file**: `paper/dataset_paper.tex` (dedicated dataset paper, separate from `paper/paper.tex`)
 
-The original `paper/paper.tex` contains three papers in one (dataset, fine-tuning methods, adversarial debate). The dedicated dataset paper (`dataset_paper.tex`) focuses exclusively on the DeFAb dataset contribution with four contributions: (1) the generation pipeline, (2) the cross-ontology KB extraction, (3) the synthetic contamination control, and (4) baseline evaluation results. Fine-tuning (DPO/RLHF/GRPO) and adversarial debate (MCTS) are mentioned as future directions only.
+The original `paper/paper.tex` contains three papers in one (dataset, fine-tuning methods, adversarial debate). The dedicated dataset paper (`dataset_paper.tex`) focuses exclusively on the DeFAb dataset contribution with five contributions: (1) the generation pipeline with polynomial-time instance generation, (2) the cross-ontology KB extraction methodology spanning 15 sources and 33.7M rules, (3) the synthetic contamination control, (4) baseline evaluation of four frontier models, and (5) a multimodal visual grounding modality (M5) for vision-language evaluation. Fine-tuning (DPO/RLHF/GRPO) and adversarial debate (MCTS) are mentioned as future directions only.
 
 ### Remaining TODOs for Dataset Paper Submission
 
@@ -29,11 +29,12 @@ The original `paper/paper.tex` contains three papers in one (dataset, fine-tunin
 - Generate and present dataset statistics tables (instance counts by level/domain/partition, difficulty distributions, novelty/revision spectra)
 - Either complete the contamination analysis (generate matched synthetic instances, compute Delta_synth) or reframe as methodology-only with results pending
 - Upload dataset to HuggingFace and obtain stable URL
-- Generate Croissant metadata JSON-LD file
-- Complete the Dataset Access section (hosting URL, loading instructions, maintenance plan)
-- Complete the Datasheet for Datasets appendix (Gebru et al. framework)
-- Download and integrate the NeurIPS 2026 LaTeX template (`neurips_2026.sty`) from https://neurips.cc/Downloads/2026
-- Complete the NeurIPS 2026 paper checklist
+- ~~Generate Croissant metadata JSON-LD file~~ DONE: `paper/croissant.json` with core + RAI fields
+- ~~Complete the Dataset Access section (hosting URL, loading instructions, maintenance plan)~~ DONE
+- ~~Complete the Datasheet for Datasets appendix (Gebru et al. framework)~~ DONE
+- ~~Download and integrate the NeurIPS 2026 LaTeX template (`neurips_2026.sty`)~~ DONE
+- ~~Complete the NeurIPS 2026 paper checklist~~ DONE (16 items, all answered)
+- ~~Verify 9-page main body limit~~ DONE: body fits exactly in 9 pages
 
 **Important (strengthen the paper):**
 - Add Qwen 2.5-72B and Qwen 2.5-32B results for within-family scaling analysis
@@ -46,6 +47,20 @@ The original `paper/paper.tex` contains three papers in one (dataset, fine-tunin
 - Complete Tier 3 instance generation from full YAGO 4.5
 - Add Level 3 instances from automated defeater extraction at scale (GO NOT-qualifiers + Wikidata P2303)
 - Symbolic ceiling evaluation via clingo ASP solver
+
+### NeurIPS 2026 E&D Track Compliance
+
+Verified against the [NeurIPS 2026 Main Track Handbook](https://neurips.cc/Conferences/2026/MainTrackHandbook) and [E&D Call for Papers](https://neurips.cc/Conferences/2026/CallForEvaluationsDatasets):
+
+- **Page limit**: Main body (through Dataset Access, before bibliography) fits within 9 content pages. References, appendices, and checklist do not count. Camera-ready allows 10.
+- **PDF structure**: Paper body, references, appendices (formal definitions, proofs, worked example, M5 details, datasheet), then NeurIPS Paper Checklist.
+- **Style file**: `neurips_2026.sty` with `[eandd, nonanonymous]` (single-blind, permitted for dataset papers).
+- **Croissant metadata**: `paper/croissant.json` includes both core and RAI fields per [Croissant RAI spec 1.0](https://docs.mlcommons.org/croissant/docs/croissant-rai-spec.html). Must be submitted alongside paper in OpenReview.
+- **Code and data**: GitHub repo and HuggingFace dataset must be accessible to all reviewers without personal request at submission time. Code release is required since DeFAb is a reusable executable artifact.
+- **Supplementary ZIP**: Recommended -- anonymized repo snapshot or build instructions for reviewers.
+- **Contribution type on OpenReview**: General or Use-Inspired.
+- **Compute reporting**: Separate OpenReview questionnaire (not part of page limit).
+- **Checklist**: Completed in `dataset_paper.tex` -- 16 items, all answered (no TODOs remaining).
 
 ---
 
