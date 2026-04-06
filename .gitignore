@@ -92,6 +92,7 @@ cache/
 !experiments/results/symbolic_baseline_*.json
 !experiments/results/partition_sensitivity.json
 !experiments/results/difficulty_distributions.json
+!paper/croissant.json
 
 # Week 8: Evaluation infrastructure
 .env
