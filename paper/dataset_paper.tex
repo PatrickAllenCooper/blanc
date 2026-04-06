@@ -265,7 +265,7 @@ The primary scale mechanism pairs the OpenCyc hierarchy~\cite{lenat1995cyc} (239
 \end{enumerate}
 
 \paragraph{Tier 2 (domain-specific extraction).}
-Gene Ontology~\cite{ashburner2000go} (409,378 rules, 1,250 defeaters from \texttt{NOT}-qualified annotations), MeSH (76,650 rules), SUMO~\cite{niles2001sumo} (13,317 rules, 792 defeaters), FrameNet~\cite{baker1998framenet} (12,765 rules), and Wikidata~\cite{vrandecic2014wikidata} (23,224 rules, 11,555 defeaters from P2302/P2303 constraint--exception pairs).
+Gene Ontology~\cite{ashburner2000go} (409,378 rules, 1,250 defeaters from \texttt{NOT}-qualified annotations), MeSH (76,650 rules), SUMO~\cite{niles2001sumo} (13,317 rules, 792 defeaters), FrameNet~\cite{baker1998framenet} (12,765 rules), and Wikidata~\cite{vrandecic2014wikidata} (23,224 rules, 11,557 defeaters from P2302/P2303 constraint--exception pairs).
 
 \paragraph{Tier 3 (encyclopedic scale).}
 Full YAGO~4.5 yields 3,457,940 materialized rules.
@@ -383,7 +383,7 @@ All models drop to 14--22\% on narrative rendering (M1) versus 73--94\% on forma
 The CoT lift at Level~2 is \emph{negative} for all models ($-1.5$ to $-31$ pp): for structured selection tasks where surface alignment between output and candidate strings suffices, chain-of-thought elaboration disrupts that alignment. This replicates the ``overthinking'' effect~\cite{chen2024overthinking}.
 
 \paragraph{Contamination analysis status.}
-The synthetic contamination control methodology is established: 409 structurally matched synthetic instances have been generated with invented predicate names (Section~\ref{subsec:synthetic}). Evaluation of frontier models on synthetic instances and computation of $\Delta_{\mathrm{synth}}$ (Definition~\ref{def:contam_gap} in companion paper) is in progress. Preliminary methodology validation confirms that synthetic theories preserve structural difficulty distributions of their naturalistic counterparts while using entirely novel vocabulary.
+The synthetic contamination control methodology is established: 409 structurally matched synthetic instances have been generated with invented predicate names (Section~\ref{subsec:synthetic}). Evaluation of frontier models on synthetic instances and computation of the contamination gap $\Delta_{\mathrm{synth}}$ is in progress. Preliminary methodology validation confirms that synthetic theories preserve structural difficulty distributions of their naturalistic counterparts while using entirely novel vocabulary.
 
 
 %% ====================================================================
@@ -406,7 +406,7 @@ The M5 modality (Section~\ref{subsec:m5}) extends \textsc{DeFAb} beyond text, te
 The formal structure of DeFAb --- verifier-backed gold standards, graded scoring, polynomial-time conservativity checks --- makes it suitable as a training signal for preference optimization methods such as DPO and RLHF, where the verifier can serve as an exact reward function without reward model approximation error. Adversarial multi-agent evaluation, where agents explore the derivation space via tree search and challenge each other on ablated proof trees, offers a complementary evaluation paradigm that generates challenging instances adaptively.
 
 \paragraph{Limitations.}
-The base evaluation uses 409 expert-curated Tier~0 instances (35 Level~3); Wilson 95\% CI half-widths are $\pm 15$--$17$ pp on aggregate Level~3 accuracy. The M1 decoder operates approximately by design. Automated Level~3 generation from Tier~1 remains limited by sparse ConceptNet \texttt{NotCapableOf} edges (329 total English edges); the richest automated defeater sources are Gene Ontology \texttt{NOT}-qualifiers (1,250) and Wikidata P2303 (11,555). The synthetic contamination control mitigates but does not eliminate the confound: structural patterns of defeasible theories may themselves be memorized.
+The base evaluation uses 409 expert-curated Tier~0 instances (35 Level~3); Wilson 95\% CI half-widths are $\pm 15$--$17$ pp on aggregate Level~3 accuracy. The M1 decoder operates approximately by design. Automated Level~3 generation from Tier~1 remains limited by sparse ConceptNet \texttt{NotCapableOf} edges (329 total English edges); the richest automated defeater sources are Gene Ontology \texttt{NOT}-qualifiers (1,250) and Wikidata P2303 (11,557). The synthetic contamination control mitigates but does not eliminate the confound: structural patterns of defeasible theories may themselves be memorized.
 
 
 %% ====================================================================
@@ -659,7 +659,7 @@ Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $
 \item \textbf{Maintainer:} Patrick Cooper, University of Colorado Boulder (\texttt{patrick.cooper@colorado.edu}).
 \item \textbf{Duration:} The dataset will be maintained for at least 5 years from publication. The generation pipeline enables re-generation from updated source KBs.
 \item \textbf{Updates:} New source KBs and instance tiers will be added via versioned releases (v1.0, v1.1, etc.). Release notes will accompany each version.
-\item \textbf{Issues:} Bug reports and error corrections are tracked via the GitHub repository issue tracker.
+\item \textbf{Issues:} Bug reports and error corrections are tracked via the GitHub repository (\url{https://github.com/PatrickAllenCooper/blanc}).
 \item \textbf{Versioning:} Semantic versioning. The Tier~0 evaluation instances are frozen at v1.0 for cross-study comparability; additional tiers are additive.
 \end{itemize}
 
@@ -671,7 +671,7 @@ Remove $r_4$ and its superiority to form $\Dm_{\mathrm{bio}}$. The observation $
 
 \item {\bf Claims}
     \item[] Answer: \answerYes{}
-    \item[] Justification: The abstract states four contributions matching the paper content. All accuracy figures include Wilson 95\% CIs. Claims about dataset scale are backed by Table~\ref{tab:kbsummary}.
+    \item[] Justification: The introduction lists four numbered contributions, each developed in corresponding sections. All accuracy figures include Wilson 95\% CIs. Claims about dataset scale are backed by Table~\ref{tab:kbsummary}.
 
 \item {\bf Limitations}
     \item[] Answer: \answerYes{}
