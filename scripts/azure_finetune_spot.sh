@@ -204,7 +204,10 @@ do_setup() {
         "sentencepiece" \
         "scipy" \
         "numpy" \
-        "tensorboard"
+        "tensorboard" \
+        "tenacity" \
+        "anthropic" \
+        "openai"
 
     pip install -q -e .
     log "Setup complete."
