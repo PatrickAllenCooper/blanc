@@ -1,0 +1,40 @@
+[Unit]
+Description=DeFAb Fine-Tuning (Spot-VM Resilient)
+Documentation=https://github.com/PatrickAllenCooper/blanc/blob/main/hpc/AZURE_FINETUNE.md
+After=network-online.target nvidia-fabricmanager.service
+Wants=network-online.target
+# Do not restart if the script itself exits cleanly (all done)
+# SIGTERM from Azure spot eviction exits with code 0 -- systemd will restart on next boot
+
+[Service]
+Type=simple
+User=azureuser
+WorkingDirectory=/home/azureuser/blanc
+
+# Environment -- loaded from /etc/defab/secrets (NOT in git)
+# Create with: sudo mkdir -p /etc/defab && echo 'HF_TOKEN=hf_...' | sudo tee /etc/defab/secrets && sudo chmod 600 /etc/defab/secrets
+EnvironmentFile=/etc/defab/secrets
+Environment="HF_HOME=/data/hf_cache"
+Environment="RESULTS_BASE=/data/defab_results"
+Environment="REPO_DIR=/home/azureuser/blanc"
+Environment="TRANSFORMERS_CACHE=/data/hf_cache"
+Environment="PYTHONUNBUFFERED=1"
+Environment="NCCL_DEBUG=WARN"
+
+ExecStart=/usr/local/bin/defab_finetune
+ExecStop=/bin/kill -SIGTERM $MAINPID
+
+# Give processes 30s to clean up on stop (Azure spot eviction gives 30s)
+TimeoutStopSec=30
+
+# Restart on failure (e.g. OOM or unexpected crash) but NOT on clean exit
+Restart=on-failure
+RestartSec=30
+
+# Write service output to journald (use: journalctl -u defab_finetune -f)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=defab_finetune
+
+[Install]
+WantedBy=multi-user.target

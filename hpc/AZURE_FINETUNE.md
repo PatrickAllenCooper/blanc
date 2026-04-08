@@ -2,9 +2,85 @@
 
 This guide covers running the full DeFAb fine-tuning pipeline on an Azure NC_A100_v4 instance (2x A100 80 GB) or equivalent dual-A100 machine.
 
+Two scripts are provided:
+
+| Script | Use case |
+|--------|----------|
+| `scripts/azure_finetune.sh` | Manual runs on a persistent VM, no auto-resume |
+| `scripts/azure_finetune_spot.sh` | Spot VM with automatic resume across deallocations |
+
 ---
 
-## Prerequisites
+## Spot VM Setup (Recommended -- Cheapest)
+
+Azure Spot VMs can be deallocated at any time but cost 60--90% less. The `azure_finetune_spot.sh` script handles this with:
+- A JSON state file that records every completed step
+- Checkpoint saves every 50 steps (~5 minutes)
+- HuggingFace Trainer auto-resumes from the latest checkpoint
+- SIGTERM handler (Azure gives 30 seconds before deallocation) that stops vLLM servers cleanly
+- A systemd service that restarts the script automatically on every boot
+
+### One-Time Setup on a Fresh Azure VM
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/PatrickAllenCooper/blanc.git /home/azureuser/blanc
+cd /home/azureuser/blanc
+
+# 2. Create persistent data directory (use an Azure Data Disk, not the OS disk)
+sudo mkdir -p /data/hf_cache /data/defab_results
+sudo chown azureuser:azureuser /data
+
+# 3. Install the script as a system command
+sudo install -m 755 scripts/azure_finetune_spot.sh /usr/local/bin/defab_finetune
+
+# 4. Install and enable the systemd service
+sudo cp scripts/defab_finetune.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable defab_finetune  # auto-start on every boot
+sudo systemctl start defab_finetune   # start now
+```
+
+### Monitoring
+
+```bash
+# Live log stream
+journalctl -u defab_finetune -f
+
+# Check current state (what has been completed)
+cat /data/defab_results/.finetune_state.json
+
+# Check if still running
+systemctl status defab_finetune
+```
+
+### What Happens on Deallocation and Restart
+
+1. Azure sends SIGTERM to the process
+2. The script stops any running vLLM servers cleanly and exits with code 0
+3. The state file retains all completed steps
+4. When the VM restarts (by you or automatically), systemd starts `defab_finetune`
+5. The script reads the state file, skips completed steps, and resumes from the last checkpoint
+
+### Resetting State (Start Over)
+
+```bash
+rm /data/defab_results/.finetune_state.json
+sudo systemctl restart defab_finetune
+```
+
+To reset only a specific step (e.g. re-run SFT for qwen32):
+```bash
+python3 -c "
+import json
+state = json.load(open('/data/defab_results/.finetune_state.json'))
+state['completed'].remove('sft_qwen32')
+json.dump(state, open('/data/defab_results/.finetune_state.json', 'w'), indent=2)
+"
+sudo systemctl restart defab_finetune
+```
+
+---
 
 - Azure VM with 2x A100 80 GB GPUs (e.g. Standard_NC48ads_A100_v4)
 - Ubuntu 22.04, CUDA 12.x, Python 3.11+
