@@ -162,6 +162,10 @@ These deficits are mutually reinforcing. A model without grounding cannot perfor
 
 \textit{Defeasible reasoning} provides exactly this structure. In a defeasible theory, every conclusion is derived through a traceable chain of strict and defeasible rules, every default is explicitly revisable, and every piece of evidence participates in identifiable support sets. This provides grounding (one can determine \emph{why} the theory concludes what it does), the machinery for novelty (anomalous observations identify which defeasible rules to target), and a concrete operationalization of rational belief revision: our conservativity requirement (Definition~\ref{def:conserv}) ensures that resolutions preserve all expectations except the targeted anomaly, directly implementing AGM's minimal change postulate \cite{gardenfors1988knowledge, katsuno1991propositional}; our revision distance metric (Definition~\ref{def:revdist}) quantifies departure from this principle; and our graded scoring function (Section~\ref{subsec:partial_credit}) decomposes model failures along the stages of rational revision, from syntactic well-formedness through anomaly resolution to full conservativity.
 
+This framework has deep roots in the philosophy of science. Popper~\cite{popper1959logic} argued that ``in so far as a scientific statement speaks about reality, it must be falsifiable: and in so far as it is not falsifiable, it does not speak about reality.'' A theory's empirical content is defined by its \emph{potential falsifiers}: ``the class of all those basic statements with which it is inconsistent (or which it rules out, or prohibits).'' In our formalization, defeasible rules are precisely Popperian conjectures---revisable claims whose content is defined by the defeaters that could override them. A defeasible rule with no possible defeater is unfalsifiable and contributes nothing to the theory's revisable knowledge; the richer the defeater set, the more the rule ``speaks about reality.''
+
+Lakatos~\cite{lakatos1976proofs} refined this picture for mathematics in \emph{Proofs and Refutations}, identifying a four-stage cycle that maps directly onto our framework: ``1.~Primitive conjecture. 2.~Proof (a rough thought-experiment or argument, decomposing the primitive conjecture into subconjectures or lemmas). 3.~`Global' counterexamples emerge. 4.~Proof re-examined: the `guilty lemma' to which the global counterexample is a `local' counterexample is spotted. This guilty lemma may have previously remained `hidden' or may have been misidentified. Now it is made explicit, and built into the primitive conjecture as a condition. The theorem---the improved conjecture---supersedes the primitive conjecture with the new proof-generated concept as its paramount new feature.'' This is exactly the structure of our Level~3 task. The primitive conjecture is the defeasible rule. The counterexample is the anomaly $\alpha$. The guilty lemma is the missing condition that distinguishes the exception from the default case. The improved conjecture is the conservative defeater that supersedes the original rule for the exception class while preserving its validity elsewhere. Our conservativity requirement (Definition~\ref{def:conserv}) formalizes Lakatos's demand that the improved theorem preserve the valid core of the original conjecture, and the graded scoring function decomposes model failures along the stages of this cycle.
+
 A literary analogy clarifies this framework and will serve as a running example throughout the paper. Consider Agatha Christie constructing \emph{Murder on the Orient Express}~\cite{christie1934murder}. Christie possesses the complete theory $\Dfull$: she knows that twelve passengers, each secretly connected to the murdered Armstrong family, conspired to kill the disguised kidnapper Cassetti, each delivering one of twelve stab wounds in a locked compartment on a snowbound train. This complete knowledge (every motive, every alibi, every physical clue) constitutes a defeasible theory in which every conclusion has a traceable support set and every default is explicitly revisable.
 
 To construct the mystery, Christie performs precisely the ablation operation of our benchmark: she withholds critical elements from $\Dfull$ to produce the challenge theory $\Dm$ that the detective Poirot receives. At Level~1, she hides individual facts: a burned letter revealing the victim's true identity, a conductor's button found in the compartment, a stopped watch establishing the time of death. These are ground facts whose absence renders specific conclusions underivable; the detective must abduce the missing observation. At Level~2, she conceals the rule connecting all twelve passengers to the Armstrong household: a missing generalization the detective must reconstruct from scattered evidence, just as a model must reconstruct a missing defeasible rule from the ablated theory.
@@ -214,7 +218,9 @@ The proof theory we adopt for defeasible reasoning follows the formalization of 
 
 Our framework connects to the theory of belief revision initiated by Alchourr\'{o}n, G\"{a}rdenfors, and Makinson \cite{alchourron1985logic}, who established rationality postulates for how an ideal agent should update beliefs in response to new evidence. G\"{a}rdenfors \cite{gardenfors1988knowledge} developed the principle of minimal change, and Katsuno and Mendelzon \cite{katsuno1991propositional} provided model-theoretic characterizations. Dalal \cite{dalal1988investigations} introduced distance-based revision using Hamming distance between models. Our conservativity requirement (Definition~\ref{def:conserv}) operationalizes minimal change in the defeasible setting, and our revision distance (Definition~\ref{def:revdist}) provides a tractable analogue of Dalal's distance. This connection is practically significant: the knowledge editing literature (including ROME \cite{meng2022locating}, MEMIT \cite{meng2023mass}, and evaluations of their side effects \cite{cohen2024evaluating}) addresses belief revision in neural models but lacks formally grounded measures of conservativity. Our benchmark provides exactly such measures, bridging the gap between the formal revision theory and empirical evaluation of neural knowledge updates.
 
-Recent neurosymbolic systems have begun to bridge the gap between formal reasoning and neural language models. LOGicalThought \cite{nananukul2025logicalt} translates natural language into RuleLog programs and feeds symbolic structure back into language models, achieving modest improvements on defeasible reasoning tasks. DARK \cite{gao2025dark} unifies deduction and abduction via masked diffusion over knowledge graphs, using a self-reflective cycle to generate and verify hypotheses. LLM-ASPIC+ \cite{fang2025llmaspic} combines language model grounding with formal ASPIC+ argumentation, achieving state-of-the-art accuracy on multi-step defeasible reasoning benchmarks by delegating conflict resolution to the symbolic layer. These systems share the goal of injecting formal structure into LLM reasoning pipelines, yet all remain evaluation-free in the benchmark sense: they develop new \emph{solvers} without providing the formally grounded \emph{instances} needed to evaluate whether models can construct defeaters or perform conservative belief revision. LogT focuses on forward reasoning (verifying conclusions) rather than abductive hypothesis generation; DARK's reliance on knowledge graph triples sacrifices the expressivity needed for complex exception handling; and LLM-ASPIC+ assumes the argumentation structure is given rather than abduced.
+\paragraph{Philosophy of science.} The structure of defeasible reasoning reflects longstanding accounts of how scientific knowledge develops. Popper~\cite{popper1959logic} argued that ``bold ideas, unjustified anticipations, and speculative thought, are our only means for interpreting nature,'' and that ``whenever we propose a solution to a problem, we ought to try as hard as we can to overthrow our solution, rather than defend it.'' This characterizes both our Level~3 task (the model must propose a bold exception to an established default) and our adversarial debate protocol (Section~\ref{sec:debate}), where agents actively attempt to overthrow each other's derivations. Lakatos~\cite{lakatos1976proofs} extended Popperian falsificationism to mathematics, demonstrating through the history of Euler's polyhedron formula ($V - E + F = 2$) that mathematical concepts themselves evolve through counterexample-driven refinement. He identified three strategies for handling counterexamples: \emph{monster-barring} (excluding the counterexample from the definition), \emph{exception-barring} (acknowledging exceptions but carving them out), and \emph{lemma-incorporation} (identifying the specific hidden assumption the counterexample violates and making it explicit). These correspond to distinct defeater construction strategies in our framework: monster-barring produces defeaters that restrict the domain of the original rule; exception-barring produces defeaters that enumerate specific exception cases; lemma-incorporation produces defeaters that introduce a new condition distinguishing the exception from the default. Lakatos favored lemma-incorporation as the strategy that ``yields more information'' because it requires understanding \emph{why} the counterexample arises, not merely \emph{that} it exists. Our conservativity requirement operationalizes this preference: a lemma-incorporating defeater preserves more of the theory's expectations than a monster-barring defeater, and therefore achieves a higher conservativity score. Kuhn's paradigm shifts~\cite{kuhn1962structure}, in which anomalies accumulate until a scientific framework is replaced, correspond to cases where the defeater set grows large enough to warrant restructuring the theory rather than adding individual exceptions. These connections are not merely analogical; they suggest that the DeFAb pipeline extends naturally to formalized mathematics, where Lean~4 or Isabelle could replace the defeasible derivation checker and Mathlib formalizations could serve as the source theory (Section~\ref{sec:discussion}).
+
+\paragraph{Neurosymbolic integration.} Recent neurosymbolic systems have begun to bridge the gap between formal reasoning and neural language models. LOGicalThought \cite{nananukul2025logicalt} translates natural language into RuleLog programs and feeds symbolic structure back into language models, achieving modest improvements on defeasible reasoning tasks. DARK \cite{gao2025dark} unifies deduction and abduction via masked diffusion over knowledge graphs, using a self-reflective cycle to generate and verify hypotheses. LLM-ASPIC+ \cite{fang2025llmaspic} combines language model grounding with formal ASPIC+ argumentation, achieving state-of-the-art accuracy on multi-step defeasible reasoning benchmarks by delegating conflict resolution to the symbolic layer. These systems share the goal of injecting formal structure into LLM reasoning pipelines, yet all remain evaluation-free in the benchmark sense: they develop new \emph{solvers} without providing the formally grounded \emph{instances} needed to evaluate whether models can construct defeaters or perform conservative belief revision. LogT focuses on forward reasoning (verifying conclusions) rather than abductive hypothesis generation; DARK's reliance on knowledge graph triples sacrifices the expressivity needed for complex exception handling; and LLM-ASPIC+ assumes the argumentation structure is given rather than abduced.
 
 Concurrently, multi-agent debate has emerged as a promising paradigm for improving LLM reasoning. Irving, Christiano, and Amodei \cite{irving2018ai_safety_debate} proposed AI safety via debate, where two agents compete to convince a judge, providing a scalable oversight mechanism. Du et al.\ \cite{du2023debate} demonstrated that multi-agent debate improves factuality and reasoning by forcing models to confront conflicting perspectives. Tree of Thoughts \cite{yao2024tree_of_thoughts} applies tree search to LLM reasoning, achieving significant improvements on tasks requiring deliberate exploration. Monte Carlo Tree Search has been applied to LLM reasoning through ReST-MCTS* and related work, using process reward models for step-level verification. However, none of these approaches combine MCTS with formal defeasible reasoning or use argumentation-theoretic proof structures as the substrate for competitive exploration. Our debate protocol (Section~\ref{sec:debate}) bridges this gap: agents explore the derivation space of a defeasible theory via MCTS, and the Author Algorithm's criticality computation generates adversarial challenges grounded in the formal framework.
 
@@ -857,6 +863,8 @@ We define three curriculum schedules and compare them experimentally:
 
 \paragraph{Evaluation protocol.} Fine-tuned models are evaluated on the held-out test set under the identical protocol as base models (Section~\ref{subsec:evaluation}): all four rendering modalities, both direct and CoT prompting, the full three-stage decoder, and greedy decoding at temperature~$0$. We report the \emph{fine-tuning lift} $\Delta_{\mathrm{FT}} = \mathrm{Acc}_{\mathrm{FT}} - \mathrm{Acc}_{\mathrm{base}}$ per level as the primary metric. For Level~3, we additionally report the graded score distribution and the error taxonomy shift.
 
+\paragraph{Cross-domain transfer to scientific reasoning.} To test whether defeasible fine-tuning improves structured scientific reasoning beyond the benchmark's own domains, we evaluate DeFAb-finetuned models on an independent chemistry benchmark comprising 12 tasks across molecular understanding, reaction prediction, retrosynthesis, IUPAC nomenclature, NMR compound identification, mechanism classification, atom mapping, molecular editing, structure elucidation, and quantitative chemistry (50 samples per task, temperature~$0$, zero-shot, exact-match scoring with RDKit SMILES canonicalization). Baseline accuracy across 10 models reveals that rule-governed tasks are the hardest: IUPAC naming ($\sim$1\%), structure elucidation (4.2\%), and retrosynthesis (7.8\%), while knowledge-retrieval tasks like molecular property inference achieve 67.2\%. We hypothesize a dissociation: DeFAb fine-tuning should improve accuracy on the rule-governed chemistry tasks (which require following sequential derivation chains with exceptions, structurally analogous to defeasible derivation) but not on knowledge-retrieval tasks (which require domain-specific chemical knowledge absent from the DeFAb training signal). A positive transfer result on rule-governed tasks would constitute evidence that defeasible reasoning is a domain-general capability transferable to scientific domains where the rules are implicit rather than formalized as defeasible theories. A null result would establish the boundary of defeasible training, indicating that transfer requires the target domain's rule structure to be made explicit.
+
 
 \subsection{Evaluation Framework}\label{subsec:ft_results}
 
@@ -976,7 +984,13 @@ SFT achieves positive Level~2 fine-tuning lift $\Delta_{\mathrm{FT}}^{(2)} > 0$ 
 
 This tests whether the information provided by incorrect responses is essential for learning Level~3 belief revision.  SFT sees only the gold hypothesis; preference methods see both correct and incorrect responses; GRPO sees a \emph{distribution} of responses at varying quality levels.  If SFT matches preference methods at Level~2 (where the task is candidate selection with binary signal) but underperforms at Level~3 (where graded scoring provides ordinal structure), this would confirm that the relative comparison signal is critical specifically for the multi-stage reasoning capabilities that Level~3 evaluates.
 
-\paragraph{Additional analyses.} Beyond the four conjectures, we report: (i)~the frequency of \emph{novel correct resolutions}: valid conservative defeaters produced by fine-tuned models that do not appear in the training gold set $\Rgold$, measuring generalization beyond memorization; (ii)~reward model fidelity for the learned-reward RLHF variant, quantified as the Spearman correlation $\rho_s(R_\phi, r)$ between learned rewards and verifier scores on the validation set; (iii)~\emph{reward overoptimization}, measured as the gap between mean $R_\phi$ and mean verifier score $r$ on PPO-generated responses at the final checkpoint; and (iv)~scaling projections, obtained by subsampling the training set to $\{10\%, 25\%, 50\%, 100\%\}$ of full size and fitting log-linear curves $\mathrm{Acc}(N) = a + b \log N$ per level, informing data collection priorities for subsequent tiers (Table~\ref{tab:kbsummary}).
+\begin{conjecture}[Cross-Domain Transfer]\label{conj:transfer_chem}
+DeFAb-finetuned models achieve positive accuracy lift on rule-governed chemistry tasks (IUPAC naming, retrosynthesis, structure elucidation) but zero or negative lift on knowledge-retrieval chemistry tasks (molecular property inference), indicating that defeasible reasoning training transfers specifically to tasks requiring sequential rule application with exceptions.
+\end{conjecture}
+
+This conjecture operationalizes the claim that defeasible reasoning is a domain-general capability, not a benchmark-specific skill. The chemistry benchmark provides a controlled test: the rule-governed tasks (IUPAC naming conventions with retained-name exceptions, Corey's retrosynthetic disconnection strategies with functional-group-interference exceptions, spectral interpretation procedures with ambiguity-resolution steps) share structural features with defeasible derivation chains even though no chemistry-specific training data is included in the DeFAb fine-tuning set. A positive result for rule-governed tasks paired with a null result for knowledge-retrieval tasks would constitute strong evidence that the fine-tuning pipeline teaches generalizable structured reasoning rather than domain-specific pattern matching.
+
+\paragraph{Additional analyses.} Beyond the conjectures, we report: (i)~the frequency of \emph{novel correct resolutions}: valid conservative defeaters produced by fine-tuned models that do not appear in the training gold set $\Rgold$, measuring generalization beyond memorization; (ii)~reward model fidelity for the learned-reward RLHF variant, quantified as the Spearman correlation $\rho_s(R_\phi, r)$ between learned rewards and verifier scores on the validation set; (iii)~\emph{reward overoptimization}, measured as the gap between mean $R_\phi$ and mean verifier score $r$ on PPO-generated responses at the final checkpoint; and (iv)~scaling projections, obtained by subsampling the training set to $\{10\%, 25\%, 50\%, 100\%\}$ of full size and fitting log-linear curves $\mathrm{Acc}(N) = a + b \log N$ per level, informing data collection priorities for subsequent tiers (Table~\ref{tab:kbsummary}).
 
 
 \section{Adversarial Defeasible Debate via Monte Carlo Tree Search}\label{sec:debate}
@@ -1150,7 +1164,11 @@ Table~\ref{tab:debate-robustness} reports the per-KB robustness scores for propo
 
 \paragraph{Defeasible fine-tuning as a diagnostic.} The preference optimization pipeline of Section~\ref{sec:finetuning} is designed as a diagnostic instrument for the belief revision deficit. If DeFAb fine-tuning yields substantial Level~3 improvement for instruction-tuned models ($\Delta_{\mathrm{FT}}^{(3)} \gg 0$), the residual gap is primarily attributable to training data composition. If fine-tuning fails despite substantial training signal, the deficit is architectural. The four conjectures of Section~\ref{subsec:ft_hypotheses} decompose this dichotomy further. The base evaluation results modify the prior on Conjecture~\ref{conj:l3improve}: given that reasoning models already achieve 48--65\% with appropriate prompting, the interesting fine-tuning target is instruction-tuned models (Claude, Kimi), for whom the direct-prompting ceiling (16--24\%) and CoT ceiling (9--28\%) leave a large residual gap.
 
-\paragraph{Adversarial debate as a third evaluation paradigm.} The debate protocol of Section~\ref{sec:debate} introduces a qualitatively different evaluation mechanism: rather than measuring a model's accuracy on fixed instances, it measures robustness under adversarial proof perturbation. The MCTS proposal phase generates evaluation targets adaptively, focusing on the most ``interesting'' regions of the derivation space (those with high UCB1 reward). This complements both the static evaluation of Section~\ref{sec:results} and the gradient-based approach of Section~\ref{sec:finetuning}: debate generates challenging instances dynamically, fine-tuning internalises solutions, and direct evaluation provides the fixed benchmark for comparability across studies.
+\paragraph{Adversarial debate as a third evaluation paradigm.} Popper observed that ``those among us who are unwilling to expose their ideas to the hazard of refutation do not take part in the scientific game''~\cite{popper1959logic}. The debate protocol of Section~\ref{sec:debate} operationalizes this principle: rather than measuring a model's accuracy on fixed instances, it measures robustness under adversarial proof perturbation. The MCTS proposal phase generates evaluation targets adaptively, focusing on the most ``interesting'' regions of the derivation space (those with high UCB1 reward). This complements both the static evaluation of Section~\ref{sec:results} and the gradient-based approach of Section~\ref{sec:finetuning}: debate generates challenging instances dynamically, fine-tuning internalises solutions, and direct evaluation provides the fixed benchmark for comparability across studies.
+
+\paragraph{Extension to formalized mathematics.} The Lakatosian connection identified in Sections~\ref{sec:intro} and~\ref{sec:related} suggests a natural extension: \textsc{DeFAb-Math}, a benchmark that applies the defeasible abduction framework to formalized mathematical libraries. The isomorphism is precise. Proven theorems with fully specified hypotheses are strict rules; weakened variants with dropped hypotheses are defeasible rules; counterexamples to the weakened statements are defeaters; and the conservativity requirement ensures that the counterexample blocks the weakened conjecture only in its exception region without invalidating the original theorem's domain. Mathlib (193K+ Lean~4 formalizations), MMLKG (65K+ Mizar theorems), and Sequencelib/OEIS provide the source theories. Lean's type checker replaces the polynomial-time defeasible derivation checker with an exact, sound, and complete verifier, and the verifier-in-the-loop fine-tuning pipeline transfers directly: Lean serves as the reward function for DPO and GRPO without approximation. At Level~3, the model receives a weakened theorem that makes an incorrect default prediction and must construct a minimal counterexample that blocks the prediction conservatively, preserving all instances where the original conditions hold. This is the Lakatosian conjecture--counterexample--refinement cycle, fully formalized and verifier-backed.
+
+\paragraph{Defeasible conflict games for fine-tuning.} The current fine-tuning pipeline (Section~\ref{sec:finetuning}) constructs preferences by sampling model responses and scoring them with the verifier. An alternative is to generate preferences from \emph{adversarial game outcomes}, connecting the debate framework (Section~\ref{sec:debate}) to the preference optimization framework. Given a defeasible conflict where two rules produce contradictory conclusions, Player~A uses MCTS to construct a defeater that resolves the conflict in favor of Rule~A; Player~B does the same for Rule~B. Both defeaters are scored for resolution, conservativity, and novelty. The winner determines the preference pair for DPO. This produces training signal grounded in the structure of the defeasible theory itself rather than in model sampling errors, scales with the number of conflicts in the knowledge base (tens of thousands in UMLS alone), and connects naturally to self-play RLVR: the model plays both sides, the verifier scores both resolutions, and GRPO's group-relative advantage normalization concentrates learning on conflicts where the model produces mixed-quality defeaters. As the model improves, the games become harder, creating an automatic curriculum without manual scheduling.
 
 \paragraph{Limitations.} The base evaluation uses 409 expert-curated Tier~0 instances (374 Level~2, 35 Level~3); Wilson 95\% CI half-widths are approximately $\pm 15$--$17$ pp on aggregate Level~3 accuracy and $\pm 25$--$33$ pp per domain, so per-domain subgroup inferences should be treated as descriptive. The M1 decoder operates approximately by design. The Tier~1 cross-ontology extraction (289,305 rules, 324,511 instances across five domains) demonstrates pipeline scalability but currently produces Level~1 and Level~2 instances only; automated Level~3 generation requires defeater--entity alignment that remains a bottleneck when ConceptNet \texttt{NotCapableOf} edges are sparse (329 total English edges). The richest automated defeater sources are Gene Ontology \texttt{NOT}-qualifiers (1,250 defeaters) and Wikidata P2303 (11,555 defeaters), which together provide structured Level~3 gold standards at scale. The fine-tuning pipeline is evaluated on Tier~0 instances; the Tier~1 dataset (324K instances) provides substantially more training signal for future fine-tuning experiments. The synthetic contamination control (Section~\ref{subsec:synthetic}) mitigates but does not eliminate the contamination confound: while synthetic predicate names are verified against Common Crawl, the \emph{structural patterns} of defeasible theories may themselves be memorized, even if the specific lexical content is novel.
 
@@ -1690,68 +1708,222 @@ A model response such as ``Disordered proteins may function through a conformati
 \item {\bf Claims}
     \item[] Question: Do the main claims made in the abstract and introduction accurately reflect the paper's contributions and scope?
     \item[] Answer: \answerYes{}
-    \item[] Justification: The introduction lists nine numbered contributions and quantifies the key empirical findings (72--79\% Level~2 accuracy under direct prompting; 14--65\% Level~3 accuracy depending on model and prompting strategy). All claims are backed by formal proofs (Appendix~\ref{app:proofs}) and evaluation results (Section~\ref{sec:results}).
+    \item[] Justification: The abstract and introduction state eight numbered contributions and quantify the key empirical findings (73--79\% Level~2 accuracy under direct prompting; 14--65\% Level~3 accuracy depending on model and prompting strategy). All claims are backed by formal proofs (Appendix~\ref{app:proofs}) and evaluation results (Section~\ref{sec:results}).
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the abstract and introduction do not include the claims made in the paper.
+        \item The abstract and/or introduction should clearly state the claims made, including the contributions made in the paper and important assumptions and limitations. A No or NA answer to this question will not be perceived well by the reviewers. 
+        \item The claims made should match theoretical and experimental results, and reflect how much the results can be expected to generalize to other settings. 
+        \item It is fine to include aspirational goals as motivation as long as it is clear that these goals are not attained by the paper. 
+    \end{itemize}
+
 \item {\bf Limitations}
     \item[] Question: Does the paper discuss the limitations of the work performed by the authors?
     \item[] Answer: \answerYes{}
     \item[] Justification: Limitations are addressed in Section~\ref{sec:discussion} and the appendices: (1)~the base evaluation uses 409 Tier~0 instances (35 Level~3); statistical power for per-domain Level~3 breakdowns is limited. (2)~Narrative rendering (M1) decoder recovery is approximate by design. (3)~Tier~1 cross-ontology extraction produces 324,511 instances but automated Level~3 generation from these remains limited by sparse ConceptNet \texttt{NotCapableOf} edges. (4)~Evaluation covers English-language theories; domain and language generalization are open questions.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper has no limitation while the answer No means that the paper has limitations, but those are not discussed in the paper. 
+        \item The authors are encouraged to create a separate "Limitations" section in their paper.
+        \item The paper should point out any strong assumptions and how robust the results are to violations of these assumptions (e.g., independence assumptions, noiseless settings, model well-specification, asymptotic approximations only holding locally). The authors should reflect on how these assumptions might be violated in practice and what the implications would be.
+        \item The authors should reflect on the scope of the claims made, e.g., if the approach was only tested on a few datasets or with a few runs. In general, empirical results often depend on implicit assumptions, which should be articulated.
+        \item The authors should reflect on the factors that influence the performance of the approach. For example, a facial recognition algorithm may perform poorly when image resolution is low or images are taken in low lighting. Or a speech-to-text system might not be used reliably to provide closed captions for online lectures because it fails to handle technical jargon.
+        \item The authors should discuss the computational efficiency of the proposed algorithms and how they scale with dataset size.
+        \item If applicable, the authors should discuss possible limitations of their approach to address problems of privacy and fairness.
+        \item While the authors might fear that complete honesty about limitations might be used by reviewers as grounds for rejection, a worse outcome might be that reviewers discover limitations that aren't acknowledged in the paper. The authors should use their best judgment and recognize that individual actions in favor of transparency play an important role in developing norms that preserve the integrity of the community. Reviewers will be specifically instructed to not penalize honesty concerning limitations.
+    \end{itemize}
+
 \item {\bf Theory assumptions and proofs}
     \item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
     \item[] Answer: \answerYes{}
     \item[] Justification: All propositions, theorems, lemmas, and corollaries are numbered and cross-referenced. Complete proofs appear in Appendix~\ref{app:proofs}. Each result states its assumptions explicitly (e.g., Proposition~\ref{prop:strict} assumes the partition maps all clauses to the strict component; Theorem~\ref{thm:derivP} assumes a finite grounded theory).
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include theoretical results. 
+        \item All the theorems, formulas, and proofs in the paper should be numbered and cross-referenced.
+        \item All assumptions should be clearly stated or referenced in the statement of any theorems.
+        \item The proofs can either appear in the main paper or the supplemental material, but if they appear in the supplemental material, the authors are encouraged to provide a short proof sketch to provide intuition. 
+        \item Inversely, any informal proof provided in the core of the paper should be complemented by formal proofs provided in appendix or supplemental material.
+        \item Theorems and Lemmas that the proof relies upon should be properly referenced. 
+    \end{itemize}
+
     \item {\bf Experimental result reproducibility}
     \item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?
     \item[] Answer: \answerYes{}
     \item[] Justification: Section~\ref{sec:experiments} specifies all models, decoding hyperparameters (greedy, temperature~$=0$), prompting strategies (direct and four-step CoT), evaluation metrics, and instance generation parameters. The generation pipeline and all 409 Tier~0 gold instances (used in the base evaluation) plus the 324,511 Tier~1 instances and 26,693 multi-tier instances are released alongside the paper. Evaluation is fully automated via the open-source pipeline described in Section~\ref{subsec:decoder_validation}.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include experiments.
+        \item If the paper includes experiments, a No answer to this question will not be perceived well by the reviewers: Making the paper reproducible is important, regardless of whether the code and data are provided or not.
+        \item If the contribution is a dataset and/or model, the authors should describe the steps taken to make their results reproducible or verifiable. 
+        \item Depending on the contribution, reproducibility can be accomplished in various ways. For example, if the contribution is a novel architecture, describing the architecture fully might suffice, or if the contribution is a specific model and empirical evaluation, it may be necessary to either make it possible for others to replicate the model with the same dataset, or provide access to the model. In general. releasing code and data is often one good way to accomplish this, but reproducibility can also be provided via detailed instructions for how to replicate the results, access to a hosted model (e.g., in the case of a large language model), releasing of a model checkpoint, or other means that are appropriate to the research performed.
+        \item While NeurIPS does not require releasing code, the conference does require all submissions to provide some reasonable avenue for reproducibility, which may depend on the nature of the contribution. For example
+        \begin{enumerate}
+            \item If the contribution is primarily a new algorithm, the paper should make it clear how to reproduce that algorithm.
+            \item If the contribution is primarily a new model architecture, the paper should describe the architecture clearly and fully.
+            \item If the contribution is a new model (e.g., a large language model), then there should either be a way to access this model for reproducing the results or a way to reproduce the model (e.g., with an open-source dataset or instructions for how to construct the dataset).
+            \item We recognize that reproducibility may be tricky in some cases, in which case authors are welcome to describe the particular way they provide for reproducibility. In the case of closed-source models, it may be that access to the model is limited in some way (e.g., to registered users), but it should be possible for other researchers to have some path to reproducing or verifying the results.
+        \end{enumerate}
+    \end{itemize}
+
+
 \item {\bf Open access to data and code}
     \item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material?
     \item[] Answer: \answerYes{}
-    \item[] Justification: The full DeFAb dataset (409 Tier~0 evaluation instances, 324,511 Tier~1 instances, and 26,693 multi-tier instances, all in JSON), the generation pipeline, the extraction infrastructure for 14 knowledge sources, and the evaluation harness are released under the MIT license. Supplemental material includes the \texttt{README} with one-command reproduction instructions. Evaluated models are accessible via commercial APIs (Azure AI Foundry) and open-source vLLM hosting (CURC), both described in Section~\ref{subsec:evaluation}.
+    \item[] Justification: The full DeFAb dataset (409 Tier~0 evaluation instances plus 351,204 scaled instances across Tiers 1--3), the generation pipeline, extractors for 14 knowledge sources, and the evaluation harness are released under the MIT license. Supplemental material includes the \texttt{README} with one-command reproduction instructions. Evaluated models are accessible via commercial APIs (Azure AI Foundry) and open-source vLLM hosting (CURC), both described in Section~\ref{subsec:evaluation}.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that paper does not include experiments requiring code.
+        \item Please see the NeurIPS code and data submission guidelines (\url{https://nips.cc/public/guides/CodeSubmissionPolicy}) for more details.
+        \item While we encourage the release of code and data, we understand that this might not be possible, so "No" is an acceptable answer. Papers cannot be rejected simply for not including code, unless this is central to the contribution (e.g., for a new open-source benchmark).
+        \item The instructions should contain the exact command and environment needed to run to reproduce the results. See the NeurIPS code and data submission guidelines (\url{https://nips.cc/public/guides/CodeSubmissionPolicy}) for more details.
+        \item The authors should provide instructions on data access and preparation, including how to access the raw data, preprocessed data, intermediate data, and generated data, etc.
+        \item The authors should provide scripts to reproduce all experimental results for the new proposed method and baselines. If only a subset of experiments are reproducible, they should state which ones are omitted from the script and why.
+        \item At submission time, to preserve anonymity, the authors should release anonymized versions (if applicable).
+        \item Providing as much information as possible in supplemental material (appended to the paper) is recommended, but including URLs to data and code is permitted.
+    \end{itemize}
+
+
 \item {\bf Experimental setting/details}
     \item[] Question: Does the paper specify all the training and test details (e.g., data splits, hyperparameters, how they were chosen, type of optimizer, etc.) necessary to understand the results?
     \item[] Answer: \answerYes{}
     \item[] Justification: Section~\ref{sec:experiments} specifies all zero-shot evaluation details: model names and API versions, decoding parameters (greedy, temperature~$=0$, \texttt{max\_tokens}), prompting strategy structure, $k=5$ distractor count, partition function families, and the three-stage decoder pipeline with validation results. Section~\ref{sec:finetuning} specifies all fine-tuning details: LoRA rank and target modules, DPO and PPO hyperparameters ($\beta$, $\gamma$, learning rates, batch sizes, epochs), data split ratios, curriculum schedules, and the verifier-in-the-loop reward computation.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include experiments.
+        \item The experimental setting should be presented in the core of the paper to a level of detail that is necessary to appreciate the results and make sense of them.
+        \item The full details can be provided either with the code, in appendix, or as supplemental material.
+    \end{itemize}
+
 \item {\bf Experiment statistical significance}
     \item[] Question: Does the paper report error bars suitably and correctly defined or other appropriate information about the statistical significance of the experiments?
     \item[] Answer: \answerYes{}
     \item[] Justification: Section~\ref{sec:results} reports 95\% Wilson score confidence intervals for all accuracy figures. Partition sensitivity analysis (Section~\ref{subsec:analysis}) uses two-sample Mann-Whitney $U$ tests and Kruskal-Wallis tests on the difficulty distribution across partition families, with Bonferroni correction for multiple comparisons. All statistical tests are described with their assumptions.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include experiments.
+        \item The authors should answer "Yes" if the results are accompanied by error bars, confidence intervals, or statistical significance tests, at least for the experiments that support the main claims of the paper.
+        \item The factors of variability that the error bars are capturing should be clearly stated (for example, train/test split, initialization, random drawing of some parameter, or overall run with given experimental conditions).
+        \item The method for calculating the error bars should be explained (closed form formula, call to a library function, bootstrap, etc.)
+        \item The assumptions made should be given (e.g., Normally distributed errors).
+        \item It should be clear whether the error bar is the standard deviation or the standard error of the mean.
+        \item It is OK to report 1-sigma error bars, but one should state it. The authors should preferably report a 2-sigma error bar than state that they have a 96\% CI, if the hypothesis of Normality of errors is not verified.
+        \item For asymmetric distributions, the authors should be careful not to show in tables or figures symmetric error bars that would yield results that are out of range (e.g. negative error rates).
+        \item If error bars are reported in tables or plots, The authors should explain in the text how they were calculated and reference the corresponding figures or tables in the text.
+    \end{itemize}
+
 \item {\bf Experiments compute resources}
     \item[] Question: For each experiment, does the paper provide sufficient information on the computer resources (type of compute workers, memory, time of execution) needed to reproduce the experiments?
     \item[] Answer: \answerYes{}
     \item[] Justification: Section~\ref{subsec:evaluation} specifies compute resources: CURC Alpine nodes with NVIDIA A100 80\,GB GPUs for open-source models; Azure AI Foundry Global Standard endpoints for closed-source models. GPU memory requirements per model are stated. Approximate API costs (total $\approx$\$25 for the full closed-source sweep) are reported in supplemental material.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not include experiments.
+        \item The paper should indicate the type of compute workers CPU or GPU, internal cluster, or cloud provider, including relevant memory and storage.
+        \item The paper should provide the amount of compute required for each of the individual experimental runs as well as estimate the total compute. 
+        \item The paper should disclose whether the full research project required more compute than the experiments reported in the paper (e.g., preliminary or failed experiments that didn't make it into the paper). 
+    \end{itemize}
+    
 \item {\bf Code of ethics}
     \item[] Question: Does the research conducted in the paper conform, in every respect, with the NeurIPS Code of Ethics \url{https://neurips.cc/public/EthicsGuidelines}?
     \item[] Answer: \answerYes{}
     \item[] Justification: All source knowledge bases are publicly available under open licenses (CC-BY, Apache 2.0, CC0). No personal data, crowdsourcing, or human subjects are involved. The benchmark evaluates logical reasoning capability and poses no foreseeable dual-use risk.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics.
+        \item If the authors answer No, they should explain the special circumstances that require a deviation from the Code of Ethics.
+        \item The authors should make sure to preserve anonymity (e.g., if there is a special consideration due to laws or regulations in their jurisdiction).
+    \end{itemize}
+
+
 \item {\bf Broader impacts}
     \item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
     \item[] Answer: \answerYes{}
     \item[] Justification: Positive impacts: improved evaluation methodology for reasoning deficits (grounding, novelty, belief revision) may accelerate development of more reliable and scientifically capable AI systems, directly relevant to AI for science. Negative impacts: a benchmark that exposes model weaknesses could be misused to craft adversarial prompts that systematically exploit the belief revision deficit; however, this risk is low given the formal nature of the task. No direct path to harmful deployment is identified.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that there is no societal impact of the work performed.
+        \item If the authors answer NA or No, they should explain why their work has no societal impact or why the paper does not address societal impact.
+        \item Examples of negative societal impacts include potential malicious or unintended uses (e.g., disinformation, generating fake profiles, surveillance), fairness considerations (e.g., deployment of technologies that could make decisions that unfairly impact specific groups), privacy considerations, and security considerations.
+        \item The conference expects that many papers will be foundational research and not tied to particular applications, let alone deployments. However, if there is a direct path to any negative applications, the authors should point it out. For example, it is legitimate to point out that an improvement in the quality of generative models could be used to generate deepfakes for disinformation. On the other hand, it is not needed to point out that a generic algorithm for optimizing neural networks could enable people to train models that generate Deepfakes faster.
+        \item The authors should consider possible harms that could arise when the technology is being used as intended and functioning correctly, harms that could arise when the technology is being used as intended but gives incorrect results, and harms following from (intentional or unintentional) misuse of the technology.
+        \item If there are negative societal impacts, the authors could also discuss possible mitigation strategies (e.g., gated release of models, providing defenses in addition to attacks, mechanisms for monitoring misuse, mechanisms to monitor how a system learns from feedback over time, improving the efficiency and accessibility of ML).
+    \end{itemize}
+    
 \item {\bf Safeguards}
     \item[] Question: Does the paper describe safeguards that have been put in place for responsible release of data or models that have a high risk for misuse (e.g., pretrained language models, image generators, or scraped datasets)?
     \item[] Answer: \answerNA{}
     \item[] Justification: The released artifacts are evaluation instances derived from public logic-based knowledge bases and a deterministic evaluation pipeline. No pretrained models are released. No internet-scraped data is included. The dataset does not contain personal information, sensitive content, or information that poses misuse risk.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper poses no such risks.
+        \item Released models that have a high risk for misuse or dual-use should be released with necessary safeguards to allow for controlled use of the model, for example by requiring that users adhere to usage guidelines or restrictions to access the model or implementing safety filters. 
+        \item Datasets that have been scraped from the Internet could pose safety risks. The authors should describe how they avoided releasing unsafe images.
+        \item We recognize that providing effective safeguards is challenging, and many papers do not require this, but we encourage authors to take this into account and make a best faith effort.
+    \end{itemize}
+
 \item {\bf Licenses for existing assets}
     \item[] Question: Are the creators or original owners of assets (e.g., code, data, models), used in the paper, properly credited and are the license and terms of use explicitly mentioned and properly respected?
     \item[] Answer: \answerYes{}
     \item[] Justification: All knowledge bases are cited with their primary references. License information: YAGO~(CC-BY~4.0), WordNet~(Princeton WordNet License, free for research), LKIF Core~(Apache~2.0), MatOnto~(CC-BY~4.0), Wikidata~(CC0~1.0), ConceptNet~(CC-BY-SA~4.0). All are free for academic use. Source KB licenses are compatible with the MIT license under which DeFAb instances are released.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not use existing assets.
+        \item The authors should cite the original paper that produced the code package or dataset.
+        \item The authors should state which version of the asset is used and, if possible, include a URL.
+        \item The name of the license (e.g., CC-BY 4.0) should be included for each asset.
+        \item For scraped data from a particular source (e.g., website), the copyright and terms of service of that source should be provided.
+        \item If assets are released, the license, copyright information, and terms of use in the package should be provided. For popular datasets, \url{paperswithcode.com/datasets} has curated licenses for some datasets. Their licensing guide can help determine the license of a dataset.
+        \item For existing datasets that are re-packaged, both the original license and the license of the derived asset (if it has changed) should be provided.
+        \item If this information is not available online, the authors are encouraged to reach out to the asset's creators.
+    \end{itemize}
+
 \item {\bf New assets}
     \item[] Question: Are new assets introduced in the paper well documented and is the documentation provided alongside the assets?
     \item[] Answer: \answerYes{}
     \item[] Justification: The DeFAb dataset (409 Tier~0 evaluation instances plus 351,204 scaled instances across Tiers 1--3), the generation pipeline, extractors for 14 knowledge sources, and the evaluation harness are released with a \texttt{README} providing installation, data format specification, and one-command reproduction instructions. Each instance JSON includes instance metadata, the challenge theory, target, candidates, gold hypotheses, and formal metrics (Nov, d\_rev, conservativity). The generation pipeline is documented in Sections~\ref{subsec:conversion}--\ref{subsec:level3}.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not release new assets.
+        \item Researchers should communicate the details of the dataset/code/model as part of their submissions via structured templates. This includes details about training, license, limitations, etc. 
+        \item The paper should discuss whether and how consent was obtained from people whose asset is used.
+        \item At submission time, remember to anonymize your assets (if applicable). You can either create an anonymized URL or include an anonymized zip file.
+    \end{itemize}
+
 \item {\bf Crowdsourcing and research with human subjects}
     \item[] Question: For crowdsourcing experiments and research with human subjects, does the paper include the full text of instructions given to participants and screenshots, if applicable, as well as details about compensation (if any)? 
     \item[] Answer: \answerNA{}
     \item[] Justification: No crowdsourcing or human subjects are involved. All instances are generated by the deterministic formal pipeline described in Sections~\ref{subsec:conversion}--\ref{subsec:level3}. The small set of high-novelty Level~3 instances with novel predicates were authored by the paper's author.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.
+        \item Including this information in the supplemental material is fine, but if the main contribution of the paper involves human subjects, then as much detail as possible should be included in the main paper. 
+        \item According to the NeurIPS Code of Ethics, workers involved in data collection, curation, or other labor should be paid at least the minimum wage in the country of the data collector. 
+    \end{itemize}
+
 \item {\bf Institutional review board (IRB) approvals or equivalent for research with human subjects}
     \item[] Question: Does the paper describe potential risks incurred by study participants, whether such risks were disclosed to the subjects, and whether Institutional Review Board (IRB) approvals (or an equivalent approval/review based on the requirements of your country or institution) were obtained?
     \item[] Answer: \answerNA{}
     \item[] Justification: No human subjects are involved. IRB review is not required.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the paper does not involve crowdsourcing nor research with human subjects.
+        \item Depending on the country in which research is conducted, IRB approval (or equivalent) may be required for any human subjects research. If you obtained IRB approval, you should clearly state this in the paper. 
+        \item We recognize that the procedures for this may vary significantly between institutions and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the guidelines for their institution. 
+        \item For initial submissions, do not include any information that would break anonymity (if applicable), such as the institution conducting the review.
+    \end{itemize}
+
 \item {\bf Declaration of LLM usage}
     \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does not impact the core methodology, scientific rigorousness, or originality of the research, declaration is not required.
     %this research? 
     \item[] Answer: \answerYes{}
     \item[] Justification: LLMs are the primary evaluated objects in Section~\ref{sec:results}. The D3 semantic parser used in the cascading decoder (Section~\ref{subsec:decoder_validation}) employs a language model for hypothesis extraction from narrative responses. All LLM usage in the evaluation pipeline is described in Section~\ref{subsec:evaluation} and Appendix~\ref{app:rendering}.
+    \item[] Guidelines:
+    \begin{itemize}
+        \item The answer NA means that the core method development in this research does not involve LLMs as any important, original, or non-standard components.
+        \item Please refer to our LLM policy (\url{https://neurips.cc/Conferences/2026/LLM}) for what should or should not be described.
+    \end{itemize}
+
 \end{enumerate}
 
 

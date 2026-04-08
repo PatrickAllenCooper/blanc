@@ -1,0 +1,81 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+
+\titlespacing*{\section}{0pt}{8pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{3pt}
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+\pagestyle{empty}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Collaboration Brief: Google.org AI for Science Application}\\[4pt]
+{\normalsize Patrick Cooper, Department of Computer Science, CU Boulder}\\[2pt]
+{\small April 2026}
+\end{center}
+
+\vspace{-4pt}
+\hrule
+\vspace{6pt}
+
+\section*{The Opportunity}
+
+The \href{https://www.google.org/impact-challenges/ai-science/}{Google.org Impact Challenge: AI for Science} is a \$30M global open call offering grants of \$500K--\$3M to academic institutions. Selected teams also receive six months of pro bono Google engineering support and Google Cloud credits. \textbf{Applications close April 17, 2026.} The two priority focus areas are \emph{AI for Health \& Life Sciences} and \emph{AI for Climate Resilience \& Environmental Science}.
+
+\section*{What We Have Built}
+
+Over the past year at CU Boulder, I have developed \textsc{DeFAb} (Defeasible Abduction Benchmark): an open-source pipeline and dataset for evaluating and training foundation models on \emph{exception-aware reasoning} over structured knowledge bases. The core idea is simple: medical and scientific knowledge is full of rules that hold \emph{by default} but admit exceptions. Drug X treats Condition Y, unless the patient has Comorbidity Z. Gene G has molecular function F, unless NOT-qualified experimental evidence overrides that annotation. SNOMED concept C inherits properties from its parent, unless the child explicitly overrides them.
+
+Current AI benchmarks (MedQA, PubMedQA, BioASQ) test whether models can \emph{retrieve} biomedical facts. None test whether models can \emph{reason about exceptions}: recognizing when a general rule fails, identifying what exception applies, and revising conclusions while preserving unrelated knowledge. This is the gap between an AI that looks up answers and one that reasons safely.
+
+\textsc{DeFAb} addresses this gap with a formally grounded methodology. We convert expert-curated knowledge bases into \emph{defeasible theories} where every rule is tagged as strict or revisable, every conclusion has a traceable proof, and every exception is verifiable in polynomial time. We then generate evaluation instances at three levels of difficulty: (1)~missing-fact completion, (2)~rule abduction, and (3)~\emph{defeater abduction}, where the model must construct an exception that blocks an incorrect default conclusion while preserving all unrelated inferences.
+
+\textbf{Critically, we have already built extraction pipelines for the major biomedical ontologies:}
+\begin{itemize}[nosep, leftmargin=1.5em]
+    \item \textbf{Gene Ontology:} 409,378 rules extracted; 1,250 defeaters from NOT-qualified experimental annotations
+    \item \textbf{UMLS:} Extractor implemented for 3.4M concepts across 189 source vocabularies; encodes clinical contradiction relations (e.g., \texttt{treats} vs.\ \texttt{contraindicated\_with}) as structured defeaters
+    \item \textbf{SNOMED CT:} Extractor implemented for 360K+ clinical concepts; captures property-override exceptions via OWL axioms
+    \item \textbf{MeSH:} 76,650 strict taxonomic rules across 16 medical subject categories
+\end{itemize}
+
+Preliminary evaluation of four frontier models (GPT-5.2, Claude Sonnet 4.6, DeepSeek-R1, Kimi-K2.5) shows strong performance on rule retrieval but significant failures on exception handling, precisely the capability that matters for safe biomedical inference.
+
+\section*{The Proposed Application: DeFAb-Health}
+
+We propose to apply under \emph{AI for Health \& Life Sciences} with a project titled \textbf{DeFAb-Health: A Verifier-Backed Benchmark for Exception-Aware Biomedical AI}. The deliverables:
+
+\begin{enumerate}[nosep, leftmargin=1.5em]
+    \item An \textbf{open benchmark} of defeasible reasoning instances drawn from GO, UMLS, SNOMED~CT, and MeSH, testing whether AI systems can handle the exceptions inherent in biomedical knowledge
+    \item A \textbf{verifier-backed training pipeline} that uses polynomial-time proof checking as an exact reward signal, enabling reliable fine-tuning without human annotation
+    \item A \textbf{public leaderboard} tracking foundation model performance on biomedical exception handling
+    \item Demonstrated \textbf{fine-tuned models} with measurably improved defeasible reasoning on biomedical theories
+\end{enumerate}
+
+The grant's criteria require \emph{innovative AI use}, \emph{open-source release}, \emph{feasibility} (existing traction matters), and \emph{scalability}. We satisfy all four: AI is the core methodology, everything will be open-source, the pipeline is already built and tested, and the extraction architecture is ontology-agnostic, so any institution can extend it to their domain.
+
+\section*{Why Collaboration with Anschutz Is Essential}
+
+The grant strongly favors interdisciplinary teams with domain expertise. A CS-only proposal lacks credibility on \emph{why these reasoning failures matter clinically}. We need collaborators who can:
+
+\begin{itemize}[nosep, leftmargin=1.5em]
+    \item Validate that exception-handling failures in UMLS/SNOMED reasoning represent real clinical risk
+    \item Help design evaluation scenarios grounded in actual biomedical inference tasks (drug interaction checking, clinical decision support, genomic annotation interpretation)
+    \item Provide or facilitate access to licensed biomedical data (UMLS, SNOMED CT)
+    \item Co-author the application with domain authority
+\end{itemize}
+
+The time constraint is tight: two weeks to submission. The core infrastructure is built. What we need is the biomedical grounding to make the health impact case convincing to reviewers.
+
+\vspace{4pt}
+\hrule
+\vspace{4pt}
+{\small\textbf{Contact:} Patrick Cooper, \href{mailto:patrick.cooper@colorado.edu}{patrick.cooper@colorado.edu} \hfill \textbf{Project:} \href{https://github.com/PatrickAllenCooper/blanc}{github.com/PatrickAllenCooper/blanc} (open-source, MIT license)}
+
+\end{document}

@@ -671,7 +671,13 @@ Key findings that affect implementation:
 
 **Maintained by**: Patrick Cooper  
 **Next update**: After dataset paper submission (May 6, 2026)  
-**See also**: `paper/dataset_paper.tex` (the dedicated NeurIPS 2026 E&D submission)
+**See also**: `paper/dataset_paper.tex` (the dedicated NeurIPS 2026 E&D submission), `Guidance_Documents/GOOGLE_ORG_APPLICATION.md` (Google.org grant application draft)
+
+**Recent progress (2026-04-07)**:
+- Google.org Impact Challenge: AI for Science application drafted (deadline April 17, 2026). The application frames DeFAb under "AI for Health & Life Sciences" as DeFAb-Health, emphasizing the biomedical KB extraction pipeline (UMLS, SNOMED CT, GO, MeSH) and verifier-backed fine-tuning. See `Guidance_Documents/GOOGLE_ORG_APPLICATION.md` for the complete drafted responses. PI: Alvaro Velasquez; team: 4 PhD students + 1 postdoc. Funding request: $2M over 36 months.
+- Extended vision developed for the application: expanded medical dataset integration roadmap covering Orphanet (16K rare diseases), HPO (18K phenotypic terms), DrugBank (14K+ drug entries), PharmGKB (800+ clinical guidelines), ClinVar (2.5M+ variant submissions), FDA AEMS, NCI Thesaurus (170K cancer concepts), Reactome (2,700+ pathways), and DisGeNET (1.1M+ gene-disease associations). Creative applications identified: rare disease diagnosis as defeater recognition, adverse drug reaction prediction as exception forecasting, pharmacogenomic precision as formalized exception handling, and cancer treatment resistance as scientific belief revision. Trust framed as a set of formally verifiable properties (traceability, revisability, conservativity, accountability, contamination resistance).
+- Collaboration brief prepared: `paper/google_org_brief.tex` (DeFAb-Health proposal summary for CU Anschutz outreach)
+- Genesis abstract prepared: `paper/genesis_abstract.tex` (multimodal hypothesis generation framing by PI Velasquez)
 
 **Recent progress (2026-03-22)**:
 - UMLS 2025AB license obtained and data verified at `D:\datasets\umls-2025AB-metathesaurus-full\2025AB\META\`

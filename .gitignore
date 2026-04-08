@@ -99,3 +99,6 @@ cache/
 .env
 cache/
 results/evaluations/*.json
+
+# Grant applications (sensitive, not for public repo)
+Guidance_Documents/GOOGLE_ORG_APPLICATION.md
