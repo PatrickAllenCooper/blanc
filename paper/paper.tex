@@ -60,6 +60,8 @@
 \usepackage{mathtools}
 \usepackage{thmtools}
 \usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta}
 \usepackage[margin=1in]{geometry}
 
 % Theorem environments
@@ -115,6 +117,7 @@
 \newcommand{\Rob}{\mathrm{Rob}}
 \newcommand{\Gnd}{\mathrm{Gnd}}
 \newcommand{\Cre}{\mathrm{Cre}}
+\newcommand{\Score}{\mathrm{Score}}
 % Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
 \title{Defeasible Reasoning as a Framework for Foundation Model Grounding, Novelty, and Belief Revision}
 
@@ -200,6 +203,8 @@ We introduce \textsc{DeFAb} (\textbf{De}feasible \textbf{A}bduction \textbf{B}en
     \item \textbf{A synthetic contamination control.} We introduce procedurally generated \emph{synthetic defeasible theories} with invented predicate and entity names, preserving the structural parameters of naturalistic theories (depth, branching factor, support set size, defeater complexity) while guaranteeing that gold-standard hypotheses fall outside any pretraining corpus. The naturalistic--synthetic accuracy gap $\Delta_{\mathrm{synth}}$ provides a per-model, per-level upper bound on contamination-attributable performance inflation, and its absence constitutes positive evidence that measured accuracy reflects genuine defeasible reasoning capability rather than memorized solutions (Section~\ref{subsec:synthetic}).
 
     \item \textbf{A preference optimization pipeline for defeasible fine-tuning.} We present a method for converting DeFAb instances into verifier-grounded preference data for DPO~\cite{rafailov2023direct} and RLHF~\cite{ouyang2022training}, exploiting the benchmark's polynomial-time scoring function as an exact reward signal. The pipeline includes a margin-weighted DPO variant adapted to the ordinal structure of Level~3 graded scoring, a verifier-in-the-loop (VITL) RLHF variant that eliminates reward model approximation, and curriculum schedules informed by the level hierarchy (Section~\ref{sec:finetuning}).
+
+    \item \textbf{A game-theoretic framework for defeasible conflict resolution.} We formalize defeasible conflicts as two-player zero-sum games whose outcomes produce structurally grounded preference pairs for DPO and self-play training signal for GRPO. The framework extends to a theory construction MDP in which the agent builds coherent theories through sequential actions, each verified in polynomial time, and an Active Inference formulation~\cite{parr2022active} that separates epistemic exploration (probing theory structure) from pragmatic revision (constructing defeaters). The formal properties of these games---binarity, zero-sumness, finiteness, and determinacy---are established in Appendix~\ref{app:game_theory} (Section~\ref{subsec:conflict_games}).
 
     \item \textbf{An adversarial defeasible debate protocol.} We formalize a competitive multi-agent evaluation framework in which two agents use Monte Carlo Tree Search over the derivation space to propose and defend competing conclusions. The Author Algorithm's criticality computation generates mutual challenges by permuting proof trees, and agents must defend under these adversarial perturbations. Resolution metrics for robustness, grounding, and creativity provide a richer diagnostic signal than single-pass evaluation (Section~\ref{sec:debate}).
 \end{enumerate}
@@ -993,6 +998,255 @@ This conjecture operationalizes the claim that defeasible reasoning is a domain-
 \paragraph{Additional analyses.} Beyond the conjectures, we report: (i)~the frequency of \emph{novel correct resolutions}: valid conservative defeaters produced by fine-tuned models that do not appear in the training gold set $\Rgold$, measuring generalization beyond memorization; (ii)~reward model fidelity for the learned-reward RLHF variant, quantified as the Spearman correlation $\rho_s(R_\phi, r)$ between learned rewards and verifier scores on the validation set; (iii)~\emph{reward overoptimization}, measured as the gap between mean $R_\phi$ and mean verifier score $r$ on PPO-generated responses at the final checkpoint; and (iv)~scaling projections, obtained by subsampling the training set to $\{10\%, 25\%, 50\%, 100\%\}$ of full size and fitting log-linear curves $\mathrm{Acc}(N) = a + b \log N$ per level, informing data collection priorities for subsequent tiers (Table~\ref{tab:kbsummary}).
 
 
+\subsection{Defeasible Conflict Games}\label{subsec:conflict_games}
+
+The preference pipeline of Sections~\ref{subsec:pref_data}--\ref{subsec:dpo} and the RLVR pipeline of Section~\ref{subsec:rlvr} provide two capabilities that are currently separate: (1)~a preference optimization framework (DPO, RLHF, GRPO) that uses the polynomial-time verifier as a reward signal, and (2)~the adversarial debate framework (Section~\ref{sec:debate}) where MCTS agents compete over derivation trees. The central proposal of this subsection is to \emph{unify} these: adversarial game outcomes become preference data for DPO, and game dynamics become the environment for RLVR.
+
+The key object is a \emph{defeasible conflict}: a theory $\D$ where two rules produce contradictory conclusions. The game is to resolve the conflict by constructing a defeater.
+
+This game formulation operationalizes a specific account of how knowledge advances. Popper~\cite{popper1959logic} argued that scientific theories earn their status by surviving attempts at falsification. In our formalization, defeasible rules are Popperian conjectures: revisable claims that make predictions and expose themselves to refutation. Defeaters are falsifiers: structured counterevidence that overrides specific defaults. Lakatos~\cite{lakatos1976proofs} refined this picture in \emph{Proofs and Refutations}: mathematical knowledge develops through a dialectical cycle in which a conjecture is proposed (the defeasible rule), a counterexample is discovered (the anomaly), and the conjecture is refined by restricting its scope or adding conditions (the conservative defeater). Lakatos identified specific strategies for this refinement---monster-barring, exception-barring, and lemma-incorporation---each of which maps to a distinct type of defeater construction, and the conservativity requirement ensures that whichever strategy the model adopts, the valid core of the original conjecture is preserved. The defeasible conflict game makes this dialectic adversarial. Two agents compete to determine which resolution of a conflict is formally superior: Lakatos's seminar room, formalized.
+
+\begin{definition}[Defeasible Conflict]\label{def:conflict}
+A defeasible conflict in theory $\D$ is a pair of defeasible rules $(r_A, r_B)$ such that $\D \pPartial q$ via a chain including $r_A$ and $\D \pPartial \comp{q}$ via a chain including $r_B$, with no existing superiority relation resolving the conflict.
+\end{definition}
+
+\begin{definition}[Conflict Resolution Game]\label{def:conflict_game}
+Given a conflict $(r_A, r_B, q)$ over theory $\D$, a two-player game proceeds as follows:
+\begin{enumerate}[nosep]
+    \item \textbf{Player A} uses MCTS over the derivation space to construct a defeater $d_A$ such that $\D \cup \{d_A\} \pPartial q$ and $\D \cup \{d_A\} \not\pPartial \comp{q}$. That is, $d_A$ resolves the conflict in favor of $r_A$.
+    \item \textbf{Player B} does the same for $r_B$: constructs $d_B$ such that $\D \cup \{d_B\} \pPartial \comp{q}$ and $\D \cup \{d_B\} \not\pPartial q$.
+    \item Both defeaters are scored by the polynomial-time verifier for:
+    \begin{itemize}[nosep]
+        \item Resolution: does the defeater actually resolve the conflict?
+        \item Conservativity: $|\Exp(\D \cup \{d\}) \setminus \Exp(\D)| + |\Exp(\D) \setminus \Exp(\D \cup \{d\})|$
+        \item Novelty: $\Nov(d, \D)$
+    \end{itemize}
+    \item The \textbf{winner} is the player whose defeater achieves higher composite score: resolution (binary gate) $\times$ conservativity (lower is better) $\times$ novelty bonus.
+\end{enumerate}
+The formal properties of this game---binarity, zero-sumness, finiteness, and determinacy---are established in Appendix~\ref{app:game_theory}.
+\end{definition}
+
+
+\subsection{Game-Generated Preferences for DPO}\label{subsec:game_prefs}
+
+Standard DPO constructs preferences by sampling model responses and scoring them. The conflict game formulation replaces this with structurally grounded preferences:
+
+\begin{definition}[Game-Generated Preference Pair]\label{def:game_pref}
+Given a conflict $(r_A, r_B, q)$ with game outcome $(d_w, d_l)$ where $d_w$ is the winning defeater and $d_l$ the losing defeater:
+\[
+    (y_w, y_l) = \bigl(\rho_{\mathrm{enc}}(d_w),\; \rho_{\mathrm{enc}}(d_l)\bigr)
+\]
+where $\rho_{\mathrm{enc}}$ renders the defeater in the prompt modality. The preference reflects which resolution is formally superior, independent of any model's behavior.
+\end{definition}
+
+The margin-weighted DPO loss (Equation~\ref{eq:graded_dpo}) applies directly, with $\Delta r_{wl}$ now representing the composite score gap between game outcomes rather than sampled response scores.
+
+Three properties distinguish game-generated preferences from sampling-based preferences:
+
+\begin{enumerate}[nosep]
+    \item \textbf{Signal source.} Preferences come from the structure of the defeasible theory, not from model errors. The model is trained on what the knowledge base says is correct, not on its own failure modes.
+    \item \textbf{Strategic depth.} MCTS explores the space of possible defeaters with principled exploration-exploitation tradeoffs. A single conflict may admit dozens of valid defeaters at varying conservativity levels. MCTS finds the best ones.
+    \item \textbf{Scale.} The number of preference pairs scales with the number of conflicts in the knowledge base. UMLS alone provides tens of thousands of structured conflicts.
+\end{enumerate}
+
+
+\subsection{Self-Play and Process Reward}\label{subsec:selfplay}
+
+\paragraph{Self-play.} Rather than pre-computing game outcomes offline, the model plays both sides of each conflict. For each conflict $(r_A, r_B, q)$:
+\begin{enumerate}[nosep]
+    \item Generate $G$ candidate defeaters for Rule A: $\{d_A^1, \ldots, d_A^G\}$
+    \item Generate $G$ candidate defeaters for Rule B: $\{d_B^1, \ldots, d_B^G\}$
+    \item Score all $2G$ candidates with the verifier
+    \item The winning side's best defeater is reinforced; the losing side's best is suppressed
+\end{enumerate}
+As the model improves at one side, the other side must improve to compete. The difficulty of the game tracks the model's capability without manual curriculum scheduling, connecting naturally to the GRPO framework of Section~\ref{subsec:rlvr}: group-relative advantage normalization concentrates learning on conflicts where the model produces mixed-quality defeaters.
+
+\paragraph{Process reward from derivation steps.} The defeasible derivation decomposes into independently verifiable steps, each providing a binary or graded reward signal:
+\begin{enumerate}[nosep]
+    \item \textbf{Conflict identification}: Did the model correctly identify the conflicting rules? (Checkable: do both rules exist in $\D$ with contradictory heads?)
+    \item \textbf{Attack analysis}: Did the model identify which rules attack the target? (Checkable: enumerate attacking rules via the engine.)
+    \item \textbf{Defeater construction}: Is the proposed defeater syntactically well-formed and does it target the correct rule? (Checkable: parse and verify the defeater structure.)
+    \item \textbf{Resolution verification}: Does the defeater actually resolve the conflict? (Checkable: run the engine on $\D \cup \{d\}$.)
+    \item \textbf{Conservativity check}: Are all unrelated expectations preserved? (Checkable: compare $\Exp(\D)$ and $\Exp(\D \cup \{d\})$.)
+\end{enumerate}
+GRPO can normalize advantages at the step level rather than the outcome level, producing credit assignment that identifies exactly where the model's reasoning fails. This step-level decomposition complements the five-level ordinal scoring of Section~\ref{subsec:partial_credit}: the scoring function measures \emph{what} the model achieved, while process reward identifies \emph{where} it went wrong.
+
+
+\subsection{Theory Construction as RL Environment}\label{subsec:theory_mdp}
+
+The most ambitious formulation treats the defeasible theory itself as the environment. Rather than generating a single defeater in one shot, the agent constructs a coherent theory through a sequence of actions, each verified in polynomial time.
+
+\subsubsection{Defeasible Theory as MDP}
+
+\begin{definition}[Theory Construction MDP]\label{def:theory_mdp}
+The theory construction MDP $\mathcal{M} = (S, A, T, R, \gamma)$ is defined by:
+\begin{itemize}[nosep]
+    \item \textbf{State} $s_t = (\D_t, \mathcal{A}_t)$: the current theory $\D_t = (F, \Rs, \Rd, \Rdf, {\succ})$ and the set of unresolved anomalies $\mathcal{A}_t = \{\alpha \mid \D_t \pPartial \comp{\alpha},\; \D_t \not\vdash_\Delta \comp{\alpha}\}$.
+    \item \textbf{Actions} $a_t \in A$: three types, each parameterized by the language bias $\La$:
+    \begin{enumerate}[nosep]
+        \item Propose a defeasible rule: $r_d\colon b_1, \ldots, b_m \defto h$
+        \item Propose a defeater: $r_{df}\colon b_1, \ldots, b_m \defeatto \comp{h}$
+        \item Assert a superiority relation: $r_i \succ r_j$
+    \end{enumerate}
+    \item \textbf{Transition} $T$: deterministic. $\D_{t+1} = \D_t \cup \{a_t\}$, with $\mathcal{A}_{t+1}$ recomputed by the verifier.
+    \item \textbf{Reward} $R(s_t, a_t)$: decomposed as
+    \[
+        R(s_t, a_t) = \underbrace{|\mathcal{A}_t| - |\mathcal{A}_{t+1}|}_{\text{anomalies resolved}} - \lambda \underbrace{|\Exp(\D_t) \setminus \Exp(\D_{t+1})|}_{\text{expectations lost}} - \mu \cdot \mathbf{1}[a_t]_{\text{parsimony}}
+    \]
+    where $\lambda$ penalizes conservativity violations and $\mu$ penalizes theory size.
+    \item \textbf{Termination}: $\mathcal{A}_t = \emptyset$ (success) or $t > T$ (budget exhausted).
+\end{itemize}
+\end{definition}
+
+GRPO applies directly to this MDP. For each initial state $s_0$, the agent generates $G$ candidate action sequences (rollouts). Each rollout produces a terminal theory $\D_T$, scored by cumulative reward. Advantages are normalized within the group, concentrating gradient on rollouts where the agent's choices made a difference.
+
+\subsubsection{Active Inference Formulation}
+
+Standard RL maximizes expected cumulative reward. Active Inference~\cite{parr2022active} instead minimizes \emph{Expected Free Energy} (EFE), which decomposes into two terms that map naturally onto defeasible reasoning.
+
+\begin{definition}[Expected Free Energy over Defeasible Theories]\label{def:efe}
+For a policy $\pi$ (a sequence of theory-modifying actions), the EFE is:
+\[
+    G(\pi) = \underbrace{-\mathbb{E}_{Q(o_\tau|\pi)}[\ln P(o_\tau)]}_{\text{pragmatic value}} - \underbrace{\mathbb{E}_{Q(o_\tau|\pi)}\bigl[D_{\mathrm{KL}}[Q(s_\tau|o_\tau,\pi) \| Q(s_\tau|\pi)]\bigr]}_{\text{epistemic value}}
+\]
+where:
+\begin{itemize}[nosep]
+    \item $s_\tau$ is the future theory state $(\D_\tau, \mathcal{A}_\tau)$
+    \item $o_\tau$ is the verifier's observation (anomaly count, conservativity status, expectation set)
+    \item $P(o_\tau)$ encodes preferences: zero anomalies, full conservativity
+    \item The epistemic term measures how much executing $\pi$ would reduce uncertainty about the theory's structure
+\end{itemize}
+\end{definition}
+
+The pragmatic term drives anomaly resolution: select actions that move the theory toward zero anomalies. The epistemic term drives \emph{theory exploration}: select actions that reveal information about the theory's structure before committing to a revision. In a defeasible theory, epistemic actions have concrete instantiations~\cite{friston2017active,sajid2021active}:
+
+\begin{itemize}[nosep]
+    \item \textbf{Support probing}: compute $\Supp(\D, q)$ for a target $q$ to identify which rules are load-bearing
+    \item \textbf{Criticality testing}: check whether $e \in \CritStar(\D, q)$ to discover which elements are essential
+    \item \textbf{Conflict scanning}: enumerate rules $r \in R[\comp{q}]$ whose antecedents are satisfiable, revealing latent attacks
+    \item \textbf{Conservativity pre-screening}: test $\Exp(\D \cup \{d\}) \supseteq \Exp(\D) \setminus \{\comp{\alpha}\}$ before committing to defeater $d$
+\end{itemize}
+
+\begin{proposition}[Tractability of Epistemic Actions]\label{prop:epistemic_tractable}
+All four epistemic actions above are computable in polynomial time: support set enumeration is $O(|\D|^2 \cdot |F|)$, criticality testing is $O(|R| \cdot |F|)$ per element, conflict scanning is $O(|R|^2)$, and conservativity checking is $O(|\Exp(\D)| \cdot |R| \cdot |F|)$.
+\end{proposition}
+
+This tractability distinguishes defeasible Active Inference from the general case. In typical Active Inference, the generative model may be intractable and epistemic actions have unknown cost. Here, every epistemic query has known polynomial-time complexity, so the agent can budget its exploration precisely.
+
+\subsubsection{Active Inference vs.\ GRPO}
+
+GRPO and Active Inference occupy different points on the planning spectrum:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Property & GRPO & Active Inference \\
+\midrule
+Planning horizon & Single step (one-shot generation) & Multi-step (sequential construction) \\
+Exploration & Implicit (group diversity) & Explicit (epistemic value term) \\
+Exploitation & Implicit (advantage normalization) & Explicit (pragmatic value term) \\
+Sparsity & Zero gradient when all $G$ score alike & Zero epistemic value when outcome certain \\
+Belief state & None (model-free) & Maintained (posterior over theory states) \\
+Epistemic actions & Not distinguished from pragmatic & Formally separated, independently scored \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+GRPO is a special case: when the planning horizon is one step and epistemic value is zero (the agent already knows the outcome of each candidate action), the EFE reduces to expected pragmatic value, which is equivalent to the GRPO advantage. Active Inference extends this by allowing the agent to first invest in epistemic actions (probing the theory's structure) before committing to pragmatic actions (constructing the revision). The sequential composition of explore-then-exploit mirrors the Lakatosian cycle: the counterexample search is an epistemic phase (what conflicts exist?), and the conjecture refinement is a pragmatic phase (resolve the conflict conservatively).
+
+\subsubsection{Active Inference Theory Construction: Workflow}
+
+\begin{center}
+\begin{tikzpicture}[
+    >=stealth,
+    box/.style={
+        draw, rounded corners=3pt,
+        minimum height=1cm, minimum width=2.8cm,
+        font=\small, inner sep=6pt,
+        text centered, align=center
+    },
+    arr/.style={->, thick},
+    lbl/.style={font=\scriptsize, fill=white, inner sep=2pt},
+]
+
+\node[box] (beliefs) at (0, 0) {Beliefs over\\theory state $Q(s_t)$};
+\node[box] (efe) at (0, -2.6) {Compute EFE\\$G(\pi) = G_{\mathrm{prag}} + G_{\mathrm{epist}}$};
+\node[box] (action) at (0, -5.2) {Select action\\(epistemic or pragmatic)};
+
+\node[box] (theory) at (6.5, 0) {Theory state\\$\D_t, \mathcal{A}_t$};
+\node[box] (verifier) at (6.5, -2.6) {Polynomial-time\\verifier};
+\node[box] (obs) at (6.5, -5.2) {Observation\\$o_t = (\mathcal{A}_{t+1}, \Exp, \mathrm{cons.})$};
+
+\draw[arr] (beliefs) -- node[lbl, right] {evaluate policies} (efe);
+\draw[arr] (efe) -- node[lbl, right] {minimize EFE} (action);
+
+\draw[arr] (action.east) -- node[lbl, above] {$a_t$} (obs.west);
+
+\draw[arr] (theory) -- node[lbl, right] {current state} (verifier);
+
+\draw[arr] (verifier) -- node[lbl, right] {score action} (obs);
+
+\draw[arr, dashed] (obs.east) -- ++(1.2, 0) |- node[lbl, right, pos=0.25] {update state} (theory.east);
+
+\draw[arr, dashed] (action.west) -- ++(-1.4, 0) |- node[lbl, left, pos=0.25] {posterior update} (beliefs.west);
+
+\end{tikzpicture}
+\end{center}
+
+The loop operates as follows. The agent maintains beliefs $Q(s_t)$ over the current theory state. It evaluates candidate policies by computing EFE, decomposed into pragmatic value (will this action resolve anomalies?) and epistemic value (will this action reveal useful structure?). It selects the action minimizing EFE, which may be an epistemic probe (e.g., computing criticality of a rule) or a pragmatic revision (e.g., adding a defeater). The verifier scores the action and produces an observation. The agent updates its beliefs and repeats.
+
+The critical difference from the GRPO workflow in Section~\ref{subsec:rlvr}: GRPO generates all candidates in parallel and scores them in one batch. Active Inference operates sequentially, using the result of each action to inform the next. This enables multi-step theory construction where early epistemic actions narrow the search space for later pragmatic actions.
+
+
+\subsection{Unified Training Pipeline}\label{subsec:unified_pipeline}
+
+The methods of Sections~\ref{subsec:sft}--\ref{subsec:selfplay} compose into a three-phase pipeline:
+
+\begin{center}
+\begin{tikzpicture}[
+    >=stealth,
+    box/.style={
+        draw, rounded corners=3pt,
+        minimum height=1cm, minimum width=2.8cm,
+        font=\small, inner sep=6pt,
+        text centered, align=center
+    },
+    arr/.style={->, thick},
+    lbl/.style={font=\scriptsize, fill=white, inner sep=2pt},
+]
+
+\node[box] (sft) at (0, 0) {Phase 1\\SFT on gold hypotheses};
+\node[box] (dpo) at (0, -2.2) {Phase 2\\DPO on game preferences};
+\node[box] (rlvr) at (0, -4.4) {Phase 3\\RLVR self-play};
+
+\node[box] (verifier) at (5.5, -2.2) {Polynomial-time\\verifier};
+\node[box] (kb) at (5.5, -4.4) {Knowledge Base\\conflicts};
+
+\draw[arr] (sft) -- node[lbl, right] {warm start} (dpo);
+\draw[arr] (dpo) -- node[lbl, right] {online phase} (rlvr);
+
+\draw[arr] (verifier.west) -- node[lbl, above] {preferences} (dpo.east);
+
+\draw[arr] (verifier.south west) -- node[lbl, above, pos=0.4] {rewards} (rlvr.east);
+
+\draw[arr] (kb) -- node[lbl, right] {games} (verifier);
+
+\draw[arr, dashed] (rlvr.south) -- ++(0, -0.6) -|
+    node[lbl, below, pos=0.25] {harder games} (kb.south);
+
+\end{tikzpicture}
+\end{center}
+
+Phase~1 (SFT): train on gold hypotheses from existing DeFAb instances (Section~\ref{subsec:sft}). This establishes baseline format compliance and grounding capability.
+
+Phase~2 (DPO): train on game-generated preferences (Section~\ref{subsec:game_prefs}). MCTS pre-computes conflict resolutions offline. The margin-weighted loss (Equation~\ref{eq:graded_dpo}) internalizes the ordinal structure of conflict resolution quality.
+
+Phase~3 (RLVR): online self-play with GRPO (Section~\ref{subsec:selfplay}). The model generates defeaters in real time. The verifier provides exact rewards. The feedback loop between model improvement and game difficulty creates an automatic curriculum.
+
+The verifier is the fixed point. It never degrades, never approximates, never drifts. Every training signal, whether preference or reward, is mathematically verified (Proposition~\ref{prop:verifier_invariance}, Appendix~\ref{app:game_theory}).
+
+
 \section{Adversarial Defeasible Debate via Monte Carlo Tree Search}\label{sec:debate}
 
 The evaluation of Sections~\ref{sec:results}--\ref{sec:finetuning} treats each model as an isolated oracle queried in a single pass. We now consider a complementary paradigm: placing two agents in \emph{competitive dialogue} over the derivation space of a shared defeasible theory. Each agent uses Monte Carlo Tree Search (MCTS) to explore the space of conclusions licensed by the knowledge base, proposes a statement it considers well-supported, and must then defend that statement when the Author Algorithm permutes the underlying proof tree. The resulting protocol---\emph{adversarial defeasible debate}---aims to surface latent reasoning capability by forcing agents to justify derivations under perturbation, a mechanism distinct from both prompting scaffolds (Section~\ref{sec:results}) and gradient-based fine-tuning (Section~\ref{sec:finetuning}).
@@ -1028,7 +1282,7 @@ where $N(v)$ is the visit count, $Q(v)$ is the cumulative reward, and the first 
 
 \begin{definition}[Derivation reward]\label{def:deriv-reward}
 For a terminal derivation state $C$ reached during rollout, the \emph{derivation reward} $\rho: 2^{\La} \to [0,1]$ is a weighted combination:
-\begin{equation}\label{eq:reward}
+\begin{equation}\label{eq:deriv_reward}
   \rho(C) = w_s \cdot \rho_{\mathrm{str}}(C) + w_n \cdot \rho_{\mathrm{nov}}(C)
 \end{equation}
 where:
@@ -1166,9 +1420,39 @@ Table~\ref{tab:debate-robustness} reports the per-KB robustness scores for propo
 
 \paragraph{Adversarial debate as a third evaluation paradigm.} Popper observed that ``those among us who are unwilling to expose their ideas to the hazard of refutation do not take part in the scientific game''~\cite{popper1959logic}. The debate protocol of Section~\ref{sec:debate} operationalizes this principle: rather than measuring a model's accuracy on fixed instances, it measures robustness under adversarial proof perturbation. The MCTS proposal phase generates evaluation targets adaptively, focusing on the most ``interesting'' regions of the derivation space (those with high UCB1 reward). This complements both the static evaluation of Section~\ref{sec:results} and the gradient-based approach of Section~\ref{sec:finetuning}: debate generates challenging instances dynamically, fine-tuning internalises solutions, and direct evaluation provides the fixed benchmark for comparability across studies.
 
-\paragraph{Extension to formalized mathematics.} The Lakatosian connection identified in Sections~\ref{sec:intro} and~\ref{sec:related} suggests a natural extension: \textsc{DeFAb-Math}, a benchmark that applies the defeasible abduction framework to formalized mathematical libraries. The isomorphism is precise. Proven theorems with fully specified hypotheses are strict rules; weakened variants with dropped hypotheses are defeasible rules; counterexamples to the weakened statements are defeaters; and the conservativity requirement ensures that the counterexample blocks the weakened conjecture only in its exception region without invalidating the original theorem's domain. Mathlib (193K+ Lean~4 formalizations), MMLKG (65K+ Mizar theorems), and Sequencelib/OEIS provide the source theories. Lean's type checker replaces the polynomial-time defeasible derivation checker with an exact, sound, and complete verifier, and the verifier-in-the-loop fine-tuning pipeline transfers directly: Lean serves as the reward function for DPO and GRPO without approximation. At Level~3, the model receives a weakened theorem that makes an incorrect default prediction and must construct a minimal counterexample that blocks the prediction conservatively, preserving all instances where the original conditions hold. This is the Lakatosian conjecture--counterexample--refinement cycle, fully formalized and verifier-backed.
+\paragraph{Extension to formalized mathematics.} The Lakatosian connection identified in Sections~\ref{sec:intro} and~\ref{sec:related} suggests a natural extension: \textsc{DeFAb-Math}, a benchmark that applies the defeasible abduction framework to formalized mathematical libraries. The isomorphism is precise:
+\begin{itemize}[nosep]
+    \item \textbf{Strict rules} from proven theorems. \texttt{theorem foo (h1: C1) (h2: C2) : P} becomes $r_s\colon C_1, C_2 \strictto P$, validated by Lean's kernel.
+    \item \textbf{Defeasible rules} from weakened theorems. Dropping condition $C_2$ yields $r_d\colon C_1 \defto P$, a conjecture that is usually true but admits exceptions when $C_1 \wedge \neg C_2$ holds.
+    \item \textbf{Defeaters} from counterexamples. An instance $a$ with $C_1(a) \wedge \neg C_2(a) \wedge \neg P(a)$ is a falsifier that defeats $r_d$.
+    \item \textbf{Conservativity} from the full theorem. The defeater must block $P$ only in the exception region $(\neg C_2)$, preserving every instance where all original conditions hold.
+\end{itemize}
+Mathlib (193K+ Lean~4 formalizations), MMLKG (65K+ Mizar theorems), and Sequencelib/OEIS provide the source theories. Lean's type checker replaces the polynomial-time defeasible derivation checker with an exact, sound, and complete verifier, and the verifier-in-the-loop fine-tuning pipeline (Section~\ref{subsec:unified_pipeline}) transfers directly: Lean serves as the reward function for DPO and GRPO without approximation. The defeasible conflict game (Section~\ref{subsec:conflict_games}) applies directly: two conflicting conjectures (weakened theorems with overlapping but incompatible domains) are resolved by constructing counterexamples that determine which conjecture should yield.
 
-\paragraph{Defeasible conflict games for fine-tuning.} The current fine-tuning pipeline (Section~\ref{sec:finetuning}) constructs preferences by sampling model responses and scoring them with the verifier. An alternative is to generate preferences from \emph{adversarial game outcomes}, connecting the debate framework (Section~\ref{sec:debate}) to the preference optimization framework. Given a defeasible conflict where two rules produce contradictory conclusions, Player~A uses MCTS to construct a defeater that resolves the conflict in favor of Rule~A; Player~B does the same for Rule~B. Both defeaters are scored for resolution, conservativity, and novelty. The winner determines the preference pair for DPO. This produces training signal grounded in the structure of the defeasible theory itself rather than in model sampling errors, scales with the number of conflicts in the knowledge base (tens of thousands in UMLS alone), and connects naturally to self-play RLVR: the model plays both sides, the verifier scores both resolutions, and GRPO's group-relative advantage normalization concentrates learning on conflicts where the model produces mixed-quality defeaters. As the model improves, the games become harder, creating an automatic curriculum without manual scheduling.
+Two concrete examples illustrate the framework. \textit{Euler's formula} $V - E + F = 2$: the defeasible rule states this holds for all polyhedra; the defeater identifies polyhedra with genus $> 0$ (a torus has $V - E + F = 0$). At Level~3, the model must construct the genus-based exception without breaking the formula for convex polyhedra. Lakatos devoted an entire book to the dialectical history of exactly this conjecture. \textit{Convergent sequences of continuous functions}: ``convergent sequences of continuous functions have continuous limits.'' The defeater identifies that pointwise (not uniform) convergence may yield discontinuous limits. The refined conjecture is a strict rule in Mathlib (\texttt{TendstoUniformly.continuous}). The game: Player~A argues for the pointwise convergence conjecture; Player~B constructs the counterexample; the verifier (Lean) confirms the counterexample and checks that the refinement to uniform convergence preserves all valid instances.
+
+\paragraph{Defeasible conflict games for fine-tuning.} Sections~\ref{subsec:conflict_games}--\ref{subsec:unified_pipeline} develop a game-theoretic extension of the fine-tuning pipeline that unifies preference optimization with adversarial debate. The defeasible conflict game (Definition~\ref{def:conflict_game}) produces structurally grounded preference pairs (Definition~\ref{def:game_pref}) whose signal comes from the knowledge base itself rather than from model sampling errors. Self-play (Section~\ref{subsec:selfplay}) creates an automatic curriculum: as the model improves at one side of a conflict, the opposing side must improve to compete, with difficulty tracking capability without manual scheduling. The theory construction MDP (Definition~\ref{def:theory_mdp}) and Active Inference formulation (Definition~\ref{def:efe}) extend the framework from single-step defeater generation to sequential theory construction, where epistemic actions (probing the theory's structure) narrow the search space for subsequent pragmatic actions (constructing revisions). The formal properties of these games---binarity, zero-sumness, finiteness, and determinacy---are established in Appendix~\ref{app:game_theory}.
+
+\paragraph{Open questions for game-based training.} The game-theoretic framework raises several questions requiring experimental investigation:
+
+\begin{enumerate}[nosep]
+    \item \textbf{Is RLVR necessary?} Learned preferences via the defeasible games may be adequate and RLVR may not provide tangible benefit. This must be experimentally verified via ablation, connecting to Conjecture~\ref{conj:sft_vs_pref}.
+    \item \textbf{Novelty computation.} We indicate that novelty can be computed but provide no explicit formulation. Information-theoretic surprisal and topological novelty on the dependency graph are candidate metrics; parsimony or conservativity alone may suffice for exploring the decision space.
+    \item \textbf{Conflict enumeration at scale.} How many distinct conflicts exist in UMLS, SNOMED, GO? Is the number tractable for exhaustive game generation, or do we need sampling strategies?
+    \item \textbf{Game balance.} Are most conflicts one-sided (one resolution clearly superior)? If so, the preference signal may be redundant. How many conflicts admit competitive resolutions where MCTS search depth matters?
+    \item \textbf{Self-play stability.} Does the self-play dynamic converge, or does it oscillate? The verifier prevents reward hacking, but the model could cycle between favoring Rule~A and Rule~B without settling. This connects to Conjecture~\ref{conj:sparsity} on gradient sparsity.
+    \item \textbf{Process vs.\ outcome reward.} Does step-level reward from derivation decomposition (Section~\ref{subsec:selfplay}) actually improve credit assignment, or does the additional complexity of step scoring introduce noise?
+    \item \textbf{Transfer to open-ended reasoning.} Models trained on KB-derived conflicts learn to resolve structured disagreements. Does this transfer to open-ended clinical reasoning where the theory is implicit rather than explicit? This extends Conjecture~\ref{conj:transfer_chem}.
+    \item \textbf{Connection to drug discovery.} In the biomedical setting, a conflict between ``Drug~X treats Condition~Y'' and ``Drug~X is contraindicated for Comorbidity~Z'' is a clinical decision. Can defeasible self-play produce models that reason about pharmacogenomic exceptions without explicit pharmacogenomic training data?
+    \item \textbf{Lakatos strategies as reward shaping.} Can the three Lakatosian refinement strategies (monster-barring, exception-barring, lemma-incorporation) be formalized as distinct reward components? If so, the training signal could distinguish \emph{how} the model refines a conjecture, not just whether the refinement is conservative.
+    \item \textbf{Mathematics as the cleanest testbed.} Lean provides an exact verifier with no approximation. If the game-based fine-tuning framework works on DeFAb-Math (where verification is perfect), does the approach transfer to biomedical domains (where verification is polynomial-time but operates over noisier knowledge bases)?
+    \item \textbf{Popper's asymmetry.} Popper observed that falsification is logically stronger than confirmation: a single counterexample refutes a universal claim, but no number of confirmations can prove one. Does this asymmetry manifest in the game dynamics? Is the opponent (falsifier) systematically advantaged over the proponent (conjecture defender)?
+    \item \textbf{Epistemic vs.\ pragmatic sample efficiency.} Does the Active Inference formulation (Section~\ref{subsec:theory_mdp}) improve sample efficiency over GRPO by explicitly separating exploration from exploitation? The hypothesis: epistemic actions narrow the search space for subsequent pragmatic actions, reducing the number of rollouts needed to find valid resolutions.
+    \item \textbf{Epistemic foraging for latent defeaters.} Can Active Inference discover defeaters that one-shot GRPO generation misses? If the theory has deep dependency chains, epistemic actions that trace support sets may reveal distant vulnerability points invisible to single-step generation.
+    \item \textbf{Lakatos as Active Inference trajectory.} Is the Lakatosian conjecture--counterexample--refinement cycle an optimal Active Inference policy? If Active Inference naturally recovers this two-phase structure, it provides a normative justification for the Lakatosian methodology.
+    \item \textbf{Falsification as epistemic action.} Popperian falsification can be formalized as selecting the action with maximal epistemic value: the observation that most discriminates between competing theories. Does Active Inference's epistemic term naturally produce falsification-seeking behavior without explicit reward shaping?
+    \item \textbf{Active Inference vs.\ curriculum scheduling.} Does the epistemic/pragmatic balance in Active Inference replace the need for manual curriculum scheduling (Section~\ref{subsec:curriculum})? If epistemic value naturally decreases as the agent learns the theory's structure, the transition from exploration to exploitation is automatic.
+\end{enumerate}
 
 \paragraph{Limitations.} The base evaluation uses 409 expert-curated Tier~0 instances (374 Level~2, 35 Level~3); Wilson 95\% CI half-widths are approximately $\pm 15$--$17$ pp on aggregate Level~3 accuracy and $\pm 25$--$33$ pp per domain, so per-domain subgroup inferences should be treated as descriptive. The M1 decoder operates approximately by design. The Tier~1 cross-ontology extraction (289,305 rules, 324,511 instances across five domains) demonstrates pipeline scalability but currently produces Level~1 and Level~2 instances only; automated Level~3 generation requires defeater--entity alignment that remains a bottleneck when ConceptNet \texttt{NotCapableOf} edges are sparse (329 total English edges). The richest automated defeater sources are Gene Ontology \texttt{NOT}-qualifiers (1,250 defeaters) and Wikidata P2303 (11,555 defeaters), which together provide structured Level~3 gold standards at scale. The fine-tuning pipeline is evaluated on Tier~0 instances; the Tier~1 dataset (324K instances) provides substantially more training signal for future fine-tuning experiments. The synthetic contamination control (Section~\ref{subsec:synthetic}) mitigates but does not eliminate the contamination confound: while synthetic predicate names are verified against Common Crawl, the \emph{structural patterns} of defeasible theories may themselves be memorized, even if the specific lexical content is novel.
 
@@ -1181,7 +1465,7 @@ At Level~3 (defeater abduction), the picture is more structured than a simple fa
 
 Two methodological findings have implications beyond this benchmark. First, the prompt-format confound at Level~3: a uniform CoT template (candidate-selection style) systematically underestimates reasoning-model capability on generation tasks. Evaluation designs for formal abductive benchmarks must separate selection-task and generation-task prompting protocols. Second, the narrative-modality bottleneck: all four models score 14--22\% on narrative rendering (M1) versus 73--94\% on formal modalities, a gap larger than any inter-model or inter-level difference---establishing that rendering robustness is a distinct evaluation dimension from logical reasoning capability.
 
-DeFAb provides the formal infrastructure---polynomial-time instance generation, verifier-backed gold hypotheses, Wilson-CI-equipped rendering-robust accuracy, a McNemar-tested model comparison protocol, and synthetic contamination controls that isolate formal reasoning from memorized domain knowledge---to track progress on belief revision as training paradigms evolve. The preference optimization pipeline of Section~\ref{sec:finetuning} extends the benchmark from a passive evaluation instrument to an active training signal, exploiting the polynomial-time verifier as an exact reward function for DPO and RLHF. The adversarial debate protocol of Section~\ref{sec:debate} adds a third dimension: competitive MCTS-driven agents that generate challenging evaluation instances adaptively and force models to defend derivations under proof perturbation. The central open question is whether fine-tuning and debate---separately or in combination---can close the residual gap for instruction-tuned models (Claude, Kimi) for whom neither direct nor CoT prompting achieves high Level~3 accuracy. In Christie's terms: we have shown that some of today's detectives can, under the right conditions, override their deepest assumptions. The work that remains is understanding whether that override can be made robust, transferable, and independent of the prompting scaffold---and whether pitting detectives against one another sharpens the deductions of both. The M5 visual grounding modality opens a further dimension: whether the defeasible reasoning capabilities measured here transfer to multimodal settings where entity identification requires perception, connecting the formal revision framework to the emerging landscape of vision-language evaluation.
+DeFAb provides the formal infrastructure---polynomial-time instance generation, verifier-backed gold hypotheses, Wilson-CI-equipped rendering-robust accuracy, a McNemar-tested model comparison protocol, and synthetic contamination controls that isolate formal reasoning from memorized domain knowledge---to track progress on belief revision as training paradigms evolve. The preference optimization pipeline of Section~\ref{sec:finetuning} extends the benchmark from a passive evaluation instrument to an active training signal, exploiting the polynomial-time verifier as an exact reward function for DPO and RLHF. The defeasible conflict game framework (Section~\ref{subsec:conflict_games}) unifies preference optimization with adversarial self-play: game outcomes become structurally grounded preference pairs, the theory construction MDP (Section~\ref{subsec:theory_mdp}) provides a sequential environment for RLVR, and the Active Inference formulation separates epistemic exploration from pragmatic revision, mirroring the Lakatosian dialectic that motivates the framework. The adversarial debate protocol of Section~\ref{sec:debate} adds a further dimension: competitive MCTS-driven agents that generate challenging evaluation instances adaptively and force models to defend derivations under proof perturbation. The central open question is whether fine-tuning and debate---separately or in combination---can close the residual gap for instruction-tuned models (Claude, Kimi) for whom neither direct nor CoT prompting achieves high Level~3 accuracy. In Christie's terms: we have shown that some of today's detectives can, under the right conditions, override their deepest assumptions. The work that remains is understanding whether that override can be made robust, transferable, and independent of the prompting scaffold---and whether pitting detectives against one another sharpens the deductions of both. The M5 visual grounding modality opens a further dimension: whether the defeasible reasoning capabilities measured here transfer to multimodal settings where entity identification requires perception, connecting the formal revision framework to the emerging landscape of vision-language evaluation.
 
 
 \bibliographystyle{plainnat}
@@ -1695,6 +1979,135 @@ Narrative rendering: ``Proteins typically have a stable three-dimensional struct
 
 A model response such as ``Disordered proteins may function through a conformational ensemble mechanism rather than lock-and-key binding'' would decode via $\rho_{\mathrm{dec}}^{\mathrm{sem}}$ to match $r_4$, scoring as a correct strong resolution with $\Nov > 0$.
 \end{example}
+
+
+%% =================================================================
+%%  APPENDIX E: GAME-THEORETIC FOUNDATIONS
+%% =================================================================
+
+\section{Game-Theoretic Foundations}\label{app:game_theory}
+
+The two-player structure of the conflict resolution game (Definition~\ref{def:conflict_game}) is not a modeling choice. It is forced by the proof theory of defeasible logic. This appendix makes the argument precise and establishes the formal properties that the training pipeline depends on: binarity, zero-sumness, finiteness, and determinacy.
+
+\subsection{From Derivation Conditions to Games}
+
+We begin with the standard derivation condition for defeasible provability. In the formulation of Antoniou, Billington, and Governatori~\cite{antoniou2001defeasible}, the condition $+\partial q$ holds in theory $\D$ if and only if:
+
+\begin{enumerate}[nosep]
+    \item There exists a rule $r \in R[q]$ such that every antecedent of $r$ is provable, and
+    \item For every rule $s \in R[\comp{q}]$ whose antecedents are all provable, there exists a rule $t \in R[q]$ whose antecedents are all provable and $t > s$.
+\end{enumerate}
+
+The quantifier structure is $\exists \forall \exists$. This alternation defines a two-player evaluation game in the standard sense of logic and model theory. Let the \emph{proponent} control the existential quantifiers and the \emph{opponent} control the universal quantifier. The proponent selects a supporting rule $r$, the opponent selects an attacking rule $s$, and the proponent must counter with a superior rule $t$. A derivation succeeds if and only if the proponent has a winning strategy in this game. This connection between alternating quantifiers and two-player games is not metaphorical; it is the content of the game-theoretic semantics of Hintikka~\cite{hintikka1996principles} applied to the metalanguage of the derivation conditions.
+
+\begin{proposition}[Binarity of Defeasible Conflict]\label{prop:binarity}
+Let $\D$ be a defeasible theory and let $q$ be a literal. Under classical complementation, every conflict over $q$ in $\D$ partitions the relevant rules into exactly two sets: $R[q]$ and $R[\comp{q}]$. No rule bears on both sides, and no third position exists.
+\end{proposition}
+
+\begin{proof}
+By the definition of a defeasible theory, every rule $r$ has a unique consequent $c(r)$. For a conflict over literal $q$, a rule is relevant if and only if $c(r) = q$ or $c(r) = \comp{q}$. Classical complementation is an involution ($\comp{\comp{q}} = q$), so $c(r) \in \{q, \comp{q}\}$ is an exhaustive and mutually exclusive partition of the relevant rules.
+\end{proof}
+
+\begin{remark}\label{rem:binarity}
+Binarity is a consequence of classical negation, not of any domain assumption. A logic with three-valued complementation (e.g., where $q$, $\comp{q}$, and $\bot$ are distinct) could induce three-player conflicts. The restriction to two players is precisely the restriction to classical defeasible logic.
+\end{remark}
+
+\subsection{From Proof Games to Theory Construction Games}
+
+The standard dialogical game operates over a fixed theory: given $\D$, does $+\partial q$ hold? Both the proponent and the opponent select from rules already present in $\D$. Our conflict resolution game (Definition~\ref{def:conflict_game}) differs in a precise way: the theory is not fixed, and the players construct extensions to it.
+
+\begin{definition}[Theory Construction Game]\label{def:theory_construction_game}
+Let $(r_A, r_B, q)$ be a defeasible conflict in $\D$. The theory construction game $\Gamma(\D, r_A, r_B, q)$ is a simultaneous-move game defined by:
+\begin{enumerate}[nosep]
+    \item \textbf{Strategy sets.} Player~A's strategy set is $S_A = \{d \in \mathcal{L}_\D \mid \D \cup \{d\} \pPartial q \text{ and } \D \cup \{d\} \not\pPartial \comp{q}\}$. Player~B's strategy set $S_B$ is defined symmetrically. Here $\mathcal{L}_\D$ is the defeater language over $\D$ (Definition~\ref{def:defeater_language}).
+    \item \textbf{Payoff.} The payoff to Player~A is $u_A(d_A, d_B) = \Score(d_A, \D, q) - \Score(d_B, \D, \comp{q})$, with $u_B = -u_A$.
+\end{enumerate}
+\end{definition}
+
+Two properties of this game require proof: that it is zero-sum, and that it is finite (and therefore determined).
+
+\begin{proposition}[Zero-Sum Structure]\label{prop:zerosum}
+The theory construction game $\Gamma(\D, r_A, r_B, q)$ is zero-sum.
+\end{proposition}
+
+\begin{proof}
+By construction, $u_B = -u_A$. It remains to show this is not merely a convention but reflects a logical constraint: no theory extension can simultaneously resolve the conflict in favor of both $q$ and $\comp{q}$.
+
+Suppose for contradiction that there exists an extension $\D' \supseteq \D$ such that $\D' \pPartial q$ and $\D' \pPartial \comp{q}$ and the conflict $(r_A, r_B)$ is resolved. By the resolution condition (Definition~\ref{def:conflict_game}), resolution in favor of $q$ requires $\D' \not\pPartial \comp{q}$, and resolution in favor of $\comp{q}$ requires $\D' \not\pPartial q$. Both conditions cannot hold simultaneously. Hence any resolution must favor exactly one side, and the gain of one player is the loss of the other.
+\end{proof}
+
+\subsection{Finiteness and Determinacy}
+
+The standard dialogical game over a fixed theory is finite because defeasible proof trees are well-founded: they bottom out at facts and strict rules. The theory construction game introduces a new concern, since the players are not selecting from a fixed rule set but constructing new rules. The strategy space could in principle be infinite. The following definition and proposition establish that it is not.
+
+\begin{definition}[Defeater Language]\label{def:defeater_language}
+Given a defeasible theory $\D$ with predicate signature $\Sigma$ and constant domain $C$, the defeater language $\mathcal{L}_\D$ is the set of all syntactically well-formed defeaters whose predicates are drawn from $\Sigma$, whose constants are drawn from $C$, and whose rule length (number of antecedents) is bounded by $k = \max_{r \in \D} |A(r)|$, the maximum antecedent length of any rule in $\D$.
+\end{definition}
+
+\begin{proposition}[Finiteness of Strategy Sets]\label{prop:finiteness}
+If $\Sigma$ and $C$ are finite, then $\mathcal{L}_\D$ is finite, and therefore $S_A$ and $S_B$ are finite.
+\end{proposition}
+
+\begin{proof}
+A defeater $d$ is specified by: a set of antecedents (a subset of the Herbrand base $\mathrm{HB}(\Sigma, C)$, bounded in size by $k$), a consequent (an element of $\mathrm{HB}(\Sigma, C)$ or its complement), and a target rule in $\D$. Since $\mathrm{HB}(\Sigma, C)$ is finite when $\Sigma$ and $C$ are finite, the number of possible antecedent sets of size at most $k$ is $\sum_{i=0}^{k} \binom{|\mathrm{HB}(\Sigma, C)|}{i}$, which is finite. The number of consequents is $2|\mathrm{HB}(\Sigma, C)|$, and the number of target rules is $|\D|$. The product is finite.
+\end{proof}
+
+\begin{remark}\label{rem:finiteness}
+The bound $k$ is a modeling choice, not a logical necessity. Without it, the strategy space remains finite (since $\Sigma$ and $C$ are finite, the Herbrand base is finite, and the powerset of a finite set is finite), but the bound ensures the strategy space is computationally manageable. In practice, defeaters in biomedical and mathematical theories rarely exceed the antecedent complexity of the rules they target, so the bound is not restrictive.
+\end{remark}
+
+\begin{proposition}[Determinacy]\label{prop:determinacy}
+The theory construction game $\Gamma(\D, r_A, r_B, q)$ is determined: it has a value $v^*$ such that
+\[
+    v^* = \max_{d_A \in S_A} \min_{d_B \in S_B} u_A(d_A, d_B) = \min_{d_B \in S_B} \max_{d_A \in S_A} u_A(d_A, d_B).
+\]
+\end{proposition}
+
+\begin{proof}
+The game is finite (Proposition~\ref{prop:finiteness}) and zero-sum (Proposition~\ref{prop:zerosum}). By von Neumann's minimax theorem for finite zero-sum games, the game has a value and both players have optimal (possibly mixed) strategies.
+\end{proof}
+
+\begin{remark}\label{rem:simultaneous}
+The simultaneous-move formulation is appropriate because neither player's defeater depends on the other's choice within a single game instance. In the self-play setting (Section~\ref{subsec:selfplay}), the same model generates defeaters for both sides independently. The sequential structure arises across training iterations, not within a single game.
+\end{remark}
+
+\subsection{The Verifier as Fixed Point}
+
+The scoring function $\Score(d, \D, q)$ is computed by the polynomial-time verifier. The following property is essential for the training pipeline and distinguishes the defeasible game from settings where reward is learned or approximated.
+
+\begin{proposition}[Verifier Invariance]\label{prop:verifier_invariance}
+The scoring function $\Score$ is:
+\begin{enumerate}[nosep]
+    \item \textbf{Deterministic:} the same defeater receives the same score on every evaluation.
+    \item \textbf{Model-independent:} the score depends only on $d$, $\D$, and $q$, not on the model that generated $d$.
+    \item \textbf{Polynomial-time:} for a theory with $n$ rules, scoring requires $O(n^2)$ time via the standard defeasible logic engine.
+\end{enumerate}
+\end{proposition}
+
+These properties jointly guarantee that the game value $v^*$ is stable across training. The minimax strategies may change as the model improves (it may discover new defeaters in $S_A$ or $S_B$ that it previously failed to generate), but the payoff function itself does not drift. This is the precise sense in which the verifier is a fixed point: it defines a stationary game that the model learns to play, rather than a co-evolving objective that the model learns to exploit.
+
+\subsection{Lakatos as Extensive Form}
+
+The connection to Lakatos~\cite{lakatos1976proofs} can now be stated as a formal claim rather than an analogy.
+
+\begin{proposition}[Lakatos Correspondence]\label{prop:lakatos_correspondence}
+Let $\D_{\mathrm{math}}$ be a defeasible theory constructed from a formalized mathematical library (Section~\ref{sec:discussion}) where strict rules correspond to proven theorems and defeasible rules correspond to weakened conjectures. Then the Lakatosian dialectical cycle
+\[
+    \text{conjecture} \longrightarrow \text{counterexample} \longrightarrow \text{refinement}
+\]
+is the move sequence of a conflict resolution game $\Gamma(\D_{\mathrm{math}}, r_A, r_B, q)$ in which:
+\begin{enumerate}[nosep]
+    \item The conjecture is the defeasible rule $r_A$ (or $r_B$).
+    \item The counterexample is the defeater $d$ constructed by the opposing player.
+    \item The refinement is the updated theory $\D_{\mathrm{math}} \cup \{d\}$, which preserves all instances where the original theorem's full conditions hold (conservativity) while blocking the conjecture in the exception region.
+\end{enumerate}
+When the formalized library is in Lean~4, the verifier is Lean's kernel, which is exact and sound by construction.
+\end{proposition}
+
+\begin{proof}[Proof sketch]
+The correspondence is verified by checking that each component of the Lakatosian cycle satisfies the formal definitions. A weakened theorem (conjecture) is a defeasible rule by Definition~\ref{def:defeater_language}'s construction: dropping a hypothesis $C_2$ from a strict rule $C_1, C_2 \strictto P$ yields the defeasible rule $C_1 \defto P$. A counterexample is an instance $a$ with $C_1(a) \wedge \neg C_2(a) \wedge \neg P(a)$, which constitutes a defeater because it provides evidence for $\comp{P}$ in the scope of $r$'s antecedent. The conservativity condition (Definition~\ref{def:conflict_game}, item~3) requires that the defeater does not block $P$ in the region where all original hypotheses hold, which is exactly the requirement that the refinement preserve the valid core of the original theorem. The three Lakatosian strategies (monster-barring, exception-barring, lemma-incorporation) correspond to three syntactically distinct classes of defeaters: those that restrict the domain of the defeasible rule, those that add conditions to the antecedent, and those that restructure the rule's dependency chain, respectively.
+\end{proof}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
