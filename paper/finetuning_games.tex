@@ -95,13 +95,13 @@ Three properties distinguish game-generated preferences from sampling-based pref
     \item \textbf{Scale.} The number of preference pairs scales with the number of conflicts in the knowledge base. UMLS alone provides tens of thousands of structured conflicts.
 \end{enumerate}
 
-\section{RLVR via Defeasible Self-Play}
+\section{RLVR via Defeasible Games}
 
-RLVR replaces learned reward models with verifiable rewards. In the defeasible game setting, RLVR takes two forms.
+Reinforcement learning with verifiable rewards (RLVR) replaces learned reward models with exact, deterministic reward signals. In the defeasible game setting, the polynomial-time verifier serves as the reward source across all formulations below. What varies is not the reward source---which is always the verifier---but the problem formulation and optimization algorithm. We present four progressively ambitious approaches: one-shot generation with batch scoring (Section~4.1), adversarial self-play with step-level credit assignment (Sections~4.2--4.3), sequential theory construction as a Markov decision process (Section~4.4), and neural-guided tree search in the style of AlphaZero (Section~4.5).
 
 \subsection{GRPO on Game Instances}
 
-The straightforward extension: use GRPO (group relative policy optimization) on game-generated conflict instances. For each conflict, the model generates $G$ candidate defeaters. Each is scored by the verifier. Advantages are normalized within the group:
+The baseline approach applies GRPO (group relative policy optimization) directly to game-generated conflict instances. For a given conflict, the model generates $G$ candidate defeaters in a single forward pass. Each candidate is scored by the verifier, and advantages are normalized within the group:
 \[
     \hat{A}_i = \frac{\Score(d_i, \D, q) - \mathrm{mean}(\mathbf{s})}{\mathrm{std}(\mathbf{s})}
 \]
@@ -111,7 +111,7 @@ GRPO's sparsity property applies: conflicts where all $G$ candidates receive ide
 
 \subsection{Self-Play}
 
-The model plays both sides. For each conflict $(r_A, r_B, q)$:
+The baseline generates defeaters for one side of a conflict. Self-play extends this by having the model play both sides simultaneously, introducing adversarial pressure while retaining the same verifier-based reward. For each conflict $(r_A, r_B, q)$:
 \begin{enumerate}[nosep]
     \item Generate $G$ candidate defeaters for Rule A: $\{d_A^1, \ldots, d_A^G\}$
     \item Generate $G$ candidate defeaters for Rule B: $\{d_B^1, \ldots, d_B^G\}$
@@ -123,7 +123,7 @@ As the model improves at one side, the other side must improve to compete. The d
 
 \subsection{Process Reward from Derivation Steps}
 
-The defeasible derivation decomposes into independently verifiable steps:
+Orthogonal to the choice between one-shot generation and self-play, the granularity of the reward signal can be refined. Rather than scoring only the final defeater, the defeasible derivation decomposes into independently verifiable steps:
 \begin{enumerate}[nosep]
     \item \textbf{Conflict identification}: Did the model correctly identify the conflicting rules? (Checkable: do both rules exist in $\D$ with contradictory heads?)
     \item \textbf{Attack analysis}: Did the model identify which rules attack the target? (Checkable: enumerate attacking rules via the engine.)
@@ -136,14 +136,234 @@ Each step provides a binary or graded reward signal. GRPO can normalize advantag
 
 \subsection{Theory Construction as RL Environment}
 
-The most ambitious formulation. The defeasible theory is the environment. At each step, the model takes an action:
+The preceding approaches treat defeater generation as a single-step problem: the model produces a complete candidate and the verifier scores it. The most ambitious formulation changes the problem structure entirely, treating the defeasible theory itself as an environment in which the agent takes sequential actions---each independently verified in polynomial time---to construct a coherent theory revision. Within this formulation, GRPO remains applicable (generating $G$ candidate rollouts and scoring terminal theories), but Active Inference offers a further alternative that explicitly separates exploration of the theory from revision of the theory.
+
+\subsubsection{Defeasible Theory as MDP}
+
+\begin{definition}[Theory Construction MDP]
+The theory construction MDP $\mathcal{M} = (S, A, T, R, \gamma)$ is defined by:
 \begin{itemize}[nosep]
-    \item Propose a new defeasible rule
-    \item Propose a defeater
-    \item Assert a superiority relation
+    \item \textbf{State} $s_t = (\D_t, \mathcal{A}_t)$: the current theory $\D_t = (F, \Rs, \Rd, \Rdf, {\succ})$ and the set of unresolved anomalies $\mathcal{A}_t = \{\alpha \mid \D_t \pPartial \comp{\alpha},\; \D_t \not\vdash_\Delta \comp{\alpha}\}$.
+    \item \textbf{Actions} $a_t \in A$: three types, each parameterized by the language bias $\La$:
+    \begin{enumerate}[nosep]
+        \item Propose a defeasible rule: $r_d\colon b_1, \ldots, b_m \defto h$
+        \item Propose a defeater: $r_{df}\colon b_1, \ldots, b_m \defeatto \comp{h}$
+        \item Assert a superiority relation: $r_i \succ r_j$
+    \end{enumerate}
+    \item \textbf{Transition} $T$: deterministic. $\D_{t+1} = \D_t \cup \{a_t\}$, with $\mathcal{A}_{t+1}$ recomputed by the verifier.
+    \item \textbf{Reward} $R(s_t, a_t)$: decomposed as
+    \[
+        R(s_t, a_t) = \underbrace{|\mathcal{A}_t| - |\mathcal{A}_{t+1}|}_{\text{anomalies resolved}} - \lambda \underbrace{|\Exp(\D_t) \setminus \Exp(\D_{t+1})|}_{\text{expectations lost}} - \mu \cdot \mathbf{1}[a_t]_{\text{parsimony}}
+    \]
+    where $\lambda$ penalizes conservativity violations and $\mu$ penalizes theory size.
+    \item \textbf{Termination}: $\mathcal{A}_t = \emptyset$ (success) or $t > T$ (budget exhausted).
+\end{itemize}
+\end{definition}
+
+GRPO applies directly to this MDP. For each initial state $s_0$, the agent generates $G$ candidate action sequences (rollouts). Each rollout produces a terminal theory $\D_T$, scored by cumulative reward. Advantages are normalized within the group, concentrating gradient on rollouts where the agent's choices made a difference.
+
+\subsubsection{Active Inference Formulation}
+
+Standard RL maximizes expected cumulative reward. Active Inference instead minimizes \emph{Expected Free Energy} (EFE), which decomposes into two terms that map naturally onto defeasible reasoning.
+
+\begin{definition}[Expected Free Energy over Defeasible Theories]
+For a policy $\pi$ (a sequence of theory-modifying actions), the EFE is:
+\[
+    G(\pi) = \underbrace{-\mathbb{E}_{Q(o_\tau|\pi)}[\ln P(o_\tau)]}_{\text{pragmatic value}} - \underbrace{\mathbb{E}_{Q(o_\tau|\pi)}\bigl[D_{\mathrm{KL}}[Q(s_\tau|o_\tau,\pi) \| Q(s_\tau|\pi)]\bigr]}_{\text{epistemic value}}
+\]
+where:
+\begin{itemize}[nosep]
+    \item $s_\tau$ is the future theory state $(\D_\tau, \mathcal{A}_\tau)$
+    \item $o_\tau$ is the verifier's observation (anomaly count, conservativity status, expectation set)
+    \item $P(o_\tau)$ encodes preferences: zero anomalies, full conservativity
+    \item The epistemic term measures how much executing $\pi$ would reduce uncertainty about the theory's structure
+\end{itemize}
+\end{definition}
+
+The pragmatic term drives anomaly resolution: select actions that move the theory toward zero anomalies. The epistemic term drives \emph{theory exploration}: select actions that reveal information about the theory's structure before committing to a revision. In a defeasible theory, epistemic actions have concrete instantiations:
+
+\begin{itemize}[nosep]
+    \item \textbf{Support probing}: compute $\mathrm{Supp}(\D, q)$ for a target $q$ to identify which rules are load-bearing
+    \item \textbf{Criticality testing}: check whether $e \in \mathrm{Crit}^*(\D, q)$ to discover which elements are essential
+    \item \textbf{Conflict scanning}: enumerate rules $r \in R[\comp{q}]$ whose antecedents are satisfiable, revealing latent attacks
+    \item \textbf{Conservativity pre-screening}: test $\Exp(\D \cup \{d\}) \supseteq \Exp(\D) \setminus \{\comp{\alpha}\}$ before committing to defeater $d$
 \end{itemize}
 
-The verifier provides immediate reward: did this action resolve an anomaly? Did it introduce a new one? Did it preserve conservativity? The episode ends when all anomalies in a target set are resolved or a step budget is exhausted. The model learns to construct coherent defeasible theories, not just answer questions about them.
+\begin{proposition}[Tractability of Epistemic Actions]
+All four epistemic actions above are computable in polynomial time: support set enumeration is $O(|\D|^2 \cdot |F|)$, criticality testing is $O(|R| \cdot |F|)$ per element, conflict scanning is $O(|R|^2)$, and conservativity checking is $O(|\Exp(\D)| \cdot |R| \cdot |F|)$.
+\end{proposition}
+
+This tractability distinguishes defeasible Active Inference from the general case. In typical Active Inference, the generative model may be intractable and epistemic actions have unknown cost. Here, every epistemic query has known polynomial-time complexity, so the agent can budget its exploration precisely.
+
+\subsubsection{Active Inference vs. GRPO}
+
+GRPO and Active Inference occupy different points on the planning spectrum:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Property & GRPO & Active Inference \\
+\midrule
+Planning horizon & Single step (one-shot generation) & Multi-step (sequential construction) \\
+Exploration & Implicit (group diversity) & Explicit (epistemic value term) \\
+Exploitation & Implicit (advantage normalization) & Explicit (pragmatic value term) \\
+Sparsity & Zero gradient when all $G$ score alike & Zero epistemic value when outcome certain \\
+Belief state & None (model-free) & Maintained (posterior over theory states) \\
+Epistemic actions & Not distinguished from pragmatic & Formally separated, independently scored \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+GRPO is a special case: when the planning horizon is one step and epistemic value is zero (the agent already knows the outcome of each candidate action), the EFE reduces to expected pragmatic value, which is equivalent to the GRPO advantage. Active Inference extends this by allowing the agent to first invest in epistemic actions (probing the theory's structure) before committing to pragmatic actions (constructing the revision). The sequential composition of explore-then-exploit mirrors the Lakatosian cycle: the counterexample search is an epistemic phase (what conflicts exist?), and the conjecture refinement is a pragmatic phase (resolve the conflict conservatively).
+
+\subsubsection{Active Inference Theory Construction: Workflow}
+
+\begin{center}
+\begin{tikzpicture}[
+    >=stealth,
+    box/.style={
+        draw, rounded corners=3pt,
+        minimum height=1cm, minimum width=2.8cm,
+        font=\small, inner sep=6pt,
+        text centered, align=center
+    },
+    arr/.style={->, thick},
+    lbl/.style={font=\scriptsize, fill=white, inner sep=2pt},
+]
+
+% Left column: Agent loop (x = 0)
+\node[box] (beliefs) at (0, 0) {Beliefs over\\theory state $Q(s_t)$};
+\node[box] (efe) at (0, -2.6) {Compute EFE\\$G(\pi) = G_{\mathrm{prag}} + G_{\mathrm{epist}}$};
+\node[box] (action) at (0, -5.2) {Select action\\(epistemic or pragmatic)};
+
+% Right column: Environment (x = 6.5)
+\node[box] (theory) at (6.5, 0) {Theory state\\$\D_t, \mathcal{A}_t$};
+\node[box] (verifier) at (6.5, -2.6) {Polynomial-time\\verifier};
+\node[box] (obs) at (6.5, -5.2) {Observation\\$o_t = (\mathcal{A}_{t+1}, \Exp, \mathrm{cons.})$};
+
+% Agent loop (left column, downward)
+\draw[arr] (beliefs) -- node[lbl, right] {evaluate policies} (efe);
+\draw[arr] (efe) -- node[lbl, right] {minimize EFE} (action);
+
+% Action sent to observation (horizontal, bottom row)
+\draw[arr] (action.east) -- node[lbl, above] {$a_t$} (obs.west);
+
+% Theory feeds verifier (right column, downward)
+\draw[arr] (theory) -- node[lbl, right] {current state} (verifier);
+
+% Verifier produces observation (right column, downward)
+\draw[arr] (verifier) -- node[lbl, right] {score action} (obs);
+
+% Feedback: observation updates theory state (right side, going wide right then up)
+\draw[arr, dashed] (obs.east) -- ++(1.2, 0) |- node[lbl, right, pos=0.25] {update state} (theory.east);
+
+% Feedback: observation updates beliefs (left side, going wide left then up)
+\draw[arr, dashed] (action.west) -- ++(-1.4, 0) |- node[lbl, left, pos=0.25] {posterior update} (beliefs.west);
+
+\end{tikzpicture}
+\end{center}
+
+The loop operates as follows. The agent maintains beliefs $Q(s_t)$ over the current theory state. It evaluates candidate policies by computing EFE, decomposed into pragmatic value (will this action resolve anomalies?) and epistemic value (will this action reveal useful structure?). It selects the action minimizing EFE, which may be an epistemic probe (e.g., computing criticality of a rule) or a pragmatic revision (e.g., adding a defeater). The verifier scores the action and produces an observation. The agent updates its beliefs and repeats.
+
+The critical difference from the GRPO workflow in Section~5: GRPO generates all candidates in parallel and scores them in one batch. Active Inference operates sequentially, using the result of each action to inform the next. This enables multi-step theory construction where early epistemic actions narrow the search space for later pragmatic actions.
+
+\subsection{Neural-Guided Tree Search}
+
+The preceding approaches either generate candidates in one shot (GRPO) or operate sequentially with analytically computed guidance (Active Inference minimizes EFE). A fourth approach, pioneered by AlphaGo~\cite{silver2016alphago} and refined through AlphaGo Zero~\cite{silver2017alphagozero}, AlphaZero~\cite{silver2018alphazero}, and MuZero~\cite{schrittwieser2020muzero}, introduces \emph{learned} policy and value functions that steer Monte-Carlo tree search through the state space. The resulting expert iteration loop---where search improves the networks and better networks improve the search---has achieved superhuman performance in every domain where an exact verifier is available, most recently in formal mathematical reasoning via AlphaProof~\cite{alphaproof2025}.
+
+The structural analogy between board games and defeasible theory construction is precise. In Go, a position is a configuration of stones; in our setting, a position is a theory state $(\D_t, \mathcal{A}_t)$. In Go, a move places a stone; in our setting, an action proposes a rule, a defeater, or a superiority relation. In Go, the outcome is win or loss; in our setting, the outcome is the verifier's composite score. The polynomial-time verifier plays the role that the rules of Go play in AlphaZero: it defines a deterministic, model-independent transition function and terminal reward, which is exactly the structure that neural-guided tree search exploits.
+
+\subsubsection{Policy and Value Networks}
+
+Two networks are trained jointly on data generated by search:
+
+\begin{itemize}[nosep]
+    \item \textbf{Policy network} $p_\theta(a \mid s_t)$: given a theory state $s_t = (\D_t, \mathcal{A}_t)$, outputs a distribution over candidate theory modifications. This narrows the branching factor of the search tree, concentrating exploration on modifications that prior experience suggests are promising.
+    \item \textbf{Value network} $v_\phi(s_t)$: given a theory state, predicts the expected terminal verifier score under continued optimal play. This truncates search depth: rather than rolling out every branch to termination, the value network provides a learned position evaluation at intermediate states.
+\end{itemize}
+
+In AlphaZero, a single network with two heads produces both outputs. The same architecture applies here: the input is a representation of the current theory state (the rule set, the anomaly set, the superiority relation), and the two heads predict the action distribution and the expected score respectively.
+
+\subsubsection{MCTS over the Derivation Space}
+
+Search proceeds as in AlphaZero. Each node in the search tree corresponds to a theory state. At each node, the algorithm selects the action maximizing an upper confidence bound:
+\[
+    a_t = \arg\max_a \Bigl( Q(s_t, a) + c_{\mathrm{puct}} \cdot p_\theta(a \mid s_t) \cdot \frac{\sqrt{\sum_b N(s_t, b)}}{1 + N(s_t, a)} \Bigr)
+\]
+where $Q(s_t, a)$ is the current action-value estimate, $N(s_t, a)$ is the visit count, and $c_{\mathrm{puct}}$ controls the exploration-exploitation tradeoff. The policy network prior $p_\theta(a \mid s_t)$ biases search toward promising modifications; the visit-count term ensures under-explored branches are not neglected.
+
+When a leaf node $s_L$ is reached, the value network evaluates it: $v_\phi(s_L)$. If the leaf is terminal (all anomalies resolved or budget exhausted), the verifier provides the exact score. The value estimate is backed up through the tree, updating $Q$ values along the traversed path. After a fixed number of simulations, the algorithm selects the action with the highest visit count from the root.
+
+The polynomial-time verifier provides an advantage that Go lacks: intermediate states can be \emph{exactly} evaluated (recompute $\mathcal{A}_t$, check conservativity) at polynomial cost. This means the value network can be supplemented or validated by the verifier at any node, not only at terminal states. The search can mix learned evaluation (fast, approximate) with verified evaluation (slower, exact), analogous to AlphaGo's mixing of value network evaluations with rollout outcomes.
+
+\subsubsection{Expert Iteration}
+
+The training loop follows AlphaZero's expert iteration:
+\begin{enumerate}[nosep]
+    \item \textbf{Self-play with search.} For each conflict $(r_A, r_B, q)$, run MCTS from the initial theory state $(\D, \mathcal{A})$. The search tree produces a policy target (the visit-count distribution at each visited node) and a value target (the terminal verifier score backed up to each visited node).
+    \item \textbf{Network update.} Train $p_\theta$ to match the search policy (cross-entropy loss) and $v_\phi$ to predict the terminal score (mean squared error). The search policy is stronger than the raw network policy because it incorporates lookahead; training the network to match it is a form of policy improvement.
+    \item \textbf{Iterate.} The improved network guides the next round of search, producing stronger policy and value targets. The loop converges when the network's raw predictions match the search-improved policy.
+\end{enumerate}
+
+This loop is self-reinforcing: better networks produce more focused search trees, and more focused search trees produce better training targets. AlphaZero demonstrated that this loop, starting from random initialization, converges to superhuman play in Go, chess, and shogi within hours of training. AlphaProof~\cite{alphaproof2025} demonstrated that the same loop, applied to formal theorem proving in Lean with the Lean kernel as verifier, solves International Mathematical Olympiad problems at silver-medal level.
+
+\subsubsection{Relationship to the Training Pipeline}
+
+The AlphaZero lineage suggests a correspondence with the three-phase pipeline of Section~5:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Pipeline Phase & AlphaGo (2016) & AlphaZero (2017+) \\
+\midrule
+Phase 1 (SFT) & SL policy from human games & Eliminated (tabula rasa) \\
+Phase 2 (DPO) & RL policy via self-play & Subsumed by expert iteration \\
+Phase 3 (RLVR) & Value network + MCTS & Unified: search \emph{is} the RL \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The original AlphaGo required all three phases. AlphaGo Zero and AlphaZero collapsed them: the expert iteration loop performs policy improvement (replacing DPO) and value learning (replacing separate reward modeling) simultaneously, bootstrapping from random initialization without human data (eliminating SFT). Whether the defeasible derivation space is structured enough for tabula rasa learning to bootstrap---or whether the SFT and DPO warm-start phases remain necessary---is an empirical question that depends on the density of valid defeaters in the search space relative to the branching factor.
+
+\subsubsection{Neural-Guided Search vs. Active Inference}
+
+Neural-guided tree search and Active Inference (Section~4.4.2) both operate sequentially over the theory construction MDP. They differ in how they guide the search:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Property & Neural-Guided Search & Active Inference \\
+\midrule
+Action evaluation & Learned ($p_\theta$, $v_\phi$) & Analytic (EFE decomposition) \\
+Exploration mechanism & UCB with policy prior & Epistemic value term \\
+Exploitation mechanism & Value network backup & Pragmatic value term \\
+Belief state & Implicit (encoded in $v_\phi$) & Explicit ($Q(s_t)$ maintained) \\
+Training signal & Expert iteration (search $\to$ network) & Not specified (framework, not algorithm) \\
+Empirical validation & AlphaZero, AlphaProof & Limited to date \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The two approaches are not mutually exclusive. Active Inference's epistemic/pragmatic decomposition could inform the design of the policy network's action space (separating probing actions from revision actions), while the neural-guided search framework provides the concrete training algorithm that Active Inference lacks. A hybrid would use EFE-inspired action decomposition within an AlphaZero-style expert iteration loop.
+
+\subsubsection{Connection to AlphaProof}
+
+AlphaProof~\cite{alphaproof2025} instantiates precisely this architecture for formal mathematics. Its components map onto ours:
+
+\begin{itemize}[nosep]
+    \item \textbf{State}: a Lean proof state (goals, hypotheses, context) $\leftrightarrow$ a defeasible theory state $(\D_t, \mathcal{A}_t)$
+    \item \textbf{Actions}: Lean tactics (apply, intro, rw, simp) $\leftrightarrow$ theory modifications (propose rule, propose defeater, assert superiority)
+    \item \textbf{Verifier}: Lean's kernel (exact, sound, deterministic) $\leftrightarrow$ the polynomial-time defeasible logic engine
+    \item \textbf{Search}: MCTS with AND-OR tree decomposition $\leftrightarrow$ MCTS over the derivation tree
+    \item \textbf{Training}: expert iteration with test-time RL $\leftrightarrow$ expert iteration with self-play on conflicts
+\end{itemize}
+
+This correspondence is not incidental. Section~6 establishes an isomorphism between defeasible theories and formalized mathematical libraries, with Lean serving as the verifier in both settings. AlphaProof validates that neural-guided tree search with a formal verifier scales to competition-level mathematics. The proposal here extends the same paradigm to the broader class of defeasible conflicts---biomedical, ontological, and mathematical---that the DeFAb pipeline addresses.
+
+DeepSearch~\cite{deepsearch2026} provides further evidence that this paradigm generalizes: it embeds MCTS directly into the RLVR training loop for LLM mathematical reasoning, demonstrating that tree-search-augmented training overcomes the performance plateaus that afflict standard GRPO.
 
 \section{Unified Training Pipeline}
 
@@ -218,7 +438,7 @@ The defeasible conflict game applies directly. Two conflicting conjectures (weak
 \section{Open Questions}
 
 \begin{enumerate}
-    \item \textbf{Is RLVF Necessary} Learned preferences via the defeasible games may be adequate and RLVF may not provide tangible benefit. This must be experimentally verified via ablation.
+    \item \textbf{Is RLVR Necessary?} Learned preferences via the defeasible games may be adequate and RLVR may not provide tangible benefit. This must be experimentally verified via ablation.
     \item \textbf{How is novelty computed?} We indicate earlier that novelty can be computed, but provide no explicit formulation. There are several clear possibilities which can be tried (Information-theoretic surprisal, topological novelty on the dependency graph), and we must verify a novelty modifier is even required at all. Parsimony or conservativity alone may be sufficient for exploring the decision space.
     \item \textbf{Conflict enumeration at scale.} How many distinct conflicts exist in UMLS, SNOMED, GO? Is the number tractable for exhaustive game generation, or do we need sampling strategies?
     \item \textbf{Game balance.} Are most conflicts ``one-sided'' (one resolution is clearly superior)? If so, the preference signal may be redundant. How many conflicts admit competitive resolutions where MCTS search depth matters?
@@ -229,6 +449,14 @@ The defeasible conflict game applies directly. Two conflicting conjectures (weak
     \item \textbf{Lakatos strategies as reward shaping.} Can the three Lakatosian refinement strategies (monster-barring, exception-barring, lemma-incorporation) be formalized as distinct reward components? If so, the training signal could distinguish \emph{how} the model refines a conjecture, not just whether the refinement is conservative.
     \item \textbf{Mathematics as the cleanest testbed.} Lean provides an exact verifier with no approximation. If the game-based fine-tuning framework works on DeFAb-Math (where verification is perfect), does the approach transfer to biomedical domains (where verification is polynomial-time but operates over noisier knowledge bases)?
     \item \textbf{Popper's asymmetry.} Popper observed that falsification is logically stronger than confirmation: a single counterexample refutes a universal claim, but no number of confirmations can prove one. Does this asymmetry manifest in the game dynamics? Is the opponent (falsifier) systematically advantaged over the proponent (conjecture defender)?
+    \item \textbf{Epistemic vs.\ pragmatic sample efficiency.} Does the Active Inference formulation (Section~4.4) improve sample efficiency over GRPO by explicitly separating exploration from exploitation? The hypothesis: epistemic actions (probing theory structure) narrow the search space for subsequent pragmatic actions (constructing defeaters), reducing the number of rollouts needed to find valid resolutions.
+    \item \textbf{Epistemic foraging for latent defeaters.} Can Active Inference discover defeaters that one-shot GRPO generation misses? If the theory has deep dependency chains, epistemic actions that trace support sets may reveal distant vulnerability points invisible to single-step generation.
+    \item \textbf{Lakatos as Active Inference trajectory.} Is the Lakatosian conjecture-counterexample-refinement cycle an optimal Active Inference policy? The counterexample search is an epistemic phase (maximizing information gain about where the conjecture fails), and the refinement is a pragmatic phase (resolving the anomaly conservatively). If Active Inference naturally recovers this two-phase structure, it provides a normative justification for the Lakatosian methodology.
+    \item \textbf{Falsification as epistemic action.} Popperian falsification can be formalized as selecting the action with maximal epistemic value: the observation that most discriminates between competing theories. Does Active Inference's epistemic term naturally produce falsification-seeking behavior without explicit reward shaping?
+    \item \textbf{Active Inference vs.\ curriculum scheduling.} Does the epistemic/pragmatic balance in Active Inference replace the need for manual curriculum scheduling (Section~5)? If epistemic value naturally decreases as the agent learns the theory's structure, the transition from exploration to exploitation is automatic.
+    \item \textbf{Tabula rasa feasibility.} AlphaGo Zero and AlphaZero demonstrated that the SL warm-start is unnecessary in Go, chess, and shogi---self-play from random initialization suffices. Does the defeasible derivation space admit the same? The density of valid defeaters relative to the branching factor determines whether random exploration can bootstrap. If the space is too sparse, the SFT and DPO phases may be prerequisites rather than accelerants.
+    \item \textbf{Branching factor of the derivation space.} In Go, the branching factor is approximately 250; in chess, approximately 35. What is the effective branching factor of the defeasible theory construction space? Given a theory $\D$ with predicate signature $\Sigma$ and constant domain $C$, the naive branching factor is $|\mathcal{L}_\D|$ (the size of the defeater language), but the policy network's role is to reduce this to a tractable effective branching factor. How aggressive must the policy network's pruning be to make search feasible?
+    \item \textbf{Learned dynamics as verifier proxy.} The polynomial-time verifier is exact but not free. For large knowledge bases, MuZero's insight applies: a learned dynamics model could predict verifier outputs (anomaly counts, conservativity status) without running the full engine. The learned model would serve as a fast proxy during search, with the exact verifier validating only terminal or high-uncertainty states. Under what conditions does the approximation error remain acceptable?
 \end{enumerate}
 
 \section{Formal Justification (WIP)}
@@ -355,7 +583,7 @@ The correspondence is verified by checking that each component of the Lakatosian
 \end{proof}
 
 
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 
 \bibitem{popper1959logic}
 K.~R. Popper.
@@ -377,6 +605,56 @@ J.~Hintikka.
 I.~Lakatos.
 \newblock \emph{Proofs and Refutations: The Logic of Mathematical Discovery}.
 \newblock Cambridge University Press, 1976.
+
+\bibitem{friston2015epistemic}
+K.~J. Friston, M.~Lin, C.~D. Frith, G.~Pezzulo, J.~A. Hobson, and S.~Ondobaka.
+\newblock Active inference, curiosity and insight.
+\newblock \emph{Neural Computation}, 29(10):2633--2683, 2017.
+
+\bibitem{parr2022active}
+T.~Parr, G.~Pezzulo, and K.~J. Friston.
+\newblock \emph{Active Inference: The Free Energy Principle in Mind, Brain, and Behavior}.
+\newblock MIT Press, 2022.
+
+\bibitem{sajid2021active}
+N.~Sajid, P.~J. Ball, T.~Parr, and K.~J. Friston.
+\newblock Active inference: demystified and compared.
+\newblock \emph{Neural Computation}, 33(3):674--712, 2021.
+
+\bibitem{dacosta2024efe}
+L.~Da~Costa, T.~Parr, N.~Sajid, S.~Veselic, V.~Neacsu, and K.~J. Friston.
+\newblock Reframing the expected free energy: Four formulations and a unification.
+\newblock \emph{arXiv preprint arXiv:2402.14460}, 2024.
+
+\bibitem{silver2016alphago}
+D.~Silver, A.~Huang, C.~J. Maddison, A.~Guez, L.~Sifre, G.~van~den~Driessche, J.~Schrittwieser, I.~Antonoglou, V.~Panneershelvam, M.~Lanctot, S.~Dieleman, D.~Grewe, J.~Nham, N.~Kalchbrenner, I.~Sutskever, T.~Lillicrap, M.~Leach, K.~Kavukcuoglu, T.~Graepel, and D.~Hassabis.
+\newblock Mastering the game of {G}o with deep neural networks and tree search.
+\newblock \emph{Nature}, 529(7587):484--489, 2016.
+
+\bibitem{silver2017alphagozero}
+D.~Silver, J.~Schrittwieser, K.~Simonyan, I.~Antonoglou, A.~Huang, A.~Guez, T.~Hubert, L.~Baker, M.~Lai, A.~Bolton, Y.~Chen, T.~Lillicrap, F.~Hui, L.~Sifre, G.~van~den~Driessche, T.~Graepel, and D.~Hassabis.
+\newblock Mastering the game of {G}o without human knowledge.
+\newblock \emph{Nature}, 550(7676):354--359, 2017.
+
+\bibitem{silver2018alphazero}
+D.~Silver, T.~Hubert, J.~Schrittwieser, I.~Antonoglou, M.~Lai, A.~Guez, M.~Lanctot, L.~Sifre, D.~Kumaran, T.~Graepel, T.~Lillicrap, K.~Simonyan, and D.~Hassabis.
+\newblock A general reinforcement learning algorithm that masters chess, shogi, and {G}o through self-play.
+\newblock \emph{Science}, 362(6419):1140--1144, 2018.
+
+\bibitem{schrittwieser2020muzero}
+J.~Schrittwieser, I.~Antonoglou, T.~Hubert, K.~Simonyan, L.~Sifre, S.~Schmitt, A.~Guez, E.~Lockhart, D.~Hassabis, T.~Graepel, T.~Lillicrap, and D.~Silver.
+\newblock Mastering {A}tari, {G}o, chess and shogi by planning with a learned model.
+\newblock \emph{Nature}, 588(7839):604--609, 2020.
+
+\bibitem{alphaproof2025}
+AlphaProof Team.
+\newblock Olympiad-level formal mathematical reasoning with reinforcement learning.
+\newblock \emph{Nature}, 2025.
+
+\bibitem{deepsearch2026}
+J.~Jiang, J.~Liu, Z.~Chen, and others.
+\newblock {DeepSearch}: Overcome the bottleneck of reinforcement learning with verifiable rewards via tree-based search.
+\newblock In \emph{Proceedings of the International Conference on Learning Representations (ICLR)}, 2026.
 
 \end{thebibliography}
 
