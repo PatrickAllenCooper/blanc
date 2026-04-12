@@ -64,9 +64,9 @@ LOG_FILE="${RESULTS_BASE}/run.log"
 # ---------------------------------------------------------------------------
 
 declare -A MODEL_IDS=(
-    [qwen72]="Qwen/Qwen2.5-72B-Instruct-AWQ"
-    [qwen32]="Qwen/Qwen2.5-32B-Instruct-AWQ"
-    [deepseek]="casperhansen/deepseek-r1-distill-llama-70b-awq"
+    [qwen72]="Qwen/Qwen2.5-72B-Instruct"
+    [qwen32]="Qwen/Qwen2.5-32B-Instruct"
+    [deepseek]="deepseek-ai/DeepSeek-R1-Distill-Llama-70B"
 )
 MODELS=("qwen72" "qwen32" "deepseek")
 METHODS=("sft" "dpo_standard" "dpo_margin" "grpo" "rlhf_vitl")
@@ -191,24 +191,27 @@ do_setup() {
     log "Installing Python dependencies..."
     pip install -q --upgrade pip
     pip install -q \
-        "torch>=2.2.0" \
-        "transformers>=4.45.0" \
-        "trl>=0.11.0" \
-        "peft>=0.12.0" \
-        "bitsandbytes>=0.43.0" \
-        "deepspeed>=0.15.0" \
-        "accelerate>=0.32.0" \
-        "datasets>=2.20.0" \
-        "huggingface_hub>=0.24.0" \
-        "vllm>=0.5.0" \
+        "torch==2.5.1+cu121" \
+        "torchvision==0.20.1+cu121" \
+        "torchaudio==2.5.1+cu121" \
+        --index-url https://download.pytorch.org/whl/cu121
+    pip install -q \
+        "transformers==4.47.0" \
+        "trl==0.12.0" \
+        "peft==0.14.0" \
+        "bitsandbytes==0.45.0" \
+        "deepspeed==0.15.4" \
+        "accelerate==1.2.1" \
+        "datasets==3.2.0" \
+        "huggingface_hub==0.27.0" \
+        "vllm==0.6.6" \
         "sentencepiece" \
         "scipy" \
-        "numpy" \
+        "numpy<2" \
         "tensorboard" \
         "tenacity" \
         "anthropic" \
-        "openai" \
-        "autoawq"
+        "openai"
 
     pip install -q -e .
     log "Setup complete."
