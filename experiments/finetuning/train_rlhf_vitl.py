@@ -182,13 +182,16 @@ class RewardModelTrainer:
                 bnb_4bit_use_double_quant=True,
             )
 
-        model = AutoModelForSequenceClassification.from_pretrained(
-            self.base_model,
+        load_kwargs = dict(
             num_labels=1,
-            quantization_config=bnb_config,
-            torch_dtype=torch.bfloat16 if not self.use_4bit else None,
+            torch_dtype=torch.bfloat16,
             device_map="auto",
             trust_remote_code=True,
+        )
+        if bnb_config is not None:
+            load_kwargs["quantization_config"] = bnb_config
+        model = AutoModelForSequenceClassification.from_pretrained(
+            self.base_model, **load_kwargs
         )
 
         from peft import get_peft_model
@@ -335,12 +338,15 @@ def _run_ppo(
     )
 
     print("  Loading policy model with value head...")
-    model = AutoModelForCausalLMWithValueHead.from_pretrained(
-        base_model,
+    model_load_kwargs = dict(
         peft_config=peft_config,
-        quantization_config=bnb_config,
-        torch_dtype=torch.bfloat16 if not use_4bit else None,
+        torch_dtype=torch.bfloat16,
         trust_remote_code=True,
+    )
+    if bnb_config is not None:
+        model_load_kwargs["quantization_config"] = bnb_config
+    model = AutoModelForCausalLMWithValueHead.from_pretrained(
+        base_model, **model_load_kwargs
     )
 
     ref_model = create_reference_model(model)

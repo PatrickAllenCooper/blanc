@@ -267,14 +267,15 @@ def _load_model_and_tokenizer(
         print("  Detected AWQ model -- skipping BitsAndBytes (model is already quantized)")
 
     print(f"  Loading base model: {base_model}")
-    model = AutoModelForCausalLM.from_pretrained(
-        base_model,
-        quantization_config=bnb_config,
+    load_kwargs = dict(
         torch_dtype=torch.bfloat16,
         device_map="auto",
         trust_remote_code=True,
         attn_implementation="sdpa",
     )
+    if bnb_config is not None:
+        load_kwargs["quantization_config"] = bnb_config
+    model = AutoModelForCausalLM.from_pretrained(base_model, **load_kwargs)
 
     lora_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
