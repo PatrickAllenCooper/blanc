@@ -207,7 +207,8 @@ do_setup() {
         "tensorboard" \
         "tenacity" \
         "anthropic" \
-        "openai"
+        "openai" \
+        "autoawq"
 
     pip install -q -e .
     log "Setup complete."
