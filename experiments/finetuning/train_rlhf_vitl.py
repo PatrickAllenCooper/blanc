@@ -173,7 +173,8 @@ class RewardModelTrainer:
             tokenizer.pad_token = tokenizer.eos_token
 
         bnb_config = None
-        if self.use_4bit:
+        is_awq = "awq" in self.base_model.lower()
+        if self.use_4bit and not is_awq:
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=torch.bfloat16,
@@ -298,13 +299,16 @@ def _run_ppo(
         tokenizer.pad_token = tokenizer.eos_token
 
     bnb_config = None
-    if use_4bit:
+    is_awq = "awq" in base_model.lower()
+    if use_4bit and not is_awq:
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_use_double_quant=True,
         )
+    elif is_awq:
+        print("  Detected AWQ model -- skipping BitsAndBytes (model is already quantized)")
 
     peft_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,

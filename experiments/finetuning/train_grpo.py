@@ -340,7 +340,8 @@ def main() -> int:
     print("\nInitializing GRPOTrainer...")
 
     model_kwargs = {"trust_remote_code": True}
-    if args.use_4bit:
+    is_awq = "awq" in args.base_model.lower()
+    if args.use_4bit and not is_awq:
         model_kwargs["quantization_config"] = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
@@ -349,7 +350,7 @@ def main() -> int:
         )
     else:
         model_kwargs["torch_dtype"] = torch.bfloat16
-        model_kwargs["attn_implementation"] = "flash_attention_2"
+        model_kwargs["attn_implementation"] = "sdpa"
 
     trainer = GRPOTrainer(
         model=args.base_model,

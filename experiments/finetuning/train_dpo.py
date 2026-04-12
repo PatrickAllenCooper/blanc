@@ -255,22 +255,25 @@ def _load_model_and_tokenizer(
         tokenizer.pad_token = tokenizer.eos_token
 
     bnb_config = None
-    if use_4bit:
+    is_awq = "awq" in base_model.lower()
+    if use_4bit and not is_awq:
         bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_use_double_quant=True,
         )
+    elif is_awq:
+        print("  Detected AWQ model -- skipping BitsAndBytes (model is already quantized)")
 
     print(f"  Loading base model: {base_model}")
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=bnb_config,
-        torch_dtype=torch.bfloat16 if not use_4bit else None,
+        torch_dtype=torch.bfloat16,
         device_map="auto",
         trust_remote_code=True,
-        attn_implementation="flash_attention_2" if not use_4bit else "sdpa",
+        attn_implementation="sdpa",
     )
 
     lora_config = LoraConfig(
