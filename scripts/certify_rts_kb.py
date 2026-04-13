@@ -336,43 +336,62 @@ def certify_conservativity(kb, verbose: bool) -> dict:
 
     checks = [
         {
-            "name": "self_defense_does_not_unlock_all_units",
+            "name": "exclusion_zone_blocks_in_zone_not_out_of_zone",
             "description": (
-                "Marine self-defense in exclusion zone does not unlock stalker engagement"
+                "Exclusion zone defeater (rts_r3003) blocks engagement inside "
+                "restricted_zone_alpha but does NOT affect engagement outside it"
             ),
             "extra_facts": [
                 "in_zone(marine, restricted_zone_alpha)",
                 "in_zone(enemy_marine_squad, restricted_zone_alpha)",
-                "under_direct_fire(marine)",
-                "hostile_unit(enemy_marine_squad)",
-                "in_zone(stalker, restricted_zone_alpha)",
-                "in_zone(enemy_siege_tank, restricted_zone_alpha)",
             ],
-            "query_should_be_true":  ["authorized_to_engage(marine, enemy_marine_squad)"],
-            "query_should_be_false": ["authorized_to_engage(stalker, enemy_siege_tank)"],
+            "query_should_be_true":  [
+                # stalker not in zone -- engagement still authorized (conservativity)
+                "authorized_to_engage(stalker, enemy_siege_tank)",
+            ],
+            "query_should_be_false": [
+                # marine in zone -- engagement blocked (the defeater fires)
+                "authorized_to_engage(marine, enemy_marine_squad)",
+            ],
         },
         {
-            "name": "worker_exception_does_not_affect_all_workers",
+            "name": "worker_protection_blocks_worker_not_military_target",
             "description": (
-                "Worker exception for repairing probe does not strip protection from scv cluster"
+                "Worker protection defeater (rts_r3012) blocks engagement of "
+                "protected workers but does NOT affect engagement of military targets"
             ),
-            "extra_facts": ["repairing_under_attack(enemy_probe_line)"],
-            "query_should_be_true":  ["protected_from_attack(enemy_scv_cluster)"],
-            "query_should_be_false": ["protected_from_attack(enemy_probe_line)"],
+            "extra_facts": [],  # enemy_probe_line already worker_target in KB
+            "query_should_be_true":  [
+                # military target -- engagement authorized (conservativity)
+                "authorized_to_engage(marine, enemy_marine_squad)",
+            ],
+            "query_should_be_false": [
+                # worker target -- engagement blocked (worker protection fires)
+                "authorized_to_engage(marine, enemy_probe_line)",
+            ],
         },
         {
-            "name": "retreat_override_does_not_affect_isolated_units",
+            "name": "retreat_override_does_not_affect_engagement_rules",
             "description": (
-                "All-in rush override of zealot retreat does not cancel stalker retreat"
+                "All-in rush retreat override does NOT affect engagement "
+                "authorizations or worker protection rules -- unrelated predicates "
+                "must be preserved (conservativity)"
             ),
             "extra_facts": [
                 "has_numerical_disadvantage(zealot)",
                 "all_in_rush_detected",
-                "is_isolated(stalker)",
-                "no_reinforcement_available",
+                "assigned_to_mission(stalker, op_ghost_eye)",
             ],
-            "query_should_be_true":  ["ordered_to_retreat(stalker)"],
-            "query_should_be_false": ["ordered_to_retreat(zealot)"],
+            "query_should_be_true":  [
+                # engagement authorization for non-retreat scenario unaffected (conservativity)
+                "authorized_to_engage(marine, enemy_marine_squad)",
+                # stealth posture for recon mission unaffected by retreat logic (conservativity)
+                "stealth_posture_active(stalker)",
+            ],
+            "query_should_be_false": [
+                # zealot with all-in rush -- retreat correctly cancelled
+                "ordered_to_retreat(zealot)",
+            ],
         },
     ]
 

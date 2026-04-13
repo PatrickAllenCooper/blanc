@@ -1,0 +1,359 @@
+{
+  "metadata": {
+    "domain": "rts_engagement",
+    "kb_stats": {
+      "domain": "rts_engagement",
+      "sources": [
+        "StarCraft II game mechanics",
+        "Newport ROE Handbook (2022)",
+        "AIIDE 2015 ASP RTS paper"
+      ],
+      "rules_total": 148,
+      "facts_total": 162,
+      "strict_rules": 89,
+      "defeasible_rules": 32,
+      "defeater_rules": 27,
+      "roe_behavioral": 59,
+      "roe_defeasible": 32,
+      "roe_defeaters": 27,
+      "max_dependency_depth": 5,
+      "roe_predicates": [
+        "authorized_to_engage",
+        "cleared_to_engage",
+        "protected_from_attack",
+        "must_use_minimum_force",
+        "ordered_to_retreat",
+        "stealth_posture_active",
+        "priority_target",
+        "requires_positive_id",
+        "mission_accomplished"
+      ],
+      "top_level_defeater_categories": [
+        "self_defense_override",
+        "escalation_trigger",
+        "worker_exception",
+        "proportionality_override",
+        "retreat_override",
+        "stealth_break",
+        "pid_waiver",
+        "friendly_fire_block"
+      ]
+    },
+    "generation_date": "2026-04-13T14:31:51.966462",
+    "levels": {
+      "level3": {
+        "count": 6,
+        "seeds": [
+          "exclusion_zone_missing",
+          "worker_protection_missing",
+          "retreat_under_all_in_rush",
+          "stealth_maintained_under_fire",
+          "retreat_when_hvt_in_range",
+          "civilian_area_protection_missing"
+        ]
+      }
+    }
+  },
+  "instances": [
+    {
+      "id": "",
+      "target": "authorized_to_engage(marine, enemy_marine_squad)",
+      "level": 3,
+      "candidates": [
+        "rts_r3003: in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha) ~> ~authorized_to_engage(X,Y)",
+        "dist_wronghead_air_combat_unit: in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha) ~> ~air_combat_unit(X)",
+        "dist_wronghead_is_high_priority: in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha) ~> ~is_high_priority(X)",
+        "dist_wronghead_is_isolated: in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha) ~> ~is_isolated(X)",
+        "dist_wronghead_is_infrastructure: in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha) ~> ~is_infrastructure(X)",
+        "dist_wronghead_can_transport_units: in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha) ~> ~can_transport_units(X)"
+      ],
+      "gold": [
+        "rts_r3003: in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha) ~> ~authorized_to_engage(X,Y)"
+      ],
+      "metadata": {
+        "anomaly": "authorized_to_engage(marine, enemy_marine_squad)",
+        "gold_defeater": "rts_r3003: in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha) ~> ~authorized_to_engage(X,Y)",
+        "defeater_type": "weak",
+        "preserved_expectations": [
+          "unit(stalker)",
+          "worker_target(enemy_probe_line)",
+          "target(enemy_hero_unit)",
+          "air_combat_unit(mutalisk)",
+          "armored_unit(immortal)",
+          "mission(op_border_watch)",
+          "military_unit(colossus)",
+          "high_threat(enemy_drop_attack)",
+          "zone(enemy_natural)",
+          "terrain(natural_ramp)",
+          "armored_unit(siege_tank)",
+          "target(enemy_command_center)",
+          "unit(banshee)",
+          "air_combat_unit(viking)",
+          "target(enemy_carrier)",
+          "medium_threat(enemy_sneak_worker_kill)",
+          "threat(enemy_harass_squad)",
+          "structure_target(enemy_command_center)",
+          "ground_combat_unit(ultralisk)",
+          "high_threat(enemy_main_army)"
+        ],
+        "nov": 0.0,
+        "d_rev": 1,
+        "conservative": true,
+        "distractor_strategy": "synthetic"
+      },
+      "theory_size": 311,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "authorized_to_engage(marine, enemy_probe_line)",
+      "level": 3,
+      "candidates": [
+        "rts_r3012: protected_from_attack(W) ~> ~authorized_to_engage(X,W)",
+        "dist_wronghead_air_combat_unit: protected_from_attack(W) ~> ~air_combat_unit(X)",
+        "dist_wronghead_is_high_priority: protected_from_attack(W) ~> ~is_high_priority(X)",
+        "dist_wronghead_is_isolated: protected_from_attack(W) ~> ~is_isolated(X)",
+        "dist_wronghead_is_infrastructure: protected_from_attack(W) ~> ~is_infrastructure(X)",
+        "dist_wronghead_can_transport_units: protected_from_attack(W) ~> ~can_transport_units(X)"
+      ],
+      "gold": [
+        "rts_r3012: protected_from_attack(W) ~> ~authorized_to_engage(X,W)"
+      ],
+      "metadata": {
+        "anomaly": "authorized_to_engage(marine, enemy_probe_line)",
+        "gold_defeater": "rts_r3012: protected_from_attack(W) ~> ~authorized_to_engage(X,W)",
+        "defeater_type": "weak",
+        "preserved_expectations": [
+          "unit(stalker)",
+          "worker_target(enemy_probe_line)",
+          "target(enemy_hero_unit)",
+          "air_combat_unit(mutalisk)",
+          "armored_unit(immortal)",
+          "mission(op_border_watch)",
+          "military_unit(colossus)",
+          "high_threat(enemy_drop_attack)",
+          "zone(enemy_natural)",
+          "terrain(natural_ramp)",
+          "armored_unit(siege_tank)",
+          "target(enemy_command_center)",
+          "unit(banshee)",
+          "air_combat_unit(viking)",
+          "target(enemy_carrier)",
+          "medium_threat(enemy_sneak_worker_kill)",
+          "threat(enemy_harass_squad)",
+          "structure_target(enemy_command_center)",
+          "ground_combat_unit(ultralisk)",
+          "high_threat(enemy_main_army)"
+        ],
+        "nov": 0.0,
+        "d_rev": 1,
+        "conservative": true,
+        "distractor_strategy": "synthetic"
+      },
+      "theory_size": 310,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ordered_to_retreat(zealot)",
+      "level": 3,
+      "candidates": [
+        "rts_r3026: military_unit(X), all_in_rush_detected ~> ~ordered_to_retreat(X)",
+        "dist_wronghead_air_combat_unit: military_unit(X), all_in_rush_detected ~> ~air_combat_unit(X)",
+        "dist_wronghead_is_high_priority: military_unit(X), all_in_rush_detected ~> ~is_high_priority(X)",
+        "dist_wronghead_is_isolated: military_unit(X), all_in_rush_detected ~> ~is_isolated(X)",
+        "dist_wronghead_is_infrastructure: military_unit(X), all_in_rush_detected ~> ~is_infrastructure(X)",
+        "dist_wronghead_can_transport_units: military_unit(X), all_in_rush_detected ~> ~can_transport_units(X)"
+      ],
+      "gold": [
+        "rts_r3026: military_unit(X), all_in_rush_detected ~> ~ordered_to_retreat(X)"
+      ],
+      "metadata": {
+        "anomaly": "ordered_to_retreat(zealot)",
+        "gold_defeater": "rts_r3026: military_unit(X), all_in_rush_detected ~> ~ordered_to_retreat(X)",
+        "defeater_type": "weak",
+        "preserved_expectations": [
+          "unit(stalker)",
+          "worker_target(enemy_probe_line)",
+          "target(enemy_hero_unit)",
+          "air_combat_unit(mutalisk)",
+          "armored_unit(immortal)",
+          "mission(op_border_watch)",
+          "military_unit(colossus)",
+          "high_threat(enemy_drop_attack)",
+          "zone(enemy_natural)",
+          "terrain(natural_ramp)",
+          "armored_unit(siege_tank)",
+          "target(enemy_command_center)",
+          "unit(banshee)",
+          "air_combat_unit(viking)",
+          "target(enemy_carrier)",
+          "medium_threat(enemy_sneak_worker_kill)",
+          "threat(enemy_harass_squad)",
+          "structure_target(enemy_command_center)",
+          "ground_combat_unit(ultralisk)",
+          "high_threat(enemy_main_army)"
+        ],
+        "nov": 0.0,
+        "d_rev": 1,
+        "conservative": true,
+        "distractor_strategy": "synthetic"
+      },
+      "theory_size": 311,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "stealth_posture_active(marine)",
+      "level": 3,
+      "candidates": [
+        "rts_r3032: under_direct_fire(X) ~> ~stealth_posture_active(X)",
+        "dist_wronghead_air_combat_unit: under_direct_fire(X) ~> ~air_combat_unit(X)",
+        "dist_wronghead_is_high_priority: under_direct_fire(X) ~> ~is_high_priority(X)",
+        "dist_wronghead_is_isolated: under_direct_fire(X) ~> ~is_isolated(X)",
+        "dist_wronghead_is_infrastructure: under_direct_fire(X) ~> ~is_infrastructure(X)",
+        "dist_wronghead_can_transport_units: under_direct_fire(X) ~> ~can_transport_units(X)"
+      ],
+      "gold": [
+        "rts_r3032: under_direct_fire(X) ~> ~stealth_posture_active(X)"
+      ],
+      "metadata": {
+        "anomaly": "stealth_posture_active(marine)",
+        "gold_defeater": "rts_r3032: under_direct_fire(X) ~> ~stealth_posture_active(X)",
+        "defeater_type": "weak",
+        "preserved_expectations": [
+          "unit(stalker)",
+          "worker_target(enemy_probe_line)",
+          "target(enemy_hero_unit)",
+          "air_combat_unit(mutalisk)",
+          "armored_unit(immortal)",
+          "mission(op_border_watch)",
+          "military_unit(colossus)",
+          "high_threat(enemy_drop_attack)",
+          "zone(enemy_natural)",
+          "terrain(natural_ramp)",
+          "armored_unit(siege_tank)",
+          "target(enemy_command_center)",
+          "unit(banshee)",
+          "air_combat_unit(viking)",
+          "target(enemy_carrier)",
+          "medium_threat(enemy_sneak_worker_kill)",
+          "threat(enemy_harass_squad)",
+          "structure_target(enemy_command_center)",
+          "ground_combat_unit(ultralisk)",
+          "high_threat(enemy_main_army)"
+        ],
+        "nov": 0.0,
+        "d_rev": 1,
+        "conservative": true,
+        "distractor_strategy": "synthetic"
+      },
+      "theory_size": 311,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ordered_to_retreat(viking)",
+      "level": 3,
+      "candidates": [
+        "rts_r3027: military_unit(X), high_value_target_in_range(X), target_attempting_escape ~> ~ordered_to_retreat(X)",
+        "dist_wronghead_air_combat_unit: military_unit(X), high_value_target_in_range(X), target_attempting_escape ~> ~air_combat_unit(X)",
+        "dist_wronghead_is_high_priority: military_unit(X), high_value_target_in_range(X), target_attempting_escape ~> ~is_high_priority(X)",
+        "dist_wronghead_is_isolated: military_unit(X), high_value_target_in_range(X), target_attempting_escape ~> ~is_isolated(X)",
+        "dist_wronghead_is_infrastructure: military_unit(X), high_value_target_in_range(X), target_attempting_escape ~> ~is_infrastructure(X)",
+        "dist_wronghead_can_transport_units: military_unit(X), high_value_target_in_range(X), target_attempting_escape ~> ~can_transport_units(X)"
+      ],
+      "gold": [
+        "rts_r3027: military_unit(X), high_value_target_in_range(X), target_attempting_escape ~> ~ordered_to_retreat(X)"
+      ],
+      "metadata": {
+        "anomaly": "ordered_to_retreat(viking)",
+        "gold_defeater": "rts_r3027: military_unit(X), high_value_target_in_range(X), target_attempting_escape ~> ~ordered_to_retreat(X)",
+        "defeater_type": "weak",
+        "preserved_expectations": [
+          "unit(stalker)",
+          "worker_target(enemy_probe_line)",
+          "target(enemy_hero_unit)",
+          "air_combat_unit(mutalisk)",
+          "armored_unit(immortal)",
+          "mission(op_border_watch)",
+          "military_unit(colossus)",
+          "high_threat(enemy_drop_attack)",
+          "zone(enemy_natural)",
+          "terrain(natural_ramp)",
+          "armored_unit(siege_tank)",
+          "target(enemy_command_center)",
+          "unit(banshee)",
+          "air_combat_unit(viking)",
+          "target(enemy_carrier)",
+          "medium_threat(enemy_sneak_worker_kill)",
+          "threat(enemy_harass_squad)",
+          "structure_target(enemy_command_center)",
+          "ground_combat_unit(ultralisk)",
+          "target_attempting_escape"
+        ],
+        "nov": 0.0,
+        "d_rev": 1,
+        "conservative": true,
+        "distractor_strategy": "synthetic"
+      },
+      "theory_size": 312,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "authorized_to_engage(marine, enemy_marine_squad)",
+      "level": 3,
+      "candidates": [
+        "rts_r3005: in_zone(Y, worker_mining_area) ~> ~authorized_to_engage(X,Y)",
+        "dist_wronghead_air_combat_unit: in_zone(Y, worker_mining_area) ~> ~air_combat_unit(X)",
+        "dist_wronghead_is_high_priority: in_zone(Y, worker_mining_area) ~> ~is_high_priority(X)",
+        "dist_wronghead_is_isolated: in_zone(Y, worker_mining_area) ~> ~is_isolated(X)",
+        "dist_wronghead_is_infrastructure: in_zone(Y, worker_mining_area) ~> ~is_infrastructure(X)",
+        "dist_wronghead_can_transport_units: in_zone(Y, worker_mining_area) ~> ~can_transport_units(X)"
+      ],
+      "gold": [
+        "rts_r3005: in_zone(Y, worker_mining_area) ~> ~authorized_to_engage(X,Y)"
+      ],
+      "metadata": {
+        "anomaly": "authorized_to_engage(marine, enemy_marine_squad)",
+        "gold_defeater": "rts_r3005: in_zone(Y, worker_mining_area) ~> ~authorized_to_engage(X,Y)",
+        "defeater_type": "weak",
+        "preserved_expectations": [
+          "unit(stalker)",
+          "worker_target(enemy_probe_line)",
+          "target(enemy_hero_unit)",
+          "air_combat_unit(mutalisk)",
+          "armored_unit(immortal)",
+          "mission(op_border_watch)",
+          "military_unit(colossus)",
+          "high_threat(enemy_drop_attack)",
+          "zone(enemy_natural)",
+          "terrain(natural_ramp)",
+          "armored_unit(siege_tank)",
+          "target(enemy_command_center)",
+          "unit(banshee)",
+          "air_combat_unit(viking)",
+          "target(enemy_carrier)",
+          "medium_threat(enemy_sneak_worker_kill)",
+          "threat(enemy_harass_squad)",
+          "structure_target(enemy_command_center)",
+          "ground_combat_unit(ultralisk)",
+          "high_threat(enemy_main_army)"
+        ],
+        "nov": 0.0,
+        "d_rev": 1,
+        "conservative": true,
+        "distractor_strategy": "synthetic"
+      },
+      "theory_size": 310,
+      "num_candidates": 6,
+      "num_gold": 1
+    }
+  ]
+}

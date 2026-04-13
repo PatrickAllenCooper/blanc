@@ -1,0 +1,169 @@
+{
+  "certification_date": "2026-04-13T14:31:23.378155",
+  "overall_passed": true,
+  "sections": {
+    "structure": {
+      "rules_total": 148,
+      "facts_total": 162,
+      "strict_rules": 89,
+      "defeasible_rules": 32,
+      "defeater_rules": 27,
+      "roe_behavioral_rules": 59,
+      "superiority_relations": 15,
+      "max_dependency_depth": 5,
+      "sources": [
+        "StarCraft II game mechanics",
+        "Newport ROE Handbook (2022)",
+        "AIIDE 2015 ASP RTS paper"
+      ],
+      "comparison_to_existing_domains": {
+        "biology": {
+          "rules": 918,
+          "facts": 255,
+          "sources": [
+            "YAGO 4.5",
+            "WordNet 3.0"
+          ]
+        },
+        "legal": {
+          "rules": 201,
+          "facts": 63,
+          "sources": [
+            "LKIF Core"
+          ]
+        },
+        "materials": {
+          "rules": 1190,
+          "facts": 86,
+          "sources": [
+            "MatOnto"
+          ]
+        }
+      },
+      "errors": [],
+      "passed": true
+    },
+    "l3_seed_conflicts": {
+      "total_seeds": 6,
+      "passed": 6,
+      "failed": 0,
+      "pass_rate": 1.0,
+      "scenarios": [
+        {
+          "scenario_id": "exclusion_zone_missing",
+          "description": "A marine unit is engaging an enemy squad. The theory is missing the exclusion zone rule. Since restricted_zone_alpha con...",
+          "anomaly": "authorized_to_engage(marine, enemy_marine_squad)",
+          "defeater_label": "rts_r3003",
+          "check_a_anomaly_derivable_in_d_minus": true,
+          "check_b_anomaly_resolved_in_d": true,
+          "check_c_conservativity_violations": [],
+          "check_c_passed": true,
+          "passed": true
+        },
+        {
+          "scenario_id": "worker_protection_missing",
+          "description": "A marine is engaging an enemy probe line (worker unit). The theory has the worker protection fact (protected_from_attack...",
+          "anomaly": "authorized_to_engage(marine, enemy_probe_line)",
+          "defeater_label": "rts_r3012",
+          "check_a_anomaly_derivable_in_d_minus": true,
+          "check_b_anomaly_resolved_in_d": true,
+          "check_c_conservativity_violations": [],
+          "check_c_passed": true,
+          "passed": true
+        },
+        {
+          "scenario_id": "retreat_under_all_in_rush",
+          "description": "Allied zealot forces are numerically outnumbered. The retreat rule (rts_r3022) fires correctly. But the all-in rush over...",
+          "anomaly": "ordered_to_retreat(zealot)",
+          "defeater_label": "rts_r3026",
+          "check_a_anomaly_derivable_in_d_minus": true,
+          "check_b_anomaly_resolved_in_d": true,
+          "check_c_conservativity_violations": [],
+          "check_c_passed": true,
+          "passed": true
+        },
+        {
+          "scenario_id": "stealth_maintained_under_fire",
+          "description": "A marine is on a recon mission (op_ghost_eye) with stealth posture active. The unit is also under direct fire. The defea...",
+          "anomaly": "stealth_posture_active(marine)",
+          "defeater_label": "rts_r3032",
+          "check_a_anomaly_derivable_in_d_minus": true,
+          "check_b_anomaly_resolved_in_d": true,
+          "check_c_conservativity_violations": [],
+          "check_c_passed": true,
+          "passed": true
+        },
+        {
+          "scenario_id": "retreat_when_hvt_in_range",
+          "description": "A Viking air unit is numerically outnumbered and the retreat rule fires. But a high-value enemy mothership is in range a...",
+          "anomaly": "ordered_to_retreat(viking)",
+          "defeater_label": "rts_r3027",
+          "check_a_anomaly_derivable_in_d_minus": true,
+          "check_b_anomaly_resolved_in_d": true,
+          "check_c_conservativity_violations": [],
+          "check_c_passed": true,
+          "passed": true
+        },
+        {
+          "scenario_id": "civilian_area_protection_missing",
+          "description": "A marine unit is engaging an enemy probe in a civilian mining area (worker_mining_area). The theory is missing the civil...",
+          "anomaly": "authorized_to_engage(marine, enemy_marine_squad)",
+          "defeater_label": "rts_r3005",
+          "check_a_anomaly_derivable_in_d_minus": true,
+          "check_b_anomaly_resolved_in_d": true,
+          "check_c_conservativity_violations": [],
+          "check_c_passed": true,
+          "passed": true
+        }
+      ]
+    },
+    "instance_generation": {
+      "level1": {
+        "count": 100,
+        "valid": 100,
+        "invalid": 0,
+        "validity_rate": 1.0,
+        "partition_strategies_used": 11
+      },
+      "level2": {
+        "count": 60,
+        "valid": 60,
+        "invalid": 0,
+        "validity_rate": 1.0,
+        "partition_strategies_used": 11
+      }
+    },
+    "conservativity": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "checks": [
+        {
+          "name": "exclusion_zone_blocks_in_zone_not_out_of_zone",
+          "description": "Exclusion zone defeater (rts_r3003) blocks engagement inside restricted_zone_alpha but does NOT affect engagement outside it",
+          "passed": true,
+          "errors": []
+        },
+        {
+          "name": "worker_protection_blocks_worker_not_military_target",
+          "description": "Worker protection defeater (rts_r3012) blocks engagement of protected workers but does NOT affect engagement of military targets",
+          "passed": true,
+          "errors": []
+        },
+        {
+          "name": "retreat_override_does_not_affect_engagement_rules",
+          "description": "All-in rush retreat override does NOT affect engagement authorizations or worker protection rules -- unrelated predicates must be preserved (conservativity)",
+          "passed": true,
+          "errors": []
+        }
+      ]
+    }
+  },
+  "section_status": {
+    "structure": true,
+    "l3_seed_conflicts": true,
+    "instance_gen_l1": true,
+    "instance_gen_l2": true,
+    "conservativity": true
+  }
+}

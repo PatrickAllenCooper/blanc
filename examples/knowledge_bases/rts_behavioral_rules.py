@@ -166,11 +166,11 @@ def add_rts_behavioral_rules(theory: Theory) -> Theory:
 
     # Critical threat overrides minimum force and unrestricts all weapons
     rid = _r(theory, rid, "~must_use_minimum_force(X)",
-             ("critical_threat(T)", "requires_immediate_response(T)"),
+             ("military_unit(X)", "critical_threat(T)", "requires_immediate_response(T)"),
              RuleType.DEFEATER)
 
     rid = _r(theory, rid, "~restricted_weapon_use(X,Y)",
-             ("critical_threat(T)", "requires_immediate_response(T)"),
+             ("military_unit(X)", "critical_threat(T)", "requires_immediate_response(T)"),
              RuleType.DEFEATER)
 
     # ────────────────────────────────────────────────────────────────────────
@@ -386,10 +386,13 @@ def add_rts_superiority_relations(theory: Theory) -> None:
     theory.add_superiority("rts_r3019", "rts_r3014")  # all-in rush exception
 
     # ── High/critical threat overrides proportionality defaults ─────────────
-    # "~must_use_minimum_force(X) :- high_threat(T), ..." (rts_r3025)
-    # beats "must_use_minimum_force(X) :- civilian_proximity(X)" (rts_r3022)
-    theory.add_superiority("rts_r3025", "rts_r3022")
-    theory.add_superiority("rts_r3026", "rts_r3021")  # critical > low-threat min-force
+    # rts_r3019: ~must_use_minimum_force :- high_threat  (DEFEATER)
+    # rts_r3020: ~must_use_minimum_force :- critical_threat (DEFEATER)
+    # rts_r3016: must_use_minimum_force :- low_threat_environment (DEFEASIBLE)
+    # rts_r3017: must_use_minimum_force :- civilian_proximity (DEFEASIBLE)
+    theory.add_superiority("rts_r3019", "rts_r3017")  # high_threat > civilian_proximity
+    theory.add_superiority("rts_r3020", "rts_r3017")  # critical_threat > civilian_proximity
+    theory.add_superiority("rts_r3020", "rts_r3016")  # critical_threat > low_threat_env
 
     # ── Retreat defeaters override retreat defaults ───────────────────────────
     # "~ordered_to_retreat(X) :- holding_choke_point(X)" (rts_r3031)

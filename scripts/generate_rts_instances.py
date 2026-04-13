@@ -82,22 +82,26 @@ from blanc.reasoning.defeasible import defeasible_provable
 # }
 
 ROE_LEVEL3_SEEDS = [
+    # ── L3 semantics (canonical, matching DeFAb penguin pattern):
+    # D^- = theory WITHOUT the gold defeater
+    # Anomaly = positively DERIVABLE in D^- (the wrong behavior that the defeater would block)
+    # Gold = the missing defeater that resolves the anomaly conservatively
     {
-        "scenario_id": "self_defense_exclusion_zone",
+        "scenario_id": "exclusion_zone_missing",
         "description": (
-            "A marine unit is under direct fire inside restricted_zone_alpha. "
-            "The ROE prohibit engagement in the exclusion zone by default. "
-            "But the self-defense override -- ~authorized_to_engage defeated "
-            "by under_direct_fire -- is missing from the theory. "
-            "Anomaly: the unit cannot be authorized to respond. "
-            "The model must construct the self-defense defeater that overrides "
-            "the exclusion zone prohibition."
+            "A marine unit is engaging an enemy squad. The theory is missing the "
+            "exclusion zone rule. Since restricted_zone_alpha contains both units "
+            "but no exclusion zone defeater exists, the default engagement authority "
+            "(rts_r3000) fires unchallenged and engagement is incorrectly authorized. "
+            "Anomaly: authorized_to_engage holds inside an exclusion zone. "
+            "The model must construct the missing ROE constraint: no engagement "
+            "when both units are in the exclusion zone."
         ),
         "anomaly": "authorized_to_engage(marine, enemy_marine_squad)",
-        "defeater_label": "rts_r3008",
-        "gold_defeater_head": "authorized_to_engage(X,Y)",
+        "defeater_label": "rts_r3003",
+        "gold_defeater_head": "~authorized_to_engage(X,Y)",
         "gold_defeater_body": [
-            "military_unit(X)", "under_direct_fire(X)", "hostile_unit(Y)"
+            "in_zone(X, restricted_zone_alpha)", "in_zone(Y, restricted_zone_alpha)"
         ],
         "context_facts": [
             "military_unit(marine)",
@@ -105,53 +109,46 @@ ROE_LEVEL3_SEEDS = [
             "military_target(enemy_marine_squad)",
             "in_zone(marine, restricted_zone_alpha)",
             "in_zone(enemy_marine_squad, restricted_zone_alpha)",
-            "under_direct_fire(marine)",
-            "hostile_unit(enemy_marine_squad)",
         ],
     },
     {
-        "scenario_id": "worker_exception_repair",
+        "scenario_id": "worker_protection_missing",
         "description": (
-            "Enemy workers (probes) are actively repairing a damaged cannon "
-            "that is firing on allied forces. "
-            "The default ROE protect workers as noncombatants. "
-            "The repair-under-attack defeater is missing from the theory. "
-            "Anomaly: the theory concludes workers are protected even while "
-            "actively sustaining an attacking structure. "
-            "The model must construct the exception: workers repairing a "
-            "structure under attack lose protected status."
+            "A marine is engaging an enemy probe line (worker unit). "
+            "The theory has the worker protection fact (protected_from_attack derives "
+            "from worker_target) but the rule blocking engagement of protected units "
+            "is missing. The default military engagement rule fires and the worker "
+            "can be attacked. "
+            "Anomaly: authorized_to_engage holds for a worker target. "
+            "The model must construct the missing defeater: engagement is prohibited "
+            "when the target has protected_from_attack status."
         ),
-        "anomaly": "~protected_from_attack(enemy_probe_line)",
-        "defeater_label": "rts_r3017",
-        "gold_defeater_head": "~protected_from_attack(W)",
-        "gold_defeater_body": [
-            "worker_target(W)", "repairing_under_attack(W)"
-        ],
+        "anomaly": "authorized_to_engage(marine, enemy_probe_line)",
+        "defeater_label": "rts_r3012",
+        "gold_defeater_head": "~authorized_to_engage(X,W)",
+        "gold_defeater_body": ["protected_from_attack(W)"],
         "context_facts": [
-            "unit(enemy_probe_line)",
-            "worker_unit(enemy_probe_line)",
+            "military_unit(marine)",
+            "infantry_unit(marine)",
             "worker_target(enemy_probe_line)",
-            "repairing_under_attack(enemy_probe_line)",
+            "military_target(enemy_probe_line)",
         ],
     },
     {
-        "scenario_id": "all_in_rush_retreat_override",
+        "scenario_id": "retreat_under_all_in_rush",
         "description": (
-            "Allied forces are numerically outnumbered and the default ROE "
-            "order retreat. However, the enemy is executing an all-in rush "
-            "on the main base. The all-in rush defeater on the retreat rule "
-            "is missing from the theory. "
-            "Anomaly: the theory still orders retreat even though base "
-            "abandonment would mean mission failure. "
-            "The model must construct the exception: all-in rush detected "
-            "means the force must hold regardless of numerical disadvantage."
+            "Allied zealot forces are numerically outnumbered. The retreat rule "
+            "(rts_r3022) fires correctly. But the all-in rush override is missing: "
+            "the defeater that cancels the retreat order when an all-in rush is "
+            "detected does not exist in the theory. "
+            "Anomaly: ordered_to_retreat holds even though an all-in rush is "
+            "underway and abandoning the position would lose the base. "
+            "The model must construct: all-in rush defeats the retreat order."
         ),
-        "anomaly": "~ordered_to_retreat(zealot)",
-        "defeater_label": "rts_r3032",
+        "anomaly": "ordered_to_retreat(zealot)",
+        "defeater_label": "rts_r3026",
         "gold_defeater_head": "~ordered_to_retreat(X)",
-        "gold_defeater_body": [
-            "military_unit(X)", "all_in_rush_detected"
-        ],
+        "gold_defeater_body": ["military_unit(X)", "all_in_rush_detected"],
         "context_facts": [
             "military_unit(zealot)",
             "ground_combat_unit(zealot)",
@@ -161,19 +158,17 @@ ROE_LEVEL3_SEEDS = [
         ],
     },
     {
-        "scenario_id": "stealth_break_direct_fire",
+        "scenario_id": "stealth_maintained_under_fire",
         "description": (
-            "A ghost unit is on a reconnaissance mission with stealth posture "
-            "active. It is then taken under direct fire by enemy units. "
-            "The stealth-break defeater (triggered by direct fire) is missing "
-            "from the theory. "
-            "Anomaly: the theory continues to require stealth posture even "
-            "though the unit is under attack and cannot evade while cloaked. "
-            "The model must construct the exception: direct fire on the unit "
-            "suspends the stealth posture obligation."
+            "A marine is on a recon mission (op_ghost_eye) with stealth posture "
+            "active. The unit is also under direct fire. The defeater that breaks "
+            "stealth when under fire is missing from the theory. "
+            "Anomaly: stealth_posture_active holds even though the unit is being "
+            "shot at, preventing it from returning fire or evading. "
+            "The model must construct: direct fire suspends the stealth posture."
         ),
-        "anomaly": "~stealth_posture_active(marine)",
-        "defeater_label": "rts_r3036",
+        "anomaly": "stealth_posture_active(marine)",
+        "defeater_label": "rts_r3032",
         "gold_defeater_head": "~stealth_posture_active(X)",
         "gold_defeater_body": ["under_direct_fire(X)"],
         "context_facts": [
@@ -186,19 +181,18 @@ ROE_LEVEL3_SEEDS = [
         ],
     },
     {
-        "scenario_id": "hvt_retreat_override",
+        "scenario_id": "retreat_when_hvt_in_range",
         "description": (
-            "A Viking unit is ordered to retreat due to numerical disadvantage. "
-            "However, a high-value enemy mothership is within attack range and "
-            "attempting to escape. The HVT-escape defeater on the retreat "
-            "order is missing from the theory. "
-            "Anomaly: the unit retreats even though engaging the HVT would "
-            "secure a decisive strategic objective. "
-            "The model must construct the exception: a high-value target in "
-            "range and fleeing overrides the retreat order."
+            "A Viking air unit is numerically outnumbered and the retreat rule "
+            "fires. But a high-value enemy mothership is in range and attempting "
+            "to escape -- the HVT pursuit override is missing from the theory. "
+            "Anomaly: ordered_to_retreat holds even though the strategic objective "
+            "(destroying the HVT) is within reach. "
+            "The model must construct: HVT in range plus target attempting escape "
+            "defeats the retreat order."
         ),
-        "anomaly": "~ordered_to_retreat(viking)",
-        "defeater_label": "rts_r3033",
+        "anomaly": "ordered_to_retreat(viking)",
+        "defeater_label": "rts_r3027",
         "gold_defeater_head": "~ordered_to_retreat(X)",
         "gold_defeater_body": [
             "military_unit(X)", "high_value_target_in_range(X)",
@@ -214,32 +208,25 @@ ROE_LEVEL3_SEEDS = [
         ],
     },
     {
-        "scenario_id": "proportionality_critical_threat",
+        "scenario_id": "civilian_area_protection_missing",
         "description": (
-            "A siege tank is operating near a civilian mining area and is "
-            "subject to the minimum-force requirement (no splash damage in "
-            "civilian proximity). A critical threat -- an enemy all-in rush "
-            "army -- is attacking. "
-            "The critical-threat proportionality override is missing from the "
-            "theory. "
-            "Anomaly: the siege tank cannot use splash damage even as the "
-            "base is being overrun. "
-            "The model must construct the exception: critical threat requiring "
-            "immediate response overrides the minimum-force requirement."
+            "A marine unit is engaging an enemy probe in a civilian mining area "
+            "(worker_mining_area). The theory is missing the civilian area defeater. "
+            "Without it, the default engagement authority (rts_r3000) fires and the "
+            "engagement is incorrectly authorized inside the civilian zone. "
+            "Anomaly: authorized_to_engage holds when the target is in a civilian area. "
+            "The model must construct the missing ROE constraint: no engagement "
+            "when the target is in a civilian area."
         ),
-        "anomaly": "~must_use_minimum_force(siege_tank)",
-        "defeater_label": "rts_r3026",
-        "gold_defeater_head": "~must_use_minimum_force(X)",
-        "gold_defeater_body": [
-            "critical_threat(T)", "requires_immediate_response(T)"
-        ],
+        "anomaly": "authorized_to_engage(marine, enemy_marine_squad)",
+        "defeater_label": "rts_r3005",
+        "gold_defeater_head": "~authorized_to_engage(X,Y)",
+        "gold_defeater_body": ["in_zone(Y, worker_mining_area)"],
         "context_facts": [
-            "military_unit(siege_tank)",
-            "armored_unit(siege_tank)",
-            "has_splash_damage(siege_tank)",
-            "civilian_proximity(siege_tank)",
-            "threat(enemy_all_in_rush)",
-            "critical_threat(enemy_all_in_rush)",
+            "military_unit(marine)",
+            "infantry_unit(marine)",
+            "military_target(enemy_marine_squad)",
+            "in_zone(enemy_marine_squad, worker_mining_area)",
         ],
     },
 ]
@@ -360,9 +347,8 @@ def generate_level3_from_seeds(theory):
             instance = generate_level3_instance(
                 theory=working_theory,
                 anomaly=seed["anomaly"],
-                defeater_rule=defeater_rule,
+                gold_defeater=defeater_rule,
                 k_distractors=5,
-                distractor_strategy="syntactic",
             )
             if instance is not None:
                 instances.append(instance)
