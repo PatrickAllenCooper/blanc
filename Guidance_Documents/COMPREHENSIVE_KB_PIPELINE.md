@@ -28,7 +28,7 @@ The original `paper/paper.tex` contains three papers in one (dataset, fine-tunin
 **Critical (must complete before submission):**
 - Generate and present dataset statistics tables (instance counts by level/domain/partition, difficulty distributions, novelty/revision spectra)
 - Either complete the contamination analysis (generate matched synthetic instances, compute Delta_synth) or reframe as methodology-only with results pending
-- Upload dataset to HuggingFace and obtain stable URL
+- ~~Upload dataset to HuggingFace and obtain stable URL~~ DONE: all tiers/instances uploaded to `PatrickAllenCooper/DeFAb`; multitier instances (framenet, gene_ontology, sumo, wikidata, umls, yago_full, babelnet) and updated tier1 instances uploaded 2026-04-15
 - ~~Generate Croissant metadata JSON-LD file~~ DONE: `paper/croissant.json` with core + RAI fields
 - ~~Complete the Dataset Access section (hosting URL, loading instructions, maintenance plan)~~ DONE
 - ~~Complete the Datasheet for Datasets appendix (Gebru et al. framework)~~ DONE
@@ -672,6 +672,11 @@ Key findings that affect implementation:
 **Maintained by**: Patrick Cooper  
 **Next update**: After dataset paper submission (May 6, 2026)  
 **See also**: `paper/dataset_paper.tex` (the dedicated NeurIPS 2026 E&D submission), `Guidance_Documents/GOOGLE_ORG_APPLICATION.md` (Google.org grant application draft)
+
+**Recent progress (2026-04-15)**:
+- Removed `--deepspeed-config` from DPO and GRPO training calls in `scripts/azure_finetune_spot.sh`. DeepSpeed initialization fails without `CUDA_HOME`; 2-GPU DDP via `torchrun` is sufficient.
+- Uploaded all new/updated instance files to `PatrickAllenCooper/DeFAb` on HuggingFace: multitier instances (framenet 16 MB, gene_ontology 2 MB, sumo 3.5 MB, wikidata 1.5 MB, umls 11.6 MB, yago_full 2.4 MB, babelnet 219 KB) and updated tier1 instances (biology 61 MB, chemistry 11 MB, everyday 174 MB, legal 42 MB, materials 17 MB).
+- Conversion script `scripts/_convert_yago_facts.py` written to stream-convert `tier3/yago_full_facts/theory.pkl` (5.5 GB) to `theory.jsonl.gz` for HuggingFace upload.
 
 **Recent progress (2026-04-10)**:
 - Integrated all content from `paper/finetuning_games.tex` into `paper/paper.tex`. Section 6 (Fine-Tuning) now includes five new subsections: Defeasible Conflict Games (formal definitions of conflicts and resolution games), Game-Generated Preferences for DPO (structurally grounded preference pairs from game outcomes), Self-Play and Process Reward (self-play training with step-level reward decomposition), Theory Construction as RL Environment (MDP formulation and Active Inference with Expected Free Energy), and Unified Training Pipeline (three-phase SFT/DPO/RLVR pipeline with tikz diagram). Discussion expanded with concrete DeFAb-Math examples (Euler's formula, convergent sequences) and 16 open questions for game-based training. New Appendix E (Game-Theoretic Foundations) added with formal proofs of binarity, zero-sumness, finiteness, determinacy, verifier invariance, and the Lakatos Correspondence. Five bibliography entries added for Active Inference and game-theoretic semantics literature. The standalone `finetuning_games.tex` is now fully subsumed by `paper.tex`.
