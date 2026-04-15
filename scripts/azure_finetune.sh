@@ -292,7 +292,6 @@ run_sft() {
         --save-steps          200 \
         --eval-steps          200 \
         --seed                42 \
-        --deepspeed-config    "$DS_CONFIG" \
         2>&1 | tee "${out_dir}/train.log"
 
     log "SFT complete: $out_dir"
@@ -340,7 +339,6 @@ run_dpo() {
             --save-steps          200 \
             --eval-steps          200 \
             --seed                42 \
-            --deepspeed-config    "$DS_CONFIG" \
             2>&1 | tee "${out_dir}/train.log"
 
         log "DPO ($variant) complete: $out_dir"
@@ -393,7 +391,6 @@ run_grpo() {
         --logging-dir           "${out_dir}/logs" \
         --save-steps            100 \
         --seed                  42 \
-        --deepspeed-config      "$DS_CONFIG" \
         2>&1 | tee "${out_dir}/train.log"
 
     log "GRPO complete: $out_dir"
