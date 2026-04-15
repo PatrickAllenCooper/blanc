@@ -368,7 +368,6 @@ do_sft() {
         --save-steps            "$SAVE_STEPS" \
         --eval-steps            "$EVAL_STEPS" \
         --seed                  42 \
-        --deepspeed-config      "$DS_CONFIG" \
         ${resume_arg} \
         2>&1 | tee -a "${out_dir}/train.log"
 }
@@ -415,7 +414,6 @@ do_dpo() {
         --save-steps            "$SAVE_STEPS" \
         --eval-steps            "$EVAL_STEPS" \
         --seed                  42 \
-        --deepspeed-config      "$DS_CONFIG" \
         ${resume_arg} \
         2>&1 | tee -a "${out_dir}/train.log"
 }
@@ -465,7 +463,6 @@ do_grpo() {
         --logging-dir           "${out_dir}/logs" \
         --save-steps            "$SAVE_STEPS" \
         --seed                  42 \
-        --deepspeed-config      "$DS_CONFIG" \
         ${resume_arg} \
         2>&1 | tee -a "${out_dir}/train.log"
 }
