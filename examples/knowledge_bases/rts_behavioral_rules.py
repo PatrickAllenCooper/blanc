@@ -191,9 +191,11 @@ def add_rts_behavioral_rules(theory: Theory) -> Theory:
              ("military_unit(X)", "holding_choke_point(X)"),
              RuleType.DEFEATER)
 
-    # All-in rush: no retreat; force must hold to protect base
+    # All-in rush: units retreating due to numerical disadvantage must hold to protect base.
+    # Scoped to has_numerical_disadvantage so isolation-based or supply-shortage retreat
+    # triggers remain active for units not in numerical jeopardy (conservativity).
     rid = _r(theory, rid, "~ordered_to_retreat(X)",
-             ("military_unit(X)", "all_in_rush_detected"),
+             ("military_unit(X)", "all_in_rush_detected", "has_numerical_disadvantage(X)"),
              RuleType.DEFEATER)
 
     # High-value target is in range and fleeing: pursue rather than retreat
@@ -363,20 +365,31 @@ def add_rts_superiority_relations(theory: Theory) -> None:
     the worker protection default (rts_r3015).
     """
 
-    # ── Self-defense overrides exclusion zone prohibition ────────────────────
-    # "authorized_to_engage(X,Y) :- under_direct_fire(X), hostile_unit(Y)" (rts_r3008)
-    # beats "~authorized_to_engage(X,Y) :- in_zone(X, restricted_zone_alpha), ..."
-    # (rts_r3003)
-    theory.add_superiority("rts_r3008", "rts_r3003")  # self-defense > exclusion zone
-    theory.add_superiority("rts_r3009", "rts_r3003")  # hostile act > exclusion zone
-    theory.add_superiority("rts_r3010", "rts_r3003")  # critical threat > exclusion zone
-
-    # Self-defense overrides civilian area restriction (rts_r3005)
-    theory.add_superiority("rts_r3008", "rts_r3005")
-    theory.add_superiority("rts_r3009", "rts_r3005")
-
-    # Self-defense overrides stealth-mission engagement prohibition (rts_r3006)
-    theory.add_superiority("rts_r3008", "rts_r3006")
+    # ── Self-defense overrides engagement restrictions ────────────────────────
+    #
+    # Rule ID trace (rid starts at 3000 in add_rts_behavioral_rules):
+    #   rts_r3000 authorized_to_engage :- military_unit, military_target
+    #   rts_r3001 authorized_to_engage :- military_unit, in_zone(engagement_zone), military_target
+    #   rts_r3002 authorized_to_engage :- military_unit, assigned_to_mission(op_thunderbolt), military_target
+    #   rts_r3003 ~authorized_to_engage :- in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha)  [DEFEATER]
+    #   rts_r3004 ~authorized_to_engage :- in_zone(Y, main_base)                                                  [DEFEATER]
+    #   rts_r3005 ~authorized_to_engage :- in_zone(Y, worker_mining_area)                                         [DEFEATER]
+    #   rts_r3006 ~authorized_to_engage :- assigned_to_mission(op_ghost_eye), stealth_posture_active              [DEFEATER]
+    #   rts_r3007 authorized_to_engage :- military_unit, under_direct_fire(X), hostile_unit(Y)   <- SELF-DEFENSE
+    #   rts_r3008 authorized_to_engage :- military_unit, hostile_act_detected_near(X,Y)          <- HOSTILE ACT
+    #   rts_r3009 authorized_to_engage :- military_unit, critical_threat(Y), under_direct_fire(X) <- CRITICAL THREAT
+    #
+    # Self-defense (rts_r3007) beats all three restriction defeaters
+    theory.add_superiority("rts_r3007", "rts_r3003")  # self-defense > exclusion zone
+    theory.add_superiority("rts_r3007", "rts_r3004")  # self-defense > allied base restriction
+    theory.add_superiority("rts_r3007", "rts_r3005")  # self-defense > civilian area restriction
+    theory.add_superiority("rts_r3007", "rts_r3006")  # self-defense > stealth-mission restriction
+    # Hostile act detected (rts_r3008) also beats exclusion and civilian restrictions
+    theory.add_superiority("rts_r3008", "rts_r3003")  # hostile act > exclusion zone
+    theory.add_superiority("rts_r3008", "rts_r3005")  # hostile act > civilian area
+    theory.add_superiority("rts_r3008", "rts_r3006")  # hostile act > stealth restriction
+    # Critical threat + direct fire (rts_r3009) beats exclusion zone
+    theory.add_superiority("rts_r3009", "rts_r3003")  # critical threat > exclusion zone
 
     # ── Worker protection defeaters override protection default ──────────────
     # "~protected_from_attack(W) :- repairing_under_attack(W)" (rts_r3017)

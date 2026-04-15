@@ -62,6 +62,11 @@ class DefeasibleEngine:
         self._definite_cache: Dict[str, bool] = {}
         self._call_depth = 0  # Prevent infinite recursion
         self._max_depth = 100
+        # Normalized fact set: canonical form "pred(a1,a2)" with no whitespace
+        # around commas/parens, so substituted literals always match stored facts.
+        self._normalized_facts: Set[str] = {
+            self._normalize_literal(f) for f in theory.facts
+        }
     
     def is_defeasibly_provable(self, literal: str) -> bool:
         """
@@ -142,8 +147,9 @@ class DefeasibleEngine:
         if literal in self._definite_cache:
             return self._definite_cache[literal]
         
-        # Base case: literal is a fact
-        if literal in self.theory.facts:
+        # Base case: literal is a fact (compare via normalized form to handle
+        # whitespace differences, e.g. "f(a, b)" vs "f(a,b)")
+        if self._normalize_literal(literal) in self._normalized_facts:
             self._definite_cache[literal] = True
             return True
         
@@ -197,27 +203,57 @@ class DefeasibleEngine:
     def _find_applicable_defeasible_rules(self, literal: str) -> List[Rule]:
         """
         Find defeasible rules whose head unifies with literal and body is provable.
-        
+
         Definition 7 condition (2b).
+
+        Handles existential body variables (variables in rule body that do not
+        appear in the head) by enumerating constants from the Herbrand base.
         """
         applicable = []
-        
+
         for rule in self.theory.get_rules_by_type(RuleType.DEFEASIBLE):
-            # Try to match rule head with literal
             substitution = self._match(rule.head, literal)
             if substitution is not None:
-                # Check if all body literals are defeasibly provable
-                all_provable = True
-                for body_lit in rule.body:
-                    instantiated = self._substitute(body_lit, substitution)
-                    if not self.is_defeasibly_provable(instantiated):
-                        all_provable = False
-                        break
-                
-                if all_provable:
+                # Check if any complete ground substitution makes all body literals
+                # defeasibly provable (handles existential body variables).
+                for _ in self._complete_substitutions(rule.body, substitution):
                     applicable.append(rule)
-        
+                    break  # one witness is enough
+
         return applicable
+
+    def _complete_substitutions(
+        self,
+        body_lits: tuple,
+        partial_sub: Dict[str, str],
+    ):
+        """
+        Yield complete ground substitutions that make every body literal
+        defeasibly provable.  Enumerates Herbrand constants for any variable
+        that appears only in the body (not bound by the head match).
+        """
+        if not body_lits:
+            yield partial_sub
+            return
+
+        lit = body_lits[0]
+        rest = body_lits[1:]
+        instantiated = self._substitute(lit, partial_sub)
+        _, args = self._parse_atom(instantiated)
+        free_vars = [a for a in args if self._is_variable(a)]
+
+        if not free_vars:
+            if self.is_defeasibly_provable(instantiated):
+                yield from self._complete_substitutions(rest, partial_sub)
+        else:
+            constants = self._extract_constants()
+            for const in constants:
+                ext_sub = dict(partial_sub)
+                for var in free_vars:
+                    ext_sub[var] = const
+                grounded = self._substitute(instantiated, ext_sub)
+                if self.is_defeasibly_provable(grounded):
+                    yield from self._complete_substitutions(rest, ext_sub)
     
     def _find_attacking_rules(self, literal: str) -> List[Rule]:
         """
@@ -408,6 +444,13 @@ class DefeasibleEngine:
         
         return (atom, [])
     
+    def _normalize_literal(self, literal: str) -> str:
+        """Return canonical form with no spaces: pred(a1,a2,...) ."""
+        pred, args = self._parse_atom(literal)
+        if not args:
+            return pred
+        return f"{pred}({','.join(args)})"
+
     def _is_variable(self, term: str) -> bool:
         """Check if term is a variable (starts with uppercase)."""
         return term and term[0].isupper()
