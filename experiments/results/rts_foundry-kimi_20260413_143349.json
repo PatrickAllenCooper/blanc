@@ -1,0 +1,172 @@
+{
+  "domain": "rts_engagement",
+  "provider": "foundry-kimi",
+  "model": "(default)",
+  "evaluation_date": "2026-04-13T14:38:39.036214",
+  "instance_counts": {
+    "3": 6
+  },
+  "modalities": [
+    "M4"
+  ],
+  "strategies": [
+    "direct",
+    "cot"
+  ],
+  "summary": {
+    "total_evaluations": 12,
+    "accuracy": 0.25,
+    "total_cost": 0.138488,
+    "avg_cost_per_eval": 0.011540666666666666,
+    "total_latency": 289.3350899219513,
+    "avg_latency": 24.11125749349594,
+    "decoder_distribution": {
+      "FAILED": 9,
+      "D1": 3
+    },
+    "cache_hit_rate": 0.0,
+    "cache_statistics": {
+      "cache_size": 13,
+      "total_queries": 15,
+      "cache_hits": 0,
+      "cache_misses": 15,
+      "hit_rate": "0.0%",
+      "cost_saved": "$0.00",
+      "time_saved": "0.0s"
+    }
+  },
+  "evaluations": [
+    {
+      "instance_id": "rts-l3-0",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "direct",
+      "correct": false,
+      "graded_score": 0.0,
+      "error_class": "E1_decoder_failure",
+      "resolves_anomaly": null,
+      "is_conservative": null
+    },
+    {
+      "instance_id": "rts-l3-0",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "cot",
+      "correct": false,
+      "graded_score": 0.0,
+      "error_class": "E1_decoder_failure",
+      "resolves_anomaly": null,
+      "is_conservative": null
+    },
+    {
+      "instance_id": "rts-l3-1",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "direct",
+      "correct": false,
+      "graded_score": 0.0,
+      "error_class": "E1_decoder_failure",
+      "resolves_anomaly": null,
+      "is_conservative": null
+    },
+    {
+      "instance_id": "rts-l3-1",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "cot",
+      "correct": true,
+      "graded_score": 1.0,
+      "error_class": "correct",
+      "resolves_anomaly": true,
+      "is_conservative": true
+    },
+    {
+      "instance_id": "rts-l3-2",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "direct",
+      "correct": false,
+      "graded_score": 0.0,
+      "error_class": "E1_decoder_failure",
+      "resolves_anomaly": null,
+      "is_conservative": null
+    },
+    {
+      "instance_id": "rts-l3-2",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "cot",
+      "correct": false,
+      "graded_score": 0.0,
+      "error_class": "E1_decoder_failure",
+      "resolves_anomaly": null,
+      "is_conservative": null
+    },
+    {
+      "instance_id": "rts-l3-3",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "direct",
+      "correct": false,
+      "graded_score": 0.0,
+      "error_class": "E1_decoder_failure",
+      "resolves_anomaly": null,
+      "is_conservative": null
+    },
+    {
+      "instance_id": "rts-l3-3",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "cot",
+      "correct": true,
+      "graded_score": 1.0,
+      "error_class": "correct",
+      "resolves_anomaly": true,
+      "is_conservative": true
+    },
+    {
+      "instance_id": "rts-l3-4",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "direct",
+      "correct": false,
+      "graded_score": 0.0,
+      "error_class": "E1_decoder_failure",
+      "resolves_anomaly": null,
+      "is_conservative": null
+    },
+    {
+      "instance_id": "rts-l3-4",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "cot",
+      "correct": false,
+      "graded_score": 0.0,
+      "error_class": "E2_derivation_failure",
+      "resolves_anomaly": null,
+      "is_conservative": null
+    },
+    {
+      "instance_id": "rts-l3-5",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "direct",
+      "correct": false,
+      "graded_score": 0.0,
+      "error_class": "E1_decoder_failure",
+      "resolves_anomaly": null,
+      "is_conservative": null
+    },
+    {
+      "instance_id": "rts-l3-5",
+      "level": 3,
+      "modality": "M4",
+      "strategy": "cot",
+      "correct": true,
+      "graded_score": 1.0,
+      "error_class": "E3_minimality_violation",
+      "resolves_anomaly": true,
+      "is_conservative": true
+    }
+  ]
+}
