@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -127,6 +128,8 @@ def _load_model_and_tokenizer(
     lora_dropout: float,
     lora_init:    str,
 ):
+    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+
     print(f"  Loading tokenizer: {base_model}")
     tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
     if tokenizer.pad_token is None:
@@ -147,7 +150,7 @@ def _load_model_and_tokenizer(
     print(f"  Loading base model: {base_model}")
     load_kwargs = dict(
         torch_dtype=torch.bfloat16,
-        device_map="auto",
+        device_map={"": local_rank},
         trust_remote_code=True,
         attn_implementation="sdpa",
     )

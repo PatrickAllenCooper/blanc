@@ -44,6 +44,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -339,7 +340,8 @@ def main() -> int:
     # --- Trainer ---
     print("\nInitializing GRPOTrainer...")
 
-    model_kwargs = {"trust_remote_code": True}
+    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    model_kwargs = {"trust_remote_code": True, "device_map": {"": local_rank}}
     is_awq = "awq" in args.base_model.lower()
     if args.use_4bit and not is_awq:
         model_kwargs["quantization_config"] = BitsAndBytesConfig(
