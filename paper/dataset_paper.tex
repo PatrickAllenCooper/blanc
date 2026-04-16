@@ -354,6 +354,9 @@ All models drop to 14--22\% on narrative rendering (M1) versus 73--94\% on forma
 \paragraph{CoT hurts candidate selection.}
 The CoT lift at Level~2 is \emph{negative} for all models ($-1.5$ to $-31$ pp): for structured selection tasks where surface alignment between output and candidate strings suffices, chain-of-thought elaboration disrupts that alignment. This replicates the ``overthinking'' effect~\cite{chen2024overthinking}.
 
+\paragraph{Level~3 formal metrics.}
+The graded scoring function (Section~\ref{subsec:scoring}) reveals meaningful variation beyond binary accuracy. Mean graded scores: DeepSeek-R1 0.596, GPT-5.2 0.429, Claude 0.150, Kimi 0.139. Among Level~3 responses, the fraction that resolve the anomaly tracks closely with conservativity: DeepSeek-R1 59.6\%/59.6\%, GPT-5.2 42.9\%/42.9\%, Claude 15.0\%/15.0\%, Kimi 13.9\%/13.9\% (resolves/conservative). Mean predicate novelty is highest for Claude (0.44) and lowest for Kimi (0.11), indicating that models with higher novelty do not necessarily achieve higher accuracy. The error taxonomy is dominated by decoder failure (E1) for Kimi (80.9\%) and derivation failure (E2) for Claude (58.2\%), while DeepSeek-R1 shows the most balanced profile: 48.2\% correct, 16.8\% E1, 23.6\% E2, 11.4\% E5 (strength shortfall).
+
 \paragraph{Contamination analysis status.}
 The synthetic contamination control methodology is established: 409 structurally matched synthetic instances have been generated with invented predicate names (Section~\ref{subsec:synthetic}). Evaluation of frontier models on synthetic instances and computation of the contamination gap $\Delta_{\mathrm{synth}}$ is in progress. Preliminary methodology validation confirms that synthetic theories preserve structural difficulty distributions of their naturalistic counterparts while using entirely novel vocabulary.
 

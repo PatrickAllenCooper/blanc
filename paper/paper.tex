@@ -435,8 +435,8 @@ Tier & Primary Sources & Rules & Instances \\
 \midrule
 0 (baseline) & YAGO, WordNet, LKIF, MatOnto & 2,318 & 374 L1/L2 + 35 L3 \\
 1 (this paper) & OpenCyc+ConceptNet & 289,305 & 324,511 \\
-2 (extracted) & GO, MeSH, SUMO, FrameNet, Wikidata, UMLS, BabelNet & 535,565 & 47,482 \\
-3 (extracted) & YAGO 4.5 full & 3,457,940 & --- \\
+2 (extracted) & GO, MeSH, SUMO, FrameNet, Wikidata, UMLS, BabelNet & 535,565 & 44,902 \\
+3 (extracted) & YAGO 4.5 full & 3,457,940 & 2,580 \\
 4 (counted) & YAGO facts (21.4\,GB, 312M triples) & 57,609,326$^{\dagger}$ & --- \\
 \midrule
 \multicolumn{2}{@{}l}{Materialized total (Tiers 0--3)} & 4,285,128 & 372,402 \\
@@ -2287,7 +2287,7 @@ The correspondence is verified by checking that each component of the Lakatosian
     \item {\bf Experimental result reproducibility}
     \item[] Question: Does the paper fully disclose all the information needed to reproduce the main experimental results of the paper to the extent that it affects the main claims and/or conclusions of the paper (regardless of whether the code and data are provided or not)?
     \item[] Answer: \answerYes{}
-    \item[] Justification: Section~\ref{sec:experiments} specifies all models, decoding hyperparameters (greedy, temperature~$=0$), prompting strategies (direct and four-step CoT), evaluation metrics, and instance generation parameters. The generation pipeline and all 409 Tier~0 gold instances (used in the base evaluation) plus the 324,511 Tier~1 instances and 47,482 multi-tier instances are released alongside the paper. Evaluation is fully automated via the open-source pipeline described in Section~\ref{subsec:decoder_validation}.
+    \item[] Justification: Section~\ref{sec:experiments} specifies all models, decoding hyperparameters (greedy, temperature~$=0$), prompting strategies (direct and four-step CoT), evaluation metrics, and instance generation parameters. The generation pipeline and all 409 Tier~0 gold instances (used in the base evaluation) plus the 324,511 Tier~1 instances, 44,902 Tier~2 multi-source instances, and 2,580 Tier~3 YAGO instances are released alongside the paper. Evaluation is fully automated via the open-source pipeline described in Section~\ref{subsec:decoder_validation}.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer NA means that the paper does not include experiments.
