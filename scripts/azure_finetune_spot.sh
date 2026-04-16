@@ -349,9 +349,51 @@ run_step() {
     fi
     if ! _verify_step "$key"; then
         log "ERROR: step '$key' exited 0 but expected artifact is missing; NOT marking complete."
+        _explain_verify "$key" || true
         return 1
     fi
     state_mark_done "$key"
+}
+
+# Print why _verify_step rejected a step. Called only on failure so it is
+# safe to be chatty.
+_explain_verify() {
+    local key="$1"
+    case "$key" in
+        download)
+            log "  checked INSTANCES_DIR=${INSTANCES_DIR}"
+            for f in level3_instances.json biology_dev_instances.json \
+                     tier1/biology/instances.json; do
+                if [[ -f "${INSTANCES_DIR}/${f}" ]]; then
+                    log "    [present] ${f}"
+                else
+                    log "    [missing] ${f}"
+                fi
+            done
+            ;;
+        data_*)
+            local slug="${key#data_}"
+            log "  checked DATA_DIR=${DATA_DIR}"
+            for f in sft_train.jsonl "preferences_${slug}.jsonl"; do
+                if [[ -s "${DATA_DIR}/${f}" ]]; then
+                    log "    [present] ${f}"
+                else
+                    log "    [missing or empty] ${f}"
+                fi
+            done
+            ;;
+        sft_*|dpo_standard_*|dpo_margin_*|grpo_*|rlhf_vitl_*)
+            local kind="${key%_*}" slug="${key##*_}"
+            log "  checked ${RESULTS_BASE}/${kind}/${slug}/final for LoRA weights"
+            ;;
+        eval_*)
+            local slug="${key#eval_}"
+            log "  checked ${RESULTS_BASE}/eval/${slug} for non-empty summary.json"
+            ;;
+        predownload_*)
+            log "  checked HF_HOME/hub for >20 GB of cached shards (HF_HOME=${HF_HOME})"
+            ;;
+    esac
 }
 
 latest_checkpoint() {
