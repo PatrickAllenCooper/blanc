@@ -40,6 +40,53 @@
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
+# Conda activation -- systemd's default PATH does not include Miniconda/Anaconda,
+# so we source conda and activate the target env before anything else. This
+# keeps `python`, `torchrun`, and the preinstalled CUDA/PyTorch stack on PATH
+# regardless of how the orchestrator is launched.
+# ---------------------------------------------------------------------------
+
+DEFAB_CONDA_ENV="${DEFAB_CONDA_ENV:-defab}"
+
+_activate_conda() {
+    # `conda activate` tolerates unbound CONDA_SHLVL etc. poorly under `set -u`.
+    # Relax strictness for this block only.
+    set +u
+    local base
+    local activated=0
+    for base in \
+        "${HOME}/miniconda3" \
+        "${HOME}/anaconda3" \
+        "/opt/miniconda3" \
+        "/opt/conda"; do
+        if [[ -f "${base}/etc/profile.d/conda.sh" ]]; then
+            # shellcheck disable=SC1091
+            source "${base}/etc/profile.d/conda.sh"
+            if conda activate "$DEFAB_CONDA_ENV" 2>/dev/null; then
+                echo "[conda] activated $DEFAB_CONDA_ENV from $base"
+                activated=1
+                break
+            fi
+            if conda activate base 2>/dev/null; then
+                echo "[conda] '$DEFAB_CONDA_ENV' not found; fell back to base at $base"
+                activated=1
+                break
+            fi
+        fi
+    done
+    if (( activated == 0 )); then
+        echo "[conda] WARN: no miniconda/anaconda install found; relying on inherited PATH"
+    fi
+    set -u
+}
+_activate_conda
+
+# After activation, $CONDA_PREFIX/bin is on PATH, so `python` resolves.
+# Pin a PYTHON variable as a last-resort explicit fallback.
+PYTHON="${PYTHON:-$(command -v python 2>/dev/null || command -v python3 2>/dev/null || echo /usr/bin/python3)}"
+export PYTHON
+
+# ---------------------------------------------------------------------------
 # Configuration -- override via /etc/defab/secrets or Environment= in unit
 # ---------------------------------------------------------------------------
 
@@ -166,7 +213,7 @@ trap 'rm -f "$PID_FILE"' EXIT
 
 state_reconcile() {
     log "Reconciling state file against on-disk artifacts..."
-    python3 "${REPO_DIR}/scripts/verify_and_repair_state.py" \
+    "$PYTHON" "${REPO_DIR}/scripts/verify_and_repair_state.py" \
         --state "$STATE_FILE" \
         --results-base "$RESULTS_BASE" \
         --repo-dir "$REPO_DIR" \
@@ -177,7 +224,7 @@ state_reconcile() {
 
 state_init() {
     if [[ ! -f "$STATE_FILE" ]]; then
-        python3 -c "
+        "$PYTHON" -c "
 import json, os, tempfile
 path = '$STATE_FILE'
 os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -193,7 +240,7 @@ os.replace(tmp, path)
 
 state_is_done() {
     local key="$1"
-    python3 -c "
+    "$PYTHON" -c "
 import json, sys
 try:
     state = json.load(open('${STATE_FILE}'))
@@ -209,7 +256,7 @@ state_mark_done() {
     # the file. Atomic replace guards against crash mid-write.
     (
         flock -x 200
-        python3 -c "
+        "$PYTHON" -c "
 import json, os, sys, tempfile
 path = '${STATE_FILE}'
 try:
@@ -456,7 +503,7 @@ do_download() {
     cd "$REPO_DIR"
 
     export HF_TOKEN
-    python -u -c "
+    "$PYTHON" -u -c "
 from huggingface_hub import snapshot_download
 import os
 snapshot_download(
@@ -495,7 +542,7 @@ do_predownload() {
     log_section "Phase 1b: Pre-download $model_id"
     mkdir -p "$HF_HOME"
     export HF_TOKEN
-    python -u -c "
+    "$PYTHON" -u -c "
 import os
 from huggingface_hub import snapshot_download
 snapshot_download(
@@ -524,7 +571,7 @@ do_prepare_data() {
     preflight || return 1
 
     if [[ ! -f "${DATA_DIR}/sft_train.jsonl" ]]; then
-        python experiments/finetuning/prepare_sft_data.py \
+        "$PYTHON" experiments/finetuning/prepare_sft_data.py \
             --instances-dir "$INSTANCES_DIR" \
             --domains biology legal materials \
             --modalities M4 M2 \
@@ -544,7 +591,7 @@ do_prepare_data() {
 
     log "Starting vLLM server for preference sampling..."
     export CUDA_VISIBLE_DEVICES=0
-    python -m vllm.entrypoints.openai.api_server \
+    "$PYTHON" -m vllm.entrypoints.openai.api_server \
         --model "$model_id" \
         --port "$VLLM_PORT" \
         --dtype auto \
@@ -560,7 +607,7 @@ do_prepare_data() {
     }
     export CUDA_VISIBLE_DEVICES=0,1
 
-    python experiments/finetuning/prepare_preference_data.py \
+    "$PYTHON" experiments/finetuning/prepare_preference_data.py \
         --provider curc \
         --base-url "http://localhost:${VLLM_PORT}" \
         --model-name "$model_id" \
@@ -742,7 +789,7 @@ do_rlhf() {
     log_section "RLHF/VITL: $model_slug"
     cd "$REPO_DIR"
 
-    CUDA_VISIBLE_DEVICES=0 spawn_to "${out_dir}/train.log" python \
+    CUDA_VISIBLE_DEVICES=0 spawn_to "${out_dir}/train.log" "$PYTHON" \
         experiments/finetuning/train_rlhf_vitl.py \
         --mode                vitl \
         --base-model          "$model_id" \
@@ -789,7 +836,7 @@ do_eval() {
         local method_name
         method_name=$(basename "$(dirname "$method_dir")")
 
-        spawn_to "${eval_dir}/${method_name}.log" python \
+        spawn_to "${eval_dir}/${method_name}.log" "$PYTHON" \
             experiments/finetuning/evaluate_finetuned.py \
             --checkpoint      "$method_dir" \
             --base-model      "$model_id" \
@@ -823,7 +870,7 @@ main() {
     log "Orchestrator pid=$$"
 
     log "Completed steps so far:"
-    python3 -c "
+    "$PYTHON" -c "
 import json
 state = json.load(open('${STATE_FILE}'))
 for s in state['completed']:

@@ -26,6 +26,13 @@ Environment="PYTHONFAULTHANDLER=1"
 Environment="NCCL_DEBUG=WARN"
 Environment="NCCL_ASYNC_ERROR_HANDLING=1"
 Environment="TOKENIZERS_PARALLELISM=false"
+# systemd strips the login shell's PATH; put conda env + conda base ahead of
+# system paths so python, torchrun, vllm, etc. resolve. The orchestrator also
+# sources conda.sh at startup (belt-and-suspenders) but this line means all
+# children -- including ones that bypass the orchestrator wrapper -- have a
+# sane PATH from the moment systemd starts the unit.
+Environment="DEFAB_CONDA_ENV=defab"
+Environment="PATH=/home/azureuser/miniconda3/envs/defab/bin:/home/azureuser/miniconda3/bin:/home/azureuser/anaconda3/envs/defab/bin:/home/azureuser/anaconda3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 # Favor the orchestrator over torchrun children if the OOM killer is triggered
 # -- we want the orchestrator to survive and mark the step as failed rather
 # than silently dying mid-write.
