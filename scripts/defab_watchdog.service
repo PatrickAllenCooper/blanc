@@ -1,0 +1,24 @@
+[Unit]
+Description=DeFAb Fine-Tuning Watchdog (stall detection)
+After=defab_finetune.service
+Wants=defab_finetune.service
+
+[Service]
+Type=simple
+User=root
+Environment="RESULTS_BASE=/data/defab_results"
+Environment="WATCH_INTERVAL=120"
+Environment="STALL_SECONDS=900"
+Environment="MAX_RESTARTS=6"
+Environment="SERVICE=defab_finetune.service"
+
+ExecStart=/usr/local/bin/defab_watchdog
+Restart=on-failure
+RestartSec=30
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=defab_watchdog
+
+[Install]
+WantedBy=multi-user.target

@@ -13,32 +13,72 @@ Two scripts are provided:
 
 ## Spot VM Setup (Recommended -- Cheapest)
 
-Azure Spot VMs can be deallocated at any time but cost 60--90% less. The `azure_finetune_spot.sh` script handles this with:
-- A JSON state file that records every completed step
-- Checkpoint saves every 50 steps (~5 minutes)
-- HuggingFace Trainer auto-resumes from the latest checkpoint
-- SIGTERM handler (Azure gives 30 seconds before deallocation) that stops vLLM servers cleanly
-- A systemd service that restarts the script automatically on every boot
+Azure Spot VMs can be deallocated at any time but cost 60--90% less. The `azure_finetune_spot.sh` script handles this with a defense-in-depth hardening stack:
+
+1. **Atomic state file** (`/data/defab_results/.finetune_state.json`) with `flock` + `tmp+rename+fsync`: the record of completed steps survives crashes mid-write.
+2. **Artifact-verified completion**: a step is marked done only after its declared output (a `final/` adapter or a non-empty `summary.json`) is present on disk. Silent exits no longer create phantom completions.
+3. **Boot-time state reconciliation** (`scripts/verify_and_repair_state.py`): every boot begins by walking the state file, dropping any entry whose artifact is missing, and then resuming from the first truly incomplete step.
+4. **Frequent checkpoints** (`save_steps=25`, `save_total_limit=3`): with 2x A100 QLoRA throughput this gives a checkpoint roughly every two minutes, so the worst-case eviction cost is bounded.
+5. **`warmup_ratio` instead of fixed `warmup_steps`**: short runs (~54 steps) no longer spend their entire budget in warmup.
+6. **Azure IMDS ScheduledEvents poller** (`scripts/azure_spot_preemption_poller.sh`): a background child polls `http://169.254.169.254/metadata/scheduledevents` every 5 seconds and signals the orchestrator *before* the OS SIGTERM arrives.
+7. **Signal propagation**: SIGTERM is fanned out to every tracked child (`torchrun` ranks, vLLM server, data-prep subprocesses) via `spawn_to`, which uses process substitution instead of a pipeline so the real child PID remains visible to the trap. systemd's `KillMode=mixed` covers anything we forget.
+8. **Pre-download step**: model shards (Qwen 32B ~65 GB, Qwen 72B ~145 GB, DeepSeek ~140 GB) are fetched with `huggingface_hub.snapshot_download(resume_download=True)` into the persistent `/data/hf_cache` *before* training begins. Eviction mid-download no longer wastes hours.
+9. **Pre-flight checks**: before each GPU-bound step we confirm at least 30 GB free under `$RESULTS_BASE` and log stale CUDA processes.
+10. **Stall watchdog** (`defab_watchdog.service`): if no `train.log` under `$RESULTS_BASE` is modified for 15 minutes while the main service is active, the watchdog restarts the service to break silent hangs (tokenizer download stalls, deadlocked NCCL collectives, etc.). Capped at six restarts per boot so a deterministic failure is not looped on forever.
 
 ### One-Time Setup on a Fresh Azure VM
 
 ```bash
-# 1. Clone the repo
 git clone https://github.com/PatrickAllenCooper/blanc.git /home/azureuser/blanc
 cd /home/azureuser/blanc
 
-# 2. Create persistent data directory (use an Azure Data Disk, not the OS disk)
 sudo mkdir -p /data/hf_cache /data/defab_results
-sudo chown azureuser:azureuser /data
+sudo chown -R azureuser:azureuser /data
 
-# 3. Install the script as a system command
-sudo install -m 755 scripts/azure_finetune_spot.sh /usr/local/bin/defab_finetune
+sudo mkdir -p /etc/defab && sudo chmod 700 /etc/defab
+echo 'HF_TOKEN=hf_...' | sudo tee /etc/defab/secrets >/dev/null
+sudo chmod 600 /etc/defab/secrets
 
-# 4. Install and enable the systemd service
+sudo install -m 755 scripts/azure_finetune_spot.sh        /usr/local/bin/defab_finetune
+sudo install -m 755 scripts/azure_spot_preemption_poller.sh /usr/local/bin/defab_preempt_poller
+sudo install -m 755 scripts/defab_watchdog.sh             /usr/local/bin/defab_watchdog
+
 sudo cp scripts/defab_finetune.service /etc/systemd/system/
+sudo cp scripts/defab_watchdog.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable defab_finetune  # auto-start on every boot
-sudo systemctl start defab_finetune   # start now
+sudo systemctl enable --now defab_finetune defab_watchdog
+```
+
+### Upgrading an Existing VM
+
+If the VM already has an older version of the orchestrator running:
+
+```bash
+cd /home/azureuser/blanc
+git pull
+
+sudo systemctl stop defab_finetune
+sudo install -m 755 scripts/azure_finetune_spot.sh        /usr/local/bin/defab_finetune
+sudo install -m 755 scripts/azure_spot_preemption_poller.sh /usr/local/bin/defab_preempt_poller
+sudo install -m 755 scripts/defab_watchdog.sh             /usr/local/bin/defab_watchdog
+sudo cp scripts/defab_finetune.service /etc/systemd/system/
+sudo cp scripts/defab_watchdog.service /etc/systemd/system/
+sudo systemctl daemon-reload
+
+# Audit the state file before restarting so phantom completions are removed.
+python3 scripts/verify_and_repair_state.py \
+    --state /data/defab_results/.finetune_state.json \
+    --results-base /data/defab_results \
+    --repo-dir /home/azureuser/blanc \
+    --report
+
+# If the report looks right, apply the repair (drop --report) and restart.
+python3 scripts/verify_and_repair_state.py \
+    --state /data/defab_results/.finetune_state.json \
+    --results-base /data/defab_results \
+    --repo-dir /home/azureuser/blanc
+
+sudo systemctl enable --now defab_finetune defab_watchdog
 ```
 
 ### Monitoring
@@ -56,11 +96,12 @@ systemctl status defab_finetune
 
 ### What Happens on Deallocation and Restart
 
-1. Azure sends SIGTERM to the process
-2. The script stops any running vLLM servers cleanly and exits with code 0
-3. The state file retains all completed steps
-4. When the VM restarts (by you or automatically), systemd starts `defab_finetune`
-5. The script reads the state file, skips completed steps, and resumes from the last checkpoint
+1. The IMDS poller sees a `Preempt` event and sends SIGTERM to the orchestrator (typically 5--30 seconds before the OS SIGTERM).
+2. The orchestrator's trap fans SIGTERM out to every tracked child: `torchrun` ranks flush their in-flight checkpoint, the vLLM server shuts down cleanly, and `spawn_to`-launched subprocesses wind down.
+3. The orchestrator exits with code 0; the state file is already flushed (atomic write on every `state_mark_done`).
+4. Azure deallocates the VM. When it comes back, systemd starts `defab_finetune` via `multi-user.target`.
+5. The orchestrator first runs `verify_and_repair_state.py`, which walks the state file and drops any entry whose artifact is absent. Then it resumes from the first truly incomplete step; if that step already has a `checkpoint-N/` directory, HuggingFace Trainer picks up from there.
+6. The watchdog (`defab_watchdog.service`) runs alongside the main service on every boot and restarts it if training output stalls for longer than 15 minutes.
 
 ### Resetting State (Start Over)
 

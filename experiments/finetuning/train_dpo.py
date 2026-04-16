@@ -335,7 +335,10 @@ def parse_args() -> argparse.Namespace:
                    help="Override num-epochs with a fixed step count.")
     p.add_argument("--per-device-batch-size", type=int, default=2)
     p.add_argument("--grad-accum-steps",      type=int, default=8)
-    p.add_argument("--warmup-steps",          type=int, default=100)
+    p.add_argument("--warmup-steps",          type=int, default=0,
+                   help="Fixed warmup step count. Ignored if --warmup-ratio is set.")
+    p.add_argument("--warmup-ratio",          type=float, default=None,
+                   help="Warmup as a fraction of total steps; preferred for short runs.")
     p.add_argument("--max-length",            type=int, default=1024)
     p.add_argument("--max-prompt-length",     type=int, default=512)
 
@@ -351,6 +354,10 @@ def parse_args() -> argparse.Namespace:
                    help="TensorBoard log dir (default: output-dir/logs).")
     p.add_argument("--save-steps",  type=int, default=200)
     p.add_argument("--eval-steps",  type=int, default=200)
+    p.add_argument("--save-total-limit", type=int, default=3,
+                   help="Keep at most N most-recent checkpoints; older are pruned.")
+    p.add_argument("--resume-from-checkpoint", default=None,
+                   help="Path to a checkpoint-N directory to resume from.")
     p.add_argument("--seed",        type=int, default=42)
 
     # DeepSpeed
@@ -401,7 +408,12 @@ def main() -> int:
         n = spectral_init_lora(model, lora_config)
         print(f"  Applied spectral LoRA initialization to {n} layers")
 
-    # --- DPO config ---
+    warmup_kwargs = (
+        {"warmup_ratio": args.warmup_ratio}
+        if args.warmup_ratio is not None
+        else {"warmup_steps": args.warmup_steps}
+    )
+
     dpo_config = DPOConfig(
         beta=args.beta,
         loss_type="sigmoid",
@@ -413,12 +425,14 @@ def main() -> int:
         learning_rate=args.learning_rate,
         num_train_epochs=args.num_epochs,
         max_steps=args.max_steps,
-        warmup_steps=args.warmup_steps,
         max_length=args.max_length,
         max_prompt_length=args.max_prompt_length,
         save_steps=args.save_steps,
         eval_steps=args.eval_steps,
+        save_total_limit=args.save_total_limit,
+        save_strategy="steps",
         evaluation_strategy="steps",
+        **warmup_kwargs,
         logging_steps=10,
         bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(),
         fp16=torch.cuda.is_available() and not torch.cuda.is_bf16_supported(),
@@ -451,7 +465,11 @@ def main() -> int:
 
     # --- Train ---
     print("\nStarting DPO training...")
-    trainer.train()
+    resume = args.resume_from_checkpoint
+    if resume and not Path(resume).exists():
+        print(f"  resume path {resume} does not exist; starting fresh.")
+        resume = None
+    trainer.train(resume_from_checkpoint=resume)
     trainer.save_model(str(output_dir / "final"))
     tokenizer.save_pretrained(str(output_dir / "final"))
 

@@ -3,35 +3,55 @@ Description=DeFAb Fine-Tuning (Spot-VM Resilient)
 Documentation=https://github.com/PatrickAllenCooper/blanc/blob/main/hpc/AZURE_FINETUNE.md
 After=network-online.target nvidia-fabricmanager.service
 Wants=network-online.target
-# Do not restart if the script itself exits cleanly (all done)
-# SIGTERM from Azure spot eviction exits with code 0 -- systemd will restart on next boot
+StartLimitIntervalSec=600
+StartLimitBurst=10
 
 [Service]
 Type=simple
 User=azureuser
 WorkingDirectory=/home/azureuser/blanc
 
-# Environment -- loaded from /etc/defab/secrets (NOT in git)
-# Create with: sudo mkdir -p /etc/defab && echo 'HF_TOKEN=hf_...' | sudo tee /etc/defab/secrets && sudo chmod 600 /etc/defab/secrets
-EnvironmentFile=/etc/defab/secrets
+# /etc/defab/secrets holds HF_TOKEN and any API keys used by eval steps.
+# Create with:
+#   sudo mkdir -p /etc/defab && sudo chmod 700 /etc/defab
+#   echo 'HF_TOKEN=hf_...' | sudo tee /etc/defab/secrets >/dev/null
+#   sudo chmod 600 /etc/defab/secrets
+EnvironmentFile=-/etc/defab/secrets
 Environment="HF_HOME=/data/hf_cache"
+Environment="TRANSFORMERS_CACHE=/data/hf_cache"
 Environment="RESULTS_BASE=/data/defab_results"
 Environment="REPO_DIR=/home/azureuser/blanc"
-Environment="TRANSFORMERS_CACHE=/data/hf_cache"
 Environment="PYTHONUNBUFFERED=1"
+Environment="PYTHONFAULTHANDLER=1"
 Environment="NCCL_DEBUG=WARN"
+Environment="NCCL_ASYNC_ERROR_HANDLING=1"
+Environment="TOKENIZERS_PARALLELISM=false"
+# Favor the orchestrator over torchrun children if the OOM killer is triggered
+# -- we want the orchestrator to survive and mark the step as failed rather
+# than silently dying mid-write.
+OOMScoreAdjust=-500
 
 ExecStart=/usr/local/bin/defab_finetune
 ExecStop=/bin/kill -SIGTERM $MAINPID
 
-# Give processes 30s to clean up on stop (Azure spot eviction gives 30s)
-TimeoutStopSec=30
+# Propagate SIGTERM to the whole cgroup so torchrun ranks, vLLM, and data
+# prep subprocesses all see it. 45s stop timeout leaves 15s buffer beyond the
+# Azure eviction window for final checkpoint flush + state-file fsync.
+KillMode=mixed
+KillSignal=SIGTERM
+SendSIGKILL=yes
+TimeoutStopSec=45
 
-# Restart on failure (e.g. OOM or unexpected crash) but NOT on clean exit
+# on-failure restarts after crashes. SIGTERM exits 0 and does NOT retrigger
+# (the VM is being evicted; systemd will start us fresh on next boot).
 Restart=on-failure
 RestartSec=30
 
-# Write service output to journald (use: journalctl -u defab_finetune -f)
+# Ample fd limit for torchrun + many-rank NCCL + HuggingFace Hub + vLLM.
+LimitNOFILE=1048576
+
+# Journald captures structured stdout/stderr. Combined with tee in the script
+# this gives us redundancy: log survives in both journald and $RESULTS_BASE/run.log.
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=defab_finetune

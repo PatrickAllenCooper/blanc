@@ -204,14 +204,22 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--max-steps",              type=int,   default=-1)
     p.add_argument("--per-device-batch-size",  type=int,   default=2)
     p.add_argument("--grad-accum-steps",       type=int,   default=8)
-    p.add_argument("--warmup-steps",           type=int,   default=100)
+    p.add_argument("--warmup-steps",           type=int,   default=0,
+                   help="Fixed warmup step count. Ignored if --warmup-ratio is set.")
+    p.add_argument("--warmup-ratio",           type=float, default=None,
+                   help="Fraction of total training steps to use as warmup. "
+                        "Preferred over --warmup-steps for short runs.")
     p.add_argument("--max-seq-length",         type=int,   default=1024)
 
     p.add_argument("--data-dir",  default="experiments/finetuning/data")
     p.add_argument("--output-dir", required=True)
     p.add_argument("--logging-dir", default=None)
-    p.add_argument("--save-steps",  type=int, default=200)
-    p.add_argument("--eval-steps",  type=int, default=200)
+    p.add_argument("--save-steps",        type=int, default=200)
+    p.add_argument("--eval-steps",        type=int, default=200)
+    p.add_argument("--save-total-limit",  type=int, default=3,
+                   help="Keep at most N most-recent checkpoints; older are pruned.")
+    p.add_argument("--resume-from-checkpoint", default=None,
+                   help="Path to a checkpoint-N directory to resume from.")
     p.add_argument("--seed",        type=int, default=42)
 
     p.add_argument("--deepspeed-config", default=None)
@@ -251,6 +259,12 @@ def main() -> int:
         args.lora_init,
     )
 
+    warmup_kwargs = (
+        {"warmup_ratio": args.warmup_ratio}
+        if args.warmup_ratio is not None
+        else {"warmup_steps": args.warmup_steps}
+    )
+
     sft_config = SFTConfig(
         output_dir=str(output_dir),
         logging_dir=str(logging_dir),
@@ -260,10 +274,11 @@ def main() -> int:
         learning_rate=args.learning_rate,
         num_train_epochs=args.num_epochs,
         max_steps=args.max_steps,
-        warmup_steps=args.warmup_steps,
         max_seq_length=args.max_seq_length,
         save_steps=args.save_steps,
         eval_steps=args.eval_steps,
+        save_total_limit=args.save_total_limit,
+        save_strategy="steps",
         evaluation_strategy="steps" if val_dataset else "no",
         logging_steps=10,
         bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(),
@@ -275,6 +290,7 @@ def main() -> int:
         deepspeed=args.deepspeed_config,
         report_to="tensorboard",
         dataset_text_field="text",
+        **warmup_kwargs,
     )
 
     trainer = SFTTrainer(
@@ -286,7 +302,11 @@ def main() -> int:
     )
 
     print("\nStarting SFT training...")
-    trainer.train()
+    resume = args.resume_from_checkpoint
+    if resume and not Path(resume).exists():
+        print(f"  resume path {resume} does not exist; starting fresh.")
+        resume = None
+    trainer.train(resume_from_checkpoint=resume)
     trainer.save_model(str(output_dir / "final"))
     tokenizer.save_pretrained(str(output_dir / "final"))
 
