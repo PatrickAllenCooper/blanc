@@ -118,8 +118,13 @@ def _build_checks(
     checks: dict[str, Callable[[], bool]] = {}
 
     checks["setup"] = lambda: True  # Package install is implicit once Python runs.
-    checks["download"] = lambda: (instances_dir / "tier0").is_dir() and any(
-        (instances_dir / "tier0").glob("*.json")
+    # do_download flattens Tier-0 dev files into instances/ and copies
+    # Tier-1 domain instances into instances/tier1/<domain>/instances.json.
+    # Either proves the HF snapshot_download step succeeded.
+    checks["download"] = lambda: (
+        (instances_dir / "level3_instances.json").exists()
+        or (instances_dir / "biology_dev_instances.json").exists()
+        or (instances_dir / "tier1" / "biology" / "instances.json").exists()
     )
 
     for slug in MODELS:

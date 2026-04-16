@@ -292,8 +292,14 @@ _verify_step() {
     local key="$1"
     case "$key" in
         setup)      return 0 ;;
-        download)   [[ -d "${INSTANCES_DIR}/tier0" ]] && \
-                    ls "${INSTANCES_DIR}/tier0"/*.json >/dev/null 2>&1 ;;
+        download)
+            # do_download copies Tier-0 dev files flat into $INSTANCES_DIR and
+            # Tier-1 per-domain files into $INSTANCES_DIR/tier1/<d>/instances.json.
+            # Either is sufficient evidence that snapshot_download ran.
+            [[ -f "${INSTANCES_DIR}/level3_instances.json" ]] || \
+            [[ -f "${INSTANCES_DIR}/biology_dev_instances.json" ]] || \
+            [[ -f "${INSTANCES_DIR}/tier1/biology/instances.json" ]]
+            ;;
         data_*)
             local slug="${key#data_}"
             [[ -s "${DATA_DIR}/sft_train.jsonl" ]] && \
