@@ -120,7 +120,16 @@ N_GPU="${N_GPU:-2}"
 WARMUP_RATIO="${WARMUP_RATIO:-0.05}"
 
 # Minimum free disk (GB) required before entering any training step.
-MIN_FREE_GB="${MIN_FREE_GB:-30}"
+# Per-step minimum free space under $RESULTS_BASE. The predownload phases
+# need far more (see preflight_disk_for_predownload below); the floor here is
+# the runtime headroom every other step needs (LoRA checkpoints, tokenizer
+# shards, eval outputs, scratch).
+MIN_FREE_GB="${MIN_FREE_GB:-50}"
+
+# Size estimates for pre-download pre-flight. Values in GB, padded ~15% for
+# shard deltas, tokenizer/config files, and in-flight partial writes.
+PREDOWNLOAD_SIZE_GB_qwen72="${PREDOWNLOAD_SIZE_GB_qwen72:-170}"
+PREDOWNLOAD_SIZE_GB_qwen32="${PREDOWNLOAD_SIZE_GB_qwen32:-80}"
 
 # Stall cap (seconds) before we abort a child process.
 STEP_TIMEOUT_SEC="${STEP_TIMEOUT_SEC:-86400}"   # 24h per step, soft cap
@@ -407,15 +416,56 @@ latest_checkpoint() {
 # Pre-flight checks
 # ---------------------------------------------------------------------------
 
+_free_gb_on() {
+    # Print free GB on the filesystem holding $1 (or 0 if unknown).
+    local path="$1" gb
+    gb=$(df -BG "$path" 2>/dev/null | awk 'NR==2 {gsub("G","",$4); print $4}')
+    echo "${gb:-0}"
+}
+
+_used_gb_on() {
+    local path="$1" gb
+    gb=$(du -sBG "$path" 2>/dev/null | awk '{gsub("G","",$1); print $1}')
+    echo "${gb:-0}"
+}
+
 preflight_disk() {
-    local free_gb
-    free_gb=$(df -BG "$RESULTS_BASE" 2>/dev/null | awk 'NR==2 {gsub("G","",$4); print $4}')
-    free_gb=${free_gb:-0}
+    local free_gb hf_free_gb
+    free_gb=$(_free_gb_on "$RESULTS_BASE")
     if (( free_gb < MIN_FREE_GB )); then
         log "ERROR: only ${free_gb}G free under $RESULTS_BASE (need >= ${MIN_FREE_GB}G). Aborting step."
         return 1
     fi
-    log "Disk headroom OK: ${free_gb}G free under $RESULTS_BASE."
+    hf_free_gb=$(_free_gb_on "$HF_HOME")
+    log "Disk headroom OK: ${free_gb}G free on \$RESULTS_BASE, ${hf_free_gb}G on \$HF_HOME."
+}
+
+# More aggressive pre-check for a model pre-download step. Estimates how
+# much of the target snapshot is already cached and requires the remainder
+# plus 10 GB scratch to be free on \$HF_HOME. Returns 1 with a clear message
+# if there is not enough room to finish the snapshot.
+preflight_disk_for_predownload() {
+    local slug="$1" need_gb cached_gb free_gb remaining_gb
+    case "$slug" in
+        qwen72)  need_gb="$PREDOWNLOAD_SIZE_GB_qwen72" ;;
+        qwen32)  need_gb="$PREDOWNLOAD_SIZE_GB_qwen32" ;;
+        *)       need_gb=20 ;;
+    esac
+    free_gb=$(_free_gb_on "$HF_HOME")
+    cached_gb=$(_used_gb_on "$HF_HOME/hub")
+    if (( cached_gb >= need_gb )); then
+        log "Predownload pre-flight OK for ${slug}: already ~${cached_gb}G cached, free=${free_gb}G."
+        return 0
+    fi
+    remaining_gb=$(( need_gb - cached_gb ))
+    if (( free_gb < remaining_gb + 10 )); then
+        log "ERROR: predownload_${slug} needs ~${remaining_gb}G more on ${HF_HOME} " \
+            "(plus 10G scratch); only ${free_gb}G free. Aborting step."
+        log "HINT: free space under ${HF_HOME}, or set HF_HOME to a larger mount" \
+            " (e.g. /mnt/resource_nvme/hf_cache) in /etc/systemd/system/defab_finetune.service."
+        return 1
+    fi
+    log "Predownload pre-flight OK for ${slug}: need ~${remaining_gb}G more, free=${free_gb}G."
 }
 
 preflight_gpu() {
@@ -589,6 +639,7 @@ do_predownload() {
 
     log_section "Phase 1b: Pre-download $model_id"
     mkdir -p "$HF_HOME"
+    preflight_disk_for_predownload "$model_slug" || return 1
     export HF_TOKEN
     "$PYTHON" -u -c "
 import os

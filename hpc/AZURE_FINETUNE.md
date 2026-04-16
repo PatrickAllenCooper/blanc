@@ -23,7 +23,7 @@ Azure Spot VMs can be deallocated at any time but cost 60--90% less. The `azure_
 6. **Azure IMDS ScheduledEvents poller** (`scripts/azure_spot_preemption_poller.sh`): a background child polls `http://169.254.169.254/metadata/scheduledevents` every 5 seconds and signals the orchestrator *before* the OS SIGTERM arrives.
 7. **Signal propagation**: SIGTERM is fanned out to every tracked child (`torchrun` ranks, vLLM server, data-prep subprocesses) via `spawn_to`, which uses process substitution instead of a pipeline so the real child PID remains visible to the trap. systemd's `KillMode=mixed` covers anything we forget.
 8. **Pre-download step**: model shards (Qwen 32B ~65 GB, Qwen 72B ~145 GB, DeepSeek ~140 GB) are fetched with `huggingface_hub.snapshot_download(resume_download=True)` into the persistent `/data/hf_cache` *before* training begins. Eviction mid-download no longer wastes hours.
-9. **Pre-flight checks**: before each GPU-bound step we confirm at least 30 GB free under `$RESULTS_BASE` and log stale CUDA processes.
+9. **Pre-flight checks**: before each GPU-bound step we confirm at least 50 GB free under `$RESULTS_BASE` and log stale CUDA processes. Before each `predownload_*` step we additionally check that `$HF_HOME` has enough room to finish the remaining shard bytes (Qwen 72B ~170 GB, Qwen 32B ~80 GB padded), and emit a clear error with remediation hints if not. Size floors are configurable via `MIN_FREE_GB`, `PREDOWNLOAD_SIZE_GB_qwen72`, and `PREDOWNLOAD_SIZE_GB_qwen32` env vars.
 10. **Stall watchdog** (`defab_watchdog.service`): if no `train.log` under `$RESULTS_BASE` is modified for 15 minutes while the main service is active, the watchdog restarts the service to break silent hangs (tokenizer download stalls, deadlocked NCCL collectives, etc.). Capped at six restarts per boot so a deterministic failure is not looped on forever.
 
 ### One-Time Setup on a Fresh Azure VM
@@ -124,6 +124,7 @@ sudo systemctl restart defab_finetune
 ---
 
 - Azure VM with 2x A100 80 GB GPUs (e.g. Standard_NC48ads_A100_v4)
+- **At least 350 GB free on `/data`** (the mount holding `HF_HOME` and `RESULTS_BASE`). Sizing breakdown: Qwen 72B shards ~145 GB, Qwen 32B shards ~65 GB, LoRA checkpoints across five methods and two models ~45 GB, data prep + eval outputs + scratch ~20 GB, plus ~75 GB headroom for transient writes and future models. If `/data` is the OS disk only, attach an NVMe data disk and bind `HF_HOME` and `RESULTS_BASE` to it.
 - Ubuntu 22.04, CUDA 12.x, Python 3.11+
 - HuggingFace account with access to `PatrickAllenCooper/DeFAb`
 - GitHub access to the blanc repository
