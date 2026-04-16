@@ -363,8 +363,20 @@ def main() -> int:
 
     Path(args.save_dir).mkdir(parents=True, exist_ok=True)
     out = Path(args.save_dir) / "partition_sensitivity.json"
+    def _sanitize(obj):
+        if isinstance(obj, float) and (obj != obj):  # NaN check
+            return None
+        return obj
+
+    def _clean(d):
+        if isinstance(d, dict):
+            return {k: _clean(v) for k, v in d.items()}
+        if isinstance(d, list):
+            return [_clean(v) for v in d]
+        return _sanitize(d)
+
     with open(out, "w") as f:
-        json.dump(results, f, indent=2, default=str)
+        json.dump(_clean(results), f, indent=2, default=str)
     print(f"\nResults saved to: {out}")
 
     return 0

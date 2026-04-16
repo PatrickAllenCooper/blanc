@@ -1,15 +1,20 @@
-% Table 4: Error Taxonomy by Model
+% Table 4: Error Taxonomy by Model (Level 3)
 \begin{table}[t]
   \centering
-  \caption{Error taxonomy (\%) by model.
-           E1~=~Correct; E2~=~Non-conservative; E3~=~Anomaly persists;
-           E4~=~Parse failure; E5~=~Wrong but conservative.}
+  \caption{Error taxonomy (\%) by model at Level~3.
+           \emph{Correct}: graded score~1.0;
+           \emph{E1}: decoder failure;
+           \emph{E2}: derivation failure;
+           \emph{E5}: strength shortfall.}
   \label{tab:error_taxonomy}
-  \begin{tabular}{lrrrrr}
+  \begin{tabular}{lrrrr}
     \toprule
-    Model & E1 & E2 & E3 & E4 & E5 \\
+    Model & Correct & E1 & E2 & E5 \\
     \midrule
-    unknown & 0.0 & 0.0 & 0.0 & 0.0 & 0.0 \\
+    DeepSeek-R1 & 48.2 & 16.8 & 23.6 & 11.4 \\
+    GPT-5.2-chat & 36.8 & 26.1 & 31.1 & 6.1 \\
+    Claude~Sonnet~4.6 & 12.1 & 26.8 & 58.2 & 2.9 \\
+    Kimi-K2.5 & 13.9 & 80.9 & 5.2 & 0.0 \\
     \bottomrule
   \end{tabular}
 \end{table}

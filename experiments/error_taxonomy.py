@@ -127,12 +127,14 @@ def print_error_report(evaluations: list[dict]) -> None:
     print("Error Distribution by Model:")
     for model, model_counts in sorted(taxonomy["by_model"].items()):
         model_total = sum(model_counts.values())
-        correct = model_counts.get("E1_correct", 0)
+        correct = model_counts.get("correct", 0)
         print(f"  {model:<35} acc={correct/model_total:.1%}  (n={model_total})")
-        for code in ("E2_non_conservative", "E3_no_resolve", "E4_parse_failure", "E5_wrong_but_conservative"):
+        for code in ("E1_decoder_failure", "E2_derivation_failure",
+                     "E3_minimality_violation", "E4_conservativity_violation",
+                     "E5_strength_shortfall"):
             count = model_counts.get(code, 0)
             if count:
-                print(f"    {ERROR_LABELS[code]:<40} {count:>4}  ({count/model_total:.1%})")
+                print(f"    {ERROR_LABELS.get(code, code):<40} {count:>4}  ({count/model_total:.1%})")
 
 
 if __name__ == "__main__":
@@ -147,9 +149,11 @@ if __name__ == "__main__":
     path = Path(args.results_file) if args.results_file else Path(args.results_dir)
     evaluations = []
     if path.is_dir():
-        for f in path.glob("*.json"):
-            d = json.load(open(f))
-            evaluations.extend(d.get("evaluations", []) if isinstance(d, dict) else d)
+        for f in path.glob("**/*.json"):
+            with open(f) as fh:
+                d = json.load(fh)
+            if isinstance(d, dict) and "evaluations" in d:
+                evaluations.extend(d["evaluations"])
     else:
         d = json.load(open(path))
         evaluations = d.get("evaluations", []) if isinstance(d, dict) else d

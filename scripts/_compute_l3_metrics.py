@@ -1,8 +1,9 @@
 """Compute Level 3 formal metrics from existing evaluation results.
 
 Reads the latest evaluation result files, extracts Level 3 responses,
-runs them through the Level3Evaluator, and produces:
-  - table3_level3_metrics.tex (updated with conservativity, novelty, revision distance)
+aggregates conservativity, novelty, revision distance, and error
+classification, and produces:
+  - table3_level3_metrics.tex (conservativity, novelty, revision distance)
   - table4_error_taxonomy.tex (E1-E5 error classification)
 
 Author: Patrick Cooper
@@ -10,52 +11,79 @@ Author: Patrick Cooper
 import json
 import sys
 from pathlib import Path
-from collections import Counter, defaultdict
+from collections import Counter
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))
 
 RESULTS_DIR = ROOT / "experiments" / "results"
-INSTANCES_FILE = ROOT / "instances" / "level3_instances.json"
 TABLES_DIR = ROOT / "paper" / "tables"
 
 MODEL_DISPLAY = {
     "DeepSeek-R1": "DeepSeek-R1",
-    "claude-sonnet-4-6": "Claude~Sonnet~4.6",
+    "claude-sonnet-4-6": r"Claude~Sonnet~4.6",
     "gpt-5.2-chat": "GPT-5.2-chat",
     "Kimi-K2.5": "Kimi-K2.5",
 }
 
 LATEST_RUNS = {
-    "DeepSeek-R1": "foundry_deepseek_20260228_174111",
-    "claude-sonnet-4-6": "foundry_claude_20260228_174111",
-    "gpt-5.2-chat": "foundry_gpt52_20260228_174111",
-    "Kimi-K2.5": "foundry_kimi_20260228_174111",
+    "DeepSeek-R1": "foundry_deepseek_20260228_174111/results_foundry-deepseek.json",
+    "claude-sonnet-4-6": "foundry_claude_20260228_174111/results_foundry-claude.json",
+    "gpt-5.2-chat": "foundry_gpt52_20260228_174111/results_foundry-gpt.json",
+    "Kimi-K2.5": "foundry_kimi_20260228_174111/results_foundry-kimi.json",
 }
 
+ERROR_ORDER = ["correct", "E1_decoder_failure", "E2_derivation_failure",
+               "E5_strength_shortfall"]
+ERROR_SHORT = {"correct": "Correct", "E1_decoder_failure": "E1",
+               "E2_derivation_failure": "E2", "E5_strength_shortfall": "E5"}
 
-def load_l3_instances():
-    with open(INSTANCES_FILE) as f:
+
+def load_l3_evaluations(result_path: str):
+    """Load Level 3 evaluations from a full results JSON."""
+    with open(RESULTS_DIR / result_path) as f:
         data = json.load(f)
-    if isinstance(data, dict) and "instances" in data:
-        return data["instances"]
-    if isinstance(data, list):
-        return data
-    return []
+    evs = data.get("evaluations", data if isinstance(data, list) else [])
+    return [e for e in evs
+            if e.get("level") == 3 or "l3" in str(e.get("instance_id", ""))]
 
 
-def load_l3_results(run_dir: str):
-    """Load Level 3 results from a run directory using the summary."""
-    summary_path = RESULTS_DIR / run_dir / "summary.json"
-    with open(summary_path) as f:
-        summary = json.load(f)
+def aggregate_l3(l3_evals):
+    """Compute aggregate L3 metrics from a list of evaluation dicts."""
+    n = len(l3_evals)
+    if n == 0:
+        return {}
 
-    l3_info = summary.get("by_level", {}).get("3", {})
+    correct = sum(1 for e in l3_evals if e.get("metrics", {}).get("correct"))
+    resolves = sum(1 for e in l3_evals
+                   if e.get("metrics", {}).get("resolves_anomaly"))
+    conserv = sum(1 for e in l3_evals
+                  if e.get("metrics", {}).get("conservativity"))
+
+    novs = [e["metrics"]["novelty"] for e in l3_evals
+            if e.get("metrics", {}).get("novelty") is not None]
+    mean_nov = sum(novs) / len(novs) if novs else 0.0
+
+    revs = [e["metrics"]["revision_distance"] for e in l3_evals
+            if e.get("metrics", {}).get("revision_distance") is not None]
+    mean_rev = sum(revs) / len(revs) if revs else 0.0
+
+    errors = Counter(
+        e.get("metrics", {}).get("error_class", "unknown") for e in l3_evals
+    )
+
     return {
-        "correct": l3_info.get("correct", 0),
-        "total": l3_info.get("total", 0),
-        "accuracy": l3_info.get("accuracy", 0.0),
+        "n": n,
+        "correct": correct,
+        "accuracy": correct / n,
+        "resolves": resolves,
+        "resolves_pct": resolves / n,
+        "conserv": conserv,
+        "conserv_pct": conserv / n,
+        "mean_nov": mean_nov,
+        "mean_rev": mean_rev,
+        "errors": dict(errors),
     }
 
 
@@ -64,84 +92,99 @@ def main():
     print("LEVEL 3 METRICS COMPUTATION")
     print("=" * 60)
 
-    l3_instances = load_l3_instances()
-    print(f"Level 3 instances loaded: {len(l3_instances)}")
+    all_results = {}
+    for model_key, result_path in LATEST_RUNS.items():
+        print(f"\n--- {model_key} ---")
+        l3 = load_l3_evaluations(result_path)
+        agg = aggregate_l3(l3)
+        all_results[model_key] = agg
+        print(f"  n={agg['n']}, acc={agg['accuracy']*100:.1f}%, "
+              f"resolves={agg['resolves_pct']*100:.1f}%, "
+              f"conserv={agg['conserv_pct']*100:.1f}%, "
+              f"nov={agg['mean_nov']:.3f}, d_rev={agg['mean_rev']:.2f}")
+        print(f"  errors: {agg['errors']}")
 
-    results_by_model = {}
-    for model_key, run_dir in LATEST_RUNS.items():
-        print(f"\n--- {model_key} ({run_dir}) ---")
-        l3_summary = load_l3_results(run_dir)
-        print(f"  L3: {l3_summary['correct']}/{l3_summary['total']} = {l3_summary['accuracy']*100:.1f}%")
-        results_by_model[model_key] = l3_summary
+    # --- Table 3: Level 3 formal metrics ---
+    TABLES_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Generate table3 with available data
-    print("\n" + "=" * 60)
-    print("Generating table3_level3_metrics.tex")
+    t3 = []
+    t3.append(r"% Table 3: Level 3 Formal Metrics by Model")
+    t3.append(r"\begin{table}[t]")
+    t3.append(r"  \centering")
+    t3.append(r"  \caption{Level~3 (Defeater Abduction) formal metrics by model.")
+    t3.append(r"           \emph{Acc}: binary accuracy;")
+    t3.append(r"           \emph{Res}: fraction resolving the anomaly;")
+    t3.append(r"           \emph{Cons}: conservative (no retracting existing rules);")
+    t3.append(r"           $\overline{\mathrm{Nov}}$: mean novelty;")
+    t3.append(r"           $\overline{d_\text{rev}}$: mean revision distance.}")
+    t3.append(r"  \label{tab:level3_metrics}")
+    t3.append(r"  \begin{tabular}{lrrrrr}")
+    t3.append(r"    \toprule")
+    t3.append(r"    Model & Acc (\%) & Res (\%) & Cons (\%) "
+              r"& $\overline{\mathrm{Nov}}$ & $\overline{d_\text{rev}}$ \\")
+    t3.append(r"    \midrule")
 
-    table3 = []
-    table3.append(r"% Table 3: Level 3 Formal Metrics by Model")
-    table3.append(r"\begin{table}[t]")
-    table3.append(r"  \centering")
-    table3.append(r"  \caption{Level~3 (Defeater Abduction) formal metrics by model.")
-    table3.append(r"           \emph{Acc}: overall accuracy.")
-    table3.append(r"           \emph{Resolves}: fraction that eliminate the anomaly.")
-    table3.append(r"           Conservativity, novelty, and revision distance require")
-    table3.append(r"           per-response evaluation (pending full L3 evaluator run).}")
-    table3.append(r"  \label{tab:level3_metrics}")
-    table3.append(r"  \begin{tabular}{lrrrrr}")
-    table3.append(r"    \toprule")
-    table3.append(r"    Model & Acc & Resolves & Conserv. & Nov (mean) & $d_\text{rev}$ \\")
-    table3.append(r"    \midrule")
+    model_order = ["DeepSeek-R1", "gpt-5.2-chat", "claude-sonnet-4-6", "Kimi-K2.5"]
+    for mk in model_order:
+        d = MODEL_DISPLAY[mk]
+        r = all_results[mk]
+        t3.append(
+            f"    {d} & {r['accuracy']*100:.1f} & {r['resolves_pct']*100:.1f} "
+            f"& {r['conserv_pct']*100:.1f} & {r['mean_nov']:.2f} "
+            f"& {r['mean_rev']:.2f} \\\\"
+        )
 
-    for model_key in ["DeepSeek-R1", "gpt-5.2-chat", "claude-sonnet-4-6", "Kimi-K2.5"]:
-        display = MODEL_DISPLAY.get(model_key, model_key)
-        r = results_by_model.get(model_key, {})
-        acc = r.get("accuracy", 0) * 100
-        table3.append(f"    {display} & {acc:.1f} & -- & -- & -- & -- \\\\")
+    t3.append(r"    \bottomrule")
+    t3.append(r"  \end{tabular}")
+    t3.append(r"\end{table}")
 
-    table3.append(r"    \bottomrule")
-    table3.append(r"  \end{tabular}")
-    table3.append(r"\end{table}")
+    out3 = TABLES_DIR / "table3_level3_metrics.tex"
+    with open(out3, "w") as f:
+        f.write("\n".join(t3) + "\n")
+    print(f"\nWritten {out3}")
 
-    with open(TABLES_DIR / "table3_level3_metrics.tex", "w") as f:
-        f.write("\n".join(table3) + "\n")
-    print(f"  Written to {TABLES_DIR / 'table3_level3_metrics.tex'}")
+    # --- Table 4: Error taxonomy ---
+    t4 = []
+    t4.append(r"% Table 4: Error Taxonomy by Model (Level 3)")
+    t4.append(r"\begin{table}[t]")
+    t4.append(r"  \centering")
+    t4.append(r"  \caption{Error taxonomy (\%) by model at Level~3.")
+    t4.append(r"           \emph{Correct}: graded score~1.0;")
+    t4.append(r"           \emph{E1}: decoder failure;")
+    t4.append(r"           \emph{E2}: derivation failure;")
+    t4.append(r"           \emph{E5}: strength shortfall.}")
+    t4.append(r"  \label{tab:error_taxonomy}")
+    t4.append(r"  \begin{tabular}{lrrrr}")
+    t4.append(r"    \toprule")
+    t4.append(r"    Model & Correct & E1 & E2 & E5 \\")
+    t4.append(r"    \midrule")
 
-    # Generate table4 with per-level error taxonomy from summary
-    print("\nGenerating table4_error_taxonomy.tex")
+    for mk in model_order:
+        d = MODEL_DISPLAY[mk]
+        r = all_results[mk]
+        n = r["n"]
+        errs = r["errors"]
+        cols = []
+        for ekey in ERROR_ORDER:
+            cnt = errs.get(ekey, 0)
+            cols.append(f"{100*cnt/n:.1f}")
+        t4.append(f"    {d} & " + " & ".join(cols) + r" \\")
 
-    table4 = []
-    table4.append(r"% Table 4: Error Taxonomy by Model")
-    table4.append(r"\begin{table}[t]")
-    table4.append(r"  \centering")
-    table4.append(r"  \caption{Error taxonomy (\%) by model at Level~3.")
-    table4.append(r"           Correct = graded score 1.0;")
-    table4.append(r"           remaining categories require per-response L3 evaluation.}")
-    table4.append(r"  \label{tab:error_taxonomy}")
-    table4.append(r"  \begin{tabular}{lrrrrr}")
-    table4.append(r"    \toprule")
-    table4.append(r"    Model & Correct & E1 & E2 & E3 & E4 \\")
-    table4.append(r"    \midrule")
+    t4.append(r"    \bottomrule")
+    t4.append(r"  \end{tabular}")
+    t4.append(r"\end{table}")
 
-    for model_key in ["DeepSeek-R1", "gpt-5.2-chat", "claude-sonnet-4-6", "Kimi-K2.5"]:
-        display = MODEL_DISPLAY.get(model_key, model_key)
-        r = results_by_model.get(model_key, {})
-        acc = r.get("accuracy", 0) * 100
-        incorrect = 100 - acc
-        table4.append(f"    {display} & {acc:.1f} & -- & -- & -- & -- \\\\")
+    out4 = TABLES_DIR / "table4_error_taxonomy.tex"
+    with open(out4, "w") as f:
+        f.write("\n".join(t4) + "\n")
+    print(f"Written {out4}")
 
-    table4.append(r"    \bottomrule")
-    table4.append(r"  \end{tabular}")
-    table4.append(r"\end{table}")
-
-    with open(TABLES_DIR / "table4_error_taxonomy.tex", "w") as f:
-        f.write("\n".join(table4) + "\n")
-    print(f"  Written to {TABLES_DIR / 'table4_error_taxonomy.tex'}")
-
-    print("\nNote: Detailed per-response metrics (conservativity, novelty, revision")
-    print("distance, and E1-E5 classification) require loading and parsing each")
-    print("individual model response through Level3Evaluator. The result JSON files")
-    print("are very large (~50-80MB each). This will be done as a separate batch job.")
+    # --- Save raw aggregates for other scripts ---
+    summary = {mk: all_results[mk] for mk in model_order}
+    out_json = RESULTS_DIR / "l3_metrics_summary.json"
+    with open(out_json, "w") as f:
+        json.dump(summary, f, indent=2)
+    print(f"Written {out_json}")
 
     return 0
 

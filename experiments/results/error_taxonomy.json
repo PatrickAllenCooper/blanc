@@ -1,0 +1,78 @@
+{
+  "overall": {
+    "unknown": 48,
+    "correct": 33113,
+    "E1_decoder_failure": 24744,
+    "E2_derivation_failure": 3057,
+    "E5_strength_shortfall": 137
+  },
+  "by_level": {
+    "3": {
+      "unknown": 48,
+      "E1_decoder_failure": 3852,
+      "E2_derivation_failure": 1539,
+      "correct": 659,
+      "E5_strength_shortfall": 137
+    },
+    "2": {
+      "correct": 32454,
+      "E1_decoder_failure": 20892,
+      "E2_derivation_failure": 1518
+    }
+  },
+  "by_model": {
+    "unknown": {
+      "unknown": 48
+    },
+    "claude-sonnet-4-6": {
+      "correct": 9168,
+      "E1_decoder_failure": 3247,
+      "E2_derivation_failure": 883,
+      "E5_strength_shortfall": 31
+    },
+    "DeepSeek-R1": {
+      "correct": 8982,
+      "E1_decoder_failure": 6808,
+      "E2_derivation_failure": 1318,
+      "E5_strength_shortfall": 64
+    },
+    "gpt-5.2-chat": {
+      "correct": 8171,
+      "E1_decoder_failure": 4048,
+      "E2_derivation_failure": 780,
+      "E5_strength_shortfall": 42
+    },
+    "Kimi-K2.5": {
+      "E1_decoder_failure": 10641,
+      "correct": 6792,
+      "E2_derivation_failure": 76
+    }
+  },
+  "by_modality": {
+    "M4": {
+      "unknown": 48,
+      "correct": 10669,
+      "E1_decoder_failure": 4779,
+      "E2_derivation_failure": 880,
+      "E5_strength_shortfall": 28
+    },
+    "M2": {
+      "correct": 10590,
+      "E1_decoder_failure": 4700,
+      "E2_derivation_failure": 1024,
+      "E5_strength_shortfall": 31
+    },
+    "M1": {
+      "correct": 2256,
+      "E1_decoder_failure": 11765,
+      "E2_derivation_failure": 179,
+      "E5_strength_shortfall": 36
+    },
+    "M3": {
+      "correct": 9598,
+      "E1_decoder_failure": 3500,
+      "E2_derivation_failure": 974,
+      "E5_strength_shortfall": 42
+    }
+  }
+}

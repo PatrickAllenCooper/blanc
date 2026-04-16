@@ -26,8 +26,8 @@ The original `paper/paper.tex` contains three papers in one (dataset, fine-tunin
 ### Remaining TODOs for Dataset Paper Submission
 
 **Critical (must complete before submission):**
-- Generate and present dataset statistics tables (instance counts by level/domain/partition, difficulty distributions, novelty/revision spectra)
-- Either complete the contamination analysis (generate matched synthetic instances, compute Delta_synth) or reframe as methodology-only with results pending
+- ~~Generate and present dataset statistics tables~~ DONE: instance counts reconciled (372,402 total), difficulty distributions and partition sensitivity JSONs regenerated
+- Either complete the contamination analysis (run model evaluation on synthetic instances to compute Delta_synth) or reframe as methodology-only with results pending. Synthetic instances generated (409 matched to Tier 0); model evaluation blocked on API keys.
 - ~~Upload dataset to HuggingFace and obtain stable URL~~ DONE: all tiers/instances uploaded to `PatrickAllenCooper/DeFAb`; multitier instances (framenet, gene_ontology, sumo, wikidata, umls, yago_full, babelnet) and updated tier1 instances uploaded 2026-04-15
 - ~~Generate Croissant metadata JSON-LD file~~ DONE: `paper/croissant.json` with core + RAI fields
 - ~~Complete the Dataset Access section (hosting URL, loading instructions, maintenance plan)~~ DONE
@@ -37,10 +37,10 @@ The original `paper/paper.tex` contains three papers in one (dataset, fine-tunin
 - ~~Verify 9-page main body limit~~ DONE: body fits exactly in 9 pages
 
 **Important (strengthen the paper):**
-- Add Qwen 2.5-72B and Qwen 2.5-32B results for within-family scaling analysis
-- Fill in Level 3 metrics table (conservativity, novelty, revision distance columns currently placeholder)
-- Fill in error taxonomy table (currently all zeros)
-- Compute and present yield curves, partition sensitivity analysis
+- Add Qwen 2.5-72B and Qwen 2.5-32B results for within-family scaling analysis (Qwen 2.5-32B SFT training in progress on Azure)
+- ~~Fill in Level 3 metrics table (conservativity, novelty, revision distance)~~ DONE: extracted from full foundry result JSONs. DeepSeek-R1: 59.6% resolves, 59.6% conservative, Nov=0.14. GPT-5.2: 42.9%/42.9%/0.23. Claude: 15.0%/15.0%/0.44. Kimi: 13.9%/13.9%/0.11. Tables written to `paper/tables/table3_level3_metrics.tex` and `paper/tables/table4_error_taxonomy.tex`.
+- ~~Fill in error taxonomy table~~ DONE: E1/E2/E5 percentages extracted from foundry results. `tab:ft_errors` Base column populated in `paper/paper.tex`. VITL-RLHF column pending Azure fine-tuning completion.
+- ~~Compute and present yield curves, partition sensitivity analysis~~ DONE: `difficulty_analysis.py`, `partition_sensitivity.py`, `statistics.py` all executed; JSON outputs regenerated under `experiments/results/`. NaN issue in `partition_sensitivity.json` fixed.
 - Add figures (difficulty distribution histograms, yield curves, contamination gap visualization)
 
 **Nice to have:**
@@ -672,6 +672,17 @@ Key findings that affect implementation:
 **Maintained by**: Patrick Cooper  
 **Next update**: After dataset paper submission (May 6, 2026)  
 **See also**: `paper/dataset_paper.tex` (the dedicated NeurIPS 2026 E&D submission), `Guidance_Documents/GOOGLE_ORG_APPLICATION.md` (Google.org grant application draft)
+
+**Recent progress (2026-04-16)**:
+- Fixed `device_map` incompatibility with `torchrun` DDP in all three training scripts (`train_sft.py`, `train_dpo.py`, `train_grpo.py`): replaced `device_map="auto"` with `device_map={"": local_rank}` so each rank loads the model onto its own GPU. Qwen 2.5-32B SFT training restarted on Azure.
+- Reconciled instance totals in `paper/paper.tex`: Tier 2 instances updated from 26,693 to 47,482 (added UMLS to source list), total from 351,613 to 372,402 (matches `dataset_paper.tex` and actual instance count on disk).
+- Rewrote `scripts/_compute_l3_metrics.py` to extract real L3 metrics (conservativity, novelty, revision distance, error class) from full foundry result JSONs instead of summary-only placeholders. Generated `paper/tables/table3_level3_metrics.tex` and `paper/tables/table4_error_taxonomy.tex` with real values.
+- Fixed key name inconsistency in `experiments/error_taxonomy.py` (`E1_correct` -> `correct`, old E2-E5 keys -> actual data keys) and recursive glob for subdirectory results. Ran against all results; saved to `experiments/results/error_taxonomy.json`.
+- Populated `tab:ft_errors` Base column in `paper/paper.tex` with foundation model L3 error distribution: E1=37.1%, E2=29.8%, E5=5.1%.
+- Regenerated synthetic contamination-control instances (409 matched to Tier 0). Model evaluation pending API access.
+- Ran `difficulty_analysis.py`, `partition_sensitivity.py`, `statistics.py` against current instances; regenerated all JSON outputs. Fixed NaN-in-JSON bug in `partition_sensitivity.py`.
+- Updated contamination analysis text in `paper/paper.tex` to note synthetic instances are generated.
+- Full test suite passes: 1627 passed, 3 skipped, 91% coverage.
 
 **Recent progress (2026-04-15)**:
 - Removed `--deepspeed-config` from DPO and GRPO training calls in `scripts/azure_finetune_spot.sh`. DeepSpeed initialization fails without `CUDA_HOME`; 2-GPU DDP via `torchrun` is sufficient.

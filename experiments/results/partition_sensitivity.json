@@ -18,7 +18,7 @@
           "Q1",
           "Q2"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       },
@@ -36,7 +36,7 @@
           "Q1",
           "Q4"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       },
@@ -45,7 +45,7 @@
           "Q2",
           "Q3"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       },
@@ -54,7 +54,7 @@
           "Q2",
           "Q4"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       },
@@ -63,7 +63,7 @@
           "Q3",
           "Q4"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       }
@@ -89,7 +89,7 @@
           "Q1",
           "Q2"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       },
@@ -107,7 +107,7 @@
           "Q1",
           "Q4"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       },
@@ -116,7 +116,7 @@
           "Q2",
           "Q3"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       },
@@ -125,7 +125,7 @@
           "Q2",
           "Q4"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       },
@@ -134,7 +134,7 @@
           "Q3",
           "Q4"
         ],
-        "U": NaN,
+        "U": null,
         "p": 1.0,
         "significant": false
       }
