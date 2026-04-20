@@ -39,7 +39,15 @@ Environment="PATH=/home/azureuser/miniconda3/envs/defab/bin:/home/azureuser/mini
 OOMScoreAdjust=-500
 
 ExecStart=/usr/local/bin/defab_finetune
-ExecStop=/bin/kill -SIGTERM $MAINPID
+
+# NO ExecStop. systemd already SIGTERMs MainPID itself (because KillSignal=SIGTERM
+# below) on `systemctl stop` -- adding `ExecStop=/bin/kill -SIGTERM $MAINPID` is
+# both redundant and actively harmful: by the time ExecStop runs, our IMDS-poller-
+# triggered SIGTERM handler has already exit 0'd the orchestrator and $MAINPID is
+# empty. Bare `kill` then prints its usage and exits 1, causing systemd to
+# mis-classify the graceful spot-preemption shutdown as a Failure, which in turn
+# fires Restart=on-failure on a VM that Azure is about to evict (wasting restart
+# budget from StartLimitBurst).
 
 # Propagate SIGTERM to the whole cgroup so torchrun ranks, vLLM, and data
 # prep subprocesses all see it. 45s stop timeout leaves 15s buffer beyond the
@@ -49,8 +57,9 @@ KillSignal=SIGTERM
 SendSIGKILL=yes
 TimeoutStopSec=45
 
-# on-failure restarts after crashes. SIGTERM exits 0 and does NOT retrigger
-# (the VM is being evicted; systemd will start us fresh on next boot).
+# on-failure restarts after crashes. The orchestrator exits 0 on SIGTERM and
+# does NOT retrigger (the VM is being evicted; systemd will start us fresh on
+# next boot via WantedBy=multi-user.target).
 Restart=on-failure
 RestartSec=30
 
