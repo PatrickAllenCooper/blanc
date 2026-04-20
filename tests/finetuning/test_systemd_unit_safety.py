@@ -168,3 +168,49 @@ def test_watchdog_unit_present_and_uses_root() -> None:
     assert re.search(r"^\s*User\s*=\s*root", src, flags=re.MULTILINE), (
         "defab_watchdog.service must run as root to restart defab_finetune."
     )
+
+
+# ---------------------------------------------------------------------------
+# Orchestrator default tuning
+# ---------------------------------------------------------------------------
+
+ORCHESTRATOR = SCRIPTS / "azure_finetune_spot.sh"
+
+
+def test_save_steps_default_bounds_preemption_loss() -> None:
+    """SAVE_STEPS sets the upper bound on work lost to a Spot preemption.
+    Observed step times: Qwen-72B QLoRA DPO ~58 s/step, Qwen-32B SFT ~25 s.
+    SAVE_STEPS=10 bounds the loss at ~10 min on the slowest workload, with
+    negligible disk overhead (~5 GB per LoRA adapter + Adam state checkpoint,
+    capped at SAVE_TOTAL_LIMIT). Prior default of 25 was set assuming an
+    incorrect 5 s/step, and cost us the full first 24 minutes of DPO on the
+    first real preemption."""
+    src = _read(ORCHESTRATOR)
+    match = re.search(
+        r'^\s*SAVE_STEPS\s*=\s*"?\$\{SAVE_STEPS:-(\d+)\}"?',
+        src,
+        flags=re.MULTILINE,
+    )
+    assert match, "Orchestrator must declare SAVE_STEPS with a default."
+    save_steps = int(match.group(1))
+    assert 5 <= save_steps <= 15, (
+        f"SAVE_STEPS default = {save_steps}. Must be in [5, 15] so a single "
+        "Spot eviction loses < 15 min on the slowest workload (Qwen-72B "
+        "DPO @ ~58 s/step) without thrashing disk I/O."
+    )
+
+
+def test_save_total_limit_keeps_disk_bounded() -> None:
+    src = _read(ORCHESTRATOR)
+    match = re.search(
+        r'^\s*SAVE_TOTAL_LIMIT\s*=\s*"?\$\{SAVE_TOTAL_LIMIT:-(\d+)\}"?',
+        src,
+        flags=re.MULTILINE,
+    )
+    assert match, "Orchestrator must declare SAVE_TOTAL_LIMIT default."
+    limit = int(match.group(1))
+    assert 2 <= limit <= 5, (
+        f"SAVE_TOTAL_LIMIT default = {limit}. Outside [2, 5]: too few risks "
+        "losing the only good checkpoint to a corrupted-mid-write event; "
+        "too many wastes disk and slows checkpoint pruning."
+    )

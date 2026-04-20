@@ -103,9 +103,17 @@ SPLITS_FILE="${INSTANCES_DIR}/splits.json"
 DS_CONFIG="${REPO_DIR}/experiments/finetuning/ds_config_zero2.json"
 VLLM_PORT="${VLLM_PORT:-8200}"
 
-# Checkpoint frequency: save often so spot eviction costs <= a few minutes.
-# At ~5s/step on 32B QLoRA, save_steps=25 yields a checkpoint every ~2 min.
-SAVE_STEPS="${SAVE_STEPS:-25}"
+# Checkpoint frequency: bound the work lost to a single Spot preemption.
+# Observed on dual-A100 80GB:
+#   * Qwen2.5-72B QLoRA (DPO):     ~58 s/step  -> SAVE_STEPS=10 ~= 9.7 min
+#   * Qwen2.5-32B QLoRA (SFT):     ~25 s/step  -> SAVE_STEPS=10 ~= 4.2 min
+#   * Qwen2.5-72B QLoRA (SFT, 54 steps): finishes in one shot, save_steps moot
+# A LoRA adapter + Adam optimizer state checkpoint is ~5 GB; with NVMe write
+# bandwidth (~3 GB/s) each save costs ~2 s, dwarfed by training step time.
+# Disk footprint is bounded by SAVE_TOTAL_LIMIT regardless.
+# We previously ran with SAVE_STEPS=25, lost a full 24 min of DPO progress on
+# the first real Spot preemption (Apr 20, step 24 of 240, no checkpoint yet).
+SAVE_STEPS="${SAVE_STEPS:-10}"
 EVAL_STEPS="${EVAL_STEPS:-50}"
 SAVE_TOTAL_LIMIT="${SAVE_TOTAL_LIMIT:-3}"
 
