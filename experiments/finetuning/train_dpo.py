@@ -64,7 +64,12 @@ from typing import Optional
 import torch
 import torch.nn.functional as F
 from datasets import Dataset
-from peft import LoraConfig, TaskType, get_peft_model
+from peft import (
+    LoraConfig,
+    TaskType,
+    get_peft_model,
+    prepare_model_for_kbit_training,
+)
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -279,6 +284,15 @@ def _load_model_and_tokenizer(
         load_kwargs["quantization_config"] = bnb_config
     model = AutoModelForCausalLM.from_pretrained(base_model, **load_kwargs)
 
+    # See train_sft.py for explanation; required to back-prop through a
+    # quantized base when gradient checkpointing is enabled.
+    if bnb_config is not None:
+        model = prepare_model_for_kbit_training(
+            model,
+            use_gradient_checkpointing=True,
+            gradient_checkpointing_kwargs={"use_reentrant": False},
+        )
+
     lora_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
         r=lora_rank,
@@ -289,6 +303,8 @@ def _load_model_and_tokenizer(
         bias="none",
     )
     model = get_peft_model(model, lora_config)
+    if hasattr(model, "enable_input_require_grads"):
+        model.enable_input_require_grads()
     model.print_trainable_parameters()
 
     return model, tokenizer, lora_config
@@ -437,6 +453,7 @@ def main() -> int:
         bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(),
         fp16=torch.cuda.is_available() and not torch.cuda.is_bf16_supported(),
         gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
         optim="adamw_torch_fused",
         lr_scheduler_type="cosine",
         seed=args.seed,

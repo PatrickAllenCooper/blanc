@@ -673,6 +673,14 @@ Key findings that affect implementation:
 **Next update**: After dataset paper submission (May 6, 2026)  
 **See also**: `paper/dataset_paper.tex` (the dedicated NeurIPS 2026 E&D submission), `Guidance_Documents/GOOGLE_ORG_APPLICATION.md` (Google.org grant application draft)
 
+**Recent progress (2026-04-20)**:
+- Diagnosed and fixed the canonical QLoRA + gradient-checkpointing bug that was crashing every SFT/DPO/RLHF-ViTL run on Azure on the first backward pass:
+  - Symptom: `RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn` at `accelerator.backward(loss)`, preceded by `UserWarning: None of the inputs have requires_grad=True. Gradients will be None`. Reproduced on Qwen2.5-72B-Instruct loaded with `bitsandbytes` 4-bit + PEFT LoRA + `gradient_checkpointing=True` + DDP.
+  - Cause: when the base model is frozen (4-bit/quantized), its embedding layer outputs lose `requires_grad=True` after gradient-checkpointing recomputation, breaking the autograd graph before it reaches the LoRA adapters.
+  - Fix in `experiments/finetuning/train_sft.py`, `train_dpo.py`, `train_rlhf_vitl.py`: import and call `prepare_model_for_kbit_training(model, use_gradient_checkpointing=True, gradient_checkpointing_kwargs={"use_reentrant": False})` before `get_peft_model` whenever `bnb_config is not None`; call `model.enable_input_require_grads()` after `get_peft_model` to cover the AWQ branch; pass `gradient_checkpointing_kwargs={"use_reentrant": False}` through every trainer config (SFT, DPO, GRPO, Reward).
+  - Regression guard: `tests/finetuning/test_qlora_grad_setup.py` (13 cases) statically asserts the import, the guarded invocation under `if bnb_config is not None`, the `enable_input_require_grads()` call, and the non-reentrant checkpointing kwarg in every trainer config. Runs in ~0.05 s with no GPU.
+  - Orchestrator hardening that proved its worth here: artifact verification refused to mark `sft_qwen72` complete despite an exit-0 from torchrun (the first-step crash never produced a `final/` adapter), and the watchdog correctly let the orchestrator's own `Restart=on-failure` handle the retry rather than masking the bug.
+
 **Recent progress (2026-04-16)**:
 - Hardened Azure Spot-VM orchestration end-to-end against deallocation:
   - Added `scripts/verify_and_repair_state.py`: boot-time audit that removes phantom `[done]` entries from `.finetune_state.json` by checking for real on-disk artifacts (`final/adapter_model.*`, non-empty `summary.json`). Motivated by Apr 15 state showing 8 Qwen-72B steps completed with zero outputs on disk.

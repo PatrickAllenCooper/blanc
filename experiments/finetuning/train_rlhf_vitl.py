@@ -194,7 +194,16 @@ class RewardModelTrainer:
             self.base_model, **load_kwargs
         )
 
-        from peft import get_peft_model
+        from peft import get_peft_model, prepare_model_for_kbit_training
+
+        # See train_sft.py for explanation; required for QLoRA + grad checkpointing.
+        if bnb_config is not None:
+            model = prepare_model_for_kbit_training(
+                model,
+                use_gradient_checkpointing=True,
+                gradient_checkpointing_kwargs={"use_reentrant": False},
+            )
+
         lora_cfg = LoraConfig(
             task_type=TaskType.SEQ_CLS,
             r=self.lora_rank,
@@ -204,6 +213,8 @@ class RewardModelTrainer:
             bias="none",
         )
         model = get_peft_model(model, lora_cfg)
+        if hasattr(model, "enable_input_require_grads"):
+            model.enable_input_require_grads()
 
         def tokenize(batch):
             chosen_enc  = tokenizer(
@@ -233,6 +244,7 @@ class RewardModelTrainer:
             learning_rate=learning_rate,
             bf16=True,
             gradient_checkpointing=True,
+            gradient_checkpointing_kwargs={"use_reentrant": False},
             evaluation_strategy="steps",
             eval_steps=100,
             save_steps=100,
@@ -250,6 +262,7 @@ class RewardModelTrainer:
             learning_rate=learning_rate,
             bf16=True,
             gradient_checkpointing=True,
+            gradient_checkpointing_kwargs={"use_reentrant": False},
             evaluation_strategy="steps",
             eval_steps=100,
             save_steps=100,

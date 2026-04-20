@@ -45,7 +45,12 @@ from pathlib import Path
 
 import torch
 from datasets import Dataset
-from peft import LoraConfig, TaskType, get_peft_model
+from peft import (
+    LoraConfig,
+    TaskType,
+    get_peft_model,
+    prepare_model_for_kbit_training,
+)
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -158,6 +163,18 @@ def _load_model_and_tokenizer(
         load_kwargs["quantization_config"] = bnb_config
     model = AutoModelForCausalLM.from_pretrained(base_model, **load_kwargs)
 
+    # Required when stacking gradient checkpointing on a quantized base model.
+    # Without this, the frozen base produces autograd-orphan tensors and the
+    # very first backward pass raises:
+    #   RuntimeError: element 0 of tensors does not require grad and does not
+    #   have a grad_fn
+    if bnb_config is not None:
+        model = prepare_model_for_kbit_training(
+            model,
+            use_gradient_checkpointing=True,
+            gradient_checkpointing_kwargs={"use_reentrant": False},
+        )
+
     lora_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
         r=lora_rank,
@@ -168,6 +185,10 @@ def _load_model_and_tokenizer(
         bias="none",
     )
     model = get_peft_model(model, lora_config)
+    # Belt-and-braces: also covers the AWQ path where prepare_model_for_kbit_training
+    # is skipped. Idempotent if already enabled by the kbit prep above.
+    if hasattr(model, "enable_input_require_grads"):
+        model.enable_input_require_grads()
     model.print_trainable_parameters()
 
     if lora_init == "spectral":
@@ -284,6 +305,7 @@ def main() -> int:
         bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(),
         fp16=torch.cuda.is_available() and not torch.cuda.is_bf16_supported(),
         gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
         optim="adamw_torch_fused",
         lr_scheduler_type="cosine",
         seed=args.seed,

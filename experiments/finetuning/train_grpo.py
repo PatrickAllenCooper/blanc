@@ -343,6 +343,7 @@ def main() -> int:
         logging_steps=10,
         bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(),
         gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
         optim="adamw_torch_fused",
         lr_scheduler_type="cosine",
         seed=args.seed,
