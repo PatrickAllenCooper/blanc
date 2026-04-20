@@ -78,6 +78,13 @@ from transformers import (
 )
 from trl import DPOConfig, DPOTrainer
 
+# Must be imported AFTER trl trainers so the in-place log() patch sees the
+# real classes. See module docstring for the bug it works around. Done via
+# direct file-path import because torchrun executes this file as __main__,
+# so package-relative imports are unavailable.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _trl_compat  # noqa: E402,F401  -- imported for side effect
+
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 

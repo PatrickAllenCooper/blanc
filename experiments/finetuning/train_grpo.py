@@ -55,6 +55,10 @@ from peft import LoraConfig, TaskType
 from transformers import AutoTokenizer, BitsAndBytesConfig
 from trl import GRPOConfig, GRPOTrainer
 
+# transformers>=4.43 / TRL log() signature drift; see _trl_compat.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _trl_compat  # noqa: E402,F401  -- imported for side effect
+
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "experiments"))

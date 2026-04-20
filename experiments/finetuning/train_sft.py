@@ -58,6 +58,11 @@ from transformers import (
 )
 from trl import SFTConfig, SFTTrainer
 
+# transformers >=4.43 calls Trainer.log(logs, start_time); some TRL trainer
+# versions only accept (logs). Patch in place. See _trl_compat.py.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _trl_compat  # noqa: E402,F401  -- imported for side effect
+
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
