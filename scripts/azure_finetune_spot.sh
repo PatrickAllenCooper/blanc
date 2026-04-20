@@ -413,11 +413,100 @@ _explain_verify() {
     esac
 }
 
+# ---------------------------------------------------------------------------
+# Checkpoint discovery + integrity validation
+#
+# Why this is not just `ls | tail -1`: a SIGTERM mid-checkpoint-write (which
+# is exactly what Azure Spot preemption produces, since the HF Trainer does
+# not write checkpoints atomically) leaves a truncated
+# `adapter_model.safetensors` on disk. On resume, `safe_open` raises
+#   safetensors_rust.SafetensorError: Error while deserializing header:
+#     incomplete metadata, file not fully covered
+# which kills the trainer before the first step, systemd counts a Failure,
+# Restart=on-failure retries, we find the same corrupt checkpoint, and the
+# service loops until StartLimitBurst is exhausted (observed Apr 20, 16:11
+# UTC, crash counter reached 5 in under a minute).
+#
+# Fix: iterate newest -> oldest; deeply validate each candidate's weight
+# file; quarantine any that fail so we never find them again; return the
+# newest surviving checkpoint or empty string to fall back to training from
+# scratch.
+# ---------------------------------------------------------------------------
+
+_checkpoint_is_valid() {
+    local ckpt="$1" weight_file=""
+    local candidate
+    for candidate in adapter_model.safetensors adapter_model.bin \
+                     pytorch_model.bin model.safetensors; do
+        if [[ -f "${ckpt}/${candidate}" ]]; then
+            weight_file="${ckpt}/${candidate}"
+            break
+        fi
+    done
+    [[ -z "$weight_file" || ! -s "$weight_file" ]] && return 1
+
+    # Deep check: ask Python to parse the archive. Cheap (~0.3 s) because
+    # safe_open only reads the header, and torch.load(weights_only=True)
+    # streams the pickle. If $PYTHON is unset (shouldn't happen after
+    # _activate_conda) we only do the shallow byte-size check above.
+    if [[ -z "${PYTHON:-}" ]]; then
+        return 0
+    fi
+    WEIGHT_FILE="$weight_file" "$PYTHON" - >/dev/null 2>&1 <<'PY'
+import os, sys
+path = os.environ["WEIGHT_FILE"]
+try:
+    if path.endswith(".safetensors"):
+        from safetensors import safe_open
+        with safe_open(path, framework="pt") as f:
+            # Empty keys would mean a valid but useless checkpoint; treat as bad.
+            if not list(f.keys()):
+                sys.exit(1)
+    else:
+        import torch
+        torch.load(path, map_location="cpu", weights_only=True)
+except Exception:
+    sys.exit(1)
+sys.exit(0)
+PY
+    return $?
+}
+
+_quarantine_checkpoint() {
+    local ckpt="$1" parent quarantine ts
+    parent=$(dirname "$ckpt")
+    quarantine="${parent}/.corrupt"
+    ts=$(date +%Y%m%dT%H%M%S)
+    mkdir -p "$quarantine"
+    if mv "$ckpt" "${quarantine}/$(basename "$ckpt").${ts}" 2>/dev/null; then
+        log "  quarantined $(basename "$ckpt") -> ${quarantine}/"
+    else
+        log "  WARN: failed to move corrupt checkpoint; renaming inline"
+        mv "$ckpt" "${ckpt}.corrupt.${ts}" 2>/dev/null || true
+    fi
+}
+
 latest_checkpoint() {
-    local dir="$1"
-    local ckpt
-    ckpt=$(ls -d "${dir}/checkpoint-"* 2>/dev/null | sort -t- -k2 -n | tail -1 || echo "")
-    echo "$ckpt"
+    local dir="$1" candidate
+    [[ -d "$dir" ]] || { echo ""; return 0; }
+
+    # Sort numerically by step, newest first.
+    local sorted_list
+    sorted_list=$(ls -d "${dir}/checkpoint-"* 2>/dev/null | sort -t- -k2 -n -r || true)
+    [[ -z "$sorted_list" ]] && { echo ""; return 0; }
+
+    while IFS= read -r candidate; do
+        [[ -z "$candidate" ]] && continue
+        if _checkpoint_is_valid "$candidate"; then
+            echo "$candidate"
+            return 0
+        fi
+        log "Rejecting corrupt checkpoint (truncated weight file): $candidate"
+        _quarantine_checkpoint "$candidate"
+    done <<< "$sorted_list"
+
+    log "No valid checkpoints in $dir; training will start from scratch."
+    echo ""
 }
 
 # ---------------------------------------------------------------------------
