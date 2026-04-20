@@ -20,31 +20,38 @@ These can be captured via PySC2 (`rgb_screen` observation) or from SC2 replays.
 | `sc2_hvt_pursuit.png` | hvt_retreat_override | Viking fighter pursuing mothership despite outnumbered, "HIGH VALUE TARGET IN RANGE" |
 | `sc2_siege_tank_min_force.png` | proportionality_critical_threat | Siege tank near worker mining line, critical threat wave incoming, "PROPORTIONALITY OVERRIDE" |
 
-### SC2 Screenshot Capture (PySC2)
+### SC2 Screenshot Capture (python-sc2 / BurnySc2)
 
 ```python
-import pysc2
-from pysc2.env import sc2_env
-from pysc2.lib import features
+# Install: pip install blanc[sc2live]
+# Requires StarCraft II client installed locally or SC2PATH set for headless.
 
-env = sc2_env.SC2Env(
-    map_name="Simple64",
-    players=[sc2_env.Agent(sc2_env.Race.terran)],
-    agent_interface_format=features.AgentInterfaceFormat(
-        feature_dimensions=features.Dimensions(screen=84, minimap=64),
-        rgb_dimensions=features.Dimensions(screen=256, minimap=128),
-        use_feature_units=True,
-    ),
-    step_mul=8,
-    game_steps_per_episode=0,
-    visualize=True,
+import asyncio
+from blanc.sc2live.bot import DeFAbBot
+from blanc.sc2live.policies.scripted import ScriptedPolicy
+
+import sc2
+from sc2.main import run_game
+from sc2.data import Race as SC2Race, Difficulty
+from sc2.player import Bot, Computer
+
+# Run a short game and capture the first frame snapshot
+bot = DeFAbBot(policy=ScriptedPolicy(), trace_dir="assets/roe_demo/sc2/")
+
+run_game(
+    sc2.maps.get("Simple64"),
+    [
+        Bot(SC2Race.Terran, bot),
+        Computer(SC2Race.Random, Difficulty.Level2),
+    ],
+    realtime=False,
+    game_steps_per_episode=880,   # ~20 seconds at fastest speed
 )
 
-obs = env.reset()
-# obs[0].observation["rgb_screen"] -> numpy array (H, W, 3)
-import PIL.Image
-img = PIL.Image.fromarray(obs[0].observation["rgb_screen"])
-img.save("assets/roe_demo/sc2/sc2_exclusion_zone.png")
+# The trace file in assets/roe_demo/sc2/ contains lifted theory snapshots.
+# For actual screenshots, use sc2's built-in debug rendering:
+#   bot.client.save_screenshot("assets/roe_demo/sc2/sc2_exclusion_zone.png")
+# This is called from DeFAbBot.on_step after detecting the relevant scenario.
 ```
 
 ---

@@ -42,6 +42,11 @@ vision = [
     "sparqlwrapper>=2.0.0",
 ]
 
+sc2live = [
+    "burnysc2>=7.0",
+    "Pillow>=10.0.0",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
@@ -69,6 +74,7 @@ addopts = "--cov=src/blanc --cov-report=term-missing --cov-report=html"
 markers = [
     "integration: live network tests against real API endpoints (deselected by default)",
     "benchmark: performance benchmarks (not run by default)",
+    "sc2_live: tests requiring a local StarCraft II binary (deselected by default)",
 ]
 
 [tool.coverage.run]

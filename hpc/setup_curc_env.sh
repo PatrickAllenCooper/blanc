@@ -154,3 +154,19 @@ echo "  2. Or submit individual jobs:"
 echo "     sbatch --export=ALL,VLLM_MODEL='Qwen/Qwen2.5-32B-Instruct-AWQ' hpc/slurm_sample_responses.sh"
 echo "     sbatch --export=ALL,BASE_MODEL='Qwen/Qwen2.5-32B-Instruct-AWQ' hpc/slurm_train_dpo.sh"
 echo "======================================================================="
+
+# ---------------------------------------------------------------------------
+# SC2 Live track (optional)
+# ---------------------------------------------------------------------------
+echo ""
+echo "To enable the SC2 live track (E1-E5):"
+echo "  1. Install SC2 headless binary:"
+echo "     bash scripts/install_sc2_linux_headless.sh"
+echo "  2. Install burnysc2:"
+echo "     conda run -n defab-train pip install 'blanc[sc2live]'"
+echo "  3. Set SC2PATH (added to ~/.bashrc by install script):"
+echo "     export SC2PATH=\${SCRATCH}/sc2"
+echo ""
+echo "  Then submit:"
+echo "     sbatch hpc/slurm_sc2_grounding.sh    # E2: grounding traces"
+echo "     sbatch hpc/slurm_sc2_selfplay.sh      # E4: self-play rollouts"

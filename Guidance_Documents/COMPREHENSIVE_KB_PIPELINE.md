@@ -733,3 +733,35 @@ Key findings that affect implementation:
 - 409 synthetic instances generated matched to Tier 0
 - `D:\datasets\DeFAb\` canonical directory structure created
 - UMLS extraction and GO/Wikidata instance regeneration running
+
+**Recent progress (2026-04-20)**:
+- Integrated python-sc2 (BurnySc2) as the live SC2 track alongside the hand-authored
+  RTS engagement KB and Lux AI S3 KB.  This closes the loop from real game physics to
+  formal defeasible reasoning to LLM training signal.
+- New package: `src/blanc/sc2live/` -- ObservationLifter, ActionCompiler, ReplayTraceExtractor,
+  DeFAbBot, ScriptedPolicy, LLMPolicy.
+- New scripts:
+  - `scripts/sc2live_extract_traces.py` -- record game traces (E1/E2)
+  - `scripts/generate_sc2live_instances.py` -- traces -> DeFAb L1/L2 instances (E2)
+  - `scripts/mine_sc2_conflicts.py` -- extract defeasible conflicts for DPO (E3)
+  - `scripts/run_sc2_selfplay.py` -- LLM-vs-LLM self-play, GRPO rollouts (E4)
+  - `scripts/run_sc2_evaluation.py` -- evaluate models on sc2live instances
+  - `scripts/install_sc2_linux_headless.sh` -- headless SC2 setup for CURC
+- New experiments: `experiments/cross_env_transfer.py` (E5 hypothesis H5 tester)
+  and `experiments/finetuning/prepare_sc2live_preference_data.py` (DPO from mined conflicts).
+- New HPC scripts: `hpc/slurm_sc2_grounding.sh`, `hpc/slurm_sc2_selfplay.sh`;
+  extended `hpc/setup_curc_env.sh` with SC2 live track instructions.
+- New tests: `tests/sc2live/` (67 unit tests, all pure Python, no SC2 binary required);
+  `tests/integration/test_sc2live_engagement_kb.py` (integration + live-binary marker).
+- `pyproject.toml` updated: `[project.optional-dependencies] sc2live = ["burnysc2>=7.0", ...]`;
+  `pytest.ini_options` now includes `sc2_live` marker.
+- Updated `assets/roe_demo/VISUAL_ASSETS.md` to reference `BotAI.state` (python-sc2 API)
+  instead of DeepMind's PySC2 screen-pixel API.
+
+### SC2 live track KB row (alongside rts and lux)
+
+| KB | Source | Rules | Facts | Instances | Script |
+|----|--------|-------|-------|-----------|--------|
+| rts_engagement | Hand-authored SC2 ROE (paper §4) | ~200 | ~80 | ~100+ | `generate_rts_instances.py` |
+| lux_ai_s3 | Lux AI S3 NeurIPS 2024 (paper §4) | ~130 | ~60 | ~80+ | `generate_lux_instances.py` |
+| **sc2live** | **Live SC2 game traces (python-sc2)** | **~200+** | **per-game** | **~5k (E2)** | **`generate_sc2live_instances.py`** |

@@ -837,3 +837,98 @@ With API keys, we can run the full evaluation:
 **Date**: February 13, 2026  
 **Project**: BLANC - Defeasible Abduction Benchmark  
 **Purpose**: Make the benchmark accessible to non-experts
+
+---
+
+## Live SC2 Track
+
+### What it is
+
+Beyond the hand-authored knowledge bases (biology, legal, materials, RTS, Lux AI), DeFAb
+now includes a **live StarCraft II** track that closes the loop between real gameplay and
+formal defeasible reasoning.  python-sc2 (BurnySc2, `burnysc2>=7.0`) runs a bot inside an
+actual SC2 game client.  Each game step is lifted into a `Theory` of ground facts, the
+existing `DefeasibleEngine` derives ROE conclusions, and unit orders are compiled back to
+SC2 actions.
+
+### Why it matters
+
+The live track provides three things the hand-authored KBs cannot:
+1. **Real grounding** -- units, positions, and engagement states come from actual game
+   physics, not curated facts.
+2. **Real conflicts** -- when a default rule and a defeater both fire simultaneously in a
+   genuine game state, we get a conflict that is structurally more diverse than the
+   hand-crafted seed scenarios.
+3. **A training environment** -- LLM-as-policy self-play means the foundation model
+   directly controls SC2 units via defeasible rule proposals.  Game outcomes become
+   verifier-grounded GRPO rewards.
+
+### Three phases (matching paper.tex §6 / §11)
+
+| Phase | Paper section | Script | CURC job |
+|-------|--------------|--------|----------|
+| P1 – Grounding | §6.7 SFT supply | `scripts/sc2live_extract_traces.py` + `scripts/generate_sc2live_instances.py` | `hpc/slurm_sc2_grounding.sh` |
+| P2 – Conflict mining (DPO) | §11.1–11.2 | `scripts/mine_sc2_conflicts.py` + `experiments/finetuning/prepare_sc2live_preference_data.py` | run after P1 traces |
+| P3 – Self-play (GRPO) | §6.7 RLVR, §11.3 | `scripts/run_sc2_selfplay.py` | `hpc/slurm_sc2_selfplay.sh` |
+
+### Module structure
+
+```
+src/blanc/sc2live/
+    __init__.py             exports: ObservationLifter, ActionCompiler, ReplayTraceExtractor, DeFAbBot
+    observation.py          BotAI.state -> Theory (ground facts)
+    orders.py               derived literals -> async BotAI unit orders
+    bot.py                  DeFAbBot(BotAI) -- lift/derive/compile each game step
+    replay.py               ReplayTraceExtractor -- streams .jsonl replay traces
+    policies/
+        __init__.py
+        scripted.py         ScriptedPolicy (baseline, no LLM)
+        llm.py              LLMPolicy (proposes defeasible rules via Foundry / vLLM)
+```
+
+### Installation
+
+```bash
+# Local development (requires SC2 retail client on Windows/macOS)
+pip install "blanc[sc2live]"
+
+# CURC Alpine headless (run once)
+bash scripts/install_sc2_linux_headless.sh   # downloads SC2 4.10 Linux binary
+pip install "blanc[sc2live]"
+export SC2PATH=$SCRATCH/sc2
+```
+
+### Quick start
+
+```bash
+# E1: plumbing -- one game, scripted policy, no LLM
+python scripts/sc2live_extract_traces.py --games 1 --difficulty Easy
+
+# E2: generate DeFAb instances from traces
+python scripts/generate_sc2live_instances.py --trace-dir data/sc2_traces/
+
+# E3: mine conflicts for DPO
+python scripts/mine_sc2_conflicts.py
+python experiments/finetuning/prepare_sc2live_preference_data.py --provider foundry-deepseek
+
+# E4: LLM self-play (synthetic, no SC2 binary)
+python scripts/run_sc2_selfplay.py --games 4 --provider foundry-deepseek --no-sc2
+
+# E5: cross-environment transfer evaluation
+python experiments/cross_env_transfer.py --provider foundry-deepseek --include-level3
+```
+
+### Key hypothesis (H5)
+
+If models fine-tuned on sc2live conflicts score comparably on RTS, Lux AI, biology, and
+legal L3 instances (despite completely different predicates and facts), this confirms
+that DeFAb measures structural defeasible reasoning rather than domain-specific pattern
+matching.  H5 is tested by `experiments/cross_env_transfer.py`.
+
+### Tests
+
+```bash
+pytest tests/sc2live/                          # unit tests, no SC2 binary needed
+pytest tests/integration/test_sc2live_engagement_kb.py  # integration, no binary
+pytest -m sc2_live                             # live-binary smoke test (requires SC2)
+```
