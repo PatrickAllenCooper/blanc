@@ -164,29 +164,54 @@ class DeFAbBot:
         # ── 1. Build current theory from KB skeleton + live facts ────────────
         theory = self._build_theory_for_tick()
 
-        # ── 2. Policy proposes optional additional rules ─────────────────────
-        proposed_rules = self._policy.propose_defeaters(theory, iteration)
-        for rule_str in proposed_rules:
-            rule = self._parse_rule_str(rule_str)
-            if rule is not None:
-                theory.add_rule(rule)
+        orders_issued: list[str] = []
 
-        # ── 3. Derive ROE conclusions ────────────────────────────────────────
-        engine = DefeasibleEngine(theory)
-        derived = self._derive_roe_conclusions(engine, theory)
+        # ── 2. Dispatch on policy type ────────────────────────────────────────
+        # CommanderPolicy exposes propose_orders(); rule-author policies expose
+        # propose_defeaters().  Dispatch on whichever interface is available.
+        if hasattr(self._policy, "propose_orders"):
+            # Commander path: LLM issues high-level orders directly
+            admitted_orders = self._policy.propose_orders(theory, iteration)
+            registry = self._build_unit_registry()
+            self._compiler.update_registry(registry)
+            for order in admitted_orders:
+                unit_obj = registry.get(order.unit)
+                target_obj = registry.get(order.target) if order.target else None
+                if unit_obj and order.action == "attack" and target_obj:
+                    unit_obj.attack(target_obj)
+                    orders_issued.append(f"attack({order.unit},{order.target})")
+                elif unit_obj and order.action == "retreat" and self._compiler._rally:
+                    unit_obj.move(self._compiler._rally)
+                    orders_issued.append(f"retreat({order.unit})")
+                elif unit_obj and order.action == "hold":
+                    unit_obj.hold_position()
+                    orders_issued.append(f"hold({order.unit})")
+            derived: set[str] = set()  # no engine derivation in commander path
 
-        # ── 4. Update unit registry ──────────────────────────────────────────
-        registry = self._build_unit_registry()
-        self._compiler.update_registry(registry)
+        else:
+            # Rule-author path (ScriptedPolicy / LLMPolicy): propose defeasible rules
+            proposed_rules = self._policy.propose_defeaters(theory, iteration)
+            for rule_str in proposed_rules:
+                rule = self._parse_rule_str(rule_str)
+                if rule is not None:
+                    theory.add_rule(rule)
 
-        # ── 5. Compile and issue orders ──────────────────────────────────────
-        batch = self._compiler.compile(derived)
-        try:
-            allied = list(self.units)  # type: ignore[attr-defined]
-            batch.apply(allied)
-            orders_issued = [str(a) for a in batch.attacks[:5]]
-        except AttributeError:
-            orders_issued = []
+            # ── 3. Derive ROE conclusions ────────────────────────────────────
+            engine = DefeasibleEngine(theory)
+            derived = self._derive_roe_conclusions(engine, theory)
+
+            # ── 4. Update unit registry ──────────────────────────────────────
+            registry = self._build_unit_registry()
+            self._compiler.update_registry(registry)
+
+            # ── 5. Compile and issue orders ──────────────────────────────────
+            batch = self._compiler.compile(derived)
+            try:
+                allied = list(self.units)  # type: ignore[attr-defined]
+                batch.apply(allied)
+                orders_issued = [str(a) for a in batch.attacks[:5]]
+            except AttributeError:
+                orders_issued = []
 
         # ── 6. Snapshot for replay extraction ────────────────────────────────
         if iteration % SNAPSHOT_INTERVAL == 0:

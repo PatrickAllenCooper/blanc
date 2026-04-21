@@ -765,3 +765,10 @@ Key findings that affect implementation:
 | rts_engagement | Hand-authored SC2 ROE (paper §4) | ~200 | ~80 | ~100+ | `generate_rts_instances.py` |
 | lux_ai_s3 | Lux AI S3 NeurIPS 2024 (paper §4) | ~130 | ~60 | ~80+ | `generate_lux_instances.py` |
 | **sc2live** | **Live SC2 game traces (python-sc2)** | **~200+** | **per-game** | **~5k (E2)** | **`generate_sc2live_instances.py`** |
+
+**Recent progress (2026-04-20, ROE compliance experiment)**:
+- Added `CommanderPolicy` (B0/B1/B2 enforcement modes) and supporting modules: `compliance.py`, `situation_report.py`, `orders_schema.py`.
+- Added `scripts/run_roe_compliance_experiment.py` (quiz + live backends) and `experiments/roe_compliance_analysis.py` (bootstrap CI tables, violation breakdown, reprompt histogram).
+- Added 79 new tests across `tests/sc2live/{test_orders_schema,test_compliance,test_situation_report,test_commander_policy}.py` and `tests/integration/test_roe_compliance_quiz.py`.
+- Widened `DeFAbBot.on_step` to dispatch on `propose_orders` (CommanderPolicy) vs `propose_defeaters` (ScriptedPolicy/LLMPolicy).
+- Full test suite: 154 passed, 3 skipped (sc2_live marker).
