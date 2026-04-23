@@ -78,7 +78,7 @@
 
 
 \begin{abstract}
-Foundation models excel at forward inference but struggle with abduction and belief revision: proposing hypotheses that explain observations and retracting defaults when exceptions arise. We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and generation pipeline that converts legacy knowledge bases into defeasible theories and generates evaluation instances with polynomial-time verifiable gold-standard hypotheses. The pipeline pairs taxonomic hierarchies from publicly funded knowledge bases (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to produce defeasible rules and defeaters at scale. Instances are stratified into three levels: fact completion, rule abduction, and defeater abduction, where models must construct conservative exception rules that override incorrect defaults while preserving unrelated expectations. The dataset comprises 372,402 instances across 33.7 million materialized rules from 15 knowledge sources spanning biology, law, materials science, chemistry, commonsense reasoning, and biomedical informatics (including 29.5 million rules from UMLS). A synthetic contamination control generates structurally isomorphic theories with invented predicate names, isolating formal reasoning from memorized associations. Evaluation of four frontier models reveals that grounding is largely solved at Level~2 (73--79\% accuracy) while belief revision at Level~3 remains highly prompt-sensitive, with a 56--79 percentage-point swing between direct and chain-of-thought prompting for reasoning-optimized models. The dataset, generation pipeline, and evaluation harness are released under the MIT license.
+Foundation models excel at forward inference but struggle with abduction and belief revision: proposing hypotheses that explain observations and retracting defaults when exceptions arise. We introduce \textsc{DeFAb} (Defeasible Abduction Benchmark), a dataset and generation pipeline that converts legacy knowledge bases into defeasible theories and generates evaluation instances with polynomial-time verifiable gold-standard hypotheses. The pipeline pairs taxonomic hierarchies from publicly funded knowledge bases (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to produce defeasible rules and defeaters at scale. Instances are stratified into three levels: fact completion, rule abduction, and defeater abduction, where models must construct conservative exception rules that override incorrect defaults while preserving unrelated expectations. The dataset comprises 372,648+ instances across 33.75 million materialized rules from 18 knowledge sources spanning biology, law, materials science, chemistry, commonsense reasoning, biomedical informatics (including 29.5 million rules from UMLS), and a Tier~RTS family of game-grounded KBs comprising a hand-authored Rules-of-Engagement theory (\texttt{rts\_engagement}, formally certified), the Lux~AI~Season~3 competition rules, and a live StarCraft~II bridge (\texttt{sc2live}) that lifts game state into ground facts at each macro-tick. A synthetic contamination control generates structurally isomorphic theories with invented predicate names, isolating formal reasoning from memorized associations. Evaluation of four frontier models reveals that grounding is largely solved at Level~2 (73--79\% accuracy) while belief revision at Level~3 remains highly prompt-sensitive, with a 56--79 percentage-point swing between direct and chain-of-thought prompting for reasoning-optimized models. The dataset, generation pipeline, and evaluation harness are released under the MIT license.
 \end{abstract}
 
 
@@ -244,10 +244,13 @@ Gene Ontology~\cite{ashburner2000go}, MeSH, SUMO~\cite{niles2001sumo}, FrameNet~
 \paragraph{Tier 3 (encyclopedic scale).}
 Full YAGO~4.5 yields 3.5M materialized rules.
 
+\paragraph{Tier RTS (game-grounded).}
+Three RTS-class KBs share the defeasible-theory schema with the cross-ontology and biomedical tiers. The hand-authored \texttt{rts\_engagement} Rules-of-Engagement KB derived from the Newport ROE Handbook contributes 148 rules (89 strict, 32 defeasible, 27 defeaters) and 162 facts with 6 hand-crafted Level~3 seed conflicts; structure, seed-conflict resolution, and three explicit conservativity checks are formally certified by \texttt{scripts/certify\_rts\_kb.py} and the report is committed at \texttt{data/rts\_certification\_report.json}. The Lux~AI~Season~3 (NeurIPS~2024) competition rules add a parallel game-grounded KB at zero predicate overlap with biology, legal, materials, or StarCraft~II ($\sim$130 rules, $\sim$80 instances). A live StarCraft~II bridge (\texttt{src/blanc/sc2live/}) lifts \texttt{BotAI.state} into ground facts via \texttt{ObservationLifter} and ingests replays via \texttt{ReplayTraceExtractor}, feeding both into the same instance generation pipeline; per-session theories of $\sim$200 rules yield several thousand Level~1/Level~2 instances per game.
+
 \begin{table}[t]
 \centering
 \small
-\caption{Knowledge base pipeline: extraction results by tier. UMLS contributes 29.5M rules from 189+ biomedical vocabularies but requires NLM license (obtained).}
+\caption{Knowledge base pipeline: extraction results by tier. UMLS contributes 29.5M rules from 189+ biomedical vocabularies but requires NLM license (obtained). The RTS row aggregates the three game-grounded KBs of Section~\ref{sec:sources}: 148 rules and 100 L1 + 60 L2 + 6 L3 instances for \texttt{rts\_engagement} (formally certified at \texttt{data/rts\_certification\_report.json}), $\sim$130 rules and $\sim$80 instances for \texttt{lux\_ai\_s3}, and dynamically generated per-session theories for \texttt{sc2live}. $^{\dagger\dagger}$The RTS rule total counts \texttt{rts\_engagement}+\texttt{lux\_ai\_s3} only; \texttt{sc2live} per-game theories vary in size. $^{\ddagger}$\texttt{sc2live} instance counts are session-dependent and not included in the materialized total.}
 \label{tab:kbsummary}
 \begin{tabular}{@{}llrr@{}}
 \toprule
@@ -258,8 +261,9 @@ Tier & Primary Sources & Rules & Instances \\
 2 (domain-specific) & GO, MeSH, SUMO, FrameNet, Wikidata, BabelNet & 535,565 & 31,477 \\
 2+ (biomedical) & UMLS 2025AB & 29,465,582 & 13,425 \\
 3 (encyclopedic) & YAGO 4.5 full & 3,457,940 & 2,580 \\
+RTS (game) & rts\_engagement, lux\_ai\_s3, sc2live$^{\ddagger}$ & 478$^{\dagger\dagger}$ & 246+$^{\ddagger}$ \\
 \midrule
-\multicolumn{2}{@{}l}{Materialized total (Tiers 0--3)} & 33,750,710 & 372,402 \\
+\multicolumn{2}{@{}l}{Materialized total (Tiers 0--3 + RTS)} & 33,751,188 & 372,648+$^{\ddagger}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -287,6 +291,9 @@ For Tier~0 Level~2 ($n = 374$): mean support size $|\Supp| = 147$ (std.\ 105), u
 
 \paragraph{Decoder validation.}
 Modalities M2--M4 achieve 100\% round-trip recovery across all 409 gold hypotheses. M1 (narrative) operates approximately by design.
+
+\paragraph{DeFAb-Hard: pre-registered difficulty hardening.}
+The 35 expert-curated Tier~0 Level~3 instances under-sample the difficulty regime: mean predicate novelty $\Nov^* = 0.14$ (range $[0, 0.5]$), mean support size 6.7 (max 10), single anomaly per instance, and unmeasured contamination gap $\Delta_{\mathrm{synth}}$. By construction the current set rewards the Lakatosian \emph{monster-barring} strategy (defeaters that restrict the original rule's domain using existing predicates), not the harder \emph{lemma-incorporation} strategy that motivates the IDP example of Section~\ref{sec:intro}. We pre-register \textsc{DeFAb-Hard}, a structurally hardened Level~3 subset stratified along four orthogonal axes, with thresholds and procedures committed at submission time and instance counts populated upon completion: (H1)~\emph{high predicate novelty} ($\Nov(r^*, \Dm) \geq 0.5$) generated by extending the language bias with a controlled novel-predicate vocabulary verified against Common Crawl via \texttt{infini-gram}~\cite{liu2024infini}, target 1{,}000 instances balanced across five domains; (H2)~\emph{scaled theory size and support depth} at $|\D| \in \{50, 100, 200\}$ with depth $\geq 5$ and $\geq 3$ competing defaults, target 100 instances per scale tier; (H3)~\emph{multi-anomaly conservativity} with $k \geq 3$ unrelated anomalies per instance so that conservativity is no longer a default-pass, target 100 instances; (H4)~\emph{completion of the synthetic contamination evaluation} on the 409 already-generated structurally-matched synthetic instances. The principal evaluation target is the \textsc{DeFAb-Hard-NovScaleMulti} intersection cell satisfying H1, H2, and H3 jointly (target $\geq 50$ instances). Actual instance counts after generation: \textbf{-- (TBD)}. Pre-registered prediction: best-model rendering-robust Level~3 accuracy on the intersection cell drops by at least 30~pp relative to the existing 35-instance baseline (currently DeepSeek-R1 92.9\% under CoT).
 
 
 %% ====================================================================
@@ -365,8 +372,8 @@ The synthetic contamination control methodology is established: 409 structurally
 \section{Discussion}\label{sec:discussion}
 %% ====================================================================
 
-\paragraph{Grounding and revision remain dissociable.}
-The Level~2-to-Level~3 gap persists even for the best model under the best prompting strategy: DeepSeek-R1 achieves 73.7\% direct L2 versus 37.1\% direct L3, a 37 pp gap. Claude, whose direct L2 (79.3\%) and direct L3 (23.6\%) differ by 56 pp, shows that high grounding accuracy does not imply belief revision capability.
+\paragraph{Grounding and revision remain dissociable (on the easy subset).}
+The Level~2-to-Level~3 gap persists even for the best model under the best prompting strategy: DeepSeek-R1 achieves 73.7\% direct L2 versus 37.1\% direct L3, a 37 pp gap. Claude, whose direct L2 (79.3\%) and direct L3 (23.6\%) differ by 56 pp, shows that high grounding accuracy does not imply belief revision capability. We acknowledge that the existing Tier~0 Level~3 set (35 instances, mean novelty 0.14, single anomaly per instance) under-samples the difficulty regime: the apparent Level~3 ceiling that DeepSeek-R1 reaches under CoT (92.9\%) may primarily reflect this difficulty distribution rather than robust belief revision capability. The DeFAb-Hard subset (Section~\ref{sec:statistics}) is pre-registered along four orthogonal hardening axes (H1--H4) with five point predictions; results on the H1 $\cap$ H2 $\cap$ H3 intersection cell are the headline empirical question for the next revision and will be reported regardless of outcome. The objective is to identify the difficulty boundary at which current frontier models reproducibly fail under the strongest available prompting strategy, before drawing capability-level conclusions.
 
 \paragraph{Prompt structure is a confounding variable.}
 The large CoT lift for reasoning models ($+56$ to $+79$ pp) demonstrates that prompting template choice can shift measured Level~3 accuracy by more than the difference between any two models. Benchmarks for formal abductive reasoning should report performance separately by prompting strategy.
@@ -594,8 +601,8 @@ Full pipeline per instance & $O(|\D|^3)$ \\
 
 \begin{itemize}[nosep]
 \item \textbf{Instance types:} Each instance is an abductive reasoning task consisting of an ablated defeasible theory $\Dm$, a target literal $q$, a candidate hypothesis set $\Hcand$, and gold-standard answers $\Hgold$. Level~1 instances require fact completion; Level~2 require rule abduction; Level~3 require conservative defeater construction.
-\item \textbf{Instance count:} Tier~0: 409 (374 L2, 35 L3). Tier~1: 324,511 (182K L1, 142K L2) across five domains. Tier~2: 44,902 from FrameNet, UMLS, SUMO, Gene Ontology, Wikidata, and BabelNet. Tier~3: 2,580 from YAGO 4.5 full. Synthetic: 409 contamination-control instances matched to Tier~0. Total: 372,402.
-\item \textbf{Rule base:} 33.7 million materialized rules from 15 knowledge sources (Tiers 0--3, including 29.5 million from UMLS 2025AB).
+\item \textbf{Instance count:} Tier~0: 409 (374 L2, 35 L3). Tier~1: 324,511 (182K L1, 142K L2) across five domains. Tier~2: 44,902 from FrameNet, UMLS, SUMO, Gene Ontology, Wikidata, and BabelNet. Tier~3: 2,580 from YAGO 4.5 full. Tier~RTS: 246+ instances from \texttt{rts\_engagement} (100 L1 + 60 L2 + 6 L3, formally certified) and \texttt{lux\_ai\_s3} ($\sim$80), plus session-dependent counts from \texttt{sc2live}. Synthetic: 409 contamination-control instances matched to Tier~0. \textsc{DeFAb-Hard} (Section~\ref{sec:statistics}, pre-registered): target 1{,}000 high-novelty + 300 scaled-depth + 100 multi-anomaly + $\geq$50 intersection-cell instances, actual counts after generation \textbf{-- (TBD)}. Total (Tier~0--3 + RTS, excluding pending DeFAb-Hard): 372,648+.
+\item \textbf{Rule base:} 33.75 million materialized rules from 18 knowledge sources (Tiers 0--3 plus the three RTS-class KBs, including 29.5 million from UMLS 2025AB).
 \item \textbf{Sensitive content:} None. All instances are derived from formal logic programs over scientific and commonsense knowledge.
 \item \textbf{Personal data:} None. No human subjects, no crowdsourcing, no personal information.
 \end{itemize}
@@ -618,8 +625,8 @@ Full pipeline per instance & $O(|\D|^3)$ \\
 \subsection*{Uses}
 
 \begin{itemize}[nosep]
-\item \textbf{Intended uses:} Evaluating foundation models on non-monotonic reasoning, belief revision, and grounded hypothesis generation. The polynomial-time verifier-backed scoring function makes the dataset suitable as a training signal for preference optimization (DPO, RLHF) without reward model approximation.
-\item \textbf{Not intended for:} Making real-world scientific, legal, or medical decisions. The defeasible rules encode general defaults and exceptions from knowledge bases, not clinical or legal guidance.
+\item \textbf{Intended uses:} Evaluating foundation models on non-monotonic reasoning, belief revision, and grounded hypothesis generation. The polynomial-time verifier-backed scoring function makes the dataset suitable as a training signal for preference optimization (DPO, RLHF) without reward model approximation. The Tier~RTS subset additionally enables verifier-grounded evaluation of LLM-as-commander policies under formal Rules of Engagement constraints, with three enforcement modes (B0 trust-LLM, B1 audit-only, B2 verifier-gated re-prompt) instantiated by the \texttt{CommanderPolicy} in \texttt{src/blanc/sc2live/policies/commander.py}.
+\item \textbf{Not intended for:} Making real-world scientific, legal, or medical decisions. The defeasible rules encode general defaults and exceptions from knowledge bases, not clinical or legal guidance. The Tier~RTS KBs use StarCraft~II / Lux~AI as unclassified proxy environments and do not encode any operational ROE.
 \end{itemize}
 
 \subsection*{Distribution}
@@ -695,7 +702,7 @@ Full pipeline per instance & $O(|\D|^3)$ \\
 
 \item {\bf New assets}
     \item[] Answer: \answerYes{}
-    \item[] Justification: DeFAb dataset documented via Datasheet (Appendix~\ref{app:datasheet}), released with README, JSON format specification, and Croissant metadata (core and RAI fields).
+    \item[] Justification: DeFAb dataset documented via Datasheet (Appendix~\ref{app:datasheet}), released with README, JSON format specification, and Croissant metadata (core and RAI fields). The Tier~RTS additions (\texttt{rts\_engagement}, \texttt{lux\_ai\_s3}, \texttt{sc2live}) ship with the formal certification report at \texttt{data/rts\_certification\_report.json}, the live-bridge package at \texttt{src/blanc/sc2live/}, and the verifier-gated commander policy at \texttt{src/blanc/sc2live/policies/commander.py}, all under the same MIT license as the rest of the dataset.
 
 \item {\bf Crowdsourcing and human subjects}
     \item[] Answer: \answerNA{}
