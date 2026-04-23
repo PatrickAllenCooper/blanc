@@ -639,6 +639,65 @@ All changes are strictly additive. Existing M1-M4 evaluation, text-only model qu
 
 ---
 
+## DeFAb-Math-Topology Research Agenda (Implemented 2026-04-23)
+
+The math-side analogue of the main pipeline lives under `src/blanc/math/` and `experiments/math_topology/`. The Lean 4 kernel replaces the polynomial-time defeasible verifier; everything above the harness layer (dropper, scorer, novelty filter, SFT/DPO/GRPO data prep, expert-iteration scaffold) is shared in shape with the main project. Per the plan in `.cursor/plans/defab-math-topology_research_agenda_56424d51.plan.md`.
+
+### Library: `src/blanc/math/`
+
+- `types.py`: `MathTheorem`, `Hypothesis`, `Defeater`, `LeanResult`, `LeanStatus`, `NoveltyVerdict`, `DefeaterScore`. Mirrors `blanc.core.theory` at the level of Lean expressions.
+- `lean_harness.py`: abstract `LeanHarness`; `MockLeanHarness` (test/CI default, deterministic response table); `SubprocessLeanHarness` (one-shot real-Lean backend; M1+ scripts only). Future LeanInteract / Pantograph backends drop in by satisfying `LeanHarness`.
+- `topology_extractor.py`: `MathlibExtractor` (regex parser with balanced-paren binder splitter) and a curated `builtin_corpus()` of 12 topology theorems (Euler V-E+F=2, Heine-Borel, Tychonoff, Urysohn, IVT, sequential compactness, etc.).
+- `hypothesis_dropper.py`: `HypothesisDropper` with `DropPolicy.SINGLE_CRITICAL | SINGLE_ANY | PAIRS_CRITICAL`, producing `ChallengeTheorem` instances for the L3 protocol.
+- `novelty.py`: `NoveltyFilter` (trivial-restoration detection + Mathlib membership) plus `normalised_lean_expr` and `novelty_distance` (Levenshtein-derived, scale-free).
+- `defeater_scorer.py`: composes `LeanHarness` + `NoveltyFilter` into one scalar reward in [0, 1] for SFT/DPO/GRPO.
+
+### Experiments: `experiments/math_topology/`
+
+- `topology_instance.py`: math-side `TopologyInstance` (L1/L2/L3) + JSONL I/O.
+- `generate_benchmark.py` (M1): produces L1, L2, L3 instances from `TopologyCorpus`.
+- `run_baseline.py` (M1): four-model panel runner (`_MockModel` for tests; real models via `model_interface`); exact match for L1/L2, `DefeaterScorer` for L3.
+- `lakatos_corpus.py` (M2): Lakatos rediscovery family with `HELD_OUT_MASK = "h_convex"` and gold defeaters (genus zero family + distractors).
+- `prepare_sft_data.py` / `prepare_dpo_data.py` (M2): SFT prompt-completion JSONL and margin-weighted DPO triples (rejected = trivial restoration + low-distance variants).
+- `evaluate_lakatos.py` (M2): held-out evaluation with one-sided z-test gate decision against baseline.
+- `train_lakatos.py` (M2): orchestration wrapper over generic `train_sft.py` / `train_dpo.py`; `--dry-run` supported.
+- `at_scale_dropping.py` (M3): the at-scale driver. Iterates corpus -> dropper -> K samples per challenge -> `DefeaterScorer` -> `groups.jsonl` (GRPO units) + `survivors.jsonl` (Lean-accepted, Mathlib-novel).
+- `grpo_dataset.py` (M3): assembles GRPO units from `groups.jsonl`; recomputes per-group advantages.
+- `discovery_harvester.py` (M3): deduplicates and ranks survivors by `novelty_distance + reward`.
+- `literature_filter.py` (M4, deferred): abstract `LiteratureFilter`; `StubLiteratureFilter` (deterministic, contract-tested); `DeferredLiteratureFilter` (raises `NotImplementedError` so production code cannot silently treat it as real). Real ArXiv / MathOverflow / textbook backends plug in here.
+- `mcts_expert_iteration.py` (M5, deferred): abstract `MCTSPolicy` + `MCTSExpert`; `UniformRolloutMCTS` (PUCT-style, deterministic, contract-tested, no neural net required); `DeferredMCTS` (raises `NotImplementedError`). Real GRPO-checkpoint policy/value head plugs in here.
+
+### The cardinal risk: trivial restoration
+
+The whole experiment fails silently if the model just memorises the dropped hypothesis and Lean accepts it back. Mitigation is built into the pipeline from M0:
+
+1. The dropped hypothesis is masked from the L3 prompt entirely, including all definitionally-equivalent forms.
+2. `NoveltyFilter` flags trivial restoration (string + normalised-form equality with the masked hypothesis); the scorer awards reward 0 to such defeaters.
+3. The reward weights strictly-weaker conditions over equivalents via `novelty_distance`.
+4. The Lakatos rediscovery positive control (M2) tests this on Euler/genus before any novel-discovery claim.
+
+### Test coverage
+
+`tests/math/` is 130 tests covering all of the above, including end-to-end Euler smoke (`test_euler_end_to_end.py`), at-scale dropping (`test_at_scale_dropping.py`), discovery harvester (`test_discovery_harvester.py`), and the M4/M5 deferred scaffolds. Run via `python -m pytest tests/math/ --no-cov -q` from the activated venv.
+
+### Status of the milestone ladder
+
+- **M0 DONE**: Lean integration + topology extractor + defeater scoring end-to-end on Euler V-E+F=2 / genus.
+- **M1 DONE**: DeFAb-Math-Topology benchmark v0 + four-model baseline scaffold (real model numbers pending API budget).
+- **M2 DONE**: Lakatos rediscovery positive control wired (SFT/DPO data prep + held-out evaluation + z-test gate).
+- **M3 DONE**: At-scale hypothesis-dropping with mock-provider smoke run (12 theorems, 22 challenges, 176 samples, 132 survivors, 110 unique discoveries on the mock harness). Real-Lean and real-model run gated on Lean throughput budget.
+- **M4 DEFERRED (scaffold)**: `LiteratureFilter` interface + `StubLiteratureFilter` for contract tests; real ArXiv / MathOverflow / textbook backends are follow-on work.
+- **M5 DEFERRED (scaffold)**: `MCTSExpert` interface + `UniformRolloutMCTS` for contract tests; real GRPO-checkpoint policy/value head + outer expert-iteration loop are follow-on work.
+
+### Open design decisions still up for discussion
+
+- Lean harness choice for M1+ (LeanDojo vs Pantograph vs LeanInteract) and per-call latency budget.
+- Granularity of the typed dependency graph for the novelty filter (per-theorem vs per-lemma).
+- Concrete operationalisation of `novelty_distance` beyond Levenshtein (definitional unfolding depth, subterm subsumption).
+- Whether Track 7 (two-player conflict generation) enters the GRPO loop at the M3 production run or is held for M5 alongside expert iteration.
+
+---
+
 ## Research Notes from Internet Search (2026-02-18)
 
 Key findings that affect implementation:

@@ -91,14 +91,20 @@ src/blanc/              Core library
   ontology/               KB extractors (YAGO, GO, UMLS, Wikidata, SNOMED, etc.)
   reasoning/              Defeasible derivation engine
   codec/                  Rendering codecs (M1--M4 modalities)
+  math/                   DeFAb-Math-Topology: Lean kernel adapter, topology
+                          extractor, hypothesis dropper, novelty filter,
+                          defeater scorer
 paper/                  LaTeX papers
   dataset_paper.tex       NeurIPS 2026 E&D track submission
   paper.tex               Full technical paper (includes fine-tuning + debate)
 experiments/            Evaluation pipeline, model interfaces, analysis
+  math_topology/          DeFAb-Math-Topology benchmark generator, baseline,
+                          Lakatos rediscovery, at-scale dropping, GRPO
+                          assembly, discovery harvester, M4/M5 scaffolds
 instances/              Generated evaluation instances by tier
 scripts/                Data download, extraction, generation scripts
 hpc/                    SLURM scripts for CURC Alpine HPC
-tests/                  Test suite
+tests/                  Test suite (incl. tests/math/ for the topology pipeline)
 Guidance_Documents/     Project planning and documentation
 ```
 
@@ -109,6 +115,31 @@ Guidance_Documents/     Project planning and documentation
 - **`paper/dataset_paper.tex`** -- NeurIPS 2026 Evaluations & Datasets track submission. Focused on the DeFAb dataset: generation pipeline, cross-ontology extraction, contamination control, and baseline evaluation.
 
 - **`paper/paper.tex`** -- Full technical paper including fine-tuning via preference optimization (DPO, RLHF, GRPO) and adversarial defeasible debate via Monte Carlo Tree Search.
+
+---
+
+## DeFAb-Math-Topology
+
+The math-side analogue of the main pipeline. The Lean 4 kernel replaces the polynomial-time defeasible verifier; everything above the harness layer (dropper, scorer, novelty filter, SFT/DPO/GRPO data prep, expert-iteration scaffold) is shared in shape with the main project.
+
+The cardinal risk is *trivial restoration*: the model just memorises the dropped hypothesis and Lean accepts it back. The novelty filter scores trivially-restored defeaters at zero, and the Lakatos positive control (M2) tests this on Euler V-E+F=2 / genus before any novel-discovery claim is made.
+
+End-to-end smoke run on the mock harness:
+
+```bash
+python experiments/math_topology/at_scale_dropping.py \
+  --provider mock \
+  --output-dir experiments/math_topology/results/m3_v0 \
+  --samples-per-challenge 8 --policy single_critical
+python experiments/math_topology/grpo_dataset.py \
+  --groups experiments/math_topology/results/m3_v0/groups.jsonl \
+  --output experiments/math_topology/results/m3_v0/grpo.jsonl
+python experiments/math_topology/discovery_harvester.py \
+  --survivors experiments/math_topology/results/m3_v0/survivors.jsonl \
+  --output experiments/math_topology/results/m3_v0/discoveries.jsonl
+```
+
+Tests: `python -m pytest tests/math/ --no-cov -q` (130 tests). See `Guidance_Documents/COMPREHENSIVE_KB_PIPELINE.md` for milestone status (M0--M3 implemented; M4/M5 deferred with stub interfaces) and the agenda in `.cursor/plans/`.
 
 ---
 

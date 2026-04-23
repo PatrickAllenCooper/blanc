@@ -102,3 +102,8 @@ results/evaluations/*.json
 
 # Grant applications (sensitive, not for public repo)
 Guidance_Documents/GOOGLE_ORG_APPLICATION.md
+
+# DeFAb-Math-Topology generated benchmarks and results (regenerated from corpus)
+experiments/math_topology/data/
+experiments/math_topology/results/
+experiments/math_topology/checkpoints/
