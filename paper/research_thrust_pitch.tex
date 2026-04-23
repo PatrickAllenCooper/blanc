@@ -10,6 +10,7 @@
 \usetikzlibrary{positioning, arrows.meta, calc}
 
 \titlespacing*{\section}{0pt}{8pt}{4pt}
+\titlespacing*{\subsection}{0pt}{6pt}{3pt}
 \setlength{\parskip}{4pt}
 \setlength{\parindent}{0pt}
 \pagestyle{empty}
@@ -18,16 +19,22 @@
 
 \begin{center}
 {\Large\bfseries Verifier-Backed Defeasible Fine-Tuning}\\[2pt]
-{\normalsize Enhancing Foundation Model Performance Where Reward Models Cannot}
+{\normalsize Targeting the Three Structural Deficits of Foundation Models}
 \end{center}
 
 \vspace{-3pt}\hrule\vspace{4pt}
 
-\section*{The Problem}
+\section*{The Three Deficits}
 
-Post-training is the main lever for foundation model capability. Its standard failure modes are well documented: learned reward models drift and get hacked; human preference labelling is slow and noisy; preference and policy optimisation plateau; updates to one capability break unrelated ones. All four trace to one missing ingredient: a fast, exact, model-independent reward signal.
+Current foundation models suffer three entangled structural deficits. Each is well-documented; together they account for the failures that limit deployment.
 
-\emph{Defeasible reasoning} provides one. The proof theory admits a polynomial-time verifier that decides, for any candidate hypothesis, whether it resolves an anomaly while preserving every unrelated conclusion (the formal counterpart of AGM minimal change). Plug that verifier in as the reward source for the post-training stack and the four failure modes go away. The verifier never drifts, never approximates, never needs human labelling, and cannot be hacked because it is the proof theory itself.
+\begin{enumerate}[nosep, leftmargin=1.6em, label=\textbf{\arabic*.}]
+    \item \textbf{Grounding.} Models cannot trace conclusions to supporting evidence. They confuse strict knowledge with revisable defaults. This is the root cause of hallucination.
+    \item \textbf{Novelty.} Without knowing which beliefs are revisable, models cannot identify where creative exceptions might apply. This is the root cause of creative sterility on out-of-distribution tasks.
+    \item \textbf{Belief revision.} Models cannot update knowledge while preserving unrelated commitments. Editing one fact triggers cascading side effects (the ripple problem documented for ROME, MEMIT, and successors).
+\end{enumerate}
+
+The three deficits share a structural cause: the absence of an explicit \emph{defeasible knowledge structure} that marks rules as strict or revisable, traces every conclusion to its support set, and admits a polynomial-time verifier that decides whether a proposed update preserves unrelated conclusions (the formal counterpart of AGM minimal change). The project supplies this structure and uses it to fine-tune foundation models against the three deficits directly.
 
 \section*{The Fine-Tuning Pipeline}
 
@@ -72,37 +79,39 @@ Post-training is the main lever for foundation model capability. Its standard fa
 \end{center}
 
 \vspace{-2pt}
-{\footnotesize Figure~1. The same verifier scores every stage. Each phase consumes a different shape of verifier output: gold targets for SFT, scored pairs for DPO, group-relative rewards for GRPO, tree-search returns for expert iteration. The model's improvements feed back as harder games. No learned reward model anywhere in the loop.}
+{\footnotesize Figure~1. The same verifier scores every stage. Each phase consumes a different shape of verifier output: gold targets, scored preference pairs, group-relative rewards, and tree-search returns. No learned reward model anywhere in the loop.}
 
-\section*{Four Phases, Four Failure Modes Addressed}
+\section*{How Each Deficit Is Targeted (and Why We Expect Success)}
 
-\begin{itemize}[nosep, leftmargin=1.4em]
-    \item \textbf{SFT on verified gold hypotheses.} Replaces noisy crowd labels with formally verified targets at three difficulty levels. Warm-starts format compliance and grounding.
-    \item \textbf{Margin-weighted DPO.} Standard DPO treats every preference pair as equal. The verifier's graded scoring weights each pair by the formal score gap, so the loss puts more gradient on the qualitative transitions (non-resolutive to conservative resolution) than on cosmetic differences. Same DPO objective as everyone else uses; only the labels are formal.
-    \item \textbf{GRPO self-play with verifier reward.} Removes the reward-model approximation error of standard RLHF. Self-play produces an automatic curriculum: improvements on one side of a defeasible conflict force improvements on the other. No human curriculum scheduling, no reward hacking.
-    \item \textbf{AlphaZero-style expert iteration.} Standard RLVR plateaus once the easy gradient is exhausted (the bottleneck DeepSearch (ICLR 2026) addresses for math). Neural-guided MCTS with the verifier supplying exact terminal scores extends the training surface. Same recipe as AlphaProof's silver-medal IMO result, transposed to a domain where the verifier exists for biomedical, legal, materials, and commonsense reasoning rather than only for formal proofs.
-\end{itemize}
+\subsection*{1. Grounding}
 
-\section*{Where Gains Will Show Up}
+\textbf{Mechanism.} Every conclusion in a defeasible theory has a traceable support set. Phase~1 (SFT) trains models on verified gold hypotheses at fact completion (L1) and rule abduction (L2): the model learns to operate over the support structure rather than retrieve from the training distribution. Phase~2 (margin-weighted DPO) reinforces the format and the structural mapping with preference pairs scored exactly by the verifier.
 
-\begin{itemize}[nosep, leftmargin=1.4em]
-    \item \emph{Belief revision under direct prompting.} Current models swing tens of points on exception construction depending on prompting strategy. The capability is latent. Fine-tuning targets the surfacing problem directly.
-    \item \emph{Conservativity in updates.} The pathology that breaks ROME, MEMIT and successors is silent disturbance of unrelated conclusions. The verifier scores conservativity directly, so the loss penalises it.
-    \item \emph{Headroom on hard subsets.} A pre-registered hard partition stratified along novelty, depth, multi-anomaly, and synthetic contamination is built specifically to expose the gap easy slices hide. It is the surface designed for measuring fine-tuning lift.
-    \item \emph{Closed-loop deployment.} A live StarCraft~II bridge runs the same verifier in real-time enforcement. Fine-tuned policies are measurable both on the static benchmark and in closed-loop control under three enforcement modes.
-\end{itemize}
+\textbf{Why we expect success.} The capability is already near-ceiling under direct prompting: the four-model frontier panel achieves 73--79\% on L2 across formal modalities at baseline. The gap to close is narrow, the targets are formally verified rather than crowd-labelled, and the structural form of the task matches the training signal exactly. Fine-tuning gains here are the most predictable of the three.
+
+\subsection*{2. Novelty}
+
+\textbf{Mechanism.} Phase~3 (GRPO self-play) and Phase~4 (AlphaZero expert iteration) operate on defeater abduction (L3): the model must construct exception rules in a controlled novel vocabulary. Self-play generates an automatic curriculum (improvements on one side of a defeasible conflict force improvements on the other), and neural-guided MCTS extends the search horizon beyond what one-shot generation can reach. The synthetic-contamination control guarantees the answer is not in the training corpus, so the model is forced to construct rather than retrieve.
+
+\textbf{Why we expect success.} AlphaProof (2025) demonstrated that neural-guided MCTS with an exact verifier reaches silver-medal IMO performance starting from a domain (formal mathematics) where the verifier is the proof kernel. DeepSearch (ICLR 2026) demonstrated that tree-search-augmented RLVR overcomes the well-documented GRPO plateau. Defeasible reasoning admits the same exact, polynomial-time verifier that the AlphaGo lineage requires, and is one of the very few non-mathematical domains that does so. The recipe transfers because the verifier transfers.
+
+\subsection*{3. Belief Revision}
+
+\textbf{Mechanism.} The conservativity check (formal counterpart of AGM minimal change) is computed in polynomial time by the verifier. Margin-weighted DPO weights each preference pair by the verifier-scored conservativity gap, so the loss puts gradient on the qualitative transitions (non-resolutive output to conservative resolution) rather than on cosmetic differences. GRPO self-play uses the same conservativity score as exact reward; AlphaZero-style expert iteration scores tree leaves by it directly. ROME, MEMIT, and other knowledge-editing methods cannot do this because they lack any measure of unrelated-conclusion preservation; the project supplies that measure as a training signal.
+
+\textbf{Why we expect success.} The capability is latent rather than absent: chain-of-thought scaffolding lifts L3 accuracy by 56--79 percentage points for reasoning-optimised models, confirming the model can revise correctly when the structure is supplied externally. Verifier-backed fine-tuning supplies the structure internally. The pre-registered hard subset (stratified along novelty, depth, multi-anomaly conservativity, and synthetic contamination) provides the non-saturated evaluation surface needed to measure genuine fine-tuning lift rather than memorisation.
 
 \section*{Practical Applications}
 
 The recipe is domain-general; only the knowledge base changes.
 
 \begin{itemize}[nosep, leftmargin=1.4em]
-    \item \textbf{Biomedical decision support.} Drug, comorbidity, and pharmacogenomic exception reasoning over UMLS and SNOMED~CT. Confident default-following is the clinically dangerous failure mode.
+    \item \textbf{Biomedical decision support.} Drug, comorbidity, and pharmacogenomic exception reasoning over UMLS and SNOMED~CT, where confident default-following is the clinically dangerous failure mode.
     \item \textbf{Functional genomics.} Curated negative annotations become first-class fine-tuning signal instead of being silently dropped.
     \item \textbf{Regulatory and legal reasoning.} Conservativity guarantees a fine-tuned compliance agent does not silently invalidate unrelated rulings when one rule changes.
     \item \textbf{Materials and chemistry discovery.} Conjecture refinement with verifier-checked guardrails against false-default predictions.
     \item \textbf{Formal mathematics and program verification.} Same pipeline with Lean's kernel as verifier and Mathlib as the knowledge base.
-    \item \textbf{Safety-critical autonomous agents.} Robotics, unmanned systems, and operator-in-the-loop control where every action must be auditable against revisable doctrine.
+    \item \textbf{Safety-critical autonomous agents.} Robotics, unmanned systems, and operator-in-the-loop control, demonstrated end-to-end on a live StarCraft~II bridge under three enforcement modes (trust, audit, verifier-gated re-prompt).
 \end{itemize}
 
 \section*{Why Now}
