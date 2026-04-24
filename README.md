@@ -124,7 +124,24 @@ The math-side analogue of the main pipeline. The Lean 4 kernel replaces the poly
 
 The cardinal risk is *trivial restoration*: the model just memorises the dropped hypothesis and Lean accepts it back. The novelty filter scores trivially-restored defeaters at zero, and the Lakatos positive control (M2) tests this on Euler V-E+F=2 / genus before any novel-discovery claim is made.
 
-End-to-end smoke run on the mock harness:
+### Prerequisites
+
+```bash
+# 1. Install elan (Lean version manager)
+curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+export PATH="$HOME/.elan/bin:$PATH"
+
+# 2. Get pre-compiled Mathlib cache (a few minutes, not hours)
+cd lean/
+lake exe cache get   # uses Lean 4.25.0, pinned in lean/lean-toolchain
+
+# 3. Install Python harness
+pip install lean-interact
+```
+
+The `lean/` project tracks `lakefile.lean` and `lean-toolchain` (pinned to `leanprover/lean4:v4.25.0`). Build artifacts go into `lean/.lake/` which is gitignored.
+
+### End-to-end smoke run (mock, no Lean needed)
 
 ```bash
 python experiments/math_topology/at_scale_dropping.py \
@@ -139,7 +156,51 @@ python experiments/math_topology/discovery_harvester.py \
   --output experiments/math_topology/results/m3_v0/discoveries.jsonl
 ```
 
-Tests: `python -m pytest tests/math/ --no-cov -q` (130 tests). See `Guidance_Documents/COMPREHENSIVE_KB_PIPELINE.md` for milestone status (M0--M3 implemented; M4/M5 deferred with stub interfaces) and the agenda in `.cursor/plans/`.
+### Real-Lean dry run on Euler V-E+F=2 (requires elan + FOUNDRY_API_KEY)
+
+```bash
+# Build Mathlib novelty index (~350ms after cache is populated):
+python scripts/extract_mathlib_topology_index.py  # writes experiments/math_topology/data/mathlib_topology_index.jsonl
+
+# Single-theorem dry run (4 samples, foundry-claude, real Lean):
+python experiments/math_topology/at_scale_dropping.py \
+  --provider foundry-claude \
+  --corpus-filter EulerCharacteristic.convex_polytope_v_minus_e_plus_f \
+  --policy single_critical \
+  --samples-per-challenge 4 \
+  --mathlib-index experiments/math_topology/data/mathlib_topology_index.jsonl \
+  --output-dir experiments/math_topology/results/m0_real
+```
+
+Observed per-call Lean latency: first call ~1500ms (REPL startup), subsequent calls 0--10ms (connection reuse).
+
+### M2 SFT/DPO data with real Lean verdicts
+
+```bash
+# Mock (default, CI-safe):
+python experiments/math_topology/prepare_sft_data.py \
+    --output experiments/math_topology/data/lakatos_sft.jsonl
+
+# Real Lean (requires lean-interact):
+python experiments/math_topology/prepare_sft_data.py \
+    --harness lean_interact \
+    --output experiments/math_topology/data/m2_real/sft.jsonl
+python experiments/math_topology/prepare_dpo_data.py \
+    --harness lean_interact \
+    --output experiments/math_topology/data/m2_real/dpo.jsonl
+```
+
+### Tests
+
+```bash
+# Mock tests (CI-safe, 130 tests):
+python -m pytest tests/math/ --no-cov -q
+
+# Real-Lean tests (requires lean-interact + Lean 4 toolchain):
+python -m pytest tests/math/test_lean_interact_harness.py -m lean_real -v
+```
+
+See `Guidance_Documents/COMPREHENSIVE_KB_PIPELINE.md` for milestone status (M0--M3 implemented; M4/M5 deferred with stub interfaces) and the agenda in `.cursor/plans/`.
 
 ---
 

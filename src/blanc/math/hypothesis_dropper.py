@@ -72,14 +72,18 @@ class HypothesisDropper:
         retained_str = "; ".join(f"{h.name} : {h.lean_expr}" for h in retained) or "(none)"
         nl = parent.natural_language or parent.identifier
         return (
+            "You are a Lean 4 mathematician.\n"
             "Theorem under consideration: "
             f"{nl}\n"
             f"Conclusion: {parent.statement}\n"
             f"Available hypotheses: {retained_str}\n"
             f"Removed hypotheses: {', '.join(masked)}.\n"
-            "Propose a strictly weaker extra hypothesis (a defeater) that "
-            "the Lean kernel will accept as sufficient to re-prove the "
-            "conclusion.  Do not simply restate the removed hypotheses."
+            "Propose one strictly weaker extra hypothesis (a defeater) that "
+            "the Lean 4 kernel will accept.  Do not simply restate the removed "
+            "hypotheses.\n\n"
+            "IMPORTANT: Reply with ONLY a single Lean 4 proposition expression "
+            "on one line -- no explanation, no code fences, no comments.  "
+            "Example output: P.boundary.genus = 0"
         )
 
     def _candidate_subsets(self, theorem: MathTheorem) -> Iterator[tuple[Hypothesis, ...]]:

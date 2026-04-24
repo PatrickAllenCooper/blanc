@@ -35,6 +35,7 @@ from blanc.math.types import (
 from blanc.math.lean_harness import (
     LeanHarness,
     LeanHarnessError,
+    LeanInteractHarness,
     MockLeanHarness,
     SubprocessLeanHarness,
     available_harness,
@@ -65,6 +66,7 @@ __all__ = [
     "NoveltyVerdict",
     "LeanHarness",
     "LeanHarnessError",
+    "LeanInteractHarness",
     "MockLeanHarness",
     "SubprocessLeanHarness",
     "available_harness",

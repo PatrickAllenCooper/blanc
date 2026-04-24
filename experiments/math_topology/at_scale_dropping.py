@@ -38,6 +38,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -96,12 +97,19 @@ class _MockSampler:
 def _build_sampler(name: str) -> Any:
     if name == "mock":
         return _MockSampler()
+    import os  # noqa: WPS433
+    try:
+        from dotenv import load_dotenv  # noqa: WPS433
+        load_dotenv(override=False)
+    except ImportError:
+        pass
     import model_interface as mi  # lazy
+    api_key = os.getenv("FOUNDRY_API_KEY", "")
     table = {
-        "foundry-gpt":      mi.FoundryGPT52Interface,
-        "foundry-kimi":     mi.FoundryKimiInterface,
-        "foundry-claude":   mi.FoundryClaudeInterface,
-        "foundry-deepseek": mi.FoundryDeepSeekInterface,
+        "foundry-gpt":      lambda: mi.FoundryGPT52Interface(api_key=api_key),
+        "foundry-kimi":     lambda: mi.FoundryKimiInterface(api_key=api_key),
+        "foundry-claude":   lambda: mi.FoundryClaudeInterface(api_key=api_key),
+        "foundry-deepseek": lambda: mi.FoundryDeepSeekInterface(api_key=api_key),
     }
     if name not in table:
         raise ValueError(
@@ -110,15 +118,38 @@ def _build_sampler(name: str) -> Any:
     return table[name]()
 
 
+_LEAN_FENCE_RE = re.compile(r"```(?:lean)?\s*(.*?)\s*```", re.DOTALL)
+
+
+def _strip_fences(text: str) -> str:
+    """Strip Lean code fences and take the first non-empty single-line token.
+
+    Frontier models often wrap the defeater in ```lean ... ``` blocks or
+    include natural-language explanations.  For the harness all we want
+    is a single Lean expression.  This function:
+    1. Extracts the content of the first ```lean ... ``` block, if present.
+    2. Returns the first non-empty, non-comment line from the result.
+    3. Falls back to the raw text stripped of whitespace.
+    """
+    m = _LEAN_FENCE_RE.search(text)
+    candidate = m.group(1) if m else text
+    for line in candidate.splitlines():
+        line = line.strip()
+        if line and not line.startswith("--"):
+            return line
+    return text.strip()
+
+
 def _sample_responses(provider: Any, challenge: ChallengeTheorem, n: int) -> list[str]:
     if isinstance(provider, _MockSampler):
         return provider.sample(challenge, n)
     out: list[str] = []
     for _ in range(n):
-        response = provider.generate(
+        response = provider.query(
             challenge.prompt, max_tokens=256, temperature=0.7,
         )
-        out.append((response.text if hasattr(response, "text") else str(response)).strip())
+        raw = response.text if hasattr(response, "text") else str(response)
+        out.append(_strip_fences(raw))
     return out
 
 
@@ -134,6 +165,7 @@ class SampledScore:
     sample_index:          int
     response:              str
     lean_status:           str
+    lean_ms:               int        # per-call Lean wall time in milliseconds
     reward:                float
     trivial_restoration:   bool
     matches_mathlib:       bool
@@ -214,7 +246,13 @@ def run_at_scale(
     policy: DropPolicy,
     output_dir: Path,
     harness: LeanHarness | None = None,
+    novelty_index_path: Path | None = None,
+    corpus_filter: str | None = None,
 ) -> dict[str, Any]:
+    if corpus_filter is not None:
+        corpus = TopologyCorpus(
+            theorems=[t for t in corpus.theorems if t.identifier == corpus_filter]
+        )
     if harness is None:
         if provider_name == "mock":
             mock = MockLeanHarness()
@@ -223,9 +261,18 @@ def run_at_scale(
         else:
             harness = available_harness(prefer_real=True)
 
-    novelty = NoveltyFilter(
-        mathlib_statements=[(t.identifier, t.statement) for t in corpus]
-    )
+    if novelty_index_path is not None and novelty_index_path.exists():
+        from blanc.math.novelty import NoveltyFilter as _NF  # avoid re-import shadowing
+        novelty = _NF.from_jsonl(novelty_index_path)
+        print(
+            f"  loaded novelty index: {novelty.loaded_count} theorems "
+            f"(commit {novelty.mathlib_commit})",
+            file=sys.stderr,
+        )
+    else:
+        novelty = NoveltyFilter(
+            mathlib_statements=[(t.identifier, t.statement) for t in corpus]
+        )
     scorer = DefeaterScorer(harness=harness, novelty=novelty)
     sampler = _build_sampler(provider_name)
     dropper = HypothesisDropper(policy=policy)
@@ -249,6 +296,7 @@ def run_at_scale(
                         sample_index=i,
                         response=resp,
                         lean_status=score.lean.status.value,
+                        lean_ms=score.lean.elapsed_ms,
                         reward=score.reward,
                         trivial_restoration=score.novelty.is_trivial_restoration,
                         matches_mathlib=score.novelty.matches_mathlib,
@@ -270,6 +318,7 @@ def run_at_scale(
                             "novelty_distance": score.novelty.distance,
                             "matched_mathlib":  score.novelty.matches_mathlib,
                             "reward":           score.reward,
+                            "lean_ms":          score.lean.elapsed_ms,
                         }))
                         sf.write("\n")
                 group = GroupRecord(
@@ -299,10 +348,15 @@ def run_at_scale(
         "n_lean_accept":         n_lean_accept,
         "n_trivial_restoration": n_trivial,
         "n_survivors":           n_survivors,
+        "novelty_index":         str(novelty_index_path) if novelty_index_path else None,
         "output_dir":            str(output_dir),
     }
     (output_dir / "summary.json").write_text(json.dumps(summary, indent=2))
     return summary
+
+
+# Default novelty-index path (auto-loaded when present)
+_DEFAULT_NOVELTY_INDEX = Path(__file__).resolve().parent / "data" / "mathlib_topology_index.jsonl"
 
 
 def main() -> int:
@@ -313,6 +367,22 @@ def main() -> int:
     parser.add_argument("--policy", type=str, default="single_critical",
                         choices=[p.value for p in DropPolicy])
     parser.add_argument("--mathlib-root", type=Path, default=None)
+    parser.add_argument(
+        "--mathlib-index", type=Path, default=None,
+        help=(
+            "Path to the Mathlib topology index JSONL produced by "
+            "scripts/extract_mathlib_topology_index.py. "
+            f"Auto-loaded from {_DEFAULT_NOVELTY_INDEX} when present."
+        ),
+    )
+    parser.add_argument(
+        "--no-novelty-index", action="store_true",
+        help="Disable the Mathlib novelty index even if it exists (useful for tests).",
+    )
+    parser.add_argument(
+        "--corpus-filter", type=str, default=None,
+        help="If set, restrict to the single theorem with this identifier (dry-run mode).",
+    )
     args = parser.parse_args()
 
     corpus = builtin_corpus()
@@ -322,12 +392,21 @@ def main() -> int:
             if thm.identifier not in seen:
                 corpus.theorems.append(thm)
 
+    novelty_index_path: Path | None = None
+    if not args.no_novelty_index:
+        if args.mathlib_index is not None:
+            novelty_index_path = args.mathlib_index
+        elif _DEFAULT_NOVELTY_INDEX.exists():
+            novelty_index_path = _DEFAULT_NOVELTY_INDEX
+
     summary = run_at_scale(
         corpus=corpus,
         provider_name=args.provider,
         samples_per_challenge=args.samples_per_challenge,
         policy=DropPolicy(args.policy),
         output_dir=args.output_dir,
+        novelty_index_path=novelty_index_path,
+        corpus_filter=args.corpus_filter,
     )
     sys.stdout.write(json.dumps(summary, indent=2) + "\n")
     return 0

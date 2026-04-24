@@ -75,6 +75,7 @@ markers = [
     "integration: live network tests against real API endpoints (deselected by default)",
     "benchmark: performance benchmarks (not run by default)",
     "sc2_live: tests requiring a local StarCraft II binary (deselected by default)",
+    "lean_real: tests requiring a real Lean 4 toolchain + lean-interact (deselected in CI)",
 ]
 
 [tool.coverage.run]

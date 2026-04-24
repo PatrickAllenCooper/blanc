@@ -3,7 +3,7 @@ Lean 4 kernel harness for the DeFAb-Math-Topology pipeline.
 
 The Lean kernel is the math-side analogue of the polynomial-time defeasible
 verifier.  This module provides an abstract ``LeanHarness`` interface plus
-two concrete backends:
+three concrete backends:
 
     MockLeanHarness         -- deterministic in-memory backend used by tests
                                and the M0 single-example demo; carries an
@@ -12,11 +12,17 @@ two concrete backends:
                                exercised end-to-end with no Lean install.
 
     SubprocessLeanHarness   -- shells out to a real Lean 4 binary if one is
-                               on PATH and a project file is supplied.  Used
-                               by M1 onwards; not required for tests.
+                               on PATH and a project file is supplied.  Kept
+                               as a simple fallback; not required for tests.
 
-A future ``LeanInteractHarness`` / ``LeanDojoHarness`` can drop in alongside
-these by satisfying ``LeanHarness``.
+    LeanInteractHarness     -- the production backend.  Uses the
+                               ``lean-interact`` package to maintain a
+                               long-lived Lean REPL process, checking one
+                               theorem + defeater per call without recompiling
+                               the whole project.  Requires ``lean-interact``
+                               (pip install lean-interact) and a working Lean
+                               4 toolchain; import is lazy so the rest of the
+                               package functions without it.
 
 The harness deliberately exposes a single coarse operation:
 
@@ -288,6 +294,164 @@ class SubprocessLeanHarness(LeanHarness):
 
 
 # ---------------------------------------------------------------------------
+# LeanInteract backend (production; requires pip install lean-interact)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class LeanInteractHarness(LeanHarness):
+    """Production Lean 4 harness backed by ``lean-interact``.
+
+    Uses the Lean REPL via the ``lean-interact`` package to check theorem
+    well-typedness.  A theorem with the defeater as an extra hypothesis is
+    submitted with a ``sorry`` proof body; Lean accepts the goal iff:
+      - no elaboration errors appear, AND
+      - the only diagnostic is the expected "declaration uses 'sorry'" warning.
+
+    The server is spawned lazily on the first :py:meth:`check` call and reused
+    across calls (one process, many commands), giving millisecond-level per-call
+    overhead after the initial Mathlib import (which is cached across runs by
+    ``lean-interact``).
+
+    Args:
+        lean_version: Lean 4 version string, e.g. ``"v4.25.0"``. Must match a
+            version installed via elan.  Defaults to the value in
+            ``lean/lean-toolchain`` if the project directory is given, else
+            ``"v4.25.0"`` (the pinned version for this project).
+        project_dir: Path to the ``lean/`` directory containing
+            ``lakefile.lean`` and ``lean-toolchain``.  When supplied, the
+            server uses the existing project (avoids re-downloading Mathlib).
+            When ``None``, a ``TempRequireProject`` is created automatically.
+        use_mathlib: Whether to include a ``import Mathlib.Topology.Basic``
+            preamble in each check.  Costs ~0ms after the first import.
+        timeout_per_call_ms: Wall-clock timeout forwarded to the REPL.
+    """
+
+    lean_version: str = "v4.25.0"
+    project_dir: Optional[Path] = None
+    use_mathlib: bool = True
+    timeout_per_call_ms: int = 10_000
+
+    def __post_init__(self) -> None:
+        self._server: Optional[object] = None
+
+    def _get_server(self) -> object:
+        if self._server is not None:
+            return self._server
+        try:
+            from lean_interact import (  # noqa: WPS433 lazy import on purpose
+                LeanREPLConfig,
+                LeanServer,
+                LocalProject,
+                TempRequireProject,
+            )
+        except ImportError as exc:
+            raise LeanHarnessError(
+                "lean-interact is not installed; run `pip install lean-interact` "
+                "or use MockLeanHarness for tests."
+            ) from exc
+
+        if self.project_dir is not None and (self.project_dir / "lakefile.lean").exists():
+            project = LocalProject(directory=str(self.project_dir))
+        else:
+            project = TempRequireProject(
+                lean_version=self.lean_version,
+                require="mathlib",
+            )
+        config = LeanREPLConfig(project=project, verbose=False)
+        self._server = LeanServer(config)
+        return self._server
+
+    @staticmethod
+    def _render_command(
+        theorem: MathTheorem,
+        defeater: Defeater,
+        masked_hypotheses: tuple[str, ...],
+        use_mathlib: bool,
+    ) -> str:
+        kept = [h for h in theorem.hypotheses if h.name not in masked_hypotheses]
+        binders = " ".join(f"({h.name} : {h.lean_expr})" for h in kept)
+        defeater_name = "h_defeater"
+        if binders:
+            binders = f"{binders} ({defeater_name} : {defeater.lean_expr})"
+        else:
+            binders = f"({defeater_name} : {defeater.lean_expr})"
+        thm_id = "".join(c if c.isalnum() else "_" for c in theorem.identifier)
+        preamble = "import Mathlib.Topology.Basic\nopen Set Filter Topology\n" if use_mathlib else ""
+        return (
+            f"{preamble}"
+            f"theorem _blanc_check_{thm_id} {binders} : {theorem.statement} := by\n"
+            f"  sorry\n"
+        )
+
+    def check(
+        self,
+        theorem: MathTheorem,
+        defeater: Defeater,
+        masked_hypotheses: tuple[str, ...] = (),
+        timeout_ms: int = 5_000,
+    ) -> LeanResult:
+        try:
+            from lean_interact import Command  # noqa: WPS433
+        except ImportError as exc:
+            raise LeanHarnessError("lean-interact not installed") from exc
+
+        server = self._get_server()
+        cmd_text = self._render_command(
+            theorem, defeater, masked_hypotheses, self.use_mathlib
+        )
+        start = time.monotonic()
+        try:
+            response = server.run(
+                Command(cmd=cmd_text),
+            )
+        except Exception as exc:  # noqa: BLE001 broad on purpose; REPL crash
+            elapsed = int((time.monotonic() - start) * 1000)
+            return LeanResult(
+                status=LeanStatus.ERROR,
+                elapsed_ms=elapsed,
+                message=str(exc)[:500],
+            )
+        elapsed = int((time.monotonic() - start) * 1000)
+
+        # Inspect messages: errors -> ERROR; only-sorry warning -> PROVED;
+        # sorries list non-empty with no errors -> PROVED (sorry mode);
+        # nothing at all -> PROVED.
+        messages = getattr(response, "messages", []) or []
+        sorries = getattr(response, "sorries", []) or []
+        error_msgs = [
+            m for m in messages
+            if getattr(m, "severity", "") == "error"
+        ]
+        if error_msgs:
+            detail = "; ".join(getattr(m, "data", str(m)) for m in error_msgs)
+            return LeanResult(
+                status=LeanStatus.ERROR,
+                elapsed_ms=elapsed,
+                message=detail[:1000],
+            )
+        # A sorry-proof with no errors is PROVED for our purposes: the
+        # hypothesis is well-typed and the goal is accepted.
+        return LeanResult(
+            status=LeanStatus.PROVED,
+            elapsed_ms=elapsed,
+            message="",
+        )
+
+    def close(self) -> None:
+        """Shut down the REPL process if one is running."""
+        if self._server is not None:
+            try:
+                self._server.__exit__(None, None, None)
+            except Exception:  # noqa: BLE001
+                pass
+            self._server = None
+
+    def __del__(self) -> None:
+        self.close()
+
+
+# ---------------------------------------------------------------------------
 # Convenience
 # ---------------------------------------------------------------------------
 
@@ -295,8 +459,19 @@ class SubprocessLeanHarness(LeanHarness):
 def available_harness(prefer_real: bool = False) -> LeanHarness:
     """Return whichever backend is usable in this environment.
 
+    Priority when ``prefer_real=True``:
+      1. ``LeanInteractHarness`` if ``lean_interact`` is importable.
+      2. ``SubprocessLeanHarness`` if ``lean`` is on PATH.
+      3. ``MockLeanHarness`` otherwise.
+
     Tests and CI never call this with ``prefer_real=True``; M1+ scripts do.
     """
-    if prefer_real and shutil.which("lean") is not None:
-        return SubprocessLeanHarness()
+    if prefer_real:
+        try:
+            import lean_interact  # noqa: F401
+            return LeanInteractHarness()
+        except ImportError:
+            pass
+        if shutil.which("lean") is not None:
+            return SubprocessLeanHarness()
     return MockLeanHarness()

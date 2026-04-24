@@ -160,10 +160,27 @@ def write_records(records: list[DPORecord], path: Path) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--harness", choices=["mock", "lean_interact"], default="mock",
+        help="Which Lean harness to use for scoring gold/distractor defeaters. "
+             "'mock' uses pre-registered verdicts (default, no Lean required). "
+             "'lean_interact' calls a real Lean 4 REPL via lean-interact.",
+    )
     args = parser.parse_args()
-    records = build_dpo_records()
+
+    if args.harness == "lean_interact":
+        from blanc.math.lean_harness import LeanInteractHarness  # noqa: WPS433
+        lean_dir = ROOT / "lean"
+        h: LeanHarness = LeanInteractHarness(
+            lean_version="v4.25.0",
+            project_dir=lean_dir if lean_dir.exists() else None,
+        )
+    else:
+        h = None  # build_dpo_records uses MockLeanHarness by default
+
+    records = build_dpo_records(harness=h)
     n = write_records(records, args.output)
-    sys.stdout.write(f"Wrote {n} DPO records to {args.output}\n")
+    sys.stdout.write(f"Wrote {n} DPO records to {args.output} (harness={args.harness})\n")
     return 0
 
 

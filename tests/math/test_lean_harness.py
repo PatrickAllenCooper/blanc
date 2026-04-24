@@ -68,6 +68,11 @@ class TestAvailableHarness:
     def test_returns_mock_when_real_unavailable_but_requested(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
+        import sys
+        import unittest.mock as mock
+
         monkeypatch.setattr("shutil.which", lambda _name: None)
-        h = available_harness(prefer_real=True)
+        # Simulate lean_interact not being installed by temporarily hiding it
+        with mock.patch.dict(sys.modules, {"lean_interact": None}):
+            h = available_harness(prefer_real=True)
         assert isinstance(h, MockLeanHarness)

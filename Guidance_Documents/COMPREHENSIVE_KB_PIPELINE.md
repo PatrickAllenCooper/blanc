@@ -639,62 +639,73 @@ All changes are strictly additive. Existing M1-M4 evaluation, text-only model qu
 
 ---
 
-## DeFAb-Math-Topology Research Agenda (Implemented 2026-04-23)
+## DeFAb-Math-Topology Research Agenda (Updated 2026-04-24)
 
 The math-side analogue of the main pipeline lives under `src/blanc/math/` and `experiments/math_topology/`. The Lean 4 kernel replaces the polynomial-time defeasible verifier; everything above the harness layer (dropper, scorer, novelty filter, SFT/DPO/GRPO data prep, expert-iteration scaffold) is shared in shape with the main project. Per the plan in `.cursor/plans/defab-math-topology_research_agenda_56424d51.plan.md`.
+
+**Lean harness decision (2026-04-24):** `lean-interact` (`pip install lean-interact`) is the chosen production backend. It wraps the Lean REPL (community REPL project), supports Lean 4.8--4.30, is on PyPI, and handles Mathlib project setup automatically via `TempRequireProject`. The `LeanInteractHarness` in `lean_harness.py` provides lazy import and connection reuse; the first call spins up the REPL (~1500ms startup), subsequent calls 0--10ms. Lean version pinned to `v4.25.0` (the earliest darwin24-compatible release, needed on macOS 25.x).
 
 ### Library: `src/blanc/math/`
 
 - `types.py`: `MathTheorem`, `Hypothesis`, `Defeater`, `LeanResult`, `LeanStatus`, `NoveltyVerdict`, `DefeaterScore`. Mirrors `blanc.core.theory` at the level of Lean expressions.
-- `lean_harness.py`: abstract `LeanHarness`; `MockLeanHarness` (test/CI default, deterministic response table); `SubprocessLeanHarness` (one-shot real-Lean backend; M1+ scripts only). Future LeanInteract / Pantograph backends drop in by satisfying `LeanHarness`.
-- `topology_extractor.py`: `MathlibExtractor` (regex parser with balanced-paren binder splitter) and a curated `builtin_corpus()` of 12 topology theorems (Euler V-E+F=2, Heine-Borel, Tychonoff, Urysohn, IVT, sequential compactness, etc.).
+- `lean_harness.py`: abstract `LeanHarness`; `MockLeanHarness` (test/CI default, deterministic response table); `SubprocessLeanHarness` (one-shot real-Lean backend); **`LeanInteractHarness`** (production backend via `lean-interact`, lazy import, server reuse). `available_harness(prefer_real=True)` returns `LeanInteractHarness` when `lean_interact` is importable, else `SubprocessLeanHarness` if `lean` is on PATH, else `MockLeanHarness`.
+- `topology_extractor.py`: `MathlibExtractor` (regex parser with balanced-paren binder splitter, `extract_subtree()` for per-directory extraction) and a curated `builtin_corpus()` of 12 topology theorems.
 - `hypothesis_dropper.py`: `HypothesisDropper` with `DropPolicy.SINGLE_CRITICAL | SINGLE_ANY | PAIRS_CRITICAL`, producing `ChallengeTheorem` instances for the L3 protocol.
-- `novelty.py`: `NoveltyFilter` (trivial-restoration detection + Mathlib membership) plus `normalised_lean_expr` and `novelty_distance` (Levenshtein-derived, scale-free).
+- `novelty.py`: `NoveltyFilter` (trivial-restoration detection + Mathlib membership, `from_jsonl()` classmethod for loading the real Mathlib index); `normalised_lean_expr` and `novelty_distance` (Levenshtein-derived, scale-free). `loaded_count` and `mathlib_commit` exposed for reproducibility logging.
 - `defeater_scorer.py`: composes `LeanHarness` + `NoveltyFilter` into one scalar reward in [0, 1] for SFT/DPO/GRPO.
+
+### Scripts: `scripts/`
+
+- `extract_mathlib_topology_index.py`: walks `lean/.lake/packages/mathlib/` (populated by `lake exe cache get`) and emits a JSONL index at `experiments/math_topology/data/mathlib_topology_index.jsonl` (4170 theorems from Topology + AlgebraicTopology + Geometry subtrees, Mathlib commit `1ccd71f89c`, Lean `v4.25.0`).
 
 ### Experiments: `experiments/math_topology/`
 
-- `topology_instance.py`: math-side `TopologyInstance` (L1/L2/L3) + JSONL I/O.
-- `generate_benchmark.py` (M1): produces L1, L2, L3 instances from `TopologyCorpus`.
-- `run_baseline.py` (M1): four-model panel runner (`_MockModel` for tests; real models via `model_interface`); exact match for L1/L2, `DefeaterScorer` for L3.
-- `lakatos_corpus.py` (M2): Lakatos rediscovery family with `HELD_OUT_MASK = "h_convex"` and gold defeaters (genus zero family + distractors).
-- `prepare_sft_data.py` / `prepare_dpo_data.py` (M2): SFT prompt-completion JSONL and margin-weighted DPO triples (rejected = trivial restoration + low-distance variants).
-- `evaluate_lakatos.py` (M2): held-out evaluation with one-sided z-test gate decision against baseline.
-- `train_lakatos.py` (M2): orchestration wrapper over generic `train_sft.py` / `train_dpo.py`; `--dry-run` supported.
-- `at_scale_dropping.py` (M3): the at-scale driver. Iterates corpus -> dropper -> K samples per challenge -> `DefeaterScorer` -> `groups.jsonl` (GRPO units) + `survivors.jsonl` (Lean-accepted, Mathlib-novel).
-- `grpo_dataset.py` (M3): assembles GRPO units from `groups.jsonl`; recomputes per-group advantages.
-- `discovery_harvester.py` (M3): deduplicates and ranks survivors by `novelty_distance + reward`.
-- `literature_filter.py` (M4, deferred): abstract `LiteratureFilter`; `StubLiteratureFilter` (deterministic, contract-tested); `DeferredLiteratureFilter` (raises `NotImplementedError` so production code cannot silently treat it as real). Real ArXiv / MathOverflow / textbook backends plug in here.
-- `mcts_expert_iteration.py` (M5, deferred): abstract `MCTSPolicy` + `MCTSExpert`; `UniformRolloutMCTS` (PUCT-style, deterministic, contract-tested, no neural net required); `DeferredMCTS` (raises `NotImplementedError`). Real GRPO-checkpoint policy/value head plugs in here.
+- `at_scale_dropping.py` (M3): the at-scale driver. Accepts `--mathlib-index` (auto-loads default when present), `--corpus-filter` (single-theorem dry-run mode), `--no-novelty-index` (CI escape hatch); logs `lean_ms` per sample for latency budgeting.
+- `prepare_sft_data.py` / `prepare_dpo_data.py` (M2): both accept `--harness {mock,lean_interact}` to optionally validate gold defeaters against real Lean; outputs under `data/m2_real/` are gitignored.
+- (All other modules unchanged from prior milestone.)
 
-### The cardinal risk: trivial restoration
+### Lean project: `lean/`
 
-The whole experiment fails silently if the model just memorises the dropped hypothesis and Lean accepts it back. Mitigation is built into the pipeline from M0:
+Committed: `lean/lakefile.lean` (Mathlib v4.25.0 dependency), `lean/lean-toolchain` (pins `leanprover/lean4:v4.25.0`), `lean/BlancMath.lean`, `lean/BlancMath/Sanity.lean` (canary: imports `Mathlib.Topology.Basic`, proves `True`). Build artifacts (`lean/.lake/`, `lean/lake-packages/`) are gitignored.
 
-1. The dropped hypothesis is masked from the L3 prompt entirely, including all definitionally-equivalent forms.
-2. `NoveltyFilter` flags trivial restoration (string + normalised-form equality with the masked hypothesis); the scorer awards reward 0 to such defeaters.
-3. The reward weights strictly-weaker conditions over equivalents via `novelty_distance`.
-4. The Lakatos rediscovery positive control (M2) tests this on Euler/genus before any novel-discovery claim.
+Install steps:
+```bash
+# elan (once per machine):
+curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+export PATH="$HOME/.elan/bin:$PATH"
+
+# per-clone:
+cd lean && lake exe cache get   # ~15s; downloads 7525 pre-compiled Mathlib oleans
+```
 
 ### Test coverage
 
-`tests/math/` is 130 tests covering all of the above, including end-to-end Euler smoke (`test_euler_end_to_end.py`), at-scale dropping (`test_at_scale_dropping.py`), discovery harvester (`test_discovery_harvester.py`), and the M4/M5 deferred scaffolds. Run via `python -m pytest tests/math/ --no-cov -q` from the activated venv.
+`tests/math/` covers 130 mock tests (CI-safe) plus `tests/math/test_lean_interact_harness.py` (5 real-Lean tests, gated on `@pytest.mark.lean_real`, skipped in CI). Run:
+```bash
+# CI-safe:
+python -m pytest tests/math/ --no-cov -q
+
+# Real-Lean (requires lean-interact + Lean 4 toolchain):
+python -m pytest tests/math/test_lean_interact_harness.py -m lean_real -v
+```
 
 ### Status of the milestone ladder
 
 - **M0 DONE**: Lean integration + topology extractor + defeater scoring end-to-end on Euler V-E+F=2 / genus.
-- **M1 DONE**: DeFAb-Math-Topology benchmark v0 + four-model baseline scaffold (real model numbers pending API budget).
+- **M1 DONE**: DeFAb-Math-Topology benchmark v0 + four-model baseline scaffold.
 - **M2 DONE**: Lakatos rediscovery positive control wired (SFT/DPO data prep + held-out evaluation + z-test gate).
-- **M3 DONE**: At-scale hypothesis-dropping with mock-provider smoke run (12 theorems, 22 challenges, 176 samples, 132 survivors, 110 unique discoveries on the mock harness). Real-Lean and real-model run gated on Lean throughput budget.
-- **M4 DEFERRED (scaffold)**: `LiteratureFilter` interface + `StubLiteratureFilter` for contract tests; real ArXiv / MathOverflow / textbook backends are follow-on work.
-- **M5 DEFERRED (scaffold)**: `MCTSExpert` interface + `UniformRolloutMCTS` for contract tests; real GRPO-checkpoint policy/value head + outer expert-iteration loop are follow-on work.
+- **M3 DONE**: At-scale hypothesis-dropping with mock-provider smoke run; real-Lean infrastructure verified end-to-end on one example. Production at-scale run deferred to CURC/follow-on session.
+- **Real-Lean dry run (2026-04-24)**: 1 theorem × 3 masks × 4 samples on Euler V-E+F=2, `foundry-claude`, real Lean 4.25.0 + Mathlib. All 12 proposals received `error` status from Lean (proposals used idealized notation); trivial-restoration and Mathlib-membership filters confirmed working. Per-call Lean latency: first call 1540ms, subsequent 0--10ms.
+- **M2 real-Lean data (2026-04-24)**: `prepare_sft_data.py --harness lean_interact` produces 6 SFT records (all `lean_verified=False` -- Lakatos gold defeaters use informal notation not yet accepted by Lean 4). A follow-on session should update the corpus with properly-typed Lean 4 expressions to produce non-zero `lean_verified` counts.
+- **M4 DEFERRED (scaffold)**: `LiteratureFilter` interface + `StubLiteratureFilter` for contract tests.
+- **M5 DEFERRED (scaffold)**: `MCTSExpert` interface + `UniformRolloutMCTS` for contract tests.
 
-### Open design decisions still up for discussion
+### Open design decisions
 
-- Lean harness choice for M1+ (LeanDojo vs Pantograph vs LeanInteract) and per-call latency budget.
-- Granularity of the typed dependency graph for the novelty filter (per-theorem vs per-lemma).
-- Concrete operationalisation of `novelty_distance` beyond Levenshtein (definitional unfolding depth, subterm subsumption).
-- Whether Track 7 (two-player conflict generation) enters the GRPO loop at the M3 production run or is held for M5 alongside expert iteration.
+- Lean corpus Lean-ification: the Lakatos gold defeaters use informal notation; before real-Lean M2 training is possible, each expression needs to be translated into properly-typed Lean 4 (using the existing `LeanInteractHarness` to iterate).
+- Per-call latency target for M3 production (empirical: 0--10ms/call with connection reuse; full M3 over 12 theorems × K challenges × 8 samples is feasible locally).
+- Whether `novelty_distance` should be replaced with a Mathlib-typed-expression metric (defer until Lean-ified corpus is ready).
+- Track 7 (two-player conflict generation) entry point: M3 production or M5 alongside expert iteration.
 
 ---
 

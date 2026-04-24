@@ -107,3 +107,10 @@ Guidance_Documents/GOOGLE_ORG_APPLICATION.md
 experiments/math_topology/data/
 experiments/math_topology/results/
 experiments/math_topology/checkpoints/
+# Lean project build artifacts (lake cache, compiled oleans, downloaded packages)
+lean/.lake/
+lean/lake-packages/
+lean/**/*.olean
+lean/**/*.ilean
+lean/**/*.c
+lean/_blanc_scratch/

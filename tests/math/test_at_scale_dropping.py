@@ -49,7 +49,7 @@ class TestPopulateMockHarness:
 class TestGroupRecord:
     def test_advantages_zero_when_all_rewards_equal(self) -> None:
         samples = [
-            SampledScore("t", ("x",), i, "y", "proved", 0.5, False, False, None, 0.5)
+            SampledScore("t", ("x",), i, "y", "proved", 0, 0.5, False, False, None, 0.5)
             for i in range(4)
         ]
         group = GroupRecord("t", ("x",), "p", samples)
@@ -57,9 +57,9 @@ class TestGroupRecord:
 
     def test_advantages_have_zero_mean(self) -> None:
         samples = [
-            SampledScore("t", ("x",), 0, "a", "proved", 1.0, False, False, None, 1.0),
-            SampledScore("t", ("x",), 1, "b", "refuted", 0.0, False, False, None, 0.0),
-            SampledScore("t", ("x",), 2, "c", "proved", 0.6, False, False, None, 0.4),
+            SampledScore("t", ("x",), 0, "a", "proved", 0, 1.0, False, False, None, 1.0),
+            SampledScore("t", ("x",), 1, "b", "refuted", 0, 0.0, False, False, None, 0.0),
+            SampledScore("t", ("x",), 2, "c", "proved", 0, 0.6, False, False, None, 0.4),
         ]
         group = GroupRecord("t", ("x",), "p", samples)
         adv = group.advantages()

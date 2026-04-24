@@ -449,3 +449,23 @@ class MathlibExtractor:
                 seen.add(theorem.identifier)
                 corpus.theorems.append(theorem)
         return corpus
+
+    def extract_subtree(self, subtree: str) -> Iterable[MathTheorem]:
+        """Yield theorems from one Mathlib subtree (relative path like ``Mathlib/Topology``).
+
+        Unlike :meth:`extract`, this iterates one directory at a time so the
+        extraction script can report per-subtree counts and apply per-subtree
+        caps for quick smoke runs.
+        """
+        if self.mathlib_root is None:
+            return
+        base = self.mathlib_root / subtree
+        if not base.exists():
+            return
+        seen: set[str] = set()
+        for path in base.rglob("*.lean"):
+            for theorem in self.parse_file(path):
+                if theorem.identifier in seen:
+                    continue
+                seen.add(theorem.identifier)
+                yield theorem

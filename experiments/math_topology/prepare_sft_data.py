@@ -10,10 +10,22 @@ Held-out hypothesis (default ``h_convex``) is never represented in the
 training set; its instances are reserved for
 :mod:`evaluate_lakatos`.
 
+By default all gold defeaters from the curated corpus are included.
+Pass ``--harness lean_interact`` to also run each gold defeater through
+a real Lean 4 REPL and include only those that the kernel accepts; this
+creates real-Lean-signal training data under ``data/m2_real/`` (the
+default output location when using the real harness).
+
 Usage:
 
+    # mock (default, no Lean install required):
     python experiments/math_topology/prepare_sft_data.py \
         --output experiments/math_topology/data/lakatos_sft.jsonl
+
+    # real Lean (requires lean-interact + Lean 4 toolchain):
+    python experiments/math_topology/prepare_sft_data.py \
+        --harness lean_interact \
+        --output experiments/math_topology/data/m2_real/sft.jsonl
 
 Author: Patrick Cooper
 """
@@ -31,6 +43,8 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "experiments"))
 
 from blanc.math.hypothesis_dropper import DropPolicy, HypothesisDropper
+from blanc.math.lean_harness import LeanInteractHarness, MockLeanHarness, available_harness
+from blanc.math.types import Defeater, LeanStatus
 
 from math_topology.lakatos_corpus import (
     LakatosFixture,
@@ -47,12 +61,16 @@ class SFTRecord:
     theorem_identifier: str
     masked_hypothesis: str
     provenance: str
+    lean_verified: bool
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, str | bool]:
         return asdict(self)
 
 
-def fixture_to_records(fixture: LakatosFixture) -> list[SFTRecord]:
+def fixture_to_records(
+    fixture: LakatosFixture,
+    harness: object = None,
+) -> list[SFTRecord]:
     dropper = HypothesisDropper(policy=DropPolicy.SINGLE_ANY)
     challenges = dropper.drop(fixture.parent)
     matching = next(
@@ -66,6 +84,14 @@ def fixture_to_records(fixture: LakatosFixture) -> list[SFTRecord]:
         )
     out: list[SFTRecord] = []
     for d in fixture.gold_defeaters:
+        lean_verified = True  # default for mock harness
+        if harness is not None and not isinstance(harness, MockLeanHarness):
+            result = harness.check(
+                fixture.parent,
+                d,
+                masked_hypotheses=tuple(matching.masked_hypotheses),
+            )
+            lean_verified = result.status is LeanStatus.PROVED
         out.append(SFTRecord(
             prompt=matching.prompt,
             completion=d.lean_expr,
@@ -73,17 +99,24 @@ def fixture_to_records(fixture: LakatosFixture) -> list[SFTRecord]:
             theorem_identifier=fixture.parent.identifier,
             masked_hypothesis=fixture.masked,
             provenance=d.provenance,
+            lean_verified=lean_verified,
         ))
     return out
 
 
-def build_sft_records(include_held_out: bool = False) -> list[SFTRecord]:
+def build_sft_records(
+    include_held_out: bool = False,
+    harness: object = None,
+    real_only: bool = False,
+) -> list[SFTRecord]:
     records: list[SFTRecord] = []
     fixtures = list(training_fixtures())
     if include_held_out:
         fixtures.append(held_out_fixture())
     for f in fixtures:
-        records.extend(fixture_to_records(f))
+        records.extend(fixture_to_records(f, harness=harness))
+    if real_only:
+        records = [r for r in records if r.lean_verified]
     return records
 
 
@@ -99,14 +132,43 @@ def write_records(records: list[SFTRecord], path: Path) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--harness", choices=["mock", "lean_interact"], default="mock",
+        help="Which Lean harness to use for verifying gold defeaters. "
+             "'mock' includes all without checking (default). "
+             "'lean_interact' runs each through real Lean and marks lean_verified.",
+    )
+    parser.add_argument(
+        "--real-only", action="store_true",
+        help="When using --harness lean_interact, exclude records that Lean rejects.",
+    )
     parser.add_argument("--include-held-out", action="store_true",
                         help="(unsafe) include the held-out site in training data; "
                         "for negative-control / data-leak experiments only.")
     args = parser.parse_args()
-    records = build_sft_records(include_held_out=args.include_held_out)
+
+    if args.harness == "lean_interact":
+        lean_dir = ROOT / "lean"
+        h = LeanInteractHarness(
+            lean_version="v4.25.0",
+            project_dir=lean_dir if lean_dir.exists() else None,
+        )
+    else:
+        h = MockLeanHarness()
+
+    records = build_sft_records(
+        include_held_out=args.include_held_out,
+        harness=h,
+        real_only=args.real_only,
+    )
     n = write_records(records, args.output)
-    sys.stdout.write(f"Wrote {n} SFT records to {args.output} "
-                     f"(held_out_in_training={args.include_held_out})\n")
+    n_verified = sum(r.lean_verified for r in records)
+    sys.stdout.write(
+        f"Wrote {n} SFT records to {args.output} "
+        f"(lean_verified={n_verified}/{n}, "
+        f"harness={args.harness}, "
+        f"held_out_in_training={args.include_held_out})\n"
+    )
     return 0
 
 
