@@ -59,6 +59,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "experiments"))
+sys.path.insert(0, str(ROOT))
 
 try:
     from dotenv import load_dotenv

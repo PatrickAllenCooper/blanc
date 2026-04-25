@@ -194,14 +194,19 @@ def evaluate_one_environment(
             "note": "evaluation_pipeline not available",
         }
 
+    model_name = getattr(model_iface, "model_name", "model") or "model"
+    models_dict = {model_name: model_iface}
+
     pipeline = EvaluationPipeline(
-        model=model_iface,
+        instances=instances,
+        models=models_dict,
         modalities=modalities,
         strategies=strategies,
-        verbose=verbose,
     )
-    results = pipeline.evaluate(instances)
-    summary = getattr(results, "summary", {})
+    results = pipeline.run()
+    summary = getattr(results, "summary", {}) if results else {}
+    if isinstance(results, dict):
+        summary = results.get("summary", {})
     return {
         "env": env_key,
         "n": len(instances),
@@ -253,11 +258,15 @@ def main() -> int:
         return 1
 
     try:
+        import os as _os
         from model_interface import create_model_interface
+        _api_key = None
+        if args.provider.startswith("foundry-"):
+            _api_key = _os.environ.get("FOUNDRY_API_KEY") or None
         model_iface = create_model_interface(
             provider=args.provider,
-            model_name=args.model,
-            base_url=args.curc_base_url,
+            api_key=_api_key,
+            model=args.model,
         )
     except ImportError:
         print("WARNING: model_interface not available; printing instance counts only")

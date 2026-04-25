@@ -48,6 +48,10 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "experiments"))
+# Allow sibling scripts to be imported by name (scripts/ has no __init__.py)
+_scripts_dir = str(Path(__file__).parent)
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
 
 try:
     from dotenv import load_dotenv
@@ -79,7 +83,7 @@ def _build_quiz_scenarios(extra_path: Path | None = None) -> list[dict]:
         gold_compliant_action  str | None  -- what a compliant commander does
         gold_prohibited_action  dict | None -- the action that must NOT be issued
     """
-    from scripts.generate_rts_instances import ROE_LEVEL3_SEEDS
+    from generate_rts_instances import ROE_LEVEL3_SEEDS
 
     scenarios = []
     for seed in ROE_LEVEL3_SEEDS:

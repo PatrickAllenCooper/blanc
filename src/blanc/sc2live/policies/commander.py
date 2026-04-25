@@ -293,8 +293,16 @@ class CommanderPolicy:
     def _get_model(self) -> Any:
         if self._model is None:
             try:
+                import os
                 from model_interface import create_model_interface  # type: ignore[import]
-                self._model = create_model_interface(provider=self._provider)
+                # Read Foundry API key from environment if not already loaded
+                api_key: str | None = None
+                if self._provider.startswith("foundry-"):
+                    api_key = os.environ.get("FOUNDRY_API_KEY") or None
+                self._model = create_model_interface(
+                    provider=self._provider,
+                    api_key=api_key,
+                )
             except ImportError:
                 logger.warning(
                     "model_interface not importable; CommanderPolicy will return []"
