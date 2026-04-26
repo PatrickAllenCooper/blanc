@@ -188,8 +188,15 @@ class LLMPolicy:
         """Lazy-load the model interface (avoids import cost at startup)."""
         if self._model is None:
             try:
-                from model_interface import create_model  # type: ignore[import]
-                self._model = create_model(self._provider)
+                import os as _os
+                from model_interface import create_model_interface  # type: ignore[import]
+                api_key: str | None = None
+                if self._provider.startswith("foundry-"):
+                    api_key = _os.environ.get("FOUNDRY_API_KEY") or None
+                self._model = create_model_interface(
+                    provider=self._provider,
+                    api_key=api_key,
+                )
             except ImportError:
                 logger.warning(
                     "model_interface not importable; LLMPolicy will return []"

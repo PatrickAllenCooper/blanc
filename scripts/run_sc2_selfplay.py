@@ -37,6 +37,14 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "experiments"))
+sys.path.insert(0, str(ROOT))           # for examples/ package
+sys.path.insert(0, str(ROOT / "scripts"))  # for sibling scripts
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(ROOT / ".env")
+except ImportError:
+    pass
 
 logger = logging.getLogger(__name__)
 

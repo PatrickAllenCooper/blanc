@@ -47,6 +47,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "experiments"))
+sys.path.insert(0, str(ROOT))           # for examples/ package
+sys.path.insert(0, str(ROOT / "scripts"))  # for generate_rts_instances etc.
 
 try:
     from dotenv import load_dotenv
@@ -176,13 +178,17 @@ def instances_to_pairs(
     except ImportError:
         return []
 
+    # Use M1 (symbolic modality) for L3 ROE instances --
+    # M4 natural-language encoder rejects binary predicates with spaces.
+    effective_modality = "M1" if modality == "M4" else modality
+
     rng = random.Random(seed)
     decoder = CascadingDecoder()
     evaluator = Level3Evaluator()
     pairs: list[PreferencePair] = []
 
     for inst in instances:
-        rendered = render_prompt(inst, modality, strategy)
+        rendered = render_prompt(inst, effective_modality, strategy)
         responses: list[tuple[str, float]] = []
 
         for _ in range(n_samples):
@@ -287,8 +293,12 @@ def main() -> int:
             split_ids[inst.id] = split_name
 
     try:
+        import os as _os
         from model_interface import create_model_interface
-        model_iface = create_model_interface(provider=args.provider)
+        _api_key = None
+        if args.provider.startswith("foundry-"):
+            _api_key = _os.environ.get("FOUNDRY_API_KEY") or None
+        model_iface = create_model_interface(provider=args.provider, api_key=_api_key)
     except ImportError:
         print("WARNING: model_interface not available; writing empty preference files")
         model_iface = None
