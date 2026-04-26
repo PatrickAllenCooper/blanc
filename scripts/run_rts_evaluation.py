@@ -242,7 +242,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--provider", required=True,
                    choices=[
                        "openai", "azure", "curc", "anthropic", "google", "ollama",
-                       "foundry-gpt", "foundry-kimi", "foundry-claude",
+                       "foundry-nano", "foundry-gpt", "foundry-kimi", "foundry-claude",
                        "foundry-deepseek", "mock",
                    ])
     p.add_argument("--api-key", default=None)
