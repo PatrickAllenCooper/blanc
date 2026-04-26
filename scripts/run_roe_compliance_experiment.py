@@ -320,8 +320,8 @@ def main() -> int:
     parser.add_argument("--enforcement", default="all",
                         choices=["B0", "B1", "B2", "all"],
                         help="Enforcement level(s) to run (default: all)")
-    parser.add_argument("--provider", default="mock",
-                        help="Model provider (mock, foundry-deepseek, etc.)")
+    parser.add_argument("--provider", default="foundry-nano",
+                        help="Model provider (mock, foundry-nano, foundry-deepseek, etc.)")
     parser.add_argument("--scenarios", default=None,
                         help="Path to extra JSON scenarios file")
     parser.add_argument("--games", type=int, default=1,

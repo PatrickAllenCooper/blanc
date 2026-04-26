@@ -1907,6 +1907,23 @@ def create_model_interface(
         model = model or "llama3:8b"
         return OllamaInterface(model=model, host=kwargs.get("host", "http://localhost:11434"))
 
+    elif provider == 'foundry-nano':
+        if not api_key:
+            raise ValueError("foundry-nano requires api_key (FOUNDRY_API_KEY)")
+        endpoint         = kwargs.pop('endpoint', FoundryGPT52Interface.FOUNDRY_ENDPOINT)
+        deployment       = model or "gpt-5.4-nano"
+        api_version      = kwargs.pop('api_version', FoundryGPT52Interface.FOUNDRY_API_VERSION)
+        reasoning_effort = kwargs.pop('reasoning_effort', 'none')
+        return FoundryGPT52Interface(
+            api_key=api_key,
+            endpoint=endpoint,
+            deployment=deployment,
+            api_version=api_version,
+            reasoning_effort=reasoning_effort,
+            rpm=250, tpm=250_000,  # nano rate limits
+            **kwargs,
+        )
+
     elif provider == 'foundry-gpt':
         if not api_key:
             raise ValueError("foundry-gpt requires api_key (FOUNDRY_API_KEY)")

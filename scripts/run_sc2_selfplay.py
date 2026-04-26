@@ -224,7 +224,7 @@ def main() -> int:
         description="LLM-vs-LLM SC2 self-play for GRPO rollout generation"
     )
     parser.add_argument("--games", type=int, default=1)
-    parser.add_argument("--provider", default="foundry-deepseek",
+    parser.add_argument("--provider", default="foundry-nano",
                         help="Provider for both bots (or use --provider-b)")
     parser.add_argument("--provider-b", default=None,
                         help="Provider for bot B (default: same as --provider)")

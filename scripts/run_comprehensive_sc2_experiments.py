@@ -44,6 +44,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # Approximate cost per 1K tokens for Foundry models (USD).
 # Used only for the budget-guard soft warning.
 _COST_PER_1K_TOKENS = {
+    "foundry-nano":     0.000150,  # gpt-5.4-nano -- cheapest, use for local iteration
     "foundry-deepseek": 0.0014,
     "foundry-gpt":      0.010,
     "foundry-claude":   0.003,
@@ -573,9 +574,9 @@ def main() -> int:
         help="Which tier(s) to run (default: AB)",
     )
     parser.add_argument(
-        "--provider", default="foundry-deepseek",
+        "--provider", default="foundry-nano",
         choices=list(_COST_PER_1K_TOKENS.keys()),
-        help="Foundry model provider for Tier B (default: foundry-deepseek)",
+        help="Foundry model provider for Tier B (default: foundry-nano)",
     )
     parser.add_argument(
         "--budget-usd", type=float, default=20.0,

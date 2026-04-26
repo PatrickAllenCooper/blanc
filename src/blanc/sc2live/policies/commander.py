@@ -114,7 +114,7 @@ class CommanderPolicy:
     def __init__(
         self,
         mode: EnforcementMode | str = EnforcementMode.B2,
-        provider: str = "foundry-deepseek",
+        provider: str = "foundry-nano",
         max_reprompts: int = 3,
         macro_step_interval: int = 44,
         scenario_id: str = "unknown",

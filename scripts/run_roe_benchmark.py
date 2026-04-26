@@ -413,14 +413,14 @@ ENVIRONMENTS = {
     },
 }
 
-ALL_PROVIDERS = ["foundry-gpt", "foundry-deepseek", "foundry-claude", "foundry-kimi"]
+ALL_PROVIDERS = ["foundry-nano", "foundry-gpt", "foundry-deepseek", "foundry-claude", "foundry-kimi"]
 
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Unified ROE Benchmark: SC2 + Lux AI S3")
-    p.add_argument("--provider", default="foundry-deepseek",
+    p.add_argument("--provider", default="foundry-nano",
                    choices=ALL_PROVIDERS + ["mock"],
-                   help="Model provider for evaluation (default: foundry-deepseek)")
+                   help="Model provider for evaluation (default: foundry-nano)")
     p.add_argument("--all-models", action="store_true",
                    help="Run all four Foundry models sequentially")
     p.add_argument("--api-key", default=None,
