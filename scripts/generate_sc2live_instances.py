@@ -51,14 +51,66 @@ from blanc.core.theory import RuleType
 from blanc.reasoning.defeasible import defeasible_provable
 
 
-ROE_PREDICATES = [
-    "authorized_to_engage",
-    "cleared_to_engage",
-    "ordered_to_retreat",
-    "stealth_posture_active",
-    "priority_target",
-    "mission_accomplished",
-]
+def _probe_roe_targets(theory) -> list[str]:
+    """
+    Find derivable conclusions suitable as L1/L2 instance targets.
+
+    Strategy:
+    1. ROE engagement conclusions (may be blocked by defeaters in live games)
+    2. Taxonomy chain conclusions (infantry_unit -> military_unit -> unit)
+       These are robust and always derivable when base facts are present.
+    3. Zone-based conclusions derived from combination of rules and facts
+    """
+    import re
+    from blanc.reasoning.defeasible import defeasible_provable
+
+    unary_re  = re.compile(r"^(\w+)\((\w+)\)$")
+    binary_re = re.compile(r"^(\w+)\((\w+),\s*(\w+)\)$")
+
+    allied_units: set[str] = set()
+    targets:      set[str] = set()
+    zones:        set[str] = set()
+
+    for fact in theory.facts:
+        m1 = unary_re.match(fact)
+        if m1:
+            pred, atom = m1.group(1), m1.group(2)
+            if pred in ("military_unit", "infantry_unit", "armored_unit",
+                        "fighter_unit", "bomber_unit", "worker_unit"):
+                allied_units.add(atom)
+            elif pred in ("military_target", "worker_target"):
+                targets.add(atom)
+        m2 = binary_re.match(fact)
+        if m2:
+            pred = m2.group(1)
+            if pred == "in_zone":
+                zones.add(m2.group(3))  # zone name
+
+    roe_targets: list[str] = []
+
+    # ── 1. ROE conclusions (may be blocked by zone defeaters) ──────────────
+    for unit in allied_units:
+        for target in targets:
+            for pred in ("authorized_to_engage", "cleared_to_engage"):
+                lit = f"{pred}({unit}, {target})"
+                if defeasible_provable(theory, lit):
+                    roe_targets.append(lit)
+        for pred in ("ordered_to_retreat",):
+            lit = f"{pred}({unit})"
+            if defeasible_provable(theory, lit):
+                roe_targets.append(lit)
+
+    # ── 2. Taxonomy chain: derived unary predicates ─────────────────────────
+    # Queries like military_unit(X), unit(X), ground_combat_unit(X)
+    derived_preds = ["military_unit", "unit", "ground_combat_unit",
+                     "air_combat_unit", "support_unit"]
+    for unit in list(allied_units)[:10]:  # cap to keep tractable
+        for pred in derived_preds:
+            lit = f"{pred}({unit})"
+            if lit not in theory.facts and defeasible_provable(theory, lit):
+                roe_targets.append(lit)
+
+    return list(dict.fromkeys(roe_targets))[:20]  # deduplicate, cap
 
 
 def generate_instances_from_frame(
@@ -79,12 +131,9 @@ def generate_instances_from_frame(
         ("rand_0.3", partition_random(0.3, seed=42)),
     ]
 
-    # Collect derivable ROE targets from this frame's facts
-    roe_targets = []
-    for fact in theory.facts:
-        for pred in ROE_PREDICATES:
-            if pred in fact and defeasible_provable(theory, fact):
-                roe_targets.append(fact)
+    # Collect derivable ROE targets by probing with known unit/target atoms
+    roe_targets = _probe_roe_targets(theory)
+    roe_targets = roe_targets[:20]  # cap to keep generation tractable
     roe_targets = list(dict.fromkeys(roe_targets))
 
     if not roe_targets:

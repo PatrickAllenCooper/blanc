@@ -33,15 +33,18 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).parent.parent
+import sys as _sys
+_sys.path.insert(0, str(ROOT / "src"))
+_sys.path.insert(0, str(ROOT))   # for examples/ package
 
 # ── Difficulty mapping ────────────────────────────────────────────────────────
 
 DIFFICULTY_MAP = {
-    "VeryEasy": 1,
-    "Easy": 2,
-    "Medium": 3,
-    "Hard": 4,
-    "VeryHard": 6,
+    "VeryEasy": "VeryEasy",
+    "Easy": "Easy",
+    "Medium": "Medium",
+    "Hard": "Hard",
+    "VeryHard": "VeryHard",
     "Random": None,  # chosen randomly each game
 }
 
@@ -72,7 +75,7 @@ def _check_sc2_import() -> bool:
 def run_single_game(
     map_name: str,
     race: str,
-    difficulty: int,
+    difficulty: str,
     trace_dir: Path,
     realtime: bool = False,
 ) -> Path | None:
@@ -91,7 +94,7 @@ def run_single_game(
 
         bot = DeFAbBot(policy=ScriptedPolicy(), trace_dir=trace_dir)
         race_obj = getattr(SC2Race, race, SC2Race.Terran)
-        diff_obj = getattr(SC2Difficulty, f"Level{difficulty}", SC2Difficulty.Level2)
+        diff_obj = getattr(SC2Difficulty, difficulty, SC2Difficulty.Easy)
 
         run_game(
             sc2.maps.get(map_name),
@@ -159,7 +162,7 @@ def main() -> int:
     trace_dir = Path(args.output)
     trace_dir.mkdir(parents=True, exist_ok=True)
 
-    difficulties = list(range(1, 7)) if args.difficulty == "Random" else [DIFFICULTY_MAP[args.difficulty]]
+    difficulties = list(DIFFICULTY_MAP.keys())[:-1] if args.difficulty == "Random" else [DIFFICULTY_MAP[args.difficulty]]
     maps = MAPS if args.map == "random" else [args.map]
 
     print(f"Recording {args.games} game(s) -> {trace_dir}")
