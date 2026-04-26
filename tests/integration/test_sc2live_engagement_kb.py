@@ -257,15 +257,23 @@ def test_defabbot_scripted_policy_one_game(tmp_path):
 
     bot = DeFAbBot(policy=ScriptedPolicy(), trace_dir=tmp_path)
 
-    # Run a very short game (3 minutes = 3960 steps at fastest speed)
+    # Run a very short game (bot concedes after ~1 min at fastest speed)
+    from blanc.sc2live.bot import SNAPSHOT_INTERVAL
+
+    class _TimedBot(DeFAbBot):
+        async def on_step(self, iteration: int) -> None:
+            await super().on_step(iteration)
+            if iteration >= 1320:
+                await self._client.leave()  # type: ignore[attr-defined]
+
+    bot = _TimedBot(policy=ScriptedPolicy(), trace_dir=tmp_path)
     run_game(
         sc2.maps.get("Simple64"),
         [
             Bot(SC2Race.Terran, bot),
-            Computer(SC2Race.Random, Difficulty.Level1),
+            Computer(SC2Race.Random, Difficulty.VeryEasy),
         ],
         realtime=False,
-        game_steps_per_episode=3960,
     )
 
     assert len(bot.trace) >= 1, "No snapshots recorded"
