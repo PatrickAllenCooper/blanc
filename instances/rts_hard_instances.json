@@ -1,0 +1,123 @@
+{
+  "instances": [
+    {
+      "scenario_id": "H1_chain_defeat_repair_exception",
+      "level": 3,
+      "description": "Enemy probe is actively repairing a cannon under fire. ROE normally protects workers, but the repairing-under-attack exception defeats that protection. The theory is missing rts_r3013. Without it, protected_from_attack holds anomalously for a worker who is actively repairing a weapon system. The anomaly is at the INTERMEDIATE level: protection is derivable even though the probe is repairing under attack. The model must construct the second-layer defeater that defeats the protection predicate itself.",
+      "anomaly": "protected_from_attack(enemy_probe)",
+      "target": "protected_from_attack(enemy_probe)",
+      "gold": "~protected_from_attack(W) :~> worker_target(W), repairing_under_attack(W).",
+      "candidates": [
+        "~protected_from_attack(W) :~> worker_target(W), repairing_under_attack(W)."
+      ],
+      "hard_aspects": [
+        "Chain defeat (2 layers): anomaly is intermediate predicate",
+        "Gold head is ~protected_from_attack, not ~authorized_to_engage",
+        "Model must not confuse rts_r3012 (engages worker) with rts_r3013 (defeats protection)"
+      ],
+      "metadata": {
+        "domain": "rts_hard",
+        "facts": [
+          "infantry_unit(marine)",
+          "military_target(enemy_probe)",
+          "military_unit(marine)",
+          "repairing_under_attack(enemy_probe)",
+          "worker_target(enemy_probe)"
+        ],
+        "gold_defeater_label": "rts_r3013"
+      }
+    },
+    {
+      "scenario_id": "H2_positive_id_chain",
+      "level": 3,
+      "description": "Sensor has detected the target (confirmed by radar/scanner). But the theory's positive-ID requirement rule still fires: requires_positive_id holds because the unit is military and the target is target-typed. The sensor-detection defeater (rts_r3050) is missing. Anomaly: requires_positive_id is derivable even though sensor_detected is a fact. Model must construct: sensor_detected(Y) defeats requires_positive_id(X,Y). Three-step chain: authorization blocked by PID -> sensor defeats PID -> fixed.",
+      "anomaly": "requires_positive_id(marine, contact_alpha)",
+      "target": "requires_positive_id(marine, contact_alpha)",
+      "gold": "~requires_positive_id(X,Y) :~> sensor_detected(Y).",
+      "candidates": [
+        "~requires_positive_id(X,Y) :~> sensor_detected(Y)."
+      ],
+      "hard_aspects": [
+        "Anomaly is intermediate predicate requires_positive_id, not authorized_to_engage",
+        "3-step chain through PID layer",
+        "Novel fact sensor_detected must be connected to PID defeater"
+      ],
+      "metadata": {
+        "domain": "rts_hard",
+        "facts": [
+          "infantry_unit(marine)",
+          "is_target_type(contact_alpha)",
+          "military_target(contact_alpha)",
+          "military_unit(marine)",
+          "not_positively_identified(contact_alpha)",
+          "sensor_detected(contact_alpha)"
+        ],
+        "gold_defeater_label": "rts_r3050"
+      }
+    },
+    {
+      "scenario_id": "H4_stealth_zone_fire_interaction",
+      "level": 3,
+      "description": "A marine is on a stealth recon mission (op_ghost_eye), inside a restricted zone, and taking direct fire. Three constraints interact: stealth posture blocks engagement (via mission rule rts_r3006), exclusion zone blocks engagement (rts_r3003), and the direct fire should defeat stealth posture (rts_r3032, which is missing). The anomaly: stealth_posture_active holds even though the unit is being shot at. The gold defeater breaks stealth on direct fire. The hard part: the model must recognize that breaking stealth does NOT authorize engagement (the zone restriction still applies). A non-conservative defeater that authorizes engagement would fail.",
+      "anomaly": "stealth_posture_active(marine)",
+      "target": "stealth_posture_active(marine)",
+      "gold": "~stealth_posture_active(X) :~> under_direct_fire(X).",
+      "candidates": [
+        "~stealth_posture_active(X) :~> under_direct_fire(X)."
+      ],
+      "hard_aspects": [
+        "Three simultaneous competing constraints",
+        "Gold defeats stealth but NOT engagement (zone still applies)",
+        "Incorrect defeater: ~authorized_to_engage -> fails conservativity"
+      ],
+      "metadata": {
+        "domain": "rts_hard",
+        "facts": [
+          "assigned_to_mission(marine, op_ghost_eye)",
+          "in_zone(enemy_squad, restricted_zone_alpha)",
+          "in_zone(marine, restricted_zone_alpha)",
+          "infantry_unit(marine)",
+          "military_target(enemy_squad)",
+          "military_unit(marine)",
+          "mission(op_ghost_eye)",
+          "reconnaissance_mission(op_ghost_eye)",
+          "under_direct_fire(marine)"
+        ],
+        "gold_defeater_label": "rts_r3032"
+      }
+    },
+    {
+      "scenario_id": "H6_multi_constraint_conservativity",
+      "level": 3,
+      "description": "Zealot unit faces two types of enemies: an enemy squad (military target) in the restricted zone, and an enemy probe (worker) outside it. Without the exclusion zone defeater (rts_r3003 removed from D^-), engagement with the squad inside the zone is anomalously authorized. But engagement with the probe must REMAIN correctly blocked by worker protection (rts_r3012 is present and correct). The model must construct a conservative defeater that resolves the zone anomaly without affecting the worker protection. A non-conservative defeater that blocks ALL engagement would fail the validity check.",
+      "anomaly": "authorized_to_engage(zealot, enemy_squad)",
+      "target": "authorized_to_engage(zealot, enemy_squad)",
+      "gold": "~authorized_to_engage(X,Y) :~> in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha).",
+      "candidates": [
+        "~authorized_to_engage(X,Y) :~> in_zone(X, restricted_zone_alpha), in_zone(Y, restricted_zone_alpha)."
+      ],
+      "hard_aspects": [
+        "Must resolve one anomaly without creating new ones",
+        "Two simultaneously present defeaters (zone + worker) must stay independent",
+        "Worker protection (rts_r3012) must remain unaffected",
+        "Engagement with non-restricted-zone target must remain authorized"
+      ],
+      "metadata": {
+        "domain": "rts_hard",
+        "facts": [
+          "in_zone(enemy_probe, engagement_zone_alpha)",
+          "in_zone(enemy_squad, restricted_zone_alpha)",
+          "in_zone(enemy_vanguard, engagement_zone_alpha)",
+          "in_zone(zealot, restricted_zone_alpha)",
+          "infantry_unit(zealot)",
+          "military_target(enemy_probe)",
+          "military_target(enemy_squad)",
+          "military_target(enemy_vanguard)",
+          "military_unit(zealot)",
+          "worker_target(enemy_probe)"
+        ],
+        "gold_defeater_label": "rts_r3003"
+      }
+    }
+  ]
+}
