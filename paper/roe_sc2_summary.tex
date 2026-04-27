@@ -30,7 +30,7 @@
 \newcommand{\no}{\textcolor{Red}{\textbf{N}}}
 \newcommand{\hi}[1]{\textcolor{Green}{\textbf{#1}}}
 \newcommand{\lo}[1]{\textcolor{Red}{\textbf{#1}}}
-\newcommand{\mid}[1]{\textcolor{Orange}{#1}}
+\newcommand{\midcol}[1]{\textcolor{Orange}{#1}}
 
 \setbeamerfont{frametitle}{size=\normalsize}
 
@@ -75,11 +75,13 @@
 \end{column}
 
 \begin{column}{0.52\textwidth}
-\includegraphics[width=0.92\textwidth]{roe_exclusion_screenshot.png}
+\includegraphics[width=\textwidth]{roe_exclusion_screenshot.png}
 \vspace{0.1em}
-{\scriptsize Live game tick. Red shaded = restricted zone.
-No attack arrow: exclusion-zone defeater (rts\_r3003) blocks engagement.
-Right panel: active ROE rules and verifier verdict.}
+{\scriptsize \textbf{Live SC2 capture} (Simple64 map). Cyan sphere = protected
+civilian zone with enemy probe inside. Red marines on the left are friendly;
+the exclusion-zone defeater (\texttt{rts\_r3015}) blocks any engagement
+into the zone. World-text overlay shows the active rule:
+\texttt{in\_zone(X, civilian) $\to$ $\sim$authorized\_to\_engage(X)}.}
 \end{column}
 \end{columns}
 \end{frame}
@@ -144,10 +146,12 @@ H6 (multi-anomaly conservativity) break CoT scaffolding.
 \begin{column}{0.52\textwidth}
 \includegraphics[width=\textwidth, height=0.58\textheight, keepaspectratio]{roe_gate_screenshot.png}
 \vspace{0.1em}
-{\scriptsize \textit{Red dashed arrow}: model proposed
-\texttt{attack(marine, enemy\_probe)} under pure-aggressive prompt.
-\textbf{BLOCKED} by B2 verifier (worker protection rts\_r3012 active).
-Model revised to a compliant order after re-prompt.}
+{\scriptsize \textbf{Live SC2 capture.} Friendly marines (red) face
+two enemy SCV workers. Model issued
+\texttt{attack(MARINE, SCV)} under pure-aggressive prompt;
+verifier returned \textbf{BLOCKED} (worker / non-combatant, \texttt{rts\_r3025}).
+The order is rejected and the commander is re-prompted before any attack
+animation is forwarded to the engine.}
 \end{column}
 
 \begin{column}{0.45\textwidth}
@@ -209,22 +213,14 @@ and what fraction are ROE-compliant?
 \begin{column}{0.45\textwidth}
 \textbf{Finding: B2 maintains tactical output.}
 
+\vspace{0.1em}
+\includegraphics[width=\textwidth, height=0.32\textheight, keepaspectratio]{roe_engagement_screenshot.png}\\
+{\tiny \textbf{Redirect (free):} APPROVED attack on hostile marine.}
+
 \vspace{0.2em}
-For nano and Claude: admitted orders stay at 2.0
-whether B0 or B2.
-The gate \emph{redirects} rather than suppresses ---
-replacing the violating attack (worker) with a
-compliant attack (military squad).
-
-\vspace{0.1em}
-\textbf{When does compliance cost?}\\
-Only when \emph{all available targets} are prohibited.
-Example: exclusion zone with no targets outside it.
-That is the next scenario to test.
-
-\vspace{0.1em}
-\textcolor{Orange}{\small Projection: exclusion-zone with no alternative targets\\
-$\Rightarrow$ B2 admitted orders $= 0$: real tactical cost.}
+\includegraphics[width=\textwidth, height=0.32\textheight, keepaspectratio]{roe_retreat_screenshot.png}\\
+{\tiny \textbf{Suppress (costly):} RETREAT (force\_ratio $<$ 0.5),
+conservativity \texttt{rts\_r3024} blocks engagement.}
 \end{column}
 \end{columns}
 \end{frame}
