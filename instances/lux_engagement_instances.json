@@ -40,7 +40,7 @@
       "visual_source": "https://s3vis.lux-ai.org",
       "roe_hierarchy": "self_preservation > scoring_objectives > resource_efficiency"
     },
-    "generation_date": "2026-04-25T17:02:34.411370",
+    "generation_date": "2026-04-26T12:53:00.438262",
     "levels": {
       "level1": {
         "count": 30,
@@ -135,568 +135,21 @@
   "instances": [
     {
       "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
+      "target": "ship(ship_b4)",
       "level": 1,
       "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_b2, ship_b2)",
-        "same_team(ship_b1, ship_b1)",
-        "same_team(ship_a3, ship_a3)",
-        "same_team(ship_a4, ship_a4)",
-        "same_team(ship_b4, ship_b4)"
-      ],
-      "gold": [
-        "same_team(ship_a5, ship_a5)"
-      ],
-      "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 1,
-      "candidates": [
-        "nebula_tile(nebula_north)",
-        "nebula_tile(nebula_south)",
-        "nebula_tile(nebula_center)"
-      ],
-      "gold": [
-        "nebula_tile(nebula_north)"
-      ],
-      "metadata": {
-        "ablated_element": "nebula_tile(nebula_north)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 3,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "energy_node(center_energy_node)",
-      "level": 1,
-      "candidates": [
-        "energy_node(center_energy_node)",
-        "energy_node(flank_energy_node)",
-        "energy_node(north_energy_cluster)",
-        "energy_node(south_energy_cluster)"
-      ],
-      "gold": [
-        "energy_node(center_energy_node)"
-      ],
-      "metadata": {
-        "ablated_element": "energy_node(center_energy_node)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 4,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
-      "level": 1,
-      "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_b4, ship_b4)",
-        "same_team(ship_a4, ship_a4)",
-        "same_team(ship_a2, ship_a2)",
-        "same_team(ship_b3, ship_b3)",
-        "same_team(ship_a3, ship_a3)"
-      ],
-      "gold": [
-        "same_team(ship_a5, ship_a5)"
-      ],
-      "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 1,
-      "candidates": [
-        "nebula_tile(nebula_north)",
-        "nebula_tile(nebula_south)",
-        "nebula_tile(nebula_center)"
-      ],
-      "gold": [
-        "nebula_tile(nebula_north)"
-      ],
-      "metadata": {
-        "ablated_element": "nebula_tile(nebula_north)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 3,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "energy_node(center_energy_node)",
-      "level": 1,
-      "candidates": [
-        "energy_node(center_energy_node)",
-        "energy_node(south_energy_cluster)",
-        "energy_node(flank_energy_node)",
-        "energy_node(north_energy_cluster)"
-      ],
-      "gold": [
-        "energy_node(center_energy_node)"
-      ],
-      "metadata": {
-        "ablated_element": "energy_node(center_energy_node)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 4,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
-      "level": 1,
-      "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_b3, ship_b3)",
-        "same_team(ship_b4, ship_b4)",
-        "same_team(ship_b2, ship_b2)",
-        "same_team(ship_a1, ship_a1)",
-        "same_team(ship_a2, ship_a2)"
-      ],
-      "gold": [
-        "same_team(ship_a5, ship_a5)"
-      ],
-      "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 1,
-      "candidates": [
-        "nebula_tile(nebula_north)",
-        "nebula_tile(nebula_center)",
-        "nebula_tile(nebula_south)"
-      ],
-      "gold": [
-        "nebula_tile(nebula_north)"
-      ],
-      "metadata": {
-        "ablated_element": "nebula_tile(nebula_north)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 3,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "energy_node(center_energy_node)",
-      "level": 1,
-      "candidates": [
-        "energy_node(center_energy_node)",
-        "energy_node(north_energy_cluster)",
-        "energy_node(south_energy_cluster)",
-        "energy_node(flank_energy_node)"
-      ],
-      "gold": [
-        "energy_node(center_energy_node)"
-      ],
-      "metadata": {
-        "ablated_element": "energy_node(center_energy_node)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 4,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
-      "level": 1,
-      "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_b5, ship_b5)",
-        "same_team(ship_a3, ship_a3)",
-        "same_team(ship_b3, ship_b3)",
-        "same_team(ship_a2, ship_a2)",
-        "same_team(ship_a1, ship_a1)"
-      ],
-      "gold": [
-        "same_team(ship_a5, ship_a5)"
-      ],
-      "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 1,
-      "candidates": [
-        "nebula_tile(nebula_north)",
-        "nebula_tile(nebula_center)",
-        "nebula_tile(nebula_south)"
-      ],
-      "gold": [
-        "nebula_tile(nebula_north)"
-      ],
-      "metadata": {
-        "ablated_element": "nebula_tile(nebula_north)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 3,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "energy_node(center_energy_node)",
-      "level": 1,
-      "candidates": [
-        "energy_node(center_energy_node)",
-        "energy_node(flank_energy_node)",
-        "energy_node(north_energy_cluster)",
-        "energy_node(south_energy_cluster)"
-      ],
-      "gold": [
-        "energy_node(center_energy_node)"
-      ],
-      "metadata": {
-        "ablated_element": "energy_node(center_energy_node)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 4,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
-      "level": 1,
-      "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_b2, ship_b2)",
-        "same_team(ship_a3, ship_a3)",
-        "same_team(ship_a1, ship_a1)",
-        "same_team(ship_b1, ship_b1)",
-        "same_team(ship_b4, ship_b4)"
-      ],
-      "gold": [
-        "same_team(ship_a5, ship_a5)"
-      ],
-      "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "energy_node(center_energy_node)",
-      "level": 1,
-      "candidates": [
-        "energy_node(center_energy_node)",
-        "energy_node(north_energy_cluster)",
-        "energy_node(south_energy_cluster)",
-        "energy_node(flank_energy_node)"
-      ],
-      "gold": [
-        "energy_node(center_energy_node)"
-      ],
-      "metadata": {
-        "ablated_element": "energy_node(center_energy_node)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 4,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "match_phase(match_phase_1)",
-      "level": 1,
-      "candidates": [
-        "match_phase(match_phase_1)",
-        "match_phase(match_phase_2)",
-        "match_phase(match_phase_4)",
-        "match_phase(match_phase_3)",
-        "match_phase(match_phase_5)"
-      ],
-      "gold": [
-        "match_phase(match_phase_1)"
-      ],
-      "metadata": {
-        "ablated_element": "match_phase(match_phase_1)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 5,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
-      "level": 1,
-      "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_b1, ship_b1)",
-        "same_team(ship_a3, ship_a3)",
-        "same_team(ship_a2, ship_a2)",
-        "same_team(ship_b4, ship_b4)",
-        "same_team(ship_a1, ship_a1)"
-      ],
-      "gold": [
-        "same_team(ship_a5, ship_a5)"
-      ],
-      "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "energy_node(center_energy_node)",
-      "level": 1,
-      "candidates": [
-        "energy_node(center_energy_node)",
-        "energy_node(north_energy_cluster)",
-        "energy_node(south_energy_cluster)",
-        "energy_node(flank_energy_node)"
-      ],
-      "gold": [
-        "energy_node(center_energy_node)"
-      ],
-      "metadata": {
-        "ablated_element": "energy_node(center_energy_node)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 4,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "match_phase(match_phase_1)",
-      "level": 1,
-      "candidates": [
-        "match_phase(match_phase_1)",
-        "match_phase(match_phase_3)",
-        "match_phase(match_phase_4)",
-        "match_phase(match_phase_5)",
-        "match_phase(match_phase_2)"
-      ],
-      "gold": [
-        "match_phase(match_phase_1)"
-      ],
-      "metadata": {
-        "ablated_element": "match_phase(match_phase_1)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 5,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
-      "level": 1,
-      "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_b1, ship_b1)",
-        "same_team(ship_a2, ship_a2)",
-        "same_team(ship_a1, ship_a1)",
-        "same_team(ship_a3, ship_a3)"
-      ],
-      "gold": [
-        "same_team(ship_a5, ship_a5)"
-      ],
-      "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 5,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "opposing_team(ship_a2, ship_b2)",
-      "level": 1,
-      "candidates": [
-        "opposing_team(ship_a2, ship_b2)",
-        "opposing_team(ship_b2, ship_a1)",
-        "opposing_team(ship_a2, ship_b1)",
-        "opposing_team(ship_b3, ship_a2)",
-        "opposing_team(ship_a2, ship_b3)",
-        "opposing_team(ship_b1, ship_a2)"
-      ],
-      "gold": [
-        "opposing_team(ship_a2, ship_b2)"
-      ],
-      "metadata": {
-        "ablated_element": "opposing_team(ship_a2, ship_b2)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "healthy_energy(ship_b1)",
-      "level": 1,
-      "candidates": [
-        "healthy_energy(ship_b1)",
-        "game_object(ship_b4)",
-        "opposing_team(ship_b1, ship_a2)",
-        "game_object(ship_b2)",
-        "map_tile(asteroid_cluster_b)",
-        "relic_node(relic_gamma)"
-      ],
-      "gold": [
-        "healthy_energy(ship_b1)"
-      ],
-      "metadata": {
-        "ablated_element": "healthy_energy(ship_b1)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
-      "level": 1,
-      "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_a3, ship_a3)",
-        "same_team(ship_b1, ship_b1)",
-        "same_team(ship_a2, ship_a2)",
-        "same_team(ship_a1, ship_a1)"
-      ],
-      "gold": [
-        "same_team(ship_a5, ship_a5)"
-      ],
-      "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 5,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "opposing_team(ship_a2, ship_b2)",
-      "level": 1,
-      "candidates": [
-        "opposing_team(ship_a2, ship_b2)",
-        "opposing_team(ship_b2, ship_a1)",
-        "opposing_team(ship_b3, ship_a2)",
-        "opposing_team(ship_b1, ship_a3)",
-        "opposing_team(ship_a2, ship_b3)",
-        "opposing_team(ship_a3, ship_b3)"
-      ],
-      "gold": [
-        "opposing_team(ship_a2, ship_b2)"
-      ],
-      "metadata": {
-        "ablated_element": "opposing_team(ship_a2, ship_b2)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "healthy_energy(ship_b1)",
-      "level": 1,
-      "candidates": [
-        "healthy_energy(ship_b1)",
+        "ship(ship_b4)",
         "ship(ship_a4)",
-        "energy_node(south_energy_cluster)",
-        "opposing_team(ship_b3, ship_a2)",
-        "match_phase(match_phase_4)",
-        "map_tile(north_energy_cluster)"
+        "ship(ship_b3)",
+        "ship(ship_a1)",
+        "ship(ship_b1)",
+        "ship(ship_b2)"
       ],
       "gold": [
-        "healthy_energy(ship_b1)"
+        "ship(ship_b4)"
       ],
       "metadata": {
-        "ablated_element": "healthy_energy(ship_b1)",
+        "ablated_element": "ship(ship_b4)",
         "ablated_type": "fact",
         "distractor_strategy": "syntactic",
         "k_distractors": 5
@@ -707,45 +160,21 @@
     },
     {
       "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
+      "target": "opposing_team(ship_b1, ship_a2)",
       "level": 1,
       "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_a2, ship_a2)",
-        "same_team(ship_a1, ship_a1)",
-        "same_team(ship_a3, ship_a3)",
-        "same_team(ship_b1, ship_b1)"
-      ],
-      "gold": [
-        "same_team(ship_a5, ship_a5)"
-      ],
-      "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
-        "ablated_type": "fact",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 5,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "opposing_team(ship_a2, ship_b2)",
-      "level": 1,
-      "candidates": [
+        "opposing_team(ship_b1, ship_a2)",
+        "opposing_team(ship_b2, ship_a1)",
+        "opposing_team(ship_b1, ship_a1)",
+        "opposing_team(ship_b3, ship_a1)",
         "opposing_team(ship_a2, ship_b2)",
-        "opposing_team(ship_b2, ship_a2)",
-        "opposing_team(ship_a2, ship_b3)",
-        "opposing_team(ship_a3, ship_b3)",
-        "opposing_team(ship_b1, ship_a3)",
         "opposing_team(ship_b3, ship_a2)"
       ],
       "gold": [
-        "opposing_team(ship_a2, ship_b2)"
+        "opposing_team(ship_b1, ship_a2)"
       ],
       "metadata": {
-        "ablated_element": "opposing_team(ship_a2, ship_b2)",
+        "ablated_element": "opposing_team(ship_b1, ship_a2)",
         "ablated_type": "fact",
         "distractor_strategy": "syntactic",
         "k_distractors": 5
@@ -756,21 +185,21 @@
     },
     {
       "id": "",
-      "target": "healthy_energy(ship_b1)",
+      "target": "contested_relic(relic_alpha)",
       "level": 1,
       "candidates": [
-        "healthy_energy(ship_b1)",
-        "game_object(ship_b4)",
-        "relic_node(relic_epsilon)",
-        "map_tile(relic_alpha)",
-        "opposing_team(ship_a2, ship_b3)",
-        "map_tile(relic_epsilon)"
+        "contested_relic(relic_alpha)",
+        "same_team(ship_b3, ship_b3)",
+        "opposing_team(ship_a3, ship_b2)",
+        "game_object(ship_a4)",
+        "game_object(ship_b3)",
+        "match_phase(match_phase_3)"
       ],
       "gold": [
-        "healthy_energy(ship_b1)"
+        "contested_relic(relic_alpha)"
       ],
       "metadata": {
-        "ablated_element": "healthy_energy(ship_b1)",
+        "ablated_element": "contested_relic(relic_alpha)",
         "ablated_type": "fact",
         "distractor_strategy": "syntactic",
         "k_distractors": 5
@@ -781,45 +210,46 @@
     },
     {
       "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
+      "target": "ship(ship_b4)",
       "level": 1,
       "candidates": [
-        "same_team(ship_a5, ship_a5)",
-        "same_team(ship_a3, ship_a3)",
-        "same_team(ship_a1, ship_a1)",
-        "same_team(ship_b1, ship_b1)",
-        "same_team(ship_a2, ship_a2)"
+        "ship(ship_b4)",
+        "ship(ship_b1)",
+        "ship(ship_a2)",
+        "ship(ship_a3)",
+        "ship(ship_a4)",
+        "ship(ship_b3)"
       ],
       "gold": [
-        "same_team(ship_a5, ship_a5)"
+        "ship(ship_b4)"
       ],
       "metadata": {
-        "ablated_element": "same_team(ship_a5, ship_a5)",
+        "ablated_element": "ship(ship_b4)",
         "ablated_type": "fact",
         "distractor_strategy": "syntactic",
         "k_distractors": 5
       },
       "theory_size": 208,
-      "num_candidates": 5,
+      "num_candidates": 6,
       "num_gold": 1
     },
     {
       "id": "",
-      "target": "opposing_team(ship_a2, ship_b2)",
+      "target": "opposing_team(ship_b1, ship_a2)",
       "level": 1,
       "candidates": [
-        "opposing_team(ship_a2, ship_b2)",
-        "opposing_team(ship_b3, ship_a2)",
+        "opposing_team(ship_b1, ship_a2)",
+        "opposing_team(ship_b1, ship_a3)",
+        "opposing_team(ship_b2, ship_a3)",
         "opposing_team(ship_b2, ship_a1)",
         "opposing_team(ship_a3, ship_b3)",
-        "opposing_team(ship_b3, ship_a1)",
-        "opposing_team(ship_b1, ship_a3)"
+        "opposing_team(ship_a1, ship_b3)"
       ],
       "gold": [
-        "opposing_team(ship_a2, ship_b2)"
+        "opposing_team(ship_b1, ship_a2)"
       ],
       "metadata": {
-        "ablated_element": "opposing_team(ship_a2, ship_b2)",
+        "ablated_element": "opposing_team(ship_b1, ship_a2)",
         "ablated_type": "fact",
         "distractor_strategy": "syntactic",
         "k_distractors": 5
@@ -830,21 +260,121 @@
     },
     {
       "id": "",
-      "target": "healthy_energy(ship_b1)",
+      "target": "contested_relic(relic_alpha)",
       "level": 1,
       "candidates": [
-        "healthy_energy(ship_b1)",
-        "relic_node(relic_delta)",
-        "map_tile(asteroid_cluster_b)",
+        "contested_relic(relic_alpha)",
+        "opposing_team(ship_a3, ship_b1)",
+        "unit(ship_a1)",
+        "same_team(ship_a2, ship_a2)",
         "match_phase(match_phase_4)",
-        "opposing_team(ship_a2, ship_b2)",
+        "energy_node(south_energy_cluster)"
+      ],
+      "gold": [
+        "contested_relic(relic_alpha)"
+      ],
+      "metadata": {
+        "ablated_element": "contested_relic(relic_alpha)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ship(ship_b4)",
+      "level": 1,
+      "candidates": [
+        "ship(ship_b4)",
+        "ship(ship_a5)",
+        "ship(ship_a2)",
+        "ship(ship_a1)",
+        "ship(ship_b1)",
+        "ship(ship_b2)"
+      ],
+      "gold": [
+        "ship(ship_b4)"
+      ],
+      "metadata": {
+        "ablated_element": "ship(ship_b4)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "opposing_team(ship_b1, ship_a2)",
+      "level": 1,
+      "candidates": [
+        "opposing_team(ship_b1, ship_a2)",
+        "opposing_team(ship_b3, ship_a3)",
+        "opposing_team(ship_b3, ship_a1)",
+        "opposing_team(ship_a1, ship_b1)",
+        "opposing_team(ship_b1, ship_a1)",
+        "opposing_team(ship_a1, ship_b3)"
+      ],
+      "gold": [
+        "opposing_team(ship_b1, ship_a2)"
+      ],
+      "metadata": {
+        "ablated_element": "opposing_team(ship_b1, ship_a2)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "contested_relic(relic_alpha)",
+      "level": 1,
+      "candidates": [
+        "contested_relic(relic_alpha)",
+        "game_object(ship_b3)",
+        "ship(ship_b3)",
+        "map_tile(flank_energy_node)",
+        "ship(ship_a4)",
+        "opposing_team(ship_b1, ship_a2)"
+      ],
+      "gold": [
+        "contested_relic(relic_alpha)"
+      ],
+      "metadata": {
+        "ablated_element": "contested_relic(relic_alpha)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ship(ship_b4)",
+      "level": 1,
+      "candidates": [
+        "ship(ship_b4)",
+        "ship(ship_b3)",
+        "ship(ship_b2)",
+        "ship(ship_a2)",
+        "ship(ship_b1)",
         "ship(ship_a4)"
       ],
       "gold": [
-        "healthy_energy(ship_b1)"
+        "ship(ship_b4)"
       ],
       "metadata": {
-        "ablated_element": "healthy_energy(ship_b1)",
+        "ablated_element": "ship(ship_b4)",
         "ablated_type": "fact",
         "distractor_strategy": "syntactic",
         "k_distractors": 5
@@ -855,23 +385,22 @@
     },
     {
       "id": "",
-      "target": "same_team(ship_a5, ship_a5)",
-      "level": 2,
+      "target": "opposing_team(ship_b1, ship_a2)",
+      "level": 1,
       "candidates": [
-        "df_same_team(ship_a5, ship_a5):  => same_team(ship_a5, ship_a5)",
-        "df_ship(ship_a1):  => ship(ship_a1)",
-        "df_laser_incoming(ship_a3):  => laser_incoming(ship_a3)",
-        "df_same_team(ship_b2, ship_b2):  => same_team(ship_b2, ship_b2)",
-        "df_opposing_team(ship_a2, ship_b2):  => opposing_team(ship_a2, ship_b2)",
-        "df_nebula_tile(nebula_center):  => nebula_tile(nebula_center)"
+        "opposing_team(ship_b1, ship_a2)",
+        "opposing_team(ship_a3, ship_b3)",
+        "opposing_team(ship_b2, ship_a3)",
+        "opposing_team(ship_b1, ship_a3)",
+        "opposing_team(ship_b3, ship_a2)",
+        "opposing_team(ship_a2, ship_b3)"
       ],
       "gold": [
-        "df_same_team(ship_a5, ship_a5):  => same_team(ship_a5, ship_a5)"
+        "opposing_team(ship_b1, ship_a2)"
       ],
       "metadata": {
-        "ablated_element": "df_same_team(ship_a5, ship_a5)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
+        "ablated_element": "opposing_team(ship_b1, ship_a2)",
+        "ablated_type": "fact",
         "distractor_strategy": "syntactic",
         "k_distractors": 5
       },
@@ -881,23 +410,22 @@
     },
     {
       "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 2,
+      "target": "contested_relic(relic_alpha)",
+      "level": 1,
       "candidates": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_unit(ship_a1):  => unit(ship_a1)",
-        "df_opposing_team(ship_b2, ship_a1):  => opposing_team(ship_b2, ship_a1)",
-        "df_ship(ship_a1):  => ship(ship_a1)",
-        "df_mid_match(match_phase_3):  => mid_match(match_phase_3)",
-        "df_full_energy(ship_b2):  => full_energy(ship_b2)"
+        "contested_relic(relic_alpha)",
+        "opposing_team(ship_b3, ship_a1)",
+        "relic_node(relic_alpha)",
+        "map_tile(relic_alpha)",
+        "same_team(ship_a1, ship_a1)",
+        "map_tile(relic_beta)"
       ],
       "gold": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)"
+        "contested_relic(relic_alpha)"
       ],
       "metadata": {
-        "ablated_element": "df_nebula_tile(nebula_north)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
+        "ablated_element": "contested_relic(relic_alpha)",
+        "ablated_type": "fact",
         "distractor_strategy": "syntactic",
         "k_distractors": 5
       },
@@ -907,21 +435,464 @@
     },
     {
       "id": "",
-      "target": "energy_node(center_energy_node)",
+      "target": "ship(ship_b4)",
+      "level": 1,
+      "candidates": [
+        "ship(ship_b4)",
+        "ship(ship_b3)",
+        "ship(ship_b1)",
+        "ship(ship_a5)",
+        "ship(ship_a2)",
+        "ship(ship_a3)"
+      ],
+      "gold": [
+        "ship(ship_b4)"
+      ],
+      "metadata": {
+        "ablated_element": "ship(ship_b4)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "contested_relic(relic_alpha)",
+      "level": 1,
+      "candidates": [
+        "contested_relic(relic_alpha)",
+        "energy_node(north_energy_cluster)",
+        "ship(ship_a3)",
+        "relic_node(relic_gamma)",
+        "ship(ship_b4)",
+        "low_energy(ship_a3)"
+      ],
+      "gold": [
+        "contested_relic(relic_alpha)"
+      ],
+      "metadata": {
+        "ablated_element": "contested_relic(relic_alpha)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "early_match(match_phase_1)",
+      "level": 1,
+      "candidates": [
+        "early_match(match_phase_1)",
+        "laser_incoming(ship_a3)",
+        "relic_node(relic_alpha)",
+        "same_team(ship_b5, ship_b5)",
+        "map_tile(flank_energy_node)",
+        "opposing_team(ship_b2, ship_a1)"
+      ],
+      "gold": [
+        "early_match(match_phase_1)"
+      ],
+      "metadata": {
+        "ablated_element": "early_match(match_phase_1)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ship(ship_b4)",
+      "level": 1,
+      "candidates": [
+        "ship(ship_b4)",
+        "ship(ship_a2)",
+        "ship(ship_b5)",
+        "ship(ship_a1)",
+        "ship(ship_b2)",
+        "ship(ship_b1)"
+      ],
+      "gold": [
+        "ship(ship_b4)"
+      ],
+      "metadata": {
+        "ablated_element": "ship(ship_b4)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "contested_relic(relic_alpha)",
+      "level": 1,
+      "candidates": [
+        "contested_relic(relic_alpha)",
+        "opposing_team(ship_b3, ship_a3)",
+        "map_tile(nebula_center)",
+        "same_team(ship_b5, ship_b5)",
+        "map_tile(relic_alpha)",
+        "ship(ship_a3)"
+      ],
+      "gold": [
+        "contested_relic(relic_alpha)"
+      ],
+      "metadata": {
+        "ablated_element": "contested_relic(relic_alpha)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "early_match(match_phase_1)",
+      "level": 1,
+      "candidates": [
+        "early_match(match_phase_1)",
+        "ship(ship_a2)",
+        "same_team(ship_b4, ship_b4)",
+        "nebula_tile(nebula_center)",
+        "relic_node(relic_beta)",
+        "unit(ship_a5)"
+      ],
+      "gold": [
+        "early_match(match_phase_1)"
+      ],
+      "metadata": {
+        "ablated_element": "early_match(match_phase_1)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ship(ship_b4)",
+      "level": 1,
+      "candidates": [
+        "ship(ship_b4)",
+        "ship(ship_b3)",
+        "ship(ship_a1)",
+        "ship(ship_a3)",
+        "ship(ship_a5)",
+        "ship(ship_b1)"
+      ],
+      "gold": [
+        "ship(ship_b4)"
+      ],
+      "metadata": {
+        "ablated_element": "ship(ship_b4)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "early_match(match_phase_1)",
+      "level": 1,
+      "candidates": [
+        "early_match(match_phase_1)",
+        "unit(ship_a2)",
+        "map_tile(nebula_center)",
+        "game_object(ship_b1)",
+        "ship(ship_b5)",
+        "opposing_team(ship_b3, ship_a3)"
+      ],
+      "gold": [
+        "early_match(match_phase_1)"
+      ],
+      "metadata": {
+        "ablated_element": "early_match(match_phase_1)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "same_team(ship_b5, ship_b5)",
+      "level": 1,
+      "candidates": [
+        "same_team(ship_b5, ship_b5)",
+        "same_team(ship_a3, ship_a3)",
+        "same_team(ship_a5, ship_a5)",
+        "same_team(ship_b3, ship_b3)",
+        "same_team(ship_b2, ship_b2)",
+        "same_team(ship_a1, ship_a1)"
+      ],
+      "gold": [
+        "same_team(ship_b5, ship_b5)"
+      ],
+      "metadata": {
+        "ablated_element": "same_team(ship_b5, ship_b5)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ship(ship_b4)",
+      "level": 1,
+      "candidates": [
+        "ship(ship_b4)",
+        "ship(ship_a1)",
+        "ship(ship_a5)",
+        "ship(ship_b1)",
+        "ship(ship_a3)",
+        "ship(ship_b2)"
+      ],
+      "gold": [
+        "ship(ship_b4)"
+      ],
+      "metadata": {
+        "ablated_element": "ship(ship_b4)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "early_match(match_phase_1)",
+      "level": 1,
+      "candidates": [
+        "early_match(match_phase_1)",
+        "full_energy(ship_b2)",
+        "nebula_tile(nebula_center)",
+        "game_object(ship_b1)",
+        "game_object(ship_a5)",
+        "map_tile(nebula_center)"
+      ],
+      "gold": [
+        "early_match(match_phase_1)"
+      ],
+      "metadata": {
+        "ablated_element": "early_match(match_phase_1)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "same_team(ship_b5, ship_b5)",
+      "level": 1,
+      "candidates": [
+        "same_team(ship_b5, ship_b5)",
+        "same_team(ship_a1, ship_a1)",
+        "same_team(ship_b2, ship_b2)",
+        "same_team(ship_a5, ship_a5)"
+      ],
+      "gold": [
+        "same_team(ship_b5, ship_b5)"
+      ],
+      "metadata": {
+        "ablated_element": "same_team(ship_b5, ship_b5)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ship(ship_b4)",
+      "level": 1,
+      "candidates": [
+        "ship(ship_b4)",
+        "ship(ship_b2)",
+        "ship(ship_a2)",
+        "ship(ship_a5)",
+        "ship(ship_a3)",
+        "ship(ship_b1)"
+      ],
+      "gold": [
+        "ship(ship_b4)"
+      ],
+      "metadata": {
+        "ablated_element": "ship(ship_b4)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "early_match(match_phase_1)",
+      "level": 1,
+      "candidates": [
+        "early_match(match_phase_1)",
+        "match_phase(match_phase_4)",
+        "same_team(ship_b2, ship_b2)",
+        "ship(ship_a5)",
+        "map_tile(relic_delta)",
+        "ship(ship_b1)"
+      ],
+      "gold": [
+        "early_match(match_phase_1)"
+      ],
+      "metadata": {
+        "ablated_element": "early_match(match_phase_1)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "same_team(ship_b5, ship_b5)",
+      "level": 1,
+      "candidates": [
+        "same_team(ship_b5, ship_b5)",
+        "same_team(ship_a1, ship_a1)",
+        "same_team(ship_b2, ship_b2)",
+        "same_team(ship_a5, ship_a5)"
+      ],
+      "gold": [
+        "same_team(ship_b5, ship_b5)"
+      ],
+      "metadata": {
+        "ablated_element": "same_team(ship_b5, ship_b5)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 4,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ship(ship_b4)",
+      "level": 1,
+      "candidates": [
+        "ship(ship_b4)",
+        "ship(ship_b1)",
+        "ship(ship_a3)",
+        "ship(ship_a5)",
+        "ship(ship_b3)",
+        "ship(ship_a1)"
+      ],
+      "gold": [
+        "ship(ship_b4)"
+      ],
+      "metadata": {
+        "ablated_element": "ship(ship_b4)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "early_match(match_phase_1)",
+      "level": 1,
+      "candidates": [
+        "early_match(match_phase_1)",
+        "healthy_energy(ship_b1)",
+        "unit(ship_b3)",
+        "match_phase(match_phase_2)",
+        "unit(ship_b4)",
+        "final_match(match_phase_5)"
+      ],
+      "gold": [
+        "early_match(match_phase_1)"
+      ],
+      "metadata": {
+        "ablated_element": "early_match(match_phase_1)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "same_team(ship_b5, ship_b5)",
+      "level": 1,
+      "candidates": [
+        "same_team(ship_b5, ship_b5)",
+        "same_team(ship_a5, ship_a5)",
+        "same_team(ship_a1, ship_a1)"
+      ],
+      "gold": [
+        "same_team(ship_b5, ship_b5)"
+      ],
+      "metadata": {
+        "ablated_element": "same_team(ship_b5, ship_b5)",
+        "ablated_type": "fact",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 3,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "ship(ship_b4)",
       "level": 2,
       "candidates": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)",
+        "df_ship(ship_b4):  => ship(ship_b4)",
+        "df_map_tile(nebula_south):  => map_tile(nebula_south)",
         "df_asteroid_tile(asteroid_cluster_a):  => asteroid_tile(asteroid_cluster_a)",
-        "df_ship(ship_b5):  => ship(ship_b5)",
-        "df_map_tile(nebula_north):  => map_tile(nebula_north)",
-        "df_healthy_energy(ship_a1):  => healthy_energy(ship_a1)",
+        "df_opposing_team(ship_a1, ship_b3):  => opposing_team(ship_a1, ship_b3)",
+        "df_mid_match(match_phase_3):  => mid_match(match_phase_3)",
         "df_match_phase(match_phase_3):  => match_phase(match_phase_3)"
       ],
       "gold": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)"
+        "df_ship(ship_b4):  => ship(ship_b4)"
       ],
       "metadata": {
-        "ablated_element": "df_energy_node(center_energy_node)",
+        "ablated_element": "df_ship(ship_b4)",
         "ablated_type": "rule",
         "ablated_rule_type": "defeasible",
         "distractor_strategy": "syntactic",
@@ -933,333 +904,47 @@
     },
     {
       "id": "",
-      "target": "nebula_tile(nebula_north)",
+      "target": "opposing_team(ship_b1, ship_a2)",
       "level": 2,
       "candidates": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_unit(ship_b5):  => unit(ship_b5)",
-        "df_same_team(ship_b5, ship_b5):  => same_team(ship_b5, ship_b5)",
-        "df_unit(ship_a4):  => unit(ship_a4)",
-        "df_full_energy(ship_b2):  => full_energy(ship_b2)",
-        "df_unit(ship_a3):  => unit(ship_a3)"
-      ],
-      "gold": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)"
-      ],
-      "metadata": {
-        "ablated_element": "df_nebula_tile(nebula_north)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "ship(ship_a1)",
-      "level": 2,
-      "candidates": [
-        "df_ship(ship_a1):  => ship(ship_a1)",
-        "df_opposing_team(ship_a1, ship_b1):  => opposing_team(ship_a1, ship_b1)",
-        "df_map_tile(nebula_south):  => map_tile(nebula_south)",
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_full_energy(ship_b2):  => full_energy(ship_b2)",
-        "df_unit(ship_a3):  => unit(ship_a3)"
-      ],
-      "gold": [
-        "df_ship(ship_a1):  => ship(ship_a1)"
-      ],
-      "metadata": {
-        "ablated_element": "df_ship(ship_a1)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "same_team(ship_a4, ship_a4)",
-      "level": 2,
-      "candidates": [
-        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)",
-        "df_ship(ship_a1):  => ship(ship_a1)",
-        "df_unit(ship_b5):  => unit(ship_b5)",
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_asteroid_tile(asteroid_cluster_b):  => asteroid_tile(asteroid_cluster_b)",
-        "df_same_team(ship_b5, ship_b5):  => same_team(ship_b5, ship_b5)"
-      ],
-      "gold": [
-        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)"
-      ],
-      "metadata": {
-        "ablated_element": "df_same_team(ship_a4, ship_a4)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 2,
-      "candidates": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_unit(ship_b5):  => unit(ship_b5)",
-        "df_opposing_team(ship_a1, ship_b1):  => opposing_team(ship_a1, ship_b1)",
-        "df_asteroid_tile(asteroid_cluster_a):  => asteroid_tile(asteroid_cluster_a)",
-        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)",
-        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)"
-      ],
-      "gold": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)"
-      ],
-      "metadata": {
-        "ablated_element": "df_nebula_tile(nebula_north)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "ship(ship_a1)",
-      "level": 2,
-      "candidates": [
-        "df_ship(ship_a1):  => ship(ship_a1)",
-        "df_same_team(ship_b2, ship_b2):  => same_team(ship_b2, ship_b2)",
-        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)",
-        "df_opposing_team(ship_a3, ship_b2):  => opposing_team(ship_a3, ship_b2)",
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_unit(ship_a3):  => unit(ship_a3)"
-      ],
-      "gold": [
-        "df_ship(ship_a1):  => ship(ship_a1)"
-      ],
-      "metadata": {
-        "ablated_element": "df_ship(ship_a1)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "same_team(ship_a4, ship_a4)",
-      "level": 2,
-      "candidates": [
-        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)",
-        "df_same_team(ship_b5, ship_b5):  => same_team(ship_b5, ship_b5)",
-        "df_same_team(ship_b2, ship_b2):  => same_team(ship_b2, ship_b2)",
-        "df_full_energy(ship_b2):  => full_energy(ship_b2)",
-        "df_ship(ship_a1):  => ship(ship_a1)",
-        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)"
-      ],
-      "gold": [
-        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)"
-      ],
-      "metadata": {
-        "ablated_element": "df_same_team(ship_a4, ship_a4)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 2,
-      "candidates": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_unit(ship_a3):  => unit(ship_a3)",
-        "df_ship(ship_b5):  => ship(ship_b5)",
-        "df_same_team(ship_b3, ship_b3):  => same_team(ship_b3, ship_b3)",
-        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)",
-        "df_map_tile(nebula_center):  => map_tile(nebula_center)"
-      ],
-      "gold": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)"
-      ],
-      "metadata": {
-        "ablated_element": "df_nebula_tile(nebula_north)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "energy_node(center_energy_node)",
-      "level": 2,
-      "candidates": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)",
-        "df_unit(ship_a1):  => unit(ship_a1)",
-        "df_map_tile(south_energy_cluster):  => map_tile(south_energy_cluster)",
-        "df_game_object(ship_a4):  => game_object(ship_a4)",
-        "df_map_tile(flank_energy_node):  => map_tile(flank_energy_node)",
-        "df_same_team(ship_b5, ship_b5):  => same_team(ship_b5, ship_b5)"
-      ],
-      "gold": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)"
-      ],
-      "metadata": {
-        "ablated_element": "df_energy_node(center_energy_node)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "match_phase(match_phase_1)",
-      "level": 2,
-      "candidates": [
-        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)",
-        "df_opposing_team(ship_a1, ship_b2):  => opposing_team(ship_a1, ship_b2)",
-        "df_same_team(ship_b4, ship_b4):  => same_team(ship_b4, ship_b4)",
-        "df_ship(ship_b5):  => ship(ship_b5)",
-        "df_healthy_energy(ship_a1):  => healthy_energy(ship_a1)",
-        "df_map_tile(flank_energy_node):  => map_tile(flank_energy_node)"
-      ],
-      "gold": [
-        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)"
-      ],
-      "metadata": {
-        "ablated_element": "df_match_phase(match_phase_1)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 2,
-      "candidates": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_full_energy(ship_b2):  => full_energy(ship_b2)",
-        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)",
-        "df_same_team(ship_b5, ship_b5):  => same_team(ship_b5, ship_b5)",
-        "df_mid_match(match_phase_2):  => mid_match(match_phase_2)",
-        "df_game_object(ship_b1):  => game_object(ship_b1)"
-      ],
-      "gold": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)"
-      ],
-      "metadata": {
-        "ablated_element": "df_nebula_tile(nebula_north)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "energy_node(center_energy_node)",
-      "level": 2,
-      "candidates": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)",
-        "df_unit(ship_a3):  => unit(ship_a3)",
-        "df_opposing_team(ship_a1, ship_b1):  => opposing_team(ship_a1, ship_b1)",
         "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
+        "df_ship(ship_a3):  => ship(ship_a3)",
+        "df_final_match(match_phase_5):  => final_match(match_phase_5)",
+        "df_ship(ship_b4):  => ship(ship_b4)",
+        "df_match_phase(match_phase_3):  => match_phase(match_phase_3)",
+        "df_healthy_energy(ship_b1):  => healthy_energy(ship_b1)"
+      ],
+      "gold": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)"
+      ],
+      "metadata": {
+        "ablated_element": "df_opposing_team(ship_b1, ship_a2)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "contested_relic(relic_alpha)",
+      "level": 2,
+      "candidates": [
         "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)",
-        "df_match_phase(match_phase_2):  => match_phase(match_phase_2)"
-      ],
-      "gold": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)"
-      ],
-      "metadata": {
-        "ablated_element": "df_energy_node(center_energy_node)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "match_phase(match_phase_1)",
-      "level": 2,
-      "candidates": [
-        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)",
-        "df_opposing_team(ship_b3, ship_a3):  => opposing_team(ship_b3, ship_a3)",
-        "df_healthy_energy(ship_a1):  => healthy_energy(ship_a1)",
-        "df_ship(ship_a1):  => ship(ship_a1)",
-        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
-        "df_unit(ship_a4):  => unit(ship_a4)"
-      ],
-      "gold": [
-        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)"
-      ],
-      "metadata": {
-        "ablated_element": "df_match_phase(match_phase_1)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 2,
-      "candidates": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
-        "df_same_team(ship_b5, ship_b5):  => same_team(ship_b5, ship_b5)",
-        "df_ship(ship_a1):  => ship(ship_a1)",
-        "df_healthy_energy(ship_a1):  => healthy_energy(ship_a1)",
+        "df_nebula_tile(nebula_center):  => nebula_tile(nebula_center)",
+        "df_relic_node(relic_epsilon):  => relic_node(relic_epsilon)",
+        "df_same_team(ship_a5, ship_a5):  => same_team(ship_a5, ship_a5)",
+        "df_ship(ship_a4):  => ship(ship_a4)",
         "df_asteroid_tile(asteroid_cluster_a):  => asteroid_tile(asteroid_cluster_a)"
       ],
       "gold": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)"
+        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)"
       ],
       "metadata": {
-        "ablated_element": "df_nebula_tile(nebula_north)",
+        "ablated_element": "df_contested_relic(relic_alpha)",
         "ablated_type": "rule",
         "ablated_rule_type": "defeasible",
         "distractor_strategy": "syntactic",
@@ -1271,21 +956,21 @@
     },
     {
       "id": "",
-      "target": "energy_node(center_energy_node)",
+      "target": "opposing_team(ship_b1, ship_a2)",
       "level": 2,
       "candidates": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)",
         "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
-        "df_opposing_team(ship_a1, ship_b1):  => opposing_team(ship_a1, ship_b1)",
-        "df_unit(ship_b5):  => unit(ship_b5)",
-        "df_match_phase(match_phase_2):  => match_phase(match_phase_2)",
-        "df_map_tile(nebula_north):  => map_tile(nebula_north)"
+        "df_unit(ship_b1):  => unit(ship_b1)",
+        "df_game_object(ship_b2):  => game_object(ship_b2)",
+        "df_energy_node(flank_energy_node):  => energy_node(flank_energy_node)",
+        "df_adjacent_enemy(ship_a2):  => adjacent_enemy(ship_a2)",
+        "df_healthy_energy(ship_a1):  => healthy_energy(ship_a1)"
       ],
       "gold": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)"
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)"
       ],
       "metadata": {
-        "ablated_element": "df_energy_node(center_energy_node)",
+        "ablated_element": "df_opposing_team(ship_b1, ship_a2)",
         "ablated_type": "rule",
         "ablated_rule_type": "defeasible",
         "distractor_strategy": "syntactic",
@@ -1297,73 +982,229 @@
     },
     {
       "id": "",
-      "target": "match_phase(match_phase_1)",
+      "target": "adjacent_enemy(ship_a2)",
       "level": 2,
       "candidates": [
-        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)",
-        "df_ship(ship_b2):  => ship(ship_b2)",
-        "df_map_tile(south_energy_cluster):  => map_tile(south_energy_cluster)",
-        "df_unit(ship_a1):  => unit(ship_a1)",
-        "df_map_tile(nebula_south):  => map_tile(nebula_south)",
-        "df_relic_node(relic_alpha):  => relic_node(relic_alpha)"
-      ],
-      "gold": [
-        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)"
-      ],
-      "metadata": {
-        "ablated_element": "df_match_phase(match_phase_1)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "nebula_tile(nebula_north)",
-      "level": 2,
-      "candidates": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)",
-        "df_map_tile(center_energy_node):  => map_tile(center_energy_node)",
-        "df_opposing_team(ship_a3, ship_b2):  => opposing_team(ship_a3, ship_b2)",
-        "df_game_object(ship_b1):  => game_object(ship_b1)",
-        "df_game_object(ship_a3):  => game_object(ship_a3)",
-        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)"
-      ],
-      "gold": [
-        "df_nebula_tile(nebula_north):  => nebula_tile(nebula_north)"
-      ],
-      "metadata": {
-        "ablated_element": "df_nebula_tile(nebula_north)",
-        "ablated_type": "rule",
-        "ablated_rule_type": "defeasible",
-        "distractor_strategy": "syntactic",
-        "k_distractors": 5
-      },
-      "theory_size": 208,
-      "num_candidates": 6,
-      "num_gold": 1
-    },
-    {
-      "id": "",
-      "target": "energy_node(center_energy_node)",
-      "level": 2,
-      "candidates": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)",
-        "df_map_tile(center_energy_node):  => map_tile(center_energy_node)",
-        "df_relic_node(relic_alpha):  => relic_node(relic_alpha)",
+        "df_adjacent_enemy(ship_a2):  => adjacent_enemy(ship_a2)",
+        "df_healthy_energy(ship_a1):  => healthy_energy(ship_a1)",
+        "df_nebula_tile(nebula_south):  => nebula_tile(nebula_south)",
         "df_opposing_team(ship_b2, ship_a2):  => opposing_team(ship_b2, ship_a2)",
-        "df_opposing_team(ship_a2, ship_b3):  => opposing_team(ship_a2, ship_b3)",
+        "df_ship(ship_a4):  => ship(ship_a4)",
+        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)"
+      ],
+      "gold": [
+        "df_adjacent_enemy(ship_a2):  => adjacent_enemy(ship_a2)"
+      ],
+      "metadata": {
+        "ablated_element": "df_adjacent_enemy(ship_a2)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "asteroid_tile(asteroid_cluster_b)",
+      "level": 2,
+      "candidates": [
+        "df_asteroid_tile(asteroid_cluster_b):  => asteroid_tile(asteroid_cluster_b)",
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
+        "df_opposing_team(ship_b2, ship_a2):  => opposing_team(ship_b2, ship_a2)",
+        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)",
+        "df_adjacent_enemy(ship_a2):  => adjacent_enemy(ship_a2)",
+        "df_map_tile(nebula_south):  => map_tile(nebula_south)"
+      ],
+      "gold": [
+        "df_asteroid_tile(asteroid_cluster_b):  => asteroid_tile(asteroid_cluster_b)"
+      ],
+      "metadata": {
+        "ablated_element": "df_asteroid_tile(asteroid_cluster_b)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "opposing_team(ship_b1, ship_a2)",
+      "level": 2,
+      "candidates": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
+        "df_game_object(ship_a3):  => game_object(ship_a3)",
+        "df_game_object(ship_b3):  => game_object(ship_b3)",
+        "df_map_tile(center_energy_node):  => map_tile(center_energy_node)",
+        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)",
+        "df_same_team(ship_a2, ship_a2):  => same_team(ship_a2, ship_a2)"
+      ],
+      "gold": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)"
+      ],
+      "metadata": {
+        "ablated_element": "df_opposing_team(ship_b1, ship_a2)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "adjacent_enemy(ship_a2)",
+      "level": 2,
+      "candidates": [
+        "df_adjacent_enemy(ship_a2):  => adjacent_enemy(ship_a2)",
+        "df_game_object(ship_b2):  => game_object(ship_b2)",
+        "df_game_object(ship_a3):  => game_object(ship_a3)",
+        "df_opposing_team(ship_a1, ship_b1):  => opposing_team(ship_a1, ship_b1)",
+        "df_opposing_team(ship_a2, ship_b1):  => opposing_team(ship_a2, ship_b1)",
+        "df_map_tile(asteroid_cluster_a):  => map_tile(asteroid_cluster_a)"
+      ],
+      "gold": [
+        "df_adjacent_enemy(ship_a2):  => adjacent_enemy(ship_a2)"
+      ],
+      "metadata": {
+        "ablated_element": "df_adjacent_enemy(ship_a2)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "asteroid_tile(asteroid_cluster_b)",
+      "level": 2,
+      "candidates": [
+        "df_asteroid_tile(asteroid_cluster_b):  => asteroid_tile(asteroid_cluster_b)",
+        "df_game_object(ship_a3):  => game_object(ship_a3)",
+        "df_ship(ship_a4):  => ship(ship_a4)",
+        "df_unit(ship_b1):  => unit(ship_b1)",
+        "df_opposing_team(ship_b2, ship_a2):  => opposing_team(ship_b2, ship_a2)",
+        "df_game_object(ship_b3):  => game_object(ship_b3)"
+      ],
+      "gold": [
+        "df_asteroid_tile(asteroid_cluster_b):  => asteroid_tile(asteroid_cluster_b)"
+      ],
+      "metadata": {
+        "ablated_element": "df_asteroid_tile(asteroid_cluster_b)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "opposing_team(ship_b1, ship_a2)",
+      "level": 2,
+      "candidates": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
+        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)",
+        "df_opposing_team(ship_a1, ship_b1):  => opposing_team(ship_a1, ship_b1)",
+        "df_ship(ship_a4):  => ship(ship_a4)",
+        "df_same_team(ship_b4, ship_b4):  => same_team(ship_b4, ship_b4)",
+        "df_relic_node(relic_delta):  => relic_node(relic_delta)"
+      ],
+      "gold": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)"
+      ],
+      "metadata": {
+        "ablated_element": "df_opposing_team(ship_b1, ship_a2)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "contested_relic(relic_alpha)",
+      "level": 2,
+      "candidates": [
+        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)",
+        "df_adjacent_enemy(ship_a2):  => adjacent_enemy(ship_a2)",
+        "df_game_object(ship_b2):  => game_object(ship_b2)",
+        "df_relic_node(relic_delta):  => relic_node(relic_delta)",
+        "df_late_match(match_phase_4):  => late_match(match_phase_4)",
+        "df_same_team(ship_b1, ship_b1):  => same_team(ship_b1, ship_b1)"
+      ],
+      "gold": [
+        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)"
+      ],
+      "metadata": {
+        "ablated_element": "df_contested_relic(relic_alpha)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "laser_incoming(ship_a3)",
+      "level": 2,
+      "candidates": [
+        "df_laser_incoming(ship_a3):  => laser_incoming(ship_a3)",
+        "df_game_object(ship_b5):  => game_object(ship_b5)",
+        "df_unit(ship_a3):  => unit(ship_a3)",
+        "df_mid_match(match_phase_2):  => mid_match(match_phase_2)",
+        "df_opposing_team(ship_b1, ship_a3):  => opposing_team(ship_b1, ship_a3)",
+        "df_relic_node(relic_delta):  => relic_node(relic_delta)"
+      ],
+      "gold": [
+        "df_laser_incoming(ship_a3):  => laser_incoming(ship_a3)"
+      ],
+      "metadata": {
+        "ablated_element": "df_laser_incoming(ship_a3)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "opposing_team(ship_b1, ship_a2)",
+      "level": 2,
+      "candidates": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
+        "df_opposing_team(ship_b2, ship_a2):  => opposing_team(ship_b2, ship_a2)",
+        "df_opposing_team(ship_a1, ship_b1):  => opposing_team(ship_a1, ship_b1)",
+        "df_laser_incoming(ship_a3):  => laser_incoming(ship_a3)",
+        "df_map_tile(relic_epsilon):  => map_tile(relic_epsilon)",
         "df_mid_match(match_phase_2):  => mid_match(match_phase_2)"
       ],
       "gold": [
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)"
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)"
       ],
       "metadata": {
-        "ablated_element": "df_energy_node(center_energy_node)",
+        "ablated_element": "df_opposing_team(ship_b1, ship_a2)",
         "ablated_type": "rule",
         "ablated_rule_type": "defeasible",
         "distractor_strategy": "syntactic",
@@ -1375,21 +1216,203 @@
     },
     {
       "id": "",
-      "target": "match_phase(match_phase_1)",
+      "target": "contested_relic(relic_alpha)",
       "level": 2,
       "candidates": [
-        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)",
-        "df_energy_node(center_energy_node):  => energy_node(center_energy_node)",
-        "df_full_energy(ship_b2):  => full_energy(ship_b2)",
-        "df_opposing_team(ship_b2, ship_a3):  => opposing_team(ship_b2, ship_a3)",
+        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)",
         "df_opposing_team(ship_a1, ship_b1):  => opposing_team(ship_a1, ship_b1)",
-        "df_unit(ship_b3):  => unit(ship_b3)"
+        "df_unit(ship_a5):  => unit(ship_a5)",
+        "df_mid_match(match_phase_2):  => mid_match(match_phase_2)",
+        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)",
+        "df_game_object(ship_b5):  => game_object(ship_b5)"
       ],
       "gold": [
-        "df_match_phase(match_phase_1):  => match_phase(match_phase_1)"
+        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)"
       ],
       "metadata": {
-        "ablated_element": "df_match_phase(match_phase_1)",
+        "ablated_element": "df_contested_relic(relic_alpha)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "laser_incoming(ship_a3)",
+      "level": 2,
+      "candidates": [
+        "df_laser_incoming(ship_a3):  => laser_incoming(ship_a3)",
+        "df_healthy_energy(ship_a1):  => healthy_energy(ship_a1)",
+        "df_same_team(ship_b3, ship_b3):  => same_team(ship_b3, ship_b3)",
+        "df_unit(ship_a3):  => unit(ship_a3)",
+        "df_asteroid_tile(asteroid_cluster_b):  => asteroid_tile(asteroid_cluster_b)",
+        "df_same_team(ship_b4, ship_b4):  => same_team(ship_b4, ship_b4)"
+      ],
+      "gold": [
+        "df_laser_incoming(ship_a3):  => laser_incoming(ship_a3)"
+      ],
+      "metadata": {
+        "ablated_element": "df_laser_incoming(ship_a3)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "opposing_team(ship_b1, ship_a2)",
+      "level": 2,
+      "candidates": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
+        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)",
+        "df_unit(ship_a1):  => unit(ship_a1)",
+        "df_adjacent_enemy(ship_a2):  => adjacent_enemy(ship_a2)",
+        "df_map_tile(relic_beta):  => map_tile(relic_beta)",
+        "df_laser_incoming(ship_a3):  => laser_incoming(ship_a3)"
+      ],
+      "gold": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)"
+      ],
+      "metadata": {
+        "ablated_element": "df_opposing_team(ship_b1, ship_a2)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "contested_relic(relic_alpha)",
+      "level": 2,
+      "candidates": [
+        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)",
+        "df_mid_match(match_phase_3):  => mid_match(match_phase_3)",
+        "df_game_object(ship_b4):  => game_object(ship_b4)",
+        "df_opposing_team(ship_a1, ship_b1):  => opposing_team(ship_a1, ship_b1)",
+        "df_opposing_team(ship_b2, ship_a2):  => opposing_team(ship_b2, ship_a2)",
+        "df_ship(ship_b5):  => ship(ship_b5)"
+      ],
+      "gold": [
+        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)"
+      ],
+      "metadata": {
+        "ablated_element": "df_contested_relic(relic_alpha)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "opposing_team(ship_a3, ship_b2)",
+      "level": 2,
+      "candidates": [
+        "df_opposing_team(ship_a3, ship_b2):  => opposing_team(ship_a3, ship_b2)",
+        "df_same_team(ship_a4, ship_a4):  => same_team(ship_a4, ship_a4)",
+        "df_asteroid_tile(asteroid_cluster_a):  => asteroid_tile(asteroid_cluster_a)",
+        "df_match_phase(match_phase_5):  => match_phase(match_phase_5)",
+        "df_unit(ship_b5):  => unit(ship_b5)",
+        "df_same_team(ship_b1, ship_b1):  => same_team(ship_b1, ship_b1)"
+      ],
+      "gold": [
+        "df_opposing_team(ship_a3, ship_b2):  => opposing_team(ship_a3, ship_b2)"
+      ],
+      "metadata": {
+        "ablated_element": "df_opposing_team(ship_a3, ship_b2)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "opposing_team(ship_b1, ship_a2)",
+      "level": 2,
+      "candidates": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)",
+        "df_mid_match(match_phase_3):  => mid_match(match_phase_3)",
+        "df_map_tile(nebula_center):  => map_tile(nebula_center)",
+        "df_map_tile(north_energy_cluster):  => map_tile(north_energy_cluster)",
+        "df_opposing_team(ship_b3, ship_a1):  => opposing_team(ship_b3, ship_a1)",
+        "df_same_team(ship_a2, ship_a2):  => same_team(ship_a2, ship_a2)"
+      ],
+      "gold": [
+        "df_opposing_team(ship_b1, ship_a2):  => opposing_team(ship_b1, ship_a2)"
+      ],
+      "metadata": {
+        "ablated_element": "df_opposing_team(ship_b1, ship_a2)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "contested_relic(relic_alpha)",
+      "level": 2,
+      "candidates": [
+        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)",
+        "df_ship(ship_b5):  => ship(ship_b5)",
+        "df_energy_node(flank_energy_node):  => energy_node(flank_energy_node)",
+        "df_unit(ship_a4):  => unit(ship_a4)",
+        "df_match_phase(match_phase_5):  => match_phase(match_phase_5)",
+        "df_map_tile(nebula_center):  => map_tile(nebula_center)"
+      ],
+      "gold": [
+        "df_contested_relic(relic_alpha):  => contested_relic(relic_alpha)"
+      ],
+      "metadata": {
+        "ablated_element": "df_contested_relic(relic_alpha)",
+        "ablated_type": "rule",
+        "ablated_rule_type": "defeasible",
+        "distractor_strategy": "syntactic",
+        "k_distractors": 5
+      },
+      "theory_size": 208,
+      "num_candidates": 6,
+      "num_gold": 1
+    },
+    {
+      "id": "",
+      "target": "opposing_team(ship_a3, ship_b2)",
+      "level": 2,
+      "candidates": [
+        "df_opposing_team(ship_a3, ship_b2):  => opposing_team(ship_a3, ship_b2)",
+        "df_map_tile(center_energy_node):  => map_tile(center_energy_node)",
+        "df_approaching_enemy(ship_a1):  => approaching_enemy(ship_a1)",
+        "df_adjacent_enemy(ship_a2):  => adjacent_enemy(ship_a2)",
+        "df_mid_match(match_phase_2):  => mid_match(match_phase_2)",
+        "df_game_object(ship_b2):  => game_object(ship_b2)"
+      ],
+      "gold": [
+        "df_opposing_team(ship_a3, ship_b2):  => opposing_team(ship_a3, ship_b2)"
+      ],
+      "metadata": {
+        "ablated_element": "df_opposing_team(ship_a3, ship_b2)",
         "ablated_type": "rule",
         "ablated_rule_type": "defeasible",
         "distractor_strategy": "syntactic",
