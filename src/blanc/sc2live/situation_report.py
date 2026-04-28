@@ -68,44 +68,73 @@ def _group_facts(facts: set[str]) -> dict:
     army_flags: list[str]  = []
     missions: list[tuple]  = []
 
+    # Pass 1: collect target atoms (= enemy units the lifter has marked as
+    # legitimate or protected targets) so we can correctly route every other
+    # fact about them.
     target_atoms: set[str] = set()
+    target_kind: dict[str, str] = {}
+    for fact in facts:
+        pred, args = _parse_fact(fact)
+        if pred in _TARGET_PREDS and args:
+            target_atoms.add(args[0])
+            target_kind[args[0]] = (
+                "military" if pred == "military_target" else "worker"
+            )
+
+    # Pass 2: collect unit type facts so allied_units and enemy_units have
+    # their full membership before we attach zones, statuses, etc.
+    for fact in facts:
+        pred, args = _parse_fact(fact)
+        if pred in _UNIT_TYPE_PREDS and args:
+            unit = args[0]
+            registry = enemy_units if unit in target_atoms else allied_units
+            if unit not in registry:
+                base = {"type": pred, "zone": None, "status": []}
+                if registry is enemy_units:
+                    base["kind"] = target_kind.get(unit, "unknown")
+                registry[unit] = base
+            else:
+                registry[unit]["type"] = pred
+
+    # Ensure every target atom is at least registered as enemy
+    for atom in target_atoms:
+        if atom not in allied_units and atom not in enemy_units:
+            enemy_units[atom] = {"zone": None, "status": [],
+                                 "kind": target_kind.get(atom, "unknown")}
+
+    # Pass 3: attach zones, statuses, missions, and army-wide flags to the
+    # already-classified registries.
+    def _registry_for(unit: str) -> dict | None:
+        if unit in allied_units:
+            return allied_units
+        if unit in enemy_units:
+            return enemy_units
+        return None
 
     for fact in facts:
         pred, args = _parse_fact(fact)
 
-        if pred in _TARGET_PREDS and args:
-            target_atoms.add(args[0])
+        if pred in _TARGET_PREDS or pred in _UNIT_TYPE_PREDS:
+            continue
 
-        elif pred in _UNIT_TYPE_PREDS and args:
-            unit = args[0]
-            if unit not in allied_units:
-                allied_units[unit] = {"type": pred, "zone": None, "status": []}
-            else:
-                allied_units[unit]["type"] = pred  # more specific wins
-
-        elif pred == _ZONE_PRED and len(args) == 2:
+        if pred == _ZONE_PRED and len(args) == 2:
             unit, zone = args
-            if unit in allied_units:
-                allied_units[unit]["zone"] = zone
-            else:
-                enemy_units.setdefault(unit, {"zone": None, "status": []})
-                enemy_units[unit]["zone"] = zone
+            reg = _registry_for(unit)
+            if reg is not None:
+                reg[unit]["zone"] = zone
 
         elif pred == _FIRE_PRED and args:
-            unit = args[0]
-            for registry in (allied_units, enemy_units):
-                if unit in registry:
-                    registry[unit]["status"].append("UNDER FIRE")
+            reg = _registry_for(args[0])
+            if reg is not None:
+                reg[args[0]]["status"].append("UNDER FIRE")
 
         elif pred == _DISADV_PRED and args:
-            unit = args[0]
-            if unit in allied_units:
-                allied_units[unit]["status"].append("OUTNUMBERED")
+            if args[0] in allied_units:
+                allied_units[args[0]]["status"].append("OUTNUMBERED")
 
         elif pred == _HVT_PRED and args:
-            unit = args[0]
-            if unit in allied_units:
-                allied_units[unit]["status"].append("HVT IN RANGE")
+            if args[0] in allied_units:
+                allied_units[args[0]]["status"].append("HVT IN RANGE")
 
         elif pred == _MISSION_PRED and len(args) == 2:
             missions.append((args[0], args[1]))
@@ -115,11 +144,6 @@ def _group_facts(facts: set[str]) -> dict:
 
         elif pred == _ESCAPE_PRED:
             army_flags.append("HIGH-VALUE TARGET ATTEMPTING ESCAPE")
-
-    # Mark target atoms that did not appear in unit-type facts as enemy units
-    for atom in target_atoms:
-        if atom not in allied_units:
-            enemy_units.setdefault(atom, {"zone": None, "status": []})
 
     return {
         "allied_units": allied_units,
@@ -241,7 +265,13 @@ def build_situation_report(
         for unit, info in list(enemy.items())[:10]:
             zone   = info["zone"] or "unknown zone"
             status = " [" + ", ".join(info["status"]) + "]" if info["status"] else ""
-            lines.append(f"  {unit}  zone={zone}{status}")
+            kind   = info.get("kind", "unknown")
+            kind_tag = (
+                " (MILITARY TARGET)" if kind == "military"
+                else " (WORKER / NON COMBATANT)" if kind == "worker"
+                else ""
+            )
+            lines.append(f"  {unit}  zone={zone}{kind_tag}{status}")
         lines.append("")
 
     # ── Active ROE rules ─────────────────────────────────────────────────────
