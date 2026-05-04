@@ -1,8 +1,9 @@
 # DeFAb: Defeasible Abduction Benchmark
 
-A dataset and generation pipeline for evaluating foundation models on grounded abductive reasoning, belief revision, and creative hypothesis generation.
+A dataset and generation pipeline for evaluating foundation models on grounded
+abductive reasoning, belief revision, and creative hypothesis generation.
 
-**Author**: Anonymous Authors, Anonymous Affiliation
+**Author**: Anonymous (NeurIPS 2026 E&D submission; revealed in camera-ready)
 
 **Target venue**: NeurIPS 2026 Evaluations & Datasets Track
 
@@ -10,31 +11,92 @@ A dataset and generation pipeline for evaluating foundation models on grounded a
 
 ## Overview
 
-Foundation models excel at forward inference but struggle with abduction and belief revision: proposing hypotheses that explain observations and retracting defaults when exceptions arise. DeFAb converts legacy knowledge bases into defeasible theories and generates evaluation instances with polynomial-time verifiable gold-standard hypotheses at three difficulty levels:
+Foundation models excel at forward inference but struggle with abduction and
+belief revision: proposing hypotheses that explain observations and retracting
+defaults when exceptions arise. DeFAb converts legacy knowledge bases into
+defeasible theories and generates evaluation instances with polynomial-time
+verifiable gold-standard hypotheses at three difficulty levels:
 
 - **Level 1 (Fact completion)**: Identify a missing observation.
 - **Level 2 (Rule abduction)**: Reconstruct a missing generalization.
-- **Level 3 (Defeater abduction)**: Construct a conservative exception rule that overrides an incorrect default while preserving unrelated expectations.
+- **Level 3 (Defeater abduction)**: Construct a conservative exception rule
+  that overrides an incorrect default while preserving unrelated expectations.
 
 ### Scale
 
-- **33.7 million materialized rules** from 15 knowledge sources
-- **356,000+ evaluation instances** across Tiers 0--2
-- **4 frontier models evaluated**: GPT-5.2-chat, Claude Sonnet 4.6, DeepSeek-R1, Kimi-K2.5
+- **33.75 million materialized rules** from 18 knowledge sources
+- **372,648+ evaluation instances** across Tiers 0--3 plus a game-grounded
+  RTS family
+- **4 frontier models evaluated**: GPT-5.2-chat, Claude Sonnet 4.6,
+  DeepSeek-R1, Kimi-K2.5
 - **Synthetic contamination control** with invented predicate names
 
 ---
 
-## Quick Start
+## Repository contents (review version)
+
+This is a streamlined snapshot of the repository, scoped to what reviewers
+need to verify the claims in the paper. The full development repository
+(including HPC orchestration, ablation runs, exploratory notebooks, math-side
+research thrust, RTS live-integration tooling, and result archives) is on
+the anonymous mirror.
+
+```
+paper/                       NeurIPS 2026 E&D submission paper
+  paper.tex                  LaTeX source (9-page main body + appendices)
+  paper.pdf                  Compiled paper PDF
+  references.bib             Bibliography
+  neurips_2026.sty           NeurIPS 2026 style file
+  croissant.json             Croissant metadata (core + RAI fields)
+  generate_figures.py        Matplotlib figure generation
+  fig_*.tex                  TikZ figure source files
+  figures/                   Compiled figure PDFs
+  tables/                    Tabular content (Level 3 metrics, error taxonomy)
+
+src/blanc/                   Core library
+  core/                      Theory representation, rule types
+  author/                    Instance generation pipeline (Author Algorithm)
+  generation/                Partition functions, distractors, synthetic generator
+  ontology/                  KB extractors (YAGO, GO, UMLS, Wikidata, etc.)
+  reasoning/                 Defeasible derivation engine (the polynomial-time verifier)
+  codec/                     Rendering codecs (M1-M5 modalities)
+  utils/                     Shared utilities
+
+experiments/                 Evaluation pipeline
+  evaluation_pipeline.py     End-to-end evaluation orchestration
+  run_evaluation.py          CLI entry point
+  model_interface.py         API client wrappers (OpenAI / Anthropic / Foundry / vLLM)
+  prompting.py               Prompt templates per modality and strategy
+  level3_evaluator.py        Level 3 graded scoring function
+  symbolic_baseline.py       ASP solver baseline (the 100% / 50us baseline)
+  *_analysis.py              Statistics, conservativity, novelty, partition sensitivity
+  validate_*.py              Decoder pipeline and API key validation
+
+scripts/                     Generation entry points
+  generate_tier1_instances.py        Tier 1 cross-ontology (324K instances)
+  generate_multitier_instances.py    Tier 2 domain-specific
+  generate_synthetic_instances.py    Synthetic contamination control
+  generate_rts_instances.py          Tier RTS engagement KB
+  certify_rts_kb.py                  Formal certification of RTS KB
+  validate_cross_ontology_scale.py   Tier 1 yield validation
+
+instances/                   Sample instances (50 per tier; full dataset on mirror)
+tests/                       Unit tests for core library (verifier, generation, codec)
+Guidance_Documents/          Project documentation
+```
+
+---
+
+## Quick start
 
 ```bash
-git clone https://github.com/anonymous-authors/defab.git
-cd blanc
+git clone https://anonymous.4open.science/r/blanc-anon
+cd blanc-anon
 pip install -r requirements.txt
 python -m pytest tests/ --tb=no -q
 ```
 
-### LLM Evaluation
+### LLM evaluation
 
 ```bash
 cp .env.template .env       # Add API keys (Azure AI Foundry, etc.)
@@ -42,182 +104,67 @@ python experiments/validate_api_keys.py
 python experiments/run_evaluation.py --provider foundry-claude --modalities M4 M2
 ```
 
-### Instance Generation
+### Instance generation
 
 ```bash
-python scripts/generate_tier1_instances.py          # Tier 1 cross-ontology (324K instances)
-python scripts/generate_multitier_instances.py       # Tier 2 domain-specific
-python scripts/generate_synthetic_instances.py       # Synthetic contamination control
+python scripts/generate_tier1_instances.py          # Tier 1 cross-ontology
+python scripts/generate_multitier_instances.py      # Tier 2 domain-specific
+python scripts/generate_synthetic_instances.py      # Synthetic contamination control
 ```
 
 ---
 
-## Knowledge Base Sources
+## Knowledge base sources
 
 | Tier | Sources | Rules | Instances |
 |------|---------|-------|-----------|
 | 0 (baseline) | YAGO, WordNet, LKIF Core, MatOnto | 2,318 | 409 |
 | 1 (cross-ontology) | OpenCyc + ConceptNet | 289,305 | 324,511 |
-| 2 (domain-specific) | GO, MeSH, SUMO, FrameNet, Wikidata | 535,565 | 31,500+ |
-| 2+ (biomedical) | UMLS 2025AB | 29,465,582 | pending |
-| 3 (encyclopedic) | YAGO 4.5 full | 3,457,940 | pending |
+| 2 (domain-specific) | GO, MeSH, SUMO, FrameNet, Wikidata, BabelNet | 535,565 | 31,477 |
+| 2+ (biomedical) | UMLS 2025AB | 29,465,582 | 13,425 |
+| 3 (encyclopedic) | YAGO 4.5 full | 3,457,940 | 2,580 |
+| RTS (game-grounded) | rts_engagement, lux_ai_s3 | 478 | 246+ |
 
-Source knowledge bases span 1984 (Cyc) to 2025 (UMLS 2025AB, YAGO 4.5) and include government-funded AI programs (DARPA, NSF, NIH, EU ESTRELLA), encyclopedic projects (Wikidata, DBpedia), and domain ontologies (Gene Ontology, SNOMED CT, LKIF Core).
-
----
-
-## Baseline Evaluation Results
-
-Accuracy (%) by model and task level (formal modalities, best prompting strategy):
-
-| Model | Level 2 (Rule Abduction) | Level 3 (Defeater Abduction) |
-|-------|--------------------------|------------------------------|
-| DeepSeek-R1 | 73.7 | 65.0 (CoT: 92.9) |
-| GPT-5.2-chat | 78.5 | 47.5 (CoT: 87.1) |
-| Claude Sonnet 4.6 | 79.3 | 23.6 (direct) |
-| Kimi-K2.5 | 71.9 | 27.6 (CoT) |
-
-Key finding: Grounding is largely solved at Level 2 (73--79%). Belief revision at Level 3 is latent and highly prompt-sensitive, with a 56--79 pp swing between direct and chain-of-thought prompting for reasoning-optimized models.
+Source knowledge bases span 1984 (Cyc) to 2025 (UMLS 2025AB, YAGO 4.5) and
+include government-funded AI programs (DARPA, NSF, NIH, EU ESTRELLA),
+encyclopedic projects (Wikidata, DBpedia), and domain ontologies (Gene
+Ontology, SNOMED CT, LKIF Core).
 
 ---
 
-## Project Structure
+## Baseline evaluation results
 
-```
-src/blanc/              Core library
-  core/                   Theory representation, rule types
-  author/                 Instance generation pipeline (the "Author Algorithm")
-  generation/             Partition functions, distractors, synthetic generator
-  ontology/               KB extractors (YAGO, GO, UMLS, Wikidata, SNOMED, etc.)
-  reasoning/              Defeasible derivation engine
-  codec/                  Rendering codecs (M1--M4 modalities)
-  math/                   DeFAb-Math-Topology: Lean kernel adapter, topology
-                          extractor, hypothesis dropper, novelty filter,
-                          defeater scorer
-paper/                  LaTeX papers
-  dataset_paper.tex       NeurIPS 2026 E&D track submission
-  paper.tex               Full technical paper (includes fine-tuning + debate)
-experiments/            Evaluation pipeline, model interfaces, analysis
-  math_topology/          DeFAb-Math-Topology benchmark generator, baseline,
-                          Lakatos rediscovery, at-scale dropping, GRPO
-                          assembly, discovery harvester, M4/M5 scaffolds
-instances/              Generated evaluation instances by tier
-scripts/                Data download, extraction, generation scripts
-hpc/                    SLURM scripts for CURC Alpine HPC
-tests/                  Test suite (incl. tests/math/ for the topology pipeline)
-Guidance_Documents/     Project planning and documentation
-```
+Headline metric: **rendering-robust accuracy** (worst case over text
+modalities M1--M4). Random chance for six-choice selection is 16.7%; the
+ASP symbolic baseline achieves 100% in under 50 microseconds per instance.
+
+| Model | Rendering-Robust | L2 Direct | L3 Direct | L3 CoT |
+|-------|------------------|-----------|-----------|--------|
+| DeepSeek-R1 | 23.5% | 73.7% | 37.1% | 92.9% |
+| Claude Sonnet 4.6 | 15.5% | 79.3% | 23.6% | 9.3% |
+| GPT-5.2-chat | 9.1% | 78.5% | 7.9% | 87.1% |
+| Kimi-K2.5 | 7.8% | 71.9% | 0.8% | 27.6% |
+
+Two of four frontier models score at or below random chance on the
+rendering-robust metric. Per-cell variance of the chain-of-thought effect
+across (model, level) cells: sigma = 36 percentage points, range = 110
+percentage points (Appendix K).
 
 ---
 
-## Papers
+## Reproducing key results
 
-- **`paper/paper.tex`** -- NeurIPS 2026 Evaluations & Datasets track submission. The single consolidated submission covering: dataset design, cross-ontology KB extraction (18 sources, 33.75M rules), synthetic contamination control, baseline evaluation (leading with worst results: symbolic ceiling 100% vs LLM rendering-robust 7.8--23.5%), M5 visual grounding, and DeFAb as a verifier-backed finetuning substrate (DPO, RLVR/GRPO, sc2live commander policies).
-
-- **`paper/paper_tmlr_archive.tex`** -- Archived TMLR-targeted long-form paper (~80 pages) covering the same dataset plus in-depth fine-tuning pipeline (DPO/RLHF/GRPO/MCTS), adversarial defeasible debate, and game-theoretic foundations. Preserved for future TMLR submission.
-
----
-
-## DeFAb-Math-Topology
-
-The math-side analogue of the main pipeline. The Lean 4 kernel replaces the polynomial-time defeasible verifier; everything above the harness layer (dropper, scorer, novelty filter, SFT/DPO/GRPO data prep, expert-iteration scaffold) is shared in shape with the main project.
-
-The cardinal risk is *trivial restoration*: the model just memorises the dropped hypothesis and Lean accepts it back. The novelty filter scores trivially-restored defeaters at zero, and the Lakatos positive control (M2) tests this on Euler V-E+F=2 / genus before any novel-discovery claim is made.
-
-### Prerequisites
-
-```bash
-# 1. Install elan (Lean version manager)
-curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
-export PATH="$HOME/.elan/bin:$PATH"
-
-# 2. Get pre-compiled Mathlib cache (a few minutes, not hours)
-cd lean/
-lake exe cache get   # uses Lean 4.25.0, pinned in lean/lean-toolchain
-
-# 3. Install Python harness
-pip install lean-interact
-```
-
-The `lean/` project tracks `lakefile.lean` and `lean-toolchain` (pinned to `leanprover/lean4:v4.25.0`). Build artifacts go into `lean/.lake/` which is gitignored.
-
-### End-to-end smoke run (mock, no Lean needed)
-
-```bash
-python experiments/math_topology/at_scale_dropping.py \
-  --provider mock \
-  --output-dir experiments/math_topology/results/m3_v0 \
-  --samples-per-challenge 8 --policy single_critical
-python experiments/math_topology/grpo_dataset.py \
-  --groups experiments/math_topology/results/m3_v0/groups.jsonl \
-  --output experiments/math_topology/results/m3_v0/grpo.jsonl
-python experiments/math_topology/discovery_harvester.py \
-  --survivors experiments/math_topology/results/m3_v0/survivors.jsonl \
-  --output experiments/math_topology/results/m3_v0/discoveries.jsonl
-```
-
-### Real-Lean dry run on Euler V-E+F=2 (requires elan + FOUNDRY_API_KEY)
-
-```bash
-# Build Mathlib novelty index (~350ms after cache is populated):
-python scripts/extract_mathlib_topology_index.py  # writes experiments/math_topology/data/mathlib_topology_index.jsonl
-
-# Single-theorem dry run (4 samples, foundry-claude, real Lean):
-python experiments/math_topology/at_scale_dropping.py \
-  --provider foundry-claude \
-  --corpus-filter EulerCharacteristic.convex_polytope_v_minus_e_plus_f \
-  --policy single_critical \
-  --samples-per-challenge 4 \
-  --mathlib-index experiments/math_topology/data/mathlib_topology_index.jsonl \
-  --output-dir experiments/math_topology/results/m0_real
-```
-
-Observed per-call Lean latency: first call ~1500ms (REPL startup), subsequent calls 0--10ms (connection reuse).
-
-### M2 SFT/DPO data with real Lean verdicts
-
-```bash
-# Mock (default, CI-safe):
-python experiments/math_topology/prepare_sft_data.py \
-    --output experiments/math_topology/data/lakatos_sft.jsonl
-
-# Real Lean (requires lean-interact):
-python experiments/math_topology/prepare_sft_data.py \
-    --harness lean_interact \
-    --output experiments/math_topology/data/m2_real/sft.jsonl
-python experiments/math_topology/prepare_dpo_data.py \
-    --harness lean_interact \
-    --output experiments/math_topology/data/m2_real/dpo.jsonl
-```
-
-### Tests
-
-```bash
-# Mock tests (CI-safe, 130 tests):
-python -m pytest tests/math/ --no-cov -q
-
-# Real-Lean tests (requires lean-interact + Lean 4 toolchain):
-python -m pytest tests/math/test_lean_interact_harness.py -m lean_real -v
-```
-
-See `Guidance_Documents/COMPREHENSIVE_KB_PIPELINE.md` for milestone status (M0--M3 implemented; M4/M5 deferred with stub interfaces) and the agenda in `.cursor/plans/`.
-
----
-
-## HPC (CURC Alpine)
-
-Open-source model evaluations and large-scale instance generation run on the an anonymous HPC cluster. See `hpc/` for SLURM submission scripts:
-
-- `slurm_evaluate_curc_vllm.sh` -- vLLM-based evaluation of DeepSeek-R1, Qwen 2.5
-- `slurm_gen_go.sh` -- Gene Ontology instance generation (409K rules)
-- `slurm_gen_wikidata.sh` -- Wikidata L3 defeater generation (11K defeaters)
-- `slurm_gen_umls.sh` -- UMLS subsampled generation (29.5M rules)
-- `slurm_yago_full_generate.sh` -- Full YAGO 4.5 generation (3.5M rules)
+- **Symbolic baseline (Section 5.1)**: `python experiments/symbolic_baseline.py`
+- **Frontier model evaluation (Section 5.3)**: `python experiments/run_evaluation.py --provider <provider>` then `python experiments/analyze_results.py`
+- **Difficulty stratification (Appendix F)**: `python experiments/difficulty_analysis.py`
+- **Per-cell CoT variance (Appendix K)**: numbers extracted by `experiments/error_taxonomy.py` from foundry result JSONs (results not included in review repo; reproduce by running the evaluation step above)
 
 ---
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
-
-Source knowledge base licenses: YAGO (CC-BY 4.0), WordNet (Princeton License), LKIF Core (Apache 2.0), MatOnto (CC-BY 4.0), Wikidata (CC0 1.0), ConceptNet (CC-BY-SA 4.0), Gene Ontology (CC-BY 4.0), UMLS (NLM License), SUMO (GPLv2), FrameNet (CC-BY 3.0), MeSH (public domain).
+MIT (pipeline and produced instances). Source knowledge base licenses:
+YAGO (CC-BY 4.0), WordNet (Princeton License), LKIF Core (Apache 2.0),
+MatOnto (CC-BY 4.0), Wikidata (CC0 1.0), ConceptNet (CC-BY-SA 4.0),
+Gene Ontology (CC-BY 4.0), UMLS (NLM License), SUMO (GPLv2),
+FrameNet (CC-BY 3.0), MeSH (public domain).

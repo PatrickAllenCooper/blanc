@@ -1,6 +1,0 @@
-summary_pages/
-
-# Bulky raw capture artefacts (frame sequences and GIFs are large; keep only
-# logs, MP4 videos, and the cherry-picked poster screenshots used in slides).
-sc2_pipeline_captures/frames/
-sc2_pipeline_captures/videos/*.gif
