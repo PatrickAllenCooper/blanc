@@ -1,0 +1,124 @@
+% M5 Visual Grounding modality — dedicated figure, no nested tikzpictures.
+%
+% Three panels shown side by side:
+%   Left  : M4 pure-formal (baseline entity names as text)
+%   Centre: M5-replace (entity name removed; image reference inserted)
+%   Right : M5-supplement (entity name retained; image added as comment)
+%
+% Image placeholder (\imgplaceholder) is defined in paper.tex preamble.
+%
+\begin{tikzpicture}[
+    >=stealth,
+    % panel outer box
+    panel/.style={
+        draw=defabGray!45, rounded corners=2.5pt,
+        inner sep=6pt, align=left, fill=white,
+        line width=0.4pt, text width=3.8cm, anchor=north
+    },
+    % modality badge top-left of panel
+    badge/.style={
+        draw=defabGold!70, rounded corners=1.5pt,
+        fill=defabGold!10, line width=0.4pt,
+        font=\fontsize{6.2}{7}\selectfont\bfseries,
+        inner sep=2.5pt, text=defabGold!85, anchor=north west
+    },
+    % section label within panel
+    sec/.style={font=\fontsize{5.6}{6.4}\selectfont\bfseries, text=defabBlue},
+    % mono code text
+    code/.style={font=\fontsize{5.6}{6.6}\selectfont\ttfamily},
+    % gray annotation
+    ann/.style={font=\fontsize{5.2}{6.0}\selectfont\itshape, text=defabGray},
+    % arrows between panels
+    marr/.style={->, semithick, color=defabBlue!60, line width=0.5pt},
+]
+
+%% ----------------------------------------------------------------
+%% PANEL 1: M4 Pure Formal
+%% ----------------------------------------------------------------
+\node[panel] at (0, 0) (m4) {
+  \textbf{Theory (facts):}\\[2pt]
+  \fontsize{5.6}{6.6}\selectfont\ttfamily
+  bear(polar\_bear).\\
+  arctic(polar\_bear).\\[4pt]
+  \normalfont\fontsize{5.6}{6.4}\selectfont\bfseries
+  \textbf{Rules:}\\[2pt]
+  \fontsize{5.6}{6.6}\selectfont\ttfamily
+  bear(X) => hib(X).\\
+  bear(X),arc(X) \textasciitilde> neg.\\[4pt]
+  \normalfont\fontsize{5.6}{6.4}\selectfont\bfseries
+  \textbf{Target \& candidates:}\\[2pt]
+  \fontsize{5.6}{6.6}\selectfont\ttfamily
+  hib(grizzly)\\
+  bear(grizzly). \quad\textit{[gold]}\\
+  mammal(grizzly).
+};
+\node[badge] at (-0.02cm, 0.26cm) {M4};
+\node[font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=defabBlue,
+      anchor=north west] at (0.75cm, 0.22cm) {Pure Formal};
+
+%% ----------------------------------------------------------------
+%% PANEL 2: M5-replace — entity name removed, image inserted
+%% ----------------------------------------------------------------
+\node[panel] at (4.4cm, 0) (m5r) {
+  \textbf{Theory (facts):}\\[2pt]
+  \fontsize{5.6}{6.6}\selectfont\ttfamily
+  bear(\imgplaceholder).\\
+  arctic(\imgplaceholder).\\[4pt]
+  \normalfont\fontsize{5.6}{6.4}\selectfont\bfseries
+  \textbf{Rules:}\\[2pt]
+  \fontsize{5.6}{6.6}\selectfont\ttfamily
+  bear(X) => hib(X).\\
+  bear(X),arc(X) \textasciitilde> neg.\\[4pt]
+  \normalfont\fontsize{5.6}{6.4}\selectfont\bfseries
+  \textbf{Target \& candidates:}\\[2pt]
+  \fontsize{5.2}{6}\selectfont\color{defabGray}\itshape
+  (unchanged from M4)\\[5pt]
+  \normalfont\fontsize{5.2}{6}\selectfont\color{defabGray}\itshape
+  Model must identify entity\\
+  from image to apply rules.
+};
+\node[badge] at (4.38cm, 0.26cm) {M5-replace};
+\node[font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=defabBlue,
+      anchor=north west] at (5.50cm, 0.22cm) {Entity $\to$ Image};
+
+%% ----------------------------------------------------------------
+%% PANEL 3: M5-supplement — name retained, image added as annotation
+%% ----------------------------------------------------------------
+\node[panel] at (8.8cm, 0) (m5s) {
+  \textbf{Theory (facts):}\\[2pt]
+  \fontsize{5.6}{6.6}\selectfont\ttfamily
+  bear(polar\_bear). {\color{defabGold!70}\%} \imgplaceholder\\
+  arctic(polar\_bear). {\color{defabGold!70}\%} \imgplaceholder\\[4pt]
+  \normalfont\fontsize{5.6}{6.4}\selectfont\bfseries
+  \textbf{Rules:}\\[2pt]
+  \fontsize{5.6}{6.6}\selectfont\ttfamily
+  bear(X) => hib(X).\\
+  bear(X),arc(X) \textasciitilde> neg.\\[4pt]
+  \normalfont\fontsize{5.6}{6.4}\selectfont\bfseries
+  \textbf{Target \& candidates:}\\[2pt]
+  \fontsize{5.2}{6}\selectfont\color{defabGray}\itshape
+  (unchanged from M4)\\[5pt]
+  \normalfont\fontsize{5.2}{6}\selectfont\color{defabGray}\itshape
+  Visual context added; name\\
+  retained for decoder.
+};
+\node[badge] at (8.78cm, 0.26cm) {M5-supplement};
+\node[font=\fontsize{6.5}{7.5}\selectfont\bfseries, text=defabBlue,
+      anchor=north west] at (10.30cm, 0.22cm) {Name + Image};
+
+%% ----------------------------------------------------------------
+%% Transition arrows  M4 -> M5-replace and M4 -> M5-supplement
+%% ----------------------------------------------------------------
+\draw[marr] (m4.east) -- node[above, ann, yshift=1pt] {hide name} (m5r.west);
+\draw[marr] (m5r.east) -- node[above, ann, yshift=1pt] {retain name} (m5s.west);
+
+%% ----------------------------------------------------------------
+%% Bottom note: verifier unchanged across modalities
+%% ----------------------------------------------------------------
+\node[draw=defabRed!65, rounded corners=2pt, fill=defabRed!7,
+      font=\fontsize{5.5}{6.4}\selectfont\bfseries, inner sep=3.5pt,
+      text=defabRed, anchor=north] at (6.4cm, -4.8cm) {
+  Verifier-backed gold standard is identical across all five modalities
+};
+
+\end{tikzpicture}

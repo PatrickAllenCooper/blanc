@@ -188,23 +188,8 @@
 \node[mbox, minimum height=0.42cm] at (-3.50,-4.65) (m1) {M1 Narrative};
 \node[mbox, minimum height=0.42cm] at ( 0.00,-4.65) (m2) {M2--M4 Formal};
 
-%% M5 box with embedded image-placeholder schematic
-\node[mbox, minimum height=0.72cm, text width=3.0cm] at (3.50,-4.65) (m3) {
-  M5: Visual Grounding\\[-1pt]
-  \texttt{bear(P).}\ $\to$\
-  \begin{tikzpicture}[baseline=-1pt]
-    \draw[defabGold!60, rounded corners=0.8pt, line width=0.45pt,
-          fill=defabGold!12]
-        (0,0) rectangle (0.72cm,0.36cm);
-    \node[font=\fontsize{4.6}{5}\selectfont\bfseries,
-          text=defabGold!80] at (0.36cm,0.18cm) {IMG};
-    % small camera corner marks
-    \draw[defabGold!50, line width=0.3pt] (0.05cm,0.30cm)
-        -- (0.05cm,0.31cm) -- (0.12cm,0.31cm);
-    \draw[defabGold!50, line width=0.3pt] (0.67cm,0.31cm)
-        -- (0.67cm,0.30cm);
-  \end{tikzpicture}
-};
+%% M5 modality box — simple, no nested tikzpicture
+\node[mbox, minimum height=0.42cm] at (3.50,-4.65) (m3) {M5 Visual};
 
 \draw[sarr] (d1.south) -- (m1.north);
 \draw[sarr] (d2.south) -- (m2.north);
@@ -217,8 +202,8 @@
     (m2.east) -- (m3.west);
 
 \node[font=\fontsize{5.0}{6}\selectfont\itshape, text=defabGold!80,
-      anchor=north] at (0,-5.42)
-    {Any instance rendered in five modalities (M5 replaces entity names with images)};
+      anchor=north] at (0,-5.15)
+    {Five rendering modalities (M5: entity names replaced by images)};
 
 %% ============================================================
 %% Arrows: pipeline ablation box → column headers
