@@ -200,10 +200,7 @@ def _draw_graded_panel(ax):
     ax.set_yticklabels(models_c, fontsize=6.5)
     ax.yaxis.set_tick_params(length=0)
     ax.set_title('(c) L3 Graded Score Distribution', fontsize=8, pad=4)
-    # Legend inside axes at top-left — clears the xlabel and sits above bar 0
-    ax.legend(loc='upper left', fontsize=4.8, handlelength=0.8, handletextpad=0.3,
-              framealpha=0.85, edgecolor=PAL['gray'], ncol=2,
-              borderpad=0.5, labelspacing=0.3)
+    # No in-axes legend — placed at figure level in fig_results() below
     ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -230,6 +227,17 @@ def fig_results():
     _draw_rend_rob_panel(ax_a)
     _draw_heatmap_panel(ax_b)
     _draw_graded_panel(ax_c)
+
+    # Figure-level legend for panel (c) score colors, placed top-right above panel (c)
+    score_handles = [mpatches.Patch(color=c, label=l)
+                     for c, l in zip(_SCORE_COLORS, _SCORE_LABELS)]
+    fig.legend(handles=score_handles,
+               loc='upper right',
+               bbox_to_anchor=(0.975, 0.985),
+               bbox_transform=fig.transFigure,
+               fontsize=4.8, handlelength=0.9, handletextpad=0.3,
+               framealpha=0.88, edgecolor=PAL['gray'],
+               ncol=1, borderpad=0.5, labelspacing=0.25)
 
     return fig
 
