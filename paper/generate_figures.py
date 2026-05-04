@@ -242,54 +242,83 @@ def fig_results():
     return fig
 
 
-def fig_cot_dissociation():
-    """Standalone CoT dissociation figure for appendix.
+def fig_cot_variance():
+    """Variance analysis of the chain-of-thought effect.
 
-    Shows L3 accuracy under direct vs CoT prompting per model,
-    with the architectural dissociation (CoT helps reasoning models,
-    hurts Claude) and rendering-robust values annotated.
+    For each (model, level) cell we plot the signed delta
+    (CoT accuracy - Direct accuracy). A stable prompting regime
+    would have all eight cells near zero; the actual spread is
+    enormous and the sign reverses between L2 and L3 for every
+    reasoning model.
+
+    Bars sorted by signed magnitude. Positive (CoT helps) = teal.
+    Negative (CoT hurts) = red. Vertical zero line. Sigma annotation.
     """
-    n_l3 = 35
-    direct_l3 = [37.1,  7.9, 23.6,  0.8]
-    cot_l3    = [92.9, 87.1,  9.3, 27.6]
-    rend_rob  = [23.5,  9.1, 15.5,  7.8]
+    # CoT - Direct, percentage points (model, level, delta)
+    cells = [
+        ('GPT 5.2',     'L3', 87.1 -  7.9),  # +79.2
+        ('DeepSeek R1', 'L3', 92.9 - 37.1),  # +55.8
+        ('Kimi K2.5',   'L3', 27.6 -  0.8),  # +26.8
+        ('Kimi K2.5',   'L2', 70.4 - 71.9),  # -1.5
+        ('DeepSeek R1', 'L2', 71.4 - 73.7),  # -2.3
+        ('Claude 4.6',  'L3',  9.3 - 23.6),  # -14.3
+        ('Claude 4.6',  'L2', 52.3 - 79.3),  # -27.0
+        ('GPT 5.2',     'L2', 47.5 - 78.5),  # -31.0
+    ]
+    # Sort by signed delta, largest positive at top
+    cells = sorted(cells, key=lambda r: -r[2])
+    labels = [f'{m}  {lvl}' for m, lvl, _ in cells]
+    deltas = [d for _, _, d in cells]
+    colors = [PAL['teal'] if d > 0 else PAL['red'] for d in deltas]
 
-    ci_direct = [_wilson_ci(n_l3, v/100)*100 for v in direct_l3]
-    ci_cot    = [_wilson_ci(n_l3, v/100)*100 for v in cot_l3]
+    sigma = float(np.std(deltas, ddof=1))
+    rng   = max(deltas) - min(deltas)
 
-    fig, ax = plt.subplots(figsize=(4.2, 2.4))
-    x = np.arange(len(_MODELS_SHORT))
-    w = 0.32
+    fig, ax = plt.subplots(figsize=(4.6, 2.8))
+    y = np.arange(len(cells))
+    bars = ax.barh(y, deltas, height=0.62, color=colors,
+                   edgecolor='white', linewidth=0.4)
 
-    ax.bar(x - w/2, direct_l3, w, label='Direct', color=PAL['blue'],
-           edgecolor='white', linewidth=0.3,
-           yerr=ci_direct, capsize=2.5,
-           error_kw={'elinewidth': 0.8, 'ecolor': PAL['blue'], 'capthick': 0.8})
-    ax.bar(x + w/2, cot_l3, w, label='Chain-of-Thought', color=PAL['teal'],
-           edgecolor='white', linewidth=0.3,
-           yerr=ci_cot, capsize=2.5,
-           error_kw={'elinewidth': 0.8, 'ecolor': PAL['teal'], 'capthick': 0.8})
+    # Annotate each bar with its signed value
+    for i, (d, b) in enumerate(zip(deltas, bars)):
+        ha = 'left' if d > 0 else 'right'
+        x_off = 1.5 if d > 0 else -1.5
+        ax.text(d + x_off, i, f'{d:+.1f}',
+                ha=ha, va='center', fontsize=6,
+                color=PAL['teal'] if d > 0 else PAL['red'],
+                fontweight='bold')
 
-    # Rendering-robust annotation (below bars as regular text)
-    for i, rr in enumerate(rend_rob):
-        ax.text(x[i], 2.5, f'Rob.={rr:.0f}%', ha='center', va='bottom',
-                fontsize=5.5, color=PAL['red'])
+    # Zero baseline
+    ax.axvline(0, color=PAL['gray'], linewidth=0.7, alpha=0.85, zorder=3)
 
-    ax.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle='--', alpha=0.8)
-    ax.axhline(100.0, color=PAL['gray'], linewidth=0.7, linestyle='--', alpha=0.6)
-    ax.text(3.6, 17.5, 'Random (1/6)', ha='right', fontsize=5.5, color=PAL['red'])
-    ax.text(3.6, 100.8, 'ASP ceiling', ha='right', fontsize=5.5, color=PAL['gray'])
+    # Sigma annotation (upper right corner inside axes)
+    ax.text(0.985, 0.97,
+            f'$\\sigma = {sigma:.1f}$ pp\nrange = {rng:.0f} pp',
+            transform=ax.transAxes,
+            ha='right', va='top', fontsize=6.5,
+            color=PAL['gray'], fontstyle='italic',
+            bbox=dict(boxstyle='round,pad=0.25',
+                      facecolor='white', edgecolor=PAL['gray'],
+                      linewidth=0.4, alpha=0.92))
 
-    ax.set_ylabel('Level 3 Accuracy (%)', fontsize=7)
-    ax.set_xticks(x)
-    ax.set_xticklabels(_MODELS_SHORT, fontsize=6.5)
-    ax.set_ylim(0, 108)
-    ax.yaxis.set_major_locator(mticker.MultipleLocator(25))
-    ax.tick_params(axis='x', length=0)
-    ax.legend(loc='upper left', framealpha=0.9, edgecolor=PAL['gray'],
-              fontsize=6, handlelength=1.0)
-    ax.set_title('L3 Accuracy: Direct vs. Chain-of-Thought', fontsize=8, pad=4)
-    fig.tight_layout(pad=0.8)
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels, fontsize=6.5)
+    ax.set_xlabel('CoT effect: $\\mathrm{Acc}_{\\mathrm{CoT}} - \\mathrm{Acc}_{\\mathrm{Direct}}$ (pp)',
+                  fontsize=7)
+    ax.set_xlim(-40, 90)
+    ax.xaxis.set_major_locator(mticker.MultipleLocator(20))
+    ax.set_title('CoT effect variance across (model, level) cells',
+                 fontsize=8, pad=4)
+    ax.tick_params(axis='y', length=0)
+    ax.spines['left'].set_visible(False)
+
+    # X-axis sub-labels for help / hurt regions
+    ax.text(-30, -1.1, 'CoT hurts', fontsize=6,
+            color=PAL['red'], fontweight='bold', ha='center')
+    ax.text( 45, -1.1, 'CoT helps', fontsize=6,
+            color=PAL['teal'], fontweight='bold', ha='center')
+
+    fig.tight_layout(pad=0.6)
     return fig
 
 
@@ -415,46 +444,71 @@ def fig_sources():
 def fig_difficulty():
     """Two-panel difficulty stratification.
 
-    Left: Novelty distribution with DeFAb-Hard H1 target region.
-    Right: Support size distribution with H2 target region.
+    Left: novelty distribution. H1 target region [0.5, 1.0] sits on the
+    same linear axis as the data, with an inline annotation.
+
+    Right: support size distribution on a log x-axis so the current data
+    (4-10) and the H2 target region [50, 200] are both visible. A gray
+    bracket-arrow marks the empty gap between them.
     """
     # Data from experiments/results/difficulty_distributions.json (level3)
     # novelty: mean 0.143, std 0.226, min 0, max 0.5
     # support_size: mean 6.743, std 1.38, min 4, max 10
 
-    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(5.5, 2.2))
+    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(6.0, 2.4),
+                                      gridspec_kw={'wspace': 0.32})
 
-    # Simulate novelty distribution (from known stats; n=35)
-    np.random.seed(42)
-    # 63% have novelty=0, ~14% have 0.25, ~14% have 0.5
-    novelty_vals = np.array([0.0]*22 + [0.25]*8 + [0.5]*5)
+    # ---- Panel (a): novelty distribution ----
+    novelty_vals = np.array([0.0] * 22 + [0.25] * 8 + [0.5] * 5)
 
     ax_a.hist(novelty_vals, bins=[-0.05, 0.1, 0.35, 0.6],
-              color=PAL['blue'], edgecolor='white', linewidth=0.4, alpha=0.85, rwidth=0.85)
-    ax_a.axvspan(0.5, 0.65, alpha=0.15, color=PAL['gold'],
-                 label='H1 target (Nov >= 0.5)')
-    ax_a.set_xlabel('Predicate novelty $Nov^*$', fontsize=7)
+              color=PAL['blue'], edgecolor='white', linewidth=0.4,
+              alpha=0.85, rwidth=0.85)
+    ax_a.axvspan(0.5, 1.0, alpha=0.20, color=PAL['gold'])
+    ax_a.text(0.75, 16, 'H1 target\n$\\mathrm{Nov}^*\\!\\in\\![0.5, 1.0]$',
+              ha='center', va='center', fontsize=6.0,
+              color=PAL['gold'], fontweight='bold')
+
+    ax_a.set_xlabel('Predicate novelty $\\mathrm{Nov}^*$', fontsize=7)
     ax_a.set_ylabel('Instance count', fontsize=7)
-    ax_a.set_title('(a) Novelty distribution\n(current L3, n=35)', fontsize=7.5, pad=3)
-    ax_a.legend(fontsize=6, framealpha=0.85)
-    ax_a.set_xlim(-0.08, 0.68)
+    ax_a.set_title('(a) Novelty distribution (current L3, $n=35$)',
+                   fontsize=7.5, pad=3)
+    ax_a.set_xlim(-0.08, 1.05)
+    ax_a.set_ylim(0, 26)
+    ax_a.yaxis.set_major_locator(mticker.MultipleLocator(5))
 
-    # Support size distribution
-    supp_vals = np.array([4]*3 + [5]*7 + [6]*9 + [7]*7 + [8]*5 + [9]*2 + [10]*2)
-    ax_b.hist(supp_vals, bins=np.arange(3.5, 11.5, 1.0),
-              color=PAL['teal'], edgecolor='white', linewidth=0.4, alpha=0.85, rwidth=0.85)
-    ax_b.axvspan(11.5, 15.5, alpha=0.2, color=PAL['gold'],
-                 label='H2 target (|D| >= 50)')
-    ax_b.set_xlabel('Support size $|\\mathrm{Supp}|$', fontsize=7)
+    # ---- Panel (b): support size on log x-axis ----
+    supp_vals = np.array([4] * 3 + [5] * 7 + [6] * 9 + [7] * 7 +
+                          [8] * 5 + [9] * 2 + [10] * 2)
+    log_bins = np.geomspace(3.5, 12, 9)  # bins covering current data
+    ax_b.hist(supp_vals, bins=log_bins,
+              color=PAL['teal'], edgecolor='white', linewidth=0.4,
+              alpha=0.85)
+
+    # H2 target region in real coordinates
+    ax_b.axvspan(50, 200, alpha=0.20, color=PAL['gold'])
+    ax_b.text(100, 7.5,
+              'H2 target\n$|\\mathcal{D}| \\in \\{50,100,200\\}$',
+              ha='center', va='center', fontsize=6.0,
+              color=PAL['gold'], fontweight='bold')
+
+    # Gap indicator: gray bracket between current max (10) and H2 min (50)
+    ax_b.annotate('', xy=(50, 1.5), xytext=(10, 1.5),
+                  arrowprops=dict(arrowstyle='|-|', color=PAL['gray'],
+                                  lw=0.7, mutation_scale=4))
+    ax_b.text(np.sqrt(10 * 50), 2.2, '5x gap', ha='center', va='bottom',
+              fontsize=5.5, color=PAL['gray'], fontstyle='italic')
+
+    ax_b.set_xscale('log')
+    ax_b.set_xlim(3, 250)
+    ax_b.set_ylim(0, 11)
+    ax_b.set_xlabel('Support size $|\\mathrm{Supp}|$ (log scale)', fontsize=7)
     ax_b.set_ylabel('Instance count', fontsize=7)
-    ax_b.set_title('(b) Support size distribution\n(current L3, n=35)', fontsize=7.5, pad=3)
-    ax_b.legend(fontsize=6, framealpha=0.85, loc='upper right')
-    ax_b.set_xlim(3, 15)
+    ax_b.set_title('(b) Support size distribution (current L3, $n=35$)',
+                   fontsize=7.5, pad=3)
+    ax_b.xaxis.set_major_formatter(mticker.ScalarFormatter())
+    ax_b.xaxis.set_minor_formatter(mticker.NullFormatter())
 
-    ax_a.text(0.515, 12, 'DeFAb-Hard H1\ntarget region',
-              fontsize=5.5, color=PAL['gold'], va='top')
-
-    fig.tight_layout(w_pad=1.5)
     return fig
 
 
@@ -469,11 +523,11 @@ if __name__ == '__main__':
     plt.close(fig4)
     print(f'  -> {OUT_DIR}/fig_results.pdf')
 
-    print('Generating CoT dissociation (appendix figure)...')
-    figcot = fig_cot_dissociation()
-    figcot.savefig(os.path.join(OUT_DIR, 'fig_cot_dissociation.pdf'), format='pdf')
+    print('Generating CoT variance analysis (appendix figure)...')
+    figcot = fig_cot_variance()
+    figcot.savefig(os.path.join(OUT_DIR, 'fig_cot_variance.pdf'), format='pdf')
     plt.close(figcot)
-    print(f'  -> {OUT_DIR}/fig_cot_dissociation.pdf')
+    print(f'  -> {OUT_DIR}/fig_cot_variance.pdf')
 
     print('Generating Figure 3: sources provenance + composition...')
     fig3 = fig_sources()
