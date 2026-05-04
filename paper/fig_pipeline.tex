@@ -1,193 +1,230 @@
 % DeFAb combined pipeline + L1/L2/L3 generation figure
 %
-% Grid layout (absolute coordinates, anchor=north for all content nodes):
-%   Pipeline row:  y =  0.00
-%   Level headers: y = -1.00
-%   Theory boxes:  y = -1.50  (uniform min-height 1.10cm)
-%   Ablated boxes: y = -2.70  (uniform min-height 0.70cm)
-%   Gold boxes:    y = -3.50  (uniform min-height 0.50cm)
-%   Distractor:    y = -4.10  (uniform min-height 0.38cm)
-%   Modality:      y = -4.58  (uniform)
+% Fixed-grid layout with conservative row heights:
+%   Every row uses anchor=north with an ABSOLUTE y coordinate.
+%   minimum height is set ≥ actual content height so boxes never overflow.
 %
-%   Column x-centres: L1=-3.6, L2=0, L3=+3.6  (column width 3.4cm)
+%   Row y-coordinates (top of box):
+%     Pipeline arc :  y = 0.00
+%     Level headers :  y = −1.05   (height 0.40cm → bottom −1.45)
+%     Theory boxes  :  y = −1.60   (height 0.90cm → bottom −2.50)  3 lines max
+%     Ablated boxes :  y = −2.65   (height 0.70cm → bottom −3.35)  2 lines max
+%     Gold boxes    :  y = −3.50   (height 0.45cm → bottom −3.95)  1 line
+%     Distractor    :  y = −4.10   (height 0.40cm → bottom −4.50)  1 line
+%     Modality      :  y = −4.65   (height 0.60cm → bottom −5.25)  M5 taller
+%     Caption label :  y = −5.40
+%
+%   Column x-centres: L1=−3.50, L2=0, L3=+3.50
 %
 \begin{tikzpicture}[
     >=stealth,
-    % pipeline boxes (top row)
+    %--- pipeline top row ---
     pipebox/.style={
         draw=defabBlue!70, rounded corners=2pt,
-        font=\fontsize{6.5}{7.5}\selectfont,
+        font=\fontsize{6.2}{7.2}\selectfont,
         inner sep=3pt, text centered, align=center,
         fill=defabBlue!6, line width=0.4pt,
-        minimum height=0.56cm, text width=1.35cm
+        minimum height=0.54cm, text width=1.30cm
     },
-    % level column headers
+    %--- column headers ---
     levhdr/.style={
         draw=defabTeal!70, rounded corners=2pt,
         font=\fontsize{6.5}{7.5}\selectfont\bfseries,
         inner sep=2.5pt, text centered, align=center,
         fill=defabTeal!12, line width=0.4pt,
-        text width=3.3cm, minimum height=0.40cm, text=defabTeal
+        text width=3.2cm, minimum height=0.40cm,
+        anchor=north, text=defabTeal
     },
-    % theory box (gray, normal text)
+    %--- theory box (3 lines strict) ---
     tbox/.style={
         draw=defabGray!45, rounded corners=1.5pt,
-        font=\fontsize{5.6}{6.4}\selectfont,
+        font=\fontsize{5.6}{6.6}\selectfont,
         inner sep=2.5pt, align=left,
         fill=white, line width=0.35pt,
-        text width=3.3cm, minimum height=1.10cm, anchor=north
+        text width=3.2cm, minimum height=0.90cm, anchor=north
     },
-    % ablated element box (red)
+    %--- ablated element box (2 lines, red) ---
     abox/.style={
         draw=defabRed!65, rounded corners=1.5pt,
-        font=\fontsize{5.6}{6.4}\selectfont\bfseries,
+        font=\fontsize{5.6}{6.6}\selectfont\bfseries,
         inner sep=2.5pt, align=left,
         fill=defabRed!7, line width=0.45pt,
-        text width=3.3cm, minimum height=0.70cm, anchor=north, text=defabRed
+        text width=3.2cm, minimum height=0.70cm,
+        anchor=north, text=defabRed
     },
-    % gold answer box (teal)
+    %--- gold answer box (1 line, teal) ---
     gbox/.style={
         draw=defabTeal!70, rounded corners=1.5pt,
-        font=\fontsize{5.6}{6.4}\selectfont\bfseries,
+        font=\fontsize{5.6}{6.6}\selectfont\bfseries,
         inner sep=2.5pt, align=left,
         fill=defabTeal!9, line width=0.40pt,
-        text width=3.3cm, minimum height=0.50cm, anchor=north, text=defabTeal!85
+        text width=3.2cm, minimum height=0.45cm,
+        anchor=north, text=defabTeal!85
     },
-    % distractor box (gray italic)
+    %--- distractor box (1 line, gray italic) ---
     dbox/.style={
         draw=defabGray!35, rounded corners=1.5pt,
         font=\fontsize{5.4}{6.2}\selectfont\itshape,
         inner sep=2.5pt, align=left,
         fill=defabGray!4, line width=0.30pt,
-        text width=3.3cm, minimum height=0.38cm, anchor=north, text=defabGray
+        text width=3.2cm, minimum height=0.40cm,
+        anchor=north, text=defabGray
     },
-    % modality box (gold)
+    %--- modality boxes (gold border) ---
     mbox/.style={
         draw=defabGold!70, rounded corners=2pt,
-        font=\fontsize{6.2}{7}\selectfont,
+        font=\fontsize{6.0}{7.0}\selectfont,
         inner sep=2.5pt, text centered, align=center,
         fill=defabGold!8, line width=0.4pt,
-        text width=3.1cm, minimum height=0.42cm, anchor=north
+        text width=3.0cm, anchor=north
     },
-    % arrows
+    %--- image placeholder (for M5 example) ---
+    imgbox/.style={
+        draw=defabGold!60, rounded corners=1pt,
+        font=\fontsize{5.0}{5.8}\selectfont\bfseries,
+        inner sep=1.5pt, text centered, align=center,
+        fill=defabGold!12, line width=0.5pt,
+        minimum width=0.7cm, minimum height=0.42cm,
+        text=defabGold!80
+    },
+    %--- arrows ---
     parr/.style={->, thick, color=defabBlue!55, line width=0.6pt},
     sarr/.style={->, thin, color=defabGray!60, line width=0.40pt},
 ]
 
-%% =================================================================
-%% PIPELINE ARC (top row, centred at y=0)
-%% =================================================================
-\node[pipebox] (kb) at (-4.90, 0)
-    {KBs\\{\fontsize{5}{6}\selectfont\color{defabGray}15+ sources}};
-\node[pipebox, right=0.55cm of kb]  (lp) {Logic\\Program $\Pi$};
-\node[pipebox, right=0.55cm of lp]  (dt) {Defeasible\\Theory $\D$};
-\node[pipebox, right=0.55cm of dt]  (ab) {Ablate\\$e$};
-\node[pipebox, right=0.55cm of ab]  (vr) {\textbf{Verifier}\\$O(|\D|^3)$};
+%% ============================================================
+%% PIPELINE ARC  (top row, centred)
+%% ============================================================
+\node[pipebox] (kb) at (-5.10, 0)
+    {KBs\\{\fontsize{5}{6}\selectfont\color{defabGray}15+ srcs}};
+\node[pipebox, right=0.45cm of kb] (lp) {Logic\\Program $\Pi$};
+\node[pipebox, right=0.45cm of lp] (dt) {Defeasible\\Theory $\D$};
+\node[pipebox, right=0.45cm of dt] (ab) {Ablate\\$e$};
+\node[pipebox, right=0.45cm of ab] (vr) {\textbf{Verifier}\\$O(|\D|^3)$};
 
-\draw[parr] (kb) -- node[above,font=\fontsize{5}{6}\selectfont\itshape,text=defabGray]{form.} (lp);
-\draw[parr] (lp) -- node[above,font=\fontsize{5}{6}\selectfont\itshape,text=defabGray]{$\kappa$} (dt);
-\draw[parr] (dt) -- node[above,font=\fontsize{5}{6}\selectfont\itshape,text=defabGray]{ablate} (ab);
-\draw[parr] (ab) -- node[above,font=\fontsize{5}{6}\selectfont\itshape,text=defabGray]{verify} (vr);
+\draw[parr] (kb) -- node[above,font=\fontsize{4.8}{5.8}\selectfont\itshape,
+    text=defabGray,inner sep=1pt]{form.} (lp);
+\draw[parr] (lp) -- node[above,font=\fontsize{4.8}{5.8}\selectfont\itshape,
+    text=defabGray,inner sep=1pt]{$\kappa$} (dt);
+\draw[parr] (dt) -- node[above,font=\fontsize{4.8}{5.8}\selectfont\itshape,
+    text=defabGray,inner sep=1pt]{ablate} (ab);
+\draw[parr] (ab) -- node[above,font=\fontsize{4.8}{5.8}\selectfont\itshape,
+    text=defabGray,inner sep=1pt]{verify} (vr);
 
-%% =================================================================
-%% COLUMN HEADERS (y = -1.00, anchored at south so header top at -1.00)
-%% =================================================================
-\node[levhdr, anchor=north] at (-3.6, -1.00) (h1) {L1: Fact Completion};
-\node[levhdr, anchor=north] at ( 0.0, -1.00) (h2) {L2: Rule Abduction};
-\node[levhdr, anchor=north] at ( 3.6, -1.00) (h3) {L3: Defeater Abduction};
+%% ============================================================
+%% LEVEL HEADERS  (top at y = −1.05)
+%% ============================================================
+\node[levhdr] at (-3.50,-1.05) (h1) {L1: Fact Completion};
+\node[levhdr] at (  0.00,-1.05) (h2) {L2: Rule Abduction};
+\node[levhdr] at (  3.50,-1.05) (h3) {L3: Defeater Abduction};
 
-%% =================================================================
-%% ROW 1: Theory boxes (top of boxes at y = -1.50)
-%% =================================================================
-\node[tbox] at (-3.6, -1.50) (t1) {
-  \textbf{Theory:}
-  \texttt{bear(G)\ bear(P)\ arctic(P)}\\
-  $r_d$: \texttt{bear(X) $\Rightarrow$ hib(X)}\\
-  $r^*$: \texttt{bear(X),arc(X) $\leadsto\neg$hib}\\
-  $r^*\!\succ\!r_d$
+%% ============================================================
+%% ROW 1 — Theory boxes  (top at y = −1.60, min-height 0.90cm)
+%% All columns have exactly 3 content lines
+%% ============================================================
+\node[tbox] at (-3.50,-1.60) {
+  \textbf{Theory:} \texttt{bear(G)\ bear(P)\ arc(P)}\\
+  $r_d$: \texttt{bear(X)$\Rightarrow$hib(X)}\\
+  $r^*$: \texttt{bear(X),arc(X)$\leadsto\neg$hib}
 };
-\node[tbox] at ( 0.0, -1.50) (t2) {
-  \textbf{Theory:}
-  \texttt{bear(G)\ bear(P)\ arctic(P)}\\
-  $r_s$: \texttt{bear(X) $\to$ mammal(X)}\\
-  $r^*$: \texttt{bear(X),arc(X) $\leadsto\neg$hib}\\
-  $r^*\!\succ\!r_d$
+\node[tbox] at ( 0.00,-1.60) {
+  \textbf{Theory:} \texttt{bear(G)\ bear(P)\ arc(P)}\\
+  $r_s$: \texttt{bear(X)$\to$mammal(X)}\\
+  $r^*$: \texttt{bear(X),arc(X)$\leadsto\neg$hib}
 };
-\node[tbox] at ( 3.6, -1.50) (t3) {
-  \textbf{Theory:}
-  \texttt{bear(P)\ arctic(P)\ seal(P)}\\
+\node[tbox] at ( 3.50,-1.60) {
+  \textbf{Theory:} \texttt{bear(P)\ arc(P)\ seal(P)}\\
   \texttt{winter\_active(P)}\\
-  $r_d$: \texttt{bear(X) $\Rightarrow$ hib(X)}
+  $r_d$: \texttt{bear(X)$\Rightarrow$hib(X)}
 };
 
-%% =================================================================
-%% ROW 2: Ablated element boxes (top at y = -2.70)
-%% =================================================================
-\node[abox] at (-3.6, -2.70) (a1) {
+%% ============================================================
+%% ROW 2 — Ablated boxes  (top at y = −2.65, min-height 0.70cm)
+%% 2 content lines per box
+%% ============================================================
+\node[abox] at (-3.50,-2.65) {
   \textbf{Remove:} \texttt{bear(grizzly)}\\
   Target \texttt{hib(G)}: chain broken!
 };
-\node[abox] at ( 0.0, -2.70) (a2) {
-  \textbf{Remove:} $r_d$: \texttt{bear(X)$\Rightarrow$hib(X)}\\
-  Target \texttt{hib(G)}: no rule exists!
+\node[abox] at ( 0.00,-2.65) {
+  \textbf{Remove:} $r_d$: \texttt{bear(X)$\Rightarrow$hib}\\
+  Target \texttt{hib(G)}: no rule!
 };
-\node[abox] at ( 3.6, -2.70) (a3) {
-  \textbf{Remove:} $r^*$ --- now $r_d$ fires\\
-  for polar: \texttt{hib(P)} \textbf{anomaly!}
-};
-
-%% =================================================================
-%% ROW 3: Gold answer boxes (top at y = -3.50)
-%% =================================================================
-\node[gbox] at (-3.6, -3.50) (g1) {
-  \textbf{Gold:} \texttt{bear(grizzly)} (restores chain)
-};
-\node[gbox] at ( 0.0, -3.50) (g2) {
-  \textbf{Gold:} \texttt{bear(X) $\Rightarrow$ hib(X)}
-};
-\node[gbox] at ( 3.6, -3.50) (g3) {
-  \textbf{Score 1.0:} $r^*$ restored, $r^*\!\succ\!r_d$
+\node[abox] at ( 3.50,-2.65) {
+  \textbf{Remove:} $r^*$ — now $r_d$ fires\\
+  $\Rightarrow$\texttt{hib(polar)}: \textbf{anomaly!}
 };
 
-%% =================================================================
-%% ROW 4: Distractor boxes (top at y = -4.10)
-%% =================================================================
-\node[dbox] at (-3.6, -4.10) (d1) {
+%% ============================================================
+%% ROW 3 — Gold answer boxes  (top at y = −3.50, min-height 0.45cm)
+%% ============================================================
+\node[gbox] at (-3.50,-3.50) {
+  \textbf{Gold:} \texttt{bear(grizzly)} (restores)
+};
+\node[gbox] at ( 0.00,-3.50) {
+  \textbf{Gold:} \texttt{bear(X)$\Rightarrow$hib(X)}
+};
+\node[gbox] at ( 3.50,-3.50) {
+  \textbf{Score 1.0:} $r^*$ restored; $r^*\!\succ\!r_d$
+};
+
+%% ============================================================
+%% ROW 4 — Distractor boxes  (top at y = −4.10, min-height 0.40cm)
+%% ============================================================
+\node[dbox] at (-3.50,-4.10) (d1) {
   Distractor: \texttt{mammal(G)} [wrong pred.]
 };
-\node[dbox] at ( 0.0, -4.10) (d2) {
-  Distractor: \texttt{mammal(X)$\Rightarrow$hib(X)} [too broad]
+\node[dbox] at ( 0.00,-4.10) (d2) {
+  Distractor: \texttt{mammal(X)$\Rightarrow$hib} [too broad]
 };
-\node[dbox] at ( 3.6, -4.10) (d3) {
-  Score 0.5: \texttt{$\neg$hib(X)$\leftarrow$bear(X)} [not conserv.]
+\node[dbox] at ( 3.50,-4.10) (d3) {
+  Score 0.5: \texttt{$\neg$hib(X):- bear(X)} [not conserv.]
 };
 
-%% =================================================================
-%% ROW 5: Modality boxes (top at y = -4.58)
-%% =================================================================
-\node[mbox] at (-3.6, -4.58) (m1) {M1 Narrative};
-\node[mbox] at ( 0.0, -4.58) (m2) {M2--M4 Formal};
-\node[mbox] at ( 3.6, -4.58) (m3) {M5 Visual};
+%% ============================================================
+%% ROW 5 — Modality boxes  (top at y = −4.65, height varies)
+%% M5 box is taller to show visual-grounding schematic
+%% ============================================================
+\node[mbox, minimum height=0.42cm] at (-3.50,-4.65) (m1) {M1 Narrative};
+\node[mbox, minimum height=0.42cm] at ( 0.00,-4.65) (m2) {M2--M4 Formal};
 
-%% Arrows down the columns
+%% M5 box with embedded image-placeholder schematic
+\node[mbox, minimum height=0.72cm, text width=3.0cm] at (3.50,-4.65) (m3) {
+  M5: Visual Grounding\\[-1pt]
+  \texttt{bear(P).}\ $\to$\
+  \begin{tikzpicture}[baseline=-1pt]
+    \draw[defabGold!60, rounded corners=0.8pt, line width=0.45pt,
+          fill=defabGold!12]
+        (0,0) rectangle (0.72cm,0.36cm);
+    \node[font=\fontsize{4.6}{5}\selectfont\bfseries,
+          text=defabGold!80] at (0.36cm,0.18cm) {IMG};
+    % small camera corner marks
+    \draw[defabGold!50, line width=0.3pt] (0.05cm,0.30cm)
+        -- (0.05cm,0.31cm) -- (0.12cm,0.31cm);
+    \draw[defabGold!50, line width=0.3pt] (0.67cm,0.31cm)
+        -- (0.67cm,0.30cm);
+  \end{tikzpicture}
+};
+
 \draw[sarr] (d1.south) -- (m1.north);
 \draw[sarr] (d2.south) -- (m2.north);
 \draw[sarr] (d3.south) -- (m3.north);
 
-%% Sibling arrows between modality boxes
-\draw[{<[scale=0.6]}-{>[scale=0.6]}, color=defabGold!65, line width=0.4pt]
+%% horizontal sibling arrows between modality boxes
+\draw[{<[scale=0.55]}-{>[scale=0.55]}, color=defabGold!65, line width=0.4pt]
     (m1.east) -- (m2.west);
-\draw[{<[scale=0.6]}-{>[scale=0.6]}, color=defabGold!65, line width=0.4pt]
+\draw[{<[scale=0.55]}-{>[scale=0.55]}, color=defabGold!65, line width=0.4pt]
     (m2.east) -- (m3.west);
 
-\node[font=\fontsize{5.2}{6}\selectfont\itshape, text=defabGold!80,
-      anchor=north] at (0, -5.06) {Five rendering modalities};
+\node[font=\fontsize{5.0}{6}\selectfont\itshape, text=defabGold!80,
+      anchor=north] at (0,-5.42)
+    {Any instance rendered in five modalities (M5 replaces entity names with images)};
 
-%% =================================================================
-%% Arrows: pipeline ablation box -> each column header
-%% =================================================================
-\draw[sarr] (ab.south) .. controls +(-0.3,-0.3) and +(0.15, 0.3) .. (h1.north);
+%% ============================================================
+%% Arrows: pipeline ablation box → column headers
+%% ============================================================
+\draw[sarr] (ab.south) ..controls +(-0.30,-0.28) and +(0.12,0.30).. (h1.north);
 \draw[sarr] (ab.south) -- (h2.north);
-\draw[sarr] (ab.south) .. controls +(0.3,-0.3) and +(-0.15, 0.3) .. (h3.north);
+\draw[sarr] (ab.south) ..controls +(0.30,-0.28) and +(-0.12,0.30).. (h3.north);
 
 \end{tikzpicture}
