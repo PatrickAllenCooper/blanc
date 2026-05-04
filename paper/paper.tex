@@ -1,7 +1,7 @@
 \documentclass{article}
 
-% NeurIPS 2026 Evaluations & Datasets Track (single-blind)
-\usepackage[eandd, nonanonymous]{neurips_2026}
+% NeurIPS 2026 Evaluations & Datasets Track (anonymous double-blind submission)
+\usepackage[eandd]{neurips_2026}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -74,11 +74,8 @@
 \title{DeFAb: A Defeasible Abduction Benchmark and Verifier-Backed Finetuning Substrate for Foundation Models}
 
 \author{%
-  Patrick Cooper \\
-  Department of Computer Science\\
-  University of Colorado Boulder\\
-  Boulder, CO 80309 \\
-  \texttt{patrick.cooper@colorado.edu} \\
+  Anonymous Authors \\
+  Anonymous Affiliation \\
 }
 
 
@@ -88,7 +85,7 @@
 
 
 \begin{abstract}
-A rule-based logic solver resolves every instance in our benchmark in under 50 microseconds with 100\% accuracy. The best frontier language model achieves 65\% at best, and drops to 7.8\% under rendering-robust evaluation. This gap is structural, not computational. We introduce \textsc{DeFAb} (\textbf{De}feasible \textbf{A}bduction \textbf{B}enchmark), a dataset, generation pipeline, and verifier-backed finetuning substrate that converts four decades of publicly funded knowledge bases into formally grounded evaluation instances for defeasible abduction: the task of constructing hypotheses that explain anomalies by overriding default conclusions while preserving unrelated expectations. The pipeline pairs taxonomic hierarchies (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to produce 372,648+ instances across 33.75 million materialized rules from 18 knowledge sources, stratified into three difficulty levels with polynomial-time verifiable gold-standard hypotheses. Evaluation of four frontier models reveals a cascade of structural failures: two of four models score below random chance (16.7\%) on the rendering-robust metric; the best model achieves only 0.8\% at Level~3 under direct prompting; 80.9\% of Kimi-K2.5 responses fail to decode at all; and chain-of-thought prompting actively harms instruction-tuned models ($-14$~pp) while helping reasoning-optimized models ($+79$~pp). These findings reveal not underperformance but structural absence of defeasible reasoning capability. Beyond evaluation, the benchmark's polynomial-time verifier doubles as an \emph{exact reward function} for preference optimization: graded scoring directly yields DPO preference pairs, RLVR/GRPO rewards, and verifier-gated re-prompt signals, making DeFAb a self-contained finetuning substrate without reward model approximation. The dataset, generation pipeline, and evaluation harness are released under the MIT license at \url{https://huggingface.co/datasets/PatrickAllenCooper/DeFAb}.
+A rule-based logic solver resolves every instance in our benchmark in under 50 microseconds with 100\% accuracy. The best frontier language model achieves 65\% at best, and drops to 7.8\% under rendering-robust evaluation. This gap is structural, not computational. We introduce \textsc{DeFAb} (\textbf{De}feasible \textbf{A}bduction \textbf{B}enchmark), a dataset, generation pipeline, and verifier-backed finetuning substrate that converts four decades of publicly funded knowledge bases into formally grounded evaluation instances for defeasible abduction: the task of constructing hypotheses that explain anomalies by overriding default conclusions while preserving unrelated expectations. The pipeline pairs taxonomic hierarchies (OpenCyc, YAGO, Wikidata) with behavioral property graphs (ConceptNet, UMLS) to produce 372,648+ instances across 33.75 million materialized rules from 18 knowledge sources, stratified into three difficulty levels with polynomial-time verifiable gold-standard hypotheses. Evaluation of four frontier models reveals a cascade of structural failures: two of four models score below random chance (16.7\%) on the rendering-robust metric; the best model achieves only 0.8\% at Level~3 under direct prompting; 80.9\% of Kimi-K2.5 responses fail to decode at all; and chain-of-thought prompting actively harms instruction-tuned models ($-14$~pp) while helping reasoning-optimized models ($+79$~pp). These findings reveal not underperformance but structural absence of defeasible reasoning capability. Beyond evaluation, the benchmark's polynomial-time verifier doubles as an \emph{exact reward function} for preference optimization: graded scoring directly yields DPO preference pairs, RLVR/GRPO rewards, and verifier-gated re-prompt signals, making DeFAb a self-contained finetuning substrate without reward model approximation. The dataset, generation pipeline, and evaluation harness are released under the MIT license; an anonymous review mirror is available at \url{https://anonymous.4open.science/r/defab-anon}.
 \end{abstract}
 
 
@@ -203,7 +200,7 @@ We evaluate four frontier models. The reasoning-optimized GPT-5.2-chat~\cite{ope
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_results.pdf}
-\caption{(a)~Rendering-robust accuracy per model (worst case over M1--M4). Bars in red are at or below the 16.7\% random-chance baseline (dashed); all four models are far below the ASP symbolic ceiling (100\%, upper dashed). \textbf{Two of four frontier models cannot beat random chance on the headline metric.} (b)~Accuracy by rendering modality M1--M4 plus rendering-robust column. All models score 73--94\% on formal modalities (M2--M4) but collapse to 14--22\% on narrative M1, confirming that formal-modality performance reflects surface syntax pattern matching rather than reasoning. (c)~Graded-score distribution at Level~3: the ``Score~0'' (anomaly entirely unresolved) fraction dominates for Claude (72\%) and Kimi (84\%), showing complete task failure rather than near-miss. The architectural CoT dissociation (DeepSeek +56~pp, Claude $-14$~pp) is shown in Appendix~\ref{app:cot_fig}.}
+\caption{(a)~Rendering-robust accuracy per model (worst case over M1--M4). Bars in red are at or below the 16.7\% random-chance baseline (dashed); all four models are far below the ASP symbolic ceiling (100\%, upper dashed). \textbf{Two of four frontier models cannot beat random chance on the headline metric.} (b)~Accuracy by rendering modality M1--M4 plus rendering-robust column. All models score 73--94\% on formal modalities (M2--M4) but collapse to 14--22\% on narrative M1, confirming that formal-modality performance reflects surface syntax pattern matching rather than reasoning. (c)~Graded-score distribution at Level~3: the ``Score~0'' (anomaly entirely unresolved) fraction dominates for Claude (72\%) and Kimi (84\%), showing complete task failure rather than near-miss. Per-cell variance of the CoT effect across all eight (model, level) cells is shown in Appendix~\ref{app:cot_fig}.}
 \label{fig:results}
 \end{figure}
 
@@ -235,7 +232,7 @@ Figure~\ref{fig:results}(a) is the primary result. The rendering-robust accuracy
 
 The Level~3 results are equally stark. Under direct prompting, Kimi achieves 0.8\% (one correct response in 125 attempts), GPT-5.2 achieves 7.9\%, and DeepSeek-R1 achieves 37.1\%. Of Kimi's Level~3 responses, 80.9\% are class~E1 (decoder failure): the model cannot produce outputs parseable as valid hypotheses, a metacognitive failure distinct from incorrect reasoning. The graded-score distribution (Figure~\ref{fig:results}c) confirms that Claude and Kimi are failing the task entirely: Score~0 (anomaly unresolved) accounts for 72\% of Claude's responses and 84\% of Kimi's; neither model is producing near-miss conservative resolutions. Table~\ref{tab:level3_metrics} reports the full Level~3 metric suite.
 
-Chain-of-thought prompting produces a large architectural dissociation: CoT raises Level~3 accuracy by 56~pp for DeepSeek-R1 and 79~pp for GPT-5.2 (reasoning-optimized) but lowers Claude's by 14~pp (instruction-optimized), and produces a universal Level~2 regression of 1.5--31~pp, replicating the overthinking effect~\cite{chen2024overthinking}. Both effects are documented in Appendix~\ref{app:cot_fig}. The single positive finding, 71.9--79.3\% Level~2 direct accuracy on formal modalities, vanishes under rendering-robust evaluation (7.8--23.5\%), and the symbolic solver achieves 100\% with no training whatsoever.
+Chain-of-thought prompting produces a large architectural dissociation: CoT raises Level~3 accuracy by 56~pp for DeepSeek-R1 and 79~pp for GPT-5.2 (reasoning-optimized) but lowers Claude's by 14~pp (instruction-optimized), and produces a universal Level~2 regression of 1.5--31~pp, replicating the overthinking effect~\cite{chen2024overthinking}. The full per-cell variance is shown in Appendix~\ref{app:cot_fig} (Figure~\ref{fig:cot_variance}); the spread of 36~pp standard deviation across the eight (model, level) cells means prompting-template choice can swing measured accuracy by more than the difference between any two models. The single positive finding, 71.9--79.3\% Level~2 direct accuracy on formal modalities, vanishes under rendering-robust evaluation (7.8--23.5\%), and the symbolic solver achieves 100\% with no training whatsoever.
 
 \begin{table}[t]
 \centering
@@ -286,7 +283,7 @@ We have introduced \textsc{DeFAb}, a benchmark that exposes structural deficits 
 
 More broadly, DeFAb is an explicit attempt to pick up the research thrust that the large publicly funded knowledge-engineering programs of the 1980s through the 2010s set in motion. Cyc, FGCS, Alvey, ESPRIT, the NSF lexical and commonsense projects, the NIH biomedical infrastructure, the EU multilingual and legal ontologies, and the encyclopedic projects Wikidata, DBpedia, and YAGO together produced the formal scaffolding that defeasible reasoning needs. That scaffolding has been treated as historical background during the deep-learning era; the contemporary failure modes of foundation models on grounding, novelty, and belief revision suggest that this was a costly omission. The synthesis we propose, in which decades of formally structured public knowledge become the verifier-backed reward signal that makes principled training of defeasible reasoning tractable, is the natural next chapter of that arc. We hope DeFAb will be read as an invitation to take it up.
 
-The DeFAb dataset, generation pipeline, and evaluation harness are released under the MIT license on HuggingFace Datasets at \url{https://huggingface.co/datasets/PatrickAllenCooper/DeFAb}, with Croissant metadata covering both the core and Responsible AI fields. Each instance is a JSON object containing the challenge theory, target literal, candidate and gold hypothesis sets, structural difficulty metrics, and renderings in all five modalities. Source knowledge base licenses are enumerated in the Datasheet (Appendix~\ref{app:datasheet}). The dataset will be maintained for at least five years from publication; Tier~0 instances are frozen at version~1.0 for cross-study comparability, and additional tiers will be released as additive versions.
+The DeFAb dataset, generation pipeline, and evaluation harness are released under the MIT license; for review they are available via an anonymous mirror at \url{https://anonymous.4open.science/r/defab-anon}, with Croissant metadata covering both the core and Responsible AI fields. The de-anonymized HuggingFace and GitHub URLs will be provided in the camera-ready version. Each instance is a JSON object containing the challenge theory, target literal, candidate and gold hypothesis sets, structural difficulty metrics, and renderings in all five modalities. Source knowledge base licenses are enumerated in the Datasheet (Appendix~\ref{app:datasheet}). The dataset will be maintained for at least five years from publication; Tier~0 instances are frozen at version~1.0 for cross-study comparability, and additional tiers will be released as additive versions.
 
 
 \bibliographystyle{plainnat}
@@ -500,14 +497,14 @@ for inst in data["instances"]:
 
 
 %% =================================================================
-\section{CoT Dissociation Figure}\label{app:cot_fig}
+\section{CoT Variance Analysis}\label{app:cot_fig}
 %% =================================================================
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=0.72\textwidth]{figures/fig_cot_dissociation.pdf}
-\caption{Level~3 accuracy under direct prompting versus chain-of-thought for the four frontier models. Reasoning-optimized models (DeepSeek-R1, GPT-5.2) gain $+56$ to $+79$~pp under CoT; the instruction-optimized Claude~Sonnet~4.6 \emph{regresses} by $-14$~pp. Wilson 95\% CI half-widths $\pm 15$--$17$~pp at Level~3. Annotated values (\emph{Rob.}) show rendering-robust accuracy for each model; note that even the best CoT result (DeepSeek 92.9\%) corresponds to a rendering-robust score of only 23.5\%, confirming that CoT on formal modalities does not transfer to the headline metric.}
-\label{fig:cot_dissociation}
+\includegraphics[width=0.78\textwidth]{figures/fig_cot_variance.pdf}
+\caption{Variance of the chain-of-thought effect across the eight (model, level) cells. Each bar shows $\mathrm{Acc}_\mathrm{CoT} - \mathrm{Acc}_\mathrm{Direct}$ in percentage points. A stable prompting regime would produce all bars near zero; the actual spread ($\sigma \approx 36$~pp, range $\approx 110$~pp) shows that prompting-template choice can swing measured accuracy by more than the difference between any two models. The sign reverses between Level~2 (CoT hurts every model) and Level~3 (CoT helps three of four reasoning-optimized models but hurts Claude). The implication for benchmarking practice is that any single headline number that pools across prompting strategies will be dominated by the prompting choice rather than by capability.}
+\label{fig:cot_variance}
 \end{figure}
 
 
@@ -541,8 +538,8 @@ Full pipeline per instance & $O(|\D|^3)$ \\
 
 \begin{itemize}[nosep]
 \item \textbf{Purpose:} DeFAb was created to evaluate and train foundation models on defeasible abduction: the ability to construct hypotheses that explain anomalies by overriding default conclusions while preserving unrelated expectations. No existing benchmark combines formally verifiable gold-standard hypotheses with conservativity constraints, contamination-resistant evaluation, and verifier-backed finetuning signal.
-\item \textbf{Creators:} Patrick Cooper, University of Colorado Boulder.
-\item \textbf{Funding:} University of Colorado Boulder Department of Computer Science.
+\item \textbf{Creators:} Anonymous (to be revealed in camera-ready).
+\item \textbf{Funding:} Anonymous institutional funding (to be revealed in camera-ready).
 \end{itemize}
 
 \subsection*{Composition}
@@ -581,16 +578,16 @@ Full pipeline per instance & $O(|\D|^3)$ \\
 
 \begin{itemize}[nosep]
 \item \textbf{License:} MIT (pipeline and produced instances). Source KB licenses: YAGO (CC-BY 4.0), WordNet (Princeton License), LKIF Core (Apache 2.0), MatOnto (CC-BY 4.0), Wikidata (CC0 1.0), ConceptNet (CC-BY-SA 4.0), Gene Ontology (CC-BY 4.0), UMLS (NLM License), SUMO (GPLv2), FrameNet (CC-BY 3.0).
-\item \textbf{Platform:} HuggingFace Datasets (\url{https://huggingface.co/datasets/PatrickAllenCooper/DeFAb}).
+\item \textbf{Platform:} HuggingFace Datasets; anonymous review mirror at \url{https://anonymous.4open.science/r/defab-anon}.
 \end{itemize}
 
 \subsection*{Maintenance}
 
 \begin{itemize}[nosep]
-\item \textbf{Maintainer:} Patrick Cooper, University of Colorado Boulder (\texttt{patrick.cooper@colorado.edu}).
+\item \textbf{Maintainer:} Anonymous; reviewers may contact the authors via OpenReview during review. Maintainer details will be provided in the camera-ready version.
 \item \textbf{Duration:} At least 5 years from publication. Generation pipeline enables re-generation from updated source KBs.
 \item \textbf{Versioning:} Semantic versioning. Tier~0 instances frozen at v1.0 for cross-study comparability. Additional tiers are additive.
-\item \textbf{Issues:} GitHub repository (\url{https://github.com/PatrickAllenCooper/blanc}).
+\item \textbf{Issues:} Anonymous review mirror (\url{https://anonymous.4open.science/r/defab-anon}); de-anonymized GitHub repository in camera-ready.
 \end{itemize}
 
 
