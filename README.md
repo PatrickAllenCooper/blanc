@@ -37,9 +37,9 @@ verifiable gold-standard hypotheses at three difficulty levels:
 
 This is a streamlined snapshot of the repository, scoped to what reviewers
 need to verify the claims in the paper. The full development repository
-(including HPC orchestration, ablation runs, exploratory notebooks, math-side
-research thrust, RTS live-integration tooling, and result archives) is on
-the anonymous mirror.
+(including HPC orchestration, ablation runs, exploratory notebooks, the
+math-side research thrust, RTS live-integration tooling, and result
+archives) will be made available at camera-ready time.
 
 ```
 paper/                       NeurIPS 2026 E&D submission paper
@@ -82,16 +82,19 @@ scripts/                     Generation entry points
 
 instances/                   Sample instances (50 per tier; full dataset on mirror)
 tests/                       Unit tests for core library (verifier, generation, codec)
-Guidance_Documents/          Project documentation
 ```
 
 ---
 
 ## Quick start
 
+Reviewers can browse the repository directly in this anonymous mirror, or
+download a snapshot via the "Download Repository" button (top-right of the
+mirror's file viewer) and then:
+
 ```bash
-git clone https://anonymous.4open.science/r/blanc-anon
-cd blanc-anon
+unzip <download>.zip
+cd blanc
 pip install -r requirements.txt
 python -m pytest tests/ --tb=no -q
 ```
