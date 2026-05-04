@@ -80,187 +80,219 @@ def _wilson_ci(n, p):
 # Figure 4: Main results grid (3 panels)
 # =====================================================================
 
-def fig_results():
-    """Three-panel results figure.
+# Shared data for figure 4 panels
+_REND_ROB     = [23.5,  9.1, 15.5,  7.8]  # DeepSeek, GPT, Claude, Kimi
+_MODELS_SHORT = ['DeepSeek\nR1', 'GPT\n5.2', 'Claude\n4.6', 'Kimi\nK2.5']
+_MODELS_HM    = ['DeepSeek-R1', 'Claude 4.6', 'Kimi-K2.5', 'GPT-5.2']
+_MODS         = ['M1', 'M2', 'M3', 'M4', 'Rend.\nRob.']
+_DATA_HM      = [
+    [21.5, 85.6, 94.1, 87.8, 23.5],  # DeepSeek
+    [19.0, 87.0, 91.1, 88.1, 15.5],  # Claude
+    [14.6, 75.9, 76.5, 75.6,  7.8],  # Kimi
+    [22.0, 75.1, 72.8, 75.6,  9.1],  # GPT
+]
+_GRADED = {
+    'DeepSeek-R1': [29.0,  5.4, 6.0, 11.4, 48.2],
+    'GPT-5.2':     [50.0,  7.1, 0.0,  6.1, 36.8],
+    'Claude 4.6':  [72.0, 13.0, 0.0,  2.9, 12.1],
+    'Kimi-K2.5':   [83.7,  2.4, 0.0,  0.0, 13.9],
+}
+_SCORE_COLORS = [PAL['red'], '#C97A5E', PAL['gold'], '#8BA86B', PAL['teal']]
+_SCORE_LABELS = ['Score 0 (unresolved)', '0.25', '0.5', '0.75 (weak conserv.)', '1.0 (conservative)']
 
-    4a: L3 accuracy by prompting strategy (Direct vs CoT) with:
-        - Wilson 95% CI whiskers
-        - Dashed line at 16.7% (random 1/6)
-        - Dashed line at 100% (ASP symbolic ceiling)
-        - Rendering-robust values annotated in red
 
-    4b: Accuracy by rendering modality M1-M4 (heatmap) plus
-        rendering-robust worst-case column.
+def _draw_rend_rob_panel(ax, models_short=None, rend_rob=None):
+    """Panel (a): rendering-robust accuracy — all models clearly failing.
 
-    4c: Graded-score distribution at L3 per model — stacked bars
-        showing the dominant Score=0 (unresolved) fraction.
+    One bar per model, y-axis 0-100, dashed reference lines at 16.7%
+    (random chance for 6-choice) and 100% (ASP symbolic ceiling).
+    Two of four bars are at or below random chance.
     """
-    n_l3 = 35   # Level 3 instances in Tier 0
-    n_l2 = 374  # Level 2 instances
+    if models_short is None:
+        models_short = _MODELS_SHORT
+    if rend_rob is None:
+        rend_rob = _REND_ROB
 
-    models_short = ['DeepSeek\nR1', 'GPT\n5.2', 'Claude\n4.6', 'Kimi\nK2.5']
-    models_long  = ['DeepSeek-R1', 'GPT-5.2', 'Claude 4.6', 'Kimi-K2.5']
+    x    = np.arange(len(models_short))
+    n_l2 = 374
+    ci   = [_wilson_ci(n_l2, v/100)*100 for v in rend_rob]
 
-    # --- Panel (a) data ---
-    direct_l3  = [37.1,  7.9, 23.6,  0.8]
-    cot_l3     = [92.9, 87.1,  9.3, 27.6]
-    rend_rob   = [23.5,  9.1, 15.5,  7.8]   # rendering-robust (overlay)
+    # Colour bars by position relative to random baseline
+    bar_colors = [PAL['red'] if v <= 16.7 else PAL['blue'] for v in rend_rob]
 
-    ci_direct = [_wilson_ci(n_l3, v/100)*100 for v in direct_l3]
-    ci_cot    = [_wilson_ci(n_l3, v/100)*100 for v in cot_l3]
+    bars = ax.bar(x, rend_rob, 0.55,
+                  color=bar_colors, edgecolor='white', linewidth=0.4,
+                  yerr=ci, capsize=2.5,
+                  error_kw={'elinewidth': 0.8, 'ecolor': PAL['gray'], 'capthick': 0.8})
 
-    # --- Panel (b) data ---
-    # Rows: DeepSeek, Claude, Kimi, GPT  (ordered by rendering-robust desc)
-    models_hm  = ['DeepSeek-R1', 'Claude 4.6', 'Kimi-K2.5', 'GPT-5.2']
-    mods       = ['M1', 'M2', 'M3', 'M4', 'Rend.\nRob.']
-    data_hm = np.array([
-        [21.5, 85.6, 94.1, 87.8, 23.5],  # DeepSeek
-        [19.0, 87.0, 91.1, 88.1, 15.5],  # Claude
-        [14.6, 75.9, 76.5, 75.6,  7.8],  # Kimi
-        [22.0, 75.1, 72.8, 75.6,  9.1],  # GPT
-    ])
+    # Value labels on top of each bar
+    for i, (v, b) in enumerate(zip(rend_rob, bars)):
+        ax.text(b.get_x() + b.get_width()/2, v + 1.5, f'{v:.1f}%',
+                ha='center', va='bottom', fontsize=6,
+                color=PAL['red'] if rend_rob[i] <= 16.7 else PAL['blue'],
+                fontweight='bold')
 
-    # --- Panel (c) data: graded score distribution at L3 ---
-    # Stacked fractions: Score 0, 0.25, 0.5, 0.75, 1.0
-    # From l3_metrics_summary.json + error_taxonomy.json
-    # Binary accuracy = correct fraction at Score=1.0 (best-prompt combined)
-    # Graded mean: DeepSeek 0.596, GPT 0.429, Claude 0.150, Kimi 0.139
-    # Detailed breakdown per 280 eval rows (8 modality×strategy combos × 35 instances)
-    # Fraction correct (graded=1.0): from accuracy numbers above
-    # We approximate the distribution from available data
-    # DeepSeek: 48.2% correct (score=1), 16.8% E1(score~0), 23.6% E2(score~0), 11.4% E5(score~0.75)
-    #   => 0=29.0%, 0.5=10%, 0.75=11.4%, 1.0=48.2% (approx, E2 mostly score 0 or 0.25)
-    # GPT: 36.8% correct, 26.1% E1, 31.1% E2, 6.1% E5
-    #   => 0=50%, 0.75=6.1%, 1.0=36.8% (rest ~0.25)
-    # Claude: 12.1% correct, 26.8% E1, 58.2% E2, 2.9% E5
-    #   => 0=72%, 0.75=2.9%, 1.0=12.1%
-    # Kimi: 13.9% correct, 80.9% E1, 5.2% E2
-    #   => 0=83.7%, 1.0=13.9%, rest ~0.25
+    # --- Reference lines ---
+    ax.axhline(16.7, color=PAL['red'], linewidth=1.2, linestyle='--', alpha=0.9,
+               zorder=3)
+    ax.axhline(100.0, color=PAL['gray'], linewidth=0.9, linestyle='--', alpha=0.7,
+               zorder=3)
+    ax.text(len(x) - 0.05, 16.7 + 1.2, 'Random chance (1/6)',
+            ha='right', va='bottom', fontsize=5.5, color=PAL['red'], alpha=0.95,
+            fontweight='bold')
+    ax.text(len(x) - 0.05, 100.0 + 0.8, 'ASP symbolic ceiling (100%)',
+            ha='right', va='bottom', fontsize=5.5, color=PAL['gray'])
 
-    # scores: [0, 0.25, 0.5, 0.75, 1.0]
-    graded = {
-        'DeepSeek-R1': [29.0,  5.4, 6.0, 11.4, 48.2],
-        'GPT-5.2':     [50.0,  7.1, 0.0,  6.1, 36.8],
-        'Claude 4.6':  [72.0, 13.0, 0.0,  2.9, 12.1],
-        'Kimi-K2.5':   [83.7,  2.4, 0.0,  0.0, 13.9],
-    }
-    score_colors = [PAL['red'], '#C97A5E', PAL['gold'], '#8BA86B', PAL['teal']]
-    score_labels = ['Score 0 (unresolved)', '0.25', '0.5', '0.75 (weak conserv.)', '1.0 (conservative)']
+    ax.set_ylabel('Rendering-Robust Accuracy (%)', fontsize=7)
+    ax.set_xticks(x)
+    ax.set_xticklabels(models_short, fontsize=6.5)
+    ax.set_ylim(0, 108)
+    ax.yaxis.set_major_locator(mticker.MultipleLocator(25))
+    ax.tick_params(axis='x', length=0)
+    ax.set_title('(a) Rendering-Robust Accuracy', fontsize=8, pad=4)
 
-    # ---- Build figure ----
-    fig = plt.figure(figsize=(7.0, 4.5))
-    gs  = fig.add_gridspec(1, 3, width_ratios=[1.15, 1.0, 1.0], wspace=0.38)
+    # Annotate below random with small indicator
+    ax.annotate('', xy=(1.35, 16.7), xycoords='data',
+                xytext=(1.35, 9.1), textcoords='data',
+                arrowprops=dict(arrowstyle='->', color=PAL['red'],
+                                lw=0.8, connectionstyle='arc3'))
 
-    ax_a = fig.add_subplot(gs[0])
-    ax_b = fig.add_subplot(gs[1])
-    ax_c = fig.add_subplot(gs[2])
 
-    # --- Panel (a) ---
-    x = np.arange(len(models_short))
-    w = 0.30
-
-    bars_d = ax_a.bar(x - w/2, direct_l3, w,
-                      label='Direct', color=PAL['blue'],
-                      edgecolor='white', linewidth=0.3,
-                      yerr=ci_direct, capsize=2.5,
-                      error_kw={'elinewidth': 0.8, 'ecolor': PAL['blue'], 'capthick': 0.8})
-    bars_c = ax_a.bar(x + w/2, cot_l3, w,
-                      label='CoT', color=PAL['teal'],
-                      edgecolor='white', linewidth=0.3,
-                      yerr=ci_cot, capsize=2.5,
-                      error_kw={'elinewidth': 0.8, 'ecolor': PAL['teal'], 'capthick': 0.8})
-
-    # Annotate rendering-robust values in red below each model
-    for i, rr in enumerate(rend_rob):
-        ax_a.annotate(f'Rob.={rr:.0f}%', xy=(x[i], -5), xycoords=('data', 'axes points'),
-                      ha='center', va='top', fontsize=5.5, color=PAL['red'],
-                      xytext=(0, -14), textcoords='offset points')
-
-    # Reference lines
-    ax_a.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle='--', alpha=0.8)
-    ax_a.axhline(100.0, color=PAL['gray'], linewidth=0.7, linestyle='--', alpha=0.6)
-    ax_a.text(3.55, 16.7 + 1.0, 'Random (1/6)', ha='right', va='bottom',
-              fontsize=5.5, color=PAL['red'], alpha=0.9)
-    ax_a.text(3.55, 100.0 + 0.5, 'ASP ceiling', ha='right', va='bottom',
-              fontsize=5.5, color=PAL['gray'])
-
-    ax_a.set_ylabel('Level~3 Accuracy (%)')
-    ax_a.set_xticks(x)
-    ax_a.set_xticklabels(models_short, fontsize=6.5)
-    ax_a.set_ylim(-2, 108)
-    ax_a.legend(loc='upper left', framealpha=0.9, edgecolor=PAL['gray'],
-                fontsize=6, handlelength=1.0, handletextpad=0.4)
-    ax_a.set_title('(a) L3 Prompting Strategy', fontsize=8, pad=4)
-    ax_a.yaxis.set_major_locator(mticker.MultipleLocator(25))
-    ax_a.tick_params(axis='x', length=0)
-
-    # --- Panel (b): Modality heatmap ---
-    # Use a two-tone colormap: yellowy for low, blue for high
+def _draw_heatmap_panel(ax):
+    """Panel (b): accuracy by rendering modality heatmap."""
     from matplotlib.colors import LinearSegmentedColormap
-    cmap = LinearSegmentedColormap.from_list(
-        'defab', [PAL['red_l'], '#F5E6C8', PAL['teal_l'], PAL['blue_l']], N=256)
-    # Reverse: high = blue, low = red
+    data_hm = np.array(_DATA_HM)
+    mods = _MODS
+    models_hm = _MODELS_HM
+
     cmap_r = LinearSegmentedColormap.from_list(
         'defab_r', ['#F2C9C8', '#F5E6C8', '#C6D9DC', '#D0DBF0'], N=256)
+    ax.imshow(data_hm, cmap=cmap_r, aspect='auto', vmin=0, vmax=100)
 
-    im = ax_b.imshow(data_hm, cmap=cmap_r, aspect='auto', vmin=0, vmax=100)
-
-    ax_b.set_xticks(np.arange(len(mods)))
-    ax_b.set_yticks(np.arange(len(models_hm)))
-    ax_b.set_xticklabels(mods, ha='center', fontsize=6.5)
-    ax_b.set_yticklabels(models_hm, fontsize=6.5)
+    ax.set_xticks(np.arange(len(mods)))
+    ax.set_yticks(np.arange(len(models_hm)))
+    ax.set_xticklabels(mods, ha='center', fontsize=6.5)
+    ax.set_yticklabels(models_hm, fontsize=6.5)
 
     for i in range(len(models_hm)):
         for j in range(len(mods)):
             val = data_hm[i, j]
             fg = 'black' if 25 < val < 85 else ('white' if val >= 85 else 'black')
-            # Mark rendering-robust column in red
             fc = PAL['red'] if j == 4 else fg
-            ax_b.text(j, i, f'{val:.0f}', ha='center', va='center',
-                      fontsize=6.5, fontweight='bold', color=fc)
+            ax.text(j, i, f'{val:.0f}', ha='center', va='center',
+                    fontsize=6.5, fontweight='bold', color=fc)
 
-    # Highlight rendering-robust column
-    ax_b.axvline(3.5, color=PAL['red'], linewidth=0.8, alpha=0.6)
-
-    ax_b.set_title('(b) Accuracy by Modality', fontsize=8, pad=4)
-    # tick marks for heatmap
-    ax_b.tick_params(left=False, bottom=False)
-    for spine in ax_b.spines.values():
+    ax.axvline(3.5, color=PAL['red'], linewidth=0.8, alpha=0.6)
+    ax.set_title('(b) Accuracy by Modality', fontsize=8, pad=4)
+    ax.tick_params(left=False, bottom=False)
+    for spine in ax.spines.values():
         spine.set_visible(False)
 
-    # --- Panel (c): Graded score distribution ---
-    models_c = list(graded.keys())
-    bottoms  = np.zeros(len(models_c))
+
+def _draw_graded_panel(ax):
+    """Panel (c): graded score distribution at L3."""
+    models_c = list(_GRADED.keys())
+    bottoms = np.zeros(len(models_c))
     score_vals = [0, 0.25, 0.5, 0.75, 1.0]
 
-    for k, (sval, sc, sl) in enumerate(zip(score_vals, score_colors, score_labels)):
-        vals = [graded[m][k] for m in models_c]
-        bars = ax_c.barh(models_c, vals, left=bottoms,
-                         color=sc, edgecolor='white', linewidth=0.3,
-                         label=sl, height=0.55)
-        # Annotate fractions > 8%
+    for k, (sval, sc, sl) in enumerate(zip(score_vals, _SCORE_COLORS, _SCORE_LABELS)):
+        vals = [_GRADED[m][k] for m in models_c]
+        ax.barh(models_c, vals, left=bottoms,
+                color=sc, edgecolor='white', linewidth=0.3,
+                label=sl, height=0.55)
         for i, (v, b) in enumerate(zip(vals, bottoms)):
             if v > 8:
-                ax_c.text(b + v/2, i, f'{v:.0f}%',
-                          ha='center', va='center', fontsize=5.5,
-                          color='white' if sc in (PAL['red'], PAL['teal']) else 'black',
-                          fontweight='bold')
+                ax.text(b + v/2, i, f'{v:.0f}%',
+                        ha='center', va='center', fontsize=5.5,
+                        color='white' if sc in (PAL['red'], PAL['teal']) else 'black',
+                        fontweight='bold')
         bottoms = bottoms + np.array(vals)
 
-    ax_c.set_xlim(0, 105)
-    ax_c.set_xlabel('Fraction of L3 responses (%)', fontsize=7)
-    ax_c.set_yticks(range(len(models_c)))
-    ax_c.set_yticklabels(models_c, fontsize=6.5)
-    ax_c.yaxis.set_tick_params(length=0)
-    ax_c.set_title('(c) L3 Graded Score Distribution', fontsize=8, pad=4)
-    ax_c.legend(loc='lower right', fontsize=5, handlelength=0.9, handletextpad=0.3,
-                framealpha=0.85, edgecolor=PAL['gray'], ncol=1)
-    ax_c.spines['left'].set_visible(False)
-    ax_c.spines['top'].set_visible(False)
-    ax_c.spines['right'].set_visible(False)
-    ax_c.xaxis.set_major_locator(mticker.MultipleLocator(25))
+    ax.set_xlim(0, 105)
+    ax.set_xlabel('Fraction of L3 responses (%)', fontsize=7)
+    ax.set_yticks(range(len(models_c)))
+    ax.set_yticklabels(models_c, fontsize=6.5)
+    ax.yaxis.set_tick_params(length=0)
+    ax.set_title('(c) L3 Graded Score Distribution', fontsize=8, pad=4)
+    ax.legend(loc='lower right', fontsize=5, handlelength=0.9, handletextpad=0.3,
+              framealpha=0.85, edgecolor=PAL['gray'], ncol=1)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.xaxis.set_major_locator(mticker.MultipleLocator(25))
 
-    fig.tight_layout()
+
+def fig_results():
+    """Three-panel results figure.
+
+    4a: Rendering-robust accuracy per model — all models below ASP ceiling,
+        two models at or below 16.7% random chance. Primary failure visual.
+    4b: Accuracy by rendering modality M1-M4 plus rendering-robust column.
+    4c: Graded score distribution at L3 — Score=0 dominates for Claude/Kimi.
+    """
+    fig = plt.figure(figsize=(7.0, 4.5))
+    gs  = fig.add_gridspec(1, 3, width_ratios=[1.05, 1.0, 1.0], wspace=0.42)
+
+    ax_a = fig.add_subplot(gs[0])
+    ax_b = fig.add_subplot(gs[1])
+    ax_c = fig.add_subplot(gs[2])
+
+    _draw_rend_rob_panel(ax_a)
+    _draw_heatmap_panel(ax_b)
+    _draw_graded_panel(ax_c)
+
+    fig.tight_layout(pad=0.6)
+    return fig
+
+
+def fig_cot_dissociation():
+    """Standalone CoT dissociation figure for appendix.
+
+    Shows L3 accuracy under direct vs CoT prompting per model,
+    with the architectural dissociation (CoT helps reasoning models,
+    hurts Claude) and rendering-robust values annotated.
+    """
+    n_l3 = 35
+    direct_l3 = [37.1,  7.9, 23.6,  0.8]
+    cot_l3    = [92.9, 87.1,  9.3, 27.6]
+    rend_rob  = [23.5,  9.1, 15.5,  7.8]
+
+    ci_direct = [_wilson_ci(n_l3, v/100)*100 for v in direct_l3]
+    ci_cot    = [_wilson_ci(n_l3, v/100)*100 for v in cot_l3]
+
+    fig, ax = plt.subplots(figsize=(4.2, 2.4))
+    x = np.arange(len(_MODELS_SHORT))
+    w = 0.32
+
+    ax.bar(x - w/2, direct_l3, w, label='Direct', color=PAL['blue'],
+           edgecolor='white', linewidth=0.3,
+           yerr=ci_direct, capsize=2.5,
+           error_kw={'elinewidth': 0.8, 'ecolor': PAL['blue'], 'capthick': 0.8})
+    ax.bar(x + w/2, cot_l3, w, label='Chain-of-Thought', color=PAL['teal'],
+           edgecolor='white', linewidth=0.3,
+           yerr=ci_cot, capsize=2.5,
+           error_kw={'elinewidth': 0.8, 'ecolor': PAL['teal'], 'capthick': 0.8})
+
+    # Rendering-robust annotation (below bars as regular text)
+    for i, rr in enumerate(rend_rob):
+        ax.text(x[i], 2.5, f'Rob.={rr:.0f}%', ha='center', va='bottom',
+                fontsize=5.5, color=PAL['red'])
+
+    ax.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle='--', alpha=0.8)
+    ax.axhline(100.0, color=PAL['gray'], linewidth=0.7, linestyle='--', alpha=0.6)
+    ax.text(3.6, 17.5, 'Random (1/6)', ha='right', fontsize=5.5, color=PAL['red'])
+    ax.text(3.6, 100.8, 'ASP ceiling', ha='right', fontsize=5.5, color=PAL['gray'])
+
+    ax.set_ylabel('Level 3 Accuracy (%)', fontsize=7)
+    ax.set_xticks(x)
+    ax.set_xticklabels(_MODELS_SHORT, fontsize=6.5)
+    ax.set_ylim(0, 108)
+    ax.yaxis.set_major_locator(mticker.MultipleLocator(25))
+    ax.tick_params(axis='x', length=0)
+    ax.legend(loc='upper left', framealpha=0.9, edgecolor=PAL['gray'],
+              fontsize=6, handlelength=1.0)
+    ax.set_title('L3 Accuracy: Direct vs. Chain-of-Thought', fontsize=8, pad=4)
+    fig.tight_layout(pad=0.8)
     return fig
 
 
@@ -434,11 +466,17 @@ def fig_difficulty():
 # =====================================================================
 
 if __name__ == '__main__':
-    print('Generating Figure 4: results grid (3 panels)...')
+    print('Generating Figure 4: results grid (3 panels, panel a = rendering-robust)...')
     fig4 = fig_results()
     fig4.savefig(os.path.join(OUT_DIR, 'fig_results.pdf'), format='pdf')
     plt.close(fig4)
     print(f'  -> {OUT_DIR}/fig_results.pdf')
+
+    print('Generating CoT dissociation (appendix figure)...')
+    figcot = fig_cot_dissociation()
+    figcot.savefig(os.path.join(OUT_DIR, 'fig_cot_dissociation.pdf'), format='pdf')
+    plt.close(figcot)
+    print(f'  -> {OUT_DIR}/fig_cot_dissociation.pdf')
 
     print('Generating Figure 3: sources provenance + composition...')
     fig3 = fig_sources()
@@ -453,6 +491,6 @@ if __name__ == '__main__':
     print(f'  -> {OUT_DIR}/fig_difficulty.pdf')
 
     print('Done.')
-    print('Note: Figure 1 (pipeline) is TikZ in fig_pipeline.tex')
-    print('      Figure 2 (worked example) is TikZ in fig_level3_example.tex')
+    print('Note: Figure 1 (pipeline+generation) is TikZ in fig_pipeline.tex')
+    print('      Figure 2 (IDP worked example) is TikZ in fig_level3_example.tex')
     print('      Figure 6 (finetuning) is TikZ in fig_finetuning.tex')
