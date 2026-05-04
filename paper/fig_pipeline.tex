@@ -1,94 +1,168 @@
-% DeFAb pipeline diagram — NeurIPS 2026 design system
-% Colors: defabBlue #1F3A6B, defabTeal #3D6B7A, defabGold #D9A441, defabRed #B0413E, defabGray #6B7280
+% DeFAb combined pipeline + L1/L2/L3 generation figure — compact version
+% Top row: pipeline arc. Bottom: three columns showing the same bear theory
+% ablated three ways, one per level, with gold answers and key distractors.
 \begin{tikzpicture}[
     >=stealth,
-    node distance=0.75cm and 1.0cm,
-    box/.style={
-        draw=defabBlue!70, rounded corners=2pt, minimum height=0.72cm,
-        font=\small, inner sep=4pt, text centered, align=center,
-        fill=defabBlue!6, line width=0.5pt
+    node distance=0.2cm and 0.5cm,
+    % pipeline boxes
+    pipebox/.style={
+        draw=defabBlue!70, rounded corners=2pt,
+        font=\fontsize{6.5}{7.5}\selectfont, inner sep=3pt,
+        text centered, align=center,
+        fill=defabBlue!6, line width=0.4pt, minimum height=0.55cm
     },
-    levelbox/.style={
-        draw=defabTeal!80, rounded corners=2pt, minimum height=0.58cm,
-        font=\footnotesize, inner sep=3pt, text centered, align=center,
-        fill=defabTeal!10, minimum width=2.1cm, line width=0.5pt
+    % column headers
+    levhdr/.style={
+        draw=defabTeal!70, rounded corners=2pt,
+        font=\fontsize{6.5}{7.5}\selectfont\bfseries,
+        inner sep=2.5pt, text centered, align=center,
+        fill=defabTeal!12, line width=0.4pt,
+        minimum width=3.8cm, minimum height=0.42cm, text=defabTeal
     },
-    exbox/.style={
-        draw=defabGray!60, rounded corners=1.5pt, minimum height=0.44cm,
-        font=\scriptsize\itshape, inner sep=2.5pt, text centered, align=center,
-        fill=defabGray!5, minimum width=2.6cm, line width=0.4pt, text=defabGray!80
+    % theory lines (compacted mini-box style as inline text)
+    linebox/.style={
+        draw=defabGray!40, rounded corners=1pt,
+        font=\fontsize{5.8}{6.5}\selectfont, inner sep=2pt, align=left,
+        fill=white, line width=0.35pt, minimum width=3.8cm
+    },
+    ablline/.style={
+        draw=defabRed!65, rounded corners=1pt,
+        font=\fontsize{5.8}{6.5}\selectfont\bfseries,
+        inner sep=2pt, align=left,
+        fill=defabRed!7, line width=0.4pt, minimum width=3.8cm, text=defabRed
+    },
+    goldline/.style={
+        draw=defabTeal!75, rounded corners=1pt,
+        font=\fontsize{5.8}{6.5}\selectfont\bfseries,
+        inner sep=2pt, align=left,
+        fill=defabTeal!9, line width=0.4pt, minimum width=3.8cm, text=defabTeal!80
+    },
+    distline/.style={
+        draw=defabGray!35, rounded corners=1pt,
+        font=\fontsize{5.5}{6}\selectfont\itshape,
+        inner sep=2pt, align=left,
+        fill=defabGray!4, line width=0.3pt, minimum width=3.8cm, text=defabGray
     },
     modbox/.style={
-        draw=defabGold!80, rounded corners=2pt,
-        font=\footnotesize, inner sep=4pt, text centered, align=center,
-        fill=defabGold!8, minimum width=1.55cm, minimum height=2.5cm, line width=0.5pt
+        draw=defabGold!70, rounded corners=2pt,
+        font=\fontsize{6.5}{7.5}\selectfont,
+        inner sep=2.5pt, text centered, align=center,
+        fill=defabGold!8, line width=0.4pt, minimum height=0.42cm
     },
-    verbox/.style={
-        draw=defabRed!70, rounded corners=2pt, minimum height=0.52cm,
-        font=\scriptsize\bfseries, inner sep=3pt, text centered, align=center,
-        fill=defabRed!8, minimum width=2.1cm, line width=0.5pt, text=defabRed
-    },
-    arr/.style={->, thick, color=defabBlue!60},
-    arrthin/.style={->, thin, color=defabGray!70, dashed},
-    lbl/.style={font=\scriptsize\itshape, midway, above, text=defabGray},
-    stglbl/.style={font=\scriptsize\bfseries, text=defabGray!70}
+    parr/.style={->, thick, color=defabBlue!55, line width=0.6pt},
+    sarr/.style={->, thin,  color=defabGray!65, line width=0.45pt},
 ]
 
-% --- Stage 1: KB → Logic Program ---
-\node[box, text width=1.75cm] (kb)
-    {Knowledge\\Bases\\[-1pt]{\scriptsize\color{defabGray}YAGO, GO,}\\[-2pt]{\scriptsize\color{defabGray}UMLS, \ldots}};
-\node[box, right=1.0cm of kb, text width=1.75cm] (lp)
-    {Logic\\Program $\Pi$};
-\draw[arr] (kb) -- node[lbl] {formalize} (lp);
+%% ---------------------------------------------------------------
+%% TOP ROW: pipeline arc (compressed)
+%% ---------------------------------------------------------------
+\node[pipebox, text width=1.45cm] (kb) at (0,0)
+    {KBs\\{\fontsize{5.5}{6}\selectfont\color{defabGray}15+ sources}};
+\node[pipebox, text width=1.3cm, right=0.65cm of kb] (lp) {Logic\\Program $\Pi$};
+\node[pipebox, text width=1.4cm, right=0.65cm of lp] (dt) {Defeasible\\Theory $\D$};
+\node[pipebox, text width=1.3cm, right=0.65cm of dt] (ab) {Ablate\\critical $e$};
+\node[pipebox, text width=1.45cm, right=0.65cm of ab] (vr)
+    {\textbf{Verifier}\\$O(|\D|^3)$};
 
-% --- Stage 2: LP → Defeasible Theory ---
-\node[box, right=1.0cm of lp, text width=1.75cm] (dt)
-    {Defeasible\\Theory $\mathcal{D}$};
-\draw[arr] (lp) -- node[lbl] {$\kappa$} (dt);
+\draw[parr] (kb) -- node[above, font=\fontsize{5}{6}\selectfont\itshape,
+    text=defabGray] {form.} (lp);
+\draw[parr] (lp) -- node[above, font=\fontsize{5}{6}\selectfont\itshape,
+    text=defabGray] {$\kappa$} (dt);
+\draw[parr] (dt) -- node[above, font=\fontsize{5}{6}\selectfont\itshape,
+    text=defabGray] {ablate} (ab);
+\draw[parr] (ab) -- node[above, font=\fontsize{5}{6}\selectfont\itshape,
+    text=defabGray] {verify} (vr);
 
-% --- Stage 3: three levels, vertically stacked ---
-\node[levelbox, right=1.15cm of dt, yshift= 0.93cm] (l3) {\textbf{L3} Defeater};
-\node[levelbox, right=1.15cm of dt]                  (l2) {\textbf{L2} Rule};
-\node[levelbox, right=1.15cm of dt, yshift=-0.93cm]  (l1) {\textbf{L1} Fact};
+%% ---------------------------------------------------------------
+%% BOTTOM REGION: L1 / L2 / L3 columns
+%% Shared bear-hibernation theory:
+%%   facts: bear(G), bear(P), arctic(P), seal_hunter(P), winter_active(P)
+%%   r_s:  bear(X) -> mammal(X)
+%%   r_d:  bear(X) => hibernates(X)
+%%   r*:   bear(X),arctic(X),sh(X) ~> not hib(X); r* > r_d
+%% ---------------------------------------------------------------
 
-\draw[arr] (dt.east) -- ++(0.35,0) |- (l3.west);
-\draw[arr] (dt.east) -- (l2.west);
-\draw[arr] (dt.east) -- ++(0.35,0) |- (l1.west);
+%% ---- L1 column ----
+\node[levhdr] (h1) at (-3.9, -0.9)  {L1: Fact Completion};
 
-% Micro-example boxes right of each level
-\node[exbox, right=0.35cm of l3] (ex3) {construct\\exception rule};
-\node[exbox, right=0.35cm of l2] (ex2) {reconstruct\\missing rule};
-\node[exbox, right=0.35cm of l1] (ex1) {identify\\missing fact};
+\node[linebox, below=0.14cm of h1, text width=3.8cm] (t1) {
+  \textbf{Theory:}
+  \texttt{bear(G)}\ \texttt{bear(P)}\ \texttt{arctic(P)\ seal\_h(P)}\\
+  $r_d$: \texttt{bear(X) $\Rightarrow$ hibernates(X)}\\
+  $r^*$: \texttt{bear(X),arctic(X) $\leadsto\neg$hib(X)}
+};
+\node[ablline, below=0.08cm of t1, text width=3.8cm] (a1) {
+  Remove fact \texttt{bear(grizzly)} $\leftarrow$ ablated!\\
+  \textbf{Target:} \texttt{hib(grizzly)} -- chain broken
+};
+\node[goldline, below=0.08cm of a1, text width=3.8cm] (g1) {
+  \textbf{Gold:} \texttt{bear(grizzly)} restores chain
+};
+\node[distline, below=0.06cm of g1, text width=3.8cm] (d1) {
+  Distractor: \texttt{mammal(grizzly)} [wrong predicate]
+};
 
-\draw[arrthin] (l3.east) -- (ex3.west);
-\draw[arrthin] (l2.east) -- (ex2.west);
-\draw[arrthin] (l1.east) -- (ex1.west);
+%% ---- L2 column ----
+\node[levhdr] (h2) at (0.0, -0.9)  {L2: Rule Abduction};
 
-% Verifier badge below level boxes
-\node[verbox, below=0.38cm of l2] (ver)
-    {$O(|\mathcal{D}|^3)$\\verifier $\checkmark$};
-\draw[arrthin, color=defabRed!60] (l3.south) -- (ver.north -| l3.south);
-\draw[arrthin, color=defabRed!60] (l2.south) -- (ver.north);
-\draw[arrthin, color=defabRed!60] (l1.north) -- (ver.south -| l1.north);
+\node[linebox, below=0.14cm of h2, text width=3.8cm] (t2) {
+  \textbf{Theory:}
+  \texttt{bear(G)}\ \texttt{bear(P)}\ \texttt{arctic(P)\ seal\_h(P)}\\
+  $r_s$: \texttt{bear(X) $\to$ mammal(X)}\\
+  $r^*$: \texttt{bear(X),arctic(X) $\leadsto\neg$hib(X)}
+};
+\node[ablline, below=0.08cm of t2, text width=3.8cm] (a2) {
+  Remove rule $r_d$: \texttt{bear(X) $\Rightarrow$ hib(X)}\\
+  \textbf{Target:} \texttt{hib(grizzly)} -- no rule!
+};
+\node[goldline, below=0.08cm of a2, text width=3.8cm] (g2) {
+  \textbf{Gold:} \texttt{bear(X) $\Rightarrow$ hib(X)} reconstructed
+};
+\node[distline, below=0.06cm of g2, text width=3.8cm] (d2) {
+  Distractor: \texttt{mammal(X) $\Rightarrow$ hib(X)} [too broad]
+};
 
-% --- Stage 4: rendering modalities ---
-\node[modbox, right=1.3cm of ex2, yshift=0.0cm]
-    (render) {M1 Narrative\\[1pt]M2 Semi-formal\\[1pt]M3 Annotated\\[1pt]M4 Formal\\[1pt]M5 Visual};
+%% ---- L3 column ----
+\node[levhdr] (h3) at (3.9, -0.9)  {L3: Defeater Abduction};
 
-\draw[arr] (ex3.east) -- (render.west |- ex3.east);
-\draw[arr] (ex2.east) -- (render.west);
-\draw[arr] (ex1.east) -- (render.west |- ex1.east);
+\node[linebox, below=0.14cm of h3, text width=3.8cm] (t3) {
+  \textbf{Theory:}
+  \texttt{bear(P)\ arctic(P)\ seal\_h(P)\ winter\_act(P)}\\
+  $r_d$: \texttt{bear(X) $\Rightarrow$ hib(X)}
+};
+\node[ablline, below=0.08cm of t3, text width=3.8cm] (a3) {
+  Remove $r^*$ --- theory predicts \texttt{hib(polar)},\\
+  but \texttt{winter\_active(polar)}: \textbf{anomaly!}
+};
+\node[goldline, below=0.08cm of a3, text width=3.8cm] (g3) {
+  \textbf{Score 1.0:} $r^*$ restored, $r^*\!\succ\!r_d$ (conservative)
+};
+\node[distline, below=0.06cm of g3, text width=3.8cm] (d3) {
+  Score 0.5: \texttt{$\neg$hib(X) :- bear(X)} [not conservative]
+};
 
-% Stage labels
-\node[stglbl, above=0.15cm of kb] {\textsf{Stage 1}};
-\node[stglbl, above=0.15cm of lp] {\textsf{Stage 2}};
-\node[stglbl, above=0.15cm of l3] {\textsf{Stage 3}};
-\node[stglbl, above=0.15cm of render] {\textsf{Stage 4}};
+%% ---- Arrows from pipeline ablation box down to column headers ----
+\draw[sarr] (ab.south) .. controls +(-0.2,-0.25) and +(0.1,0.25) .. (h1.north);
+\draw[sarr] (ab.south) -- (h2.north);
+\draw[sarr] (ab.south) .. controls +(0.2,-0.25) and +(-0.1,0.25) .. (h3.north);
 
-% Verifier double-use annotation
-\node[font=\scriptsize\itshape, text=defabRed!80,
-      below right=-0.05cm and 0.2cm of ver.south east,
-      text width=3.2cm, align=left]
-    {also: DPO reward,\\GRPO reward,\\gated re-prompt};
+%% ---- Modality strip ----
+\node[modbox, below=0.18cm of d1, text width=3.6cm, minimum height=0.42cm] (m1)
+    {M1 Narrative};
+\node[modbox, below=0.18cm of d2, text width=3.6cm, minimum height=0.42cm] (m2)
+    {M2--M4 Formal};
+\node[modbox, below=0.18cm of d3, text width=3.6cm, minimum height=0.42cm] (m3)
+    {M5 Visual};
+
+\draw[sarr] (d1.south) -- (m1.north);
+\draw[sarr] (d2.south) -- (m2.north);
+\draw[sarr] (d3.south) -- (m3.north);
+
+\draw[{<[scale=0.6]}-{>[scale=0.6]}, color=defabGold!65, line width=0.4pt]
+    (m1.east) -- (m2.west);
+\draw[{<[scale=0.6]}-{>[scale=0.6]}, color=defabGold!65, line width=0.4pt]
+    (m2.east) -- (m3.west);
+\node[font=\fontsize{5.5}{6}\selectfont\itshape, text=defabGold!80,
+      below=0.04cm of m2, anchor=north] {Five rendering modalities (each instance)};
 
 \end{tikzpicture}
