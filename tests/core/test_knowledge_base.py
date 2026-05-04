@@ -4,7 +4,7 @@ Tests for core/knowledge_base.py coverage gaps.
 Covers: KnowledgeBase initialization, _create_backend error paths,
 load FileNotFoundError, repr (lines 44-48, 64-107, 123-128, 204-206).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

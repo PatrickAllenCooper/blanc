@@ -28,7 +28,7 @@ Usage::
     python scripts/seed_roe_conflicts.py
     python scripts/seed_roe_conflicts.py --output data/sc2_conflicts.jsonl
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import json

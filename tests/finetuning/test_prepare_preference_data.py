@@ -8,7 +8,7 @@ Tests cover pure-Python logic (no GPU, no live model):
   - extract_gold_anchored_pairs
   - score_response (via mocks)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

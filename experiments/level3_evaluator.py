@@ -18,7 +18,7 @@ For each model response on a Level 3 instance this module:
        E4  Conservativity violation-- resolves anomaly but breaks other expectations
        E5  Strength shortfall      -- conservative but weaker strength than gold
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

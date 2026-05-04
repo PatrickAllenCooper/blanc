@@ -4,7 +4,7 @@ Tests for CommanderPolicy with mocked LLM responses.
 One test per enforcement mode demonstrating gating behavior.
 All tests are pure Python with no SC2 binary or real API required.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import copy

@@ -6,7 +6,7 @@ GPU-dependent code (actual training) is not tested.  Tests cover
 pure-Python logic: data formatting, reward function interface,
 spectral initialization mathematics, and sparsity metrics.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

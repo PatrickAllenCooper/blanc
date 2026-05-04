@@ -24,7 +24,7 @@ The novelty *distance* metric defaults to a bounded edit-distance over the
 normalised Lean expressions.  Used by margin-weighted DPO at M2 to reward
 strictly-weaker conditions over equivalents.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

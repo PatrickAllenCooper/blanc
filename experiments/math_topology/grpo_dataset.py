@@ -14,7 +14,7 @@ sampling pass and the GRPO step are independently re-runnable.
 The output is shaped to match the input expected by the existing
 ``experiments/finetuning/train_grpo.py`` driver in this repo.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

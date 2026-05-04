@@ -8,7 +8,7 @@ Integrates:
 - Decoder cascade (D1→D2→D3)
 - Metrics computation
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

@@ -15,7 +15,7 @@ Usage examples:
     # With explicit target
     python experiments/debate/run_debate.py --kb biology --target "flies(tweety)" --rounds 3
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import argparse

@@ -5,7 +5,7 @@ Provides a clean MCTS implementation parameterised by a search space
 protocol. The defeasible-reasoning domain adapter lives in
 derivation_space.py; this module knows nothing about logic.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

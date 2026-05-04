@@ -7,7 +7,7 @@ cross-language inconsistencies -> defeaters, rate limiting
 configuration, theory generation, taxonomy output, and the
 convenience function -- all without real API calls.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

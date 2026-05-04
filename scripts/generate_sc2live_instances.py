@@ -20,7 +20,7 @@ Usage::
     python scripts/generate_sc2live_instances.py --trace-dir data/sc2_traces/
     python scripts/generate_sc2live_instances.py --level 3 --max-instances 50
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import argparse

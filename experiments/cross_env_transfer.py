@@ -44,7 +44,7 @@ Key table format:
     legal             --        --        --
     materials         --        --        --
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -4,7 +4,7 @@ Targeted tests for codec/nl_mapping.py coverage gaps.
 Covers: _verify_injectivity, from_nl, has_mapping, add_mapping,
 get_nl_mapping error path (lines 122-125, 150-151, 155, 168-170, 196).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

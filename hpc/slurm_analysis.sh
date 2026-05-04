@@ -39,7 +39,7 @@
 #   sbatch hpc/slurm_analysis.sh
 #   sbatch --export=ALL,RESULTS_DIR=experiments/results/foundry_gpt52_20260228 hpc/slurm_analysis.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

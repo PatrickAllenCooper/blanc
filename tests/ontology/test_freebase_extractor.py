@@ -6,7 +6,7 @@ type.object.type -> strict type facts, type.type.instance -> instance
 facts, other predicates -> defeasible rules, cross-domain type conflict
 detection -> defeaters, theory generation, and taxonomy output.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

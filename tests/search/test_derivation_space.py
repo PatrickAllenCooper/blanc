@@ -4,7 +4,7 @@ Tests for the defeasible derivation search space adapter.
 Validates action enumeration, state transitions, terminal detection,
 and integration with the DefeasibleEngine.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

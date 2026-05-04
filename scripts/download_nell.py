@@ -4,7 +4,7 @@ Download NELL beliefs from HuggingFace.
 Uses the datasets library to download rtw-cmu/nell.
 The data is cached by HuggingFace under ~/.cache/huggingface/.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

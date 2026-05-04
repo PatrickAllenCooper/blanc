@@ -34,7 +34,7 @@
 #   sudo systemctl enable --now defab_finetune defab_watchdog
 #   journalctl -u defab_finetune -f
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # =============================================================================
 
 set -euo pipefail

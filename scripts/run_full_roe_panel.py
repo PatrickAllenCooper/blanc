@@ -23,7 +23,7 @@ Usage::
     python scripts/run_full_roe_panel.py --skip-done --budget-usd 30
     python scripts/run_full_roe_panel.py --models foundry-gpt foundry-claude foundry-kimi
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

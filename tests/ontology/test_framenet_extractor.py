@@ -5,7 +5,7 @@ Mocks the NLTK framenet corpus so tests run without downloading any
 data.  Covers inheritance rules, core FE rules, Using presupposition
 rules, taxonomy extraction, and the ImportError fallback.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

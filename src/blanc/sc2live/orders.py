@@ -20,7 +20,7 @@ Conclusions that have no direct SC2 action are silently dropped; the bot
 continues to issue only positively derived orders, never suppresses default
 SC2 AI behavior unless a conclusion explicitly overrides it.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

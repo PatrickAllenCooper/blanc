@@ -14,7 +14,7 @@ CURC vLLM (only for models not available on Foundry):
   Qwen 2.5 72B / 32B for within-family scaling comparison.
   Accessed via SSH tunnel: http://localhost:8000/v1
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 
@@ -1044,7 +1044,7 @@ class CURCInterface(ModelInterface):
     """
     Interface for CURC-hosted open-source models via vLLM.
 
-    The CURC LLM Hoster (Patrick Cooper, 2026) runs a vLLM inference server
+    The CURC LLM Hoster (Anonymous Authors, 2026) runs a vLLM inference server
     on Alpine's A100 GPU nodes and exposes an OpenAI-compatible REST API.
     Access is via SSH tunnel (local) or directly from within the cluster:
 

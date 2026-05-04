@@ -38,7 +38,7 @@
 #   sbatch hpc/slurm_ft_analysis.sh
 #   sbatch --export=ALL,RESULTS_DIR=experiments/results/finetuned hpc/slurm_ft_analysis.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

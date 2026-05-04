@@ -3,7 +3,7 @@ Yield Model Fitting - Section 4.3.4 Enhancement
 
 Fit parametric models to yield curves and perform statistical tests.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

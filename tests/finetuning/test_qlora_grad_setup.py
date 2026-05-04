@@ -27,7 +27,7 @@ Loading the actual model needs a GPU and tens of GB of weights, so these tests
 parse the source files instead. They run in <50 ms and break the build the
 moment any of the three guards is removed.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

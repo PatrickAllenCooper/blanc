@@ -2,7 +2,7 @@
 Tests for derivation tree construction.
 
 Tests Definition 13 (AND-OR derivation trees).
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

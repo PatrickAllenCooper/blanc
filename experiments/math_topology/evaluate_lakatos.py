@@ -20,7 +20,7 @@ It also accepts a ``baseline_hits`` count and applies a one-sided
 proportion test (McNemar-style for paired counts when supplied) so the
 M2 gate decision is statistically defensible.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

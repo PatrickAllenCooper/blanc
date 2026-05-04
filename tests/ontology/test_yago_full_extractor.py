@@ -5,7 +5,7 @@ Uses tempfile to create small synthetic TTL files for stream parsing.
 Covers prefix resolution, triple classification, theory rule types,
 taxonomy and property extraction.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

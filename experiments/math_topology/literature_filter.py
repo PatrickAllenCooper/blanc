@@ -24,7 +24,7 @@ This module ships with two concrete filters:
                                    downstream code cannot silently treat
                                    it as a real filter.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

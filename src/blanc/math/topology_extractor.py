@@ -21,7 +21,7 @@ skips anything containing meta-variables, holes, or attribute decorators
 it cannot safely round-trip.  Anything we cannot fully parse is dropped
 on the floor; the dropper / scorer never sees a half-parsed theorem.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

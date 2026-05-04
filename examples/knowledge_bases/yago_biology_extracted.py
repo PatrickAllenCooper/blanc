@@ -6,7 +6,7 @@ Source: data\yago\yago-4.5.0.2-tiny\yago-tiny.ttl
 Classes: 3390
 Rules: 584
 
-Author: Extracted by Patrick Cooper
+Author: Extracted by Anonymous Authors
 Date: 2026-02-12
 """
 

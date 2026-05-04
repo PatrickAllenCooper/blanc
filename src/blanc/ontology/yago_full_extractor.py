@@ -12,7 +12,7 @@ Conversion rules:
     schema:* properties     -> defeasible property rules
     yago:* properties       -> defeasible property rules
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

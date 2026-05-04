@@ -30,7 +30,7 @@
 #   sbatch hpc/slurm_debate.sh
 #   sbatch --export=ALL,DEBATE_ROUNDS=5,MCTS_ITERATIONS=500 hpc/slurm_debate.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

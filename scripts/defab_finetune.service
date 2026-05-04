@@ -1,6 +1,6 @@
 [Unit]
 Description=DeFAb Fine-Tuning (Spot-VM Resilient)
-Documentation=https://github.com/PatrickAllenCooper/blanc/blob/main/hpc/AZURE_FINETUNE.md
+Documentation=https://github.com/anonymous-authors/defab/blob/main/hpc/AZURE_FINETUNE.md
 After=network-online.target nvidia-fabricmanager.service
 Wants=network-online.target
 StartLimitIntervalSec=600

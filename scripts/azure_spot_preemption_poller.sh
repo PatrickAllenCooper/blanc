@@ -22,7 +22,7 @@
 #   DEFAB_SENTINEL   -- path to touch on imminent preemption (optional)
 #   DEFAB_POLL_SEC   -- poll interval in seconds (default 5)
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # =============================================================================
 
 set -u

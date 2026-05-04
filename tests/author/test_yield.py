@@ -1,7 +1,7 @@
 """
 Tests for yield computation and Proposition 3.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

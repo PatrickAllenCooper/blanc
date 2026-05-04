@@ -7,7 +7,7 @@ Based on organisms that exist in YAGO/WordNet taxonomies.
 These are real organisms (not synthetic) that appear in expert KBs.
 Used to populate the biology KB with ground facts for instance generation.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

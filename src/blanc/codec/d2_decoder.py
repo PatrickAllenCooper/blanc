@@ -4,7 +4,7 @@ D2 Decoder: Template Extraction via Edit Distance
 Decodes text by finding closest match via Levenshtein distance.
 Paper Section 4.4 (D2: Template extraction).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

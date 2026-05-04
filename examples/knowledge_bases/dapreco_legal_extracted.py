@@ -11,7 +11,7 @@ Citation: Robaldo, L., Bartolini, C., Lenzini, G. (2020).
           The DAPRECO Knowledge Base: Representing the GDPR
           in LegalRuleML. LREC 2020.
 
-Author: Extracted by Patrick Cooper
+Author: Extracted by Anonymous Authors
 Date: 2026-02-12
 """
 

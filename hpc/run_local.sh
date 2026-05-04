@@ -39,7 +39,7 @@
 #   OLLAMA_MODEL      Ollama model tag        (default: llama3:8b)
 #   OLLAMA_HOST       Ollama server URL       (default: http://localhost:11434)
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # Date: 2026-02-19
 
 set -euo pipefail

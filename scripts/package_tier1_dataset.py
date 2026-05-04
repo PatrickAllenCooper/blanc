@@ -1,7 +1,7 @@
 """
 Package Tier 1 dataset: generate statistics and summary.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

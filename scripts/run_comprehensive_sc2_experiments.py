@@ -22,7 +22,7 @@ Usage::
     python scripts/run_comprehensive_sc2_experiments.py --budget-usd 10 --verbose
     python scripts/run_comprehensive_sc2_experiments.py --provider foundry-gpt
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

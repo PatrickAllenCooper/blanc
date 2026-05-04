@@ -27,7 +27,7 @@ These tests:
      (iterates newest-first, quarantines invalid checkpoints, validates
      with Python before returning).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

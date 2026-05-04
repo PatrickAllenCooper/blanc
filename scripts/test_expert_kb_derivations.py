@@ -4,7 +4,7 @@ Test derivation chains in expert KBs.
 Find derivable conclusions that go through rule chains to verify
 the expert KBs have sufficient depth for instance generation.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

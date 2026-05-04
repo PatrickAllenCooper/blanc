@@ -4,7 +4,7 @@ Reward functions for MCTS over defeasible derivation spaces.
 Each function scores a DerivationState, returning a float in [0, 1].
 ``composite_reward`` combines several into a weighted mixture.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

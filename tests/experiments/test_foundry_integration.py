@@ -21,7 +21,7 @@ models have headroom to emit a visible reply.
 Run the full Foundry connectivity check (human-readable) with:
     python experiments/validate_api_keys.py
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-19
 """
 

@@ -8,7 +8,7 @@ Tests:
 - Statistics tracking
 - Hit/miss tracking
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

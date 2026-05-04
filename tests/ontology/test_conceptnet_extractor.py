@@ -4,7 +4,7 @@ Comprehensive tests for ConceptNet5 extractor.
 Tests extraction logic across multiple domains with all supported
 relation types.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import gzip

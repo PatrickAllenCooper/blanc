@@ -4,7 +4,7 @@ M1 Encoder: Narrative Modality
 Encodes rules and facts in full natural language with linguistic hedging.
 Paper Section 4.4 (M1: Narrative - hardest modality).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

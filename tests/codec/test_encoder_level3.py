@@ -5,7 +5,7 @@ Covers: encode_instance (Level 3), defeater encoding, superiority
 encoding, _is_well_formed_atom edge cases, and the module-level
 encode_instance convenience function (encoder.py lines 143-262).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

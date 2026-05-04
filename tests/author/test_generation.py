@@ -2,7 +2,7 @@
 Tests for instance generation (Levels 1-2).
 
 Tests Definitions 20-21.
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

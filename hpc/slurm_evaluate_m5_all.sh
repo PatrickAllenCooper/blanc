@@ -22,7 +22,7 @@
 #   export FOUNDRY_API_KEY=<key>
 #   bash hpc/slurm_evaluate_m5_all.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

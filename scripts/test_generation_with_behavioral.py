@@ -3,7 +3,7 @@ Test instance generation with defeasible behavioral rules.
 
 Now that biology KB has defeasible rules, test if instance generation works.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

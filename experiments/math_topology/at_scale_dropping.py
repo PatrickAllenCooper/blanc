@@ -30,7 +30,7 @@ Usage:
 The script is GRPO-friendly: per-challenge groups of K samples are
 preserved end-to-end, and ``grpo_dataset.py`` consumes the same JSONL.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

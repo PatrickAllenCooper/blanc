@@ -3,7 +3,7 @@ Exact match decoder (D1).
 
 Implements D1 decoding strategy from paper.tex Definition 29, line 723.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 
 CRITICAL COMPONENT: Round-trip consistency must be perfect.

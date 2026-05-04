@@ -2,7 +2,7 @@
 Tests for Level 3 metrics: predicate_novelty, check_conservativity,
 revision_distance (blanc.author.metrics).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

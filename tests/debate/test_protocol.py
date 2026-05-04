@@ -4,7 +4,7 @@ Tests for the debate agent framework, protocol, and resolution scoring.
 Covers proposal generation, defense mechanism, full debate rounds on
 a small knowledge base, challenge instance validity, and scoring.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

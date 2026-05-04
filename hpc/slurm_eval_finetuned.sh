@@ -31,7 +31,7 @@
 #   sbatch --export=ALL,CHECKPOINT=/path/to/checkpoint,BASE_MODEL=Qwen/Qwen2.5-72B-Instruct-AWQ \
 #          hpc/slurm_eval_finetuned.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

@@ -4,7 +4,7 @@ Metrics for instance generation and analysis.
 Implements yield computation (Definition 22), predicate novelty (Definition 14),
 conservativity verification (Definition 15), and revision distance (Definition 16).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

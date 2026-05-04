@@ -29,7 +29,7 @@ Lux AI S3 mechanics:
     - Nebulae reduce sensor range and drain energy
     - Asteroids are impassable and drift across the map
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.core.theory import Theory, Rule, RuleType

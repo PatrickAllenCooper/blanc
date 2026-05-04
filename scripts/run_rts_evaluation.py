@@ -40,7 +40,7 @@ Hypotheses being tested (from the plan):
   H3: ROE L3 accuracy may exceed biology L3 (explicit exception structure).
   H4: E4 (non-conservative defeaters) more frequent in ROE than biology.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

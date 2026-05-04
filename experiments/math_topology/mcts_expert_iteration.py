@@ -18,7 +18,7 @@ makes a ``NotImplementedError`` the only honest answer for production use.
 The Lean kernel is reused as the terminal reward signal via the existing
 :class:`blanc.math.lean_harness.LeanHarness`.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

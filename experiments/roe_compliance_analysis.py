@@ -22,7 +22,7 @@ Usage::
         --input data/roe_compliance/foundry-deepseek_quiz_20260420.jsonl \\
         --output experiments/results/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

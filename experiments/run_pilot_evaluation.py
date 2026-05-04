@@ -13,7 +13,7 @@ Requires:
 Expected cost: $2-5
 Expected time: 5-10 minutes
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

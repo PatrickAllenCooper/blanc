@@ -7,7 +7,7 @@ type constraints, and mutual-exclusion defeaters.
 
 Primary source files: Merge.kif, Mid-level-ontology.kif.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

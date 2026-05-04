@@ -12,7 +12,7 @@ Runs the 6 ROE_LEVEL3_SEEDS quiz scenarios through all three enforcement modes
 
 No SC2 binary required.  Runtime < 10 seconds.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

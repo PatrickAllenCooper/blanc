@@ -11,7 +11,7 @@ Usage:
     python experiments/debate/analyze_debate.py
     python experiments/debate/analyze_debate.py --results-file experiments/results/debate_results.json
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import argparse

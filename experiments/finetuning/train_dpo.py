@@ -48,7 +48,7 @@ Usage (local, 1 GPU for smoke test):
       --max-steps 10 \\
       --per-device-batch-size 1
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

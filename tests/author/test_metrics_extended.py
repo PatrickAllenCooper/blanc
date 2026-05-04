@@ -1,7 +1,7 @@
 """
 Extended tests for author/metrics.py to improve coverage.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

@@ -18,7 +18,7 @@ This script processes completed evaluation results to extract scaling
 curves.  The actual model calls are handled by run_evaluation.py;
 this script analyses the saved JSON outputs.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

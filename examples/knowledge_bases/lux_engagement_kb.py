@@ -40,7 +40,7 @@ Cross-environment comparison:
     comparison tests whether the DeFAb verifier measures domain-general
     defeasible reasoning rather than SC2-specific vocabulary.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.core.theory import Theory

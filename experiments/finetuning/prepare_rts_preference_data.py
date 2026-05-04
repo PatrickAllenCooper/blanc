@@ -46,7 +46,7 @@ Outputs (in --output-dir):
     rts_splits.json              -- instance ID -> split mapping
     rts_preference_stats.json    -- counts, margins, error breakdown
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

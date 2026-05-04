@@ -4,7 +4,7 @@ Natural Language Mapping for Semi-Formal Encoding (M2).
 Maps predicate symbols to natural language phrases while maintaining injectivity.
 Definition 28 from paper.tex.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

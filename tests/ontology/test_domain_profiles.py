@@ -1,7 +1,7 @@
 """
 Tests for domain profile system.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

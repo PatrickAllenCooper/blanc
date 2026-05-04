@@ -1,7 +1,7 @@
 """
 Tests for cross-ontology combiner module.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import json

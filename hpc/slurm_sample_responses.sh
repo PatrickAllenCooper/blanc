@@ -36,7 +36,7 @@
 #   sbatch --export=ALL,VLLM_MODEL="Qwen/Qwen2.5-32B-Instruct-AWQ" hpc/slurm_sample_responses.sh
 #   sbatch --gres=gpu:2 --export=ALL,VLLM_MODEL="casperhansen/deepseek-r1-distill-llama-70b-awq",TP_SIZE=2 hpc/slurm_sample_responses.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

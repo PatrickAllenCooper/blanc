@@ -4,7 +4,7 @@ Generate instances from all extracted multi-tier theories.
 Loads theories from data/extracted/*/theory.pkl and generates
 L1, L2, and L3 instances using the same pipeline as Tier 1.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

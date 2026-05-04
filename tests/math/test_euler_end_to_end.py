@@ -4,7 +4,7 @@ This is the gating M0 deliverable: corpus + dropper + mock Lean kernel +
 novelty filter + scorer all compose into a single working pipeline on the
 canonical Lakatos example.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

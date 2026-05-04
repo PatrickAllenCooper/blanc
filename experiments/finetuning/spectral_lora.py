@@ -21,7 +21,7 @@ and subtract the base weight contribution to ensure the initial effective
 weight change is not the full rank-r projection but rather a controlled
 perturbation.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

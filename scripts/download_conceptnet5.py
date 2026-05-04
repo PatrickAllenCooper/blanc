@@ -3,7 +3,7 @@ Download ConceptNet5 assertions file.
 
 Downloads the main assertions CSV from ConceptNet 5.7.0 (latest stable).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

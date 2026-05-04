@@ -2,7 +2,7 @@
 Tests for defeasible conversion.
 
 Tests Definition 9 and Proposition 1.
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

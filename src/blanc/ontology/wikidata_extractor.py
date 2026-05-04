@@ -5,7 +5,7 @@ Queries the Wikidata SPARQL endpoint (https://query.wikidata.org/sparql) for
 property-constraint exceptions (P2302/P2303) and domain-specific instanceof
 assertions, converting them into defeasible rules and defeaters.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations
@@ -69,7 +69,7 @@ class WikidataExtractor:
 
     def __init__(
         self,
-        user_agent: str = "DeFAb/1.0 (patrick.cooper@colorado.edu)",
+        user_agent: str = "DeFAb/1.0 (anonymous@anonymous.org)",
         delay: float = 2.0,
     ):
         self.user_agent = user_agent
@@ -361,7 +361,7 @@ LIMIT {limit}
 def extract_from_wikidata(
     domains: Optional[List[str]] = None,
     limit: int = 50000,
-    user_agent: str = "DeFAb/1.0 (patrick.cooper@colorado.edu)",
+    user_agent: str = "DeFAb/1.0 (anonymous@anonymous.org)",
     delay: float = 2.0,
 ) -> Theory:
     """Extract a defeasible theory from Wikidata.

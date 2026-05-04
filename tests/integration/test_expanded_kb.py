@@ -4,7 +4,7 @@ End-to-end integration tests for the expanded KB pipeline.
 Tests the full flow: extract -> combine -> validate -> report,
 using synthetic data (no raw data downloads required).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import gzip

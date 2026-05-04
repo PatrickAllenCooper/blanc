@@ -6,7 +6,7 @@ rather than Datalog literals.  A MathTheorem is the math analogue of a strict
 rule; a Defeater is the analogue of a defeasible rule that overrides the
 default conclusion under a stricter hypothesis subset.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

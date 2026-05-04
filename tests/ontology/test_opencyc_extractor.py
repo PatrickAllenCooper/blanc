@@ -5,7 +5,7 @@ The OpenCyc OWL file is not included in the repo, so tests that require
 the actual file are skipped.  Tests cover initialization, interface,
 domain-profile acceptance, and helper methods.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

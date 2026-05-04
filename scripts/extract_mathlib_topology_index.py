@@ -19,7 +19,7 @@ Plus a single meta-row at the start:
     {"_meta": {"mathlib_commit": "<rev>", "lean_version": "<ver>",
                "theorem_count": N, "timestamp": "..."}}
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

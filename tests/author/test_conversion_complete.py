@@ -3,7 +3,7 @@ Complete conversion tests to push coverage to 85%+.
 
 Targets all remaining lines in author/conversion.py for full coverage.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

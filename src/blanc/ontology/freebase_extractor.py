@@ -14,7 +14,7 @@ Conversion rules:
 Primary source: freebase-rdf-latest.gz from
 https://developers.google.com/freebase.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

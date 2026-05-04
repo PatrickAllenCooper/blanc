@@ -34,7 +34,7 @@ Usage::
     python scripts/mine_sc2_conflicts.py --trace-dir data/sc2_traces/ --output data/sc2_conflicts.jsonl
     python scripts/mine_sc2_conflicts.py --max-per-file 50
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import argparse

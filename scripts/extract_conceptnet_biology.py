@@ -3,7 +3,7 @@ Extract biology KB from ConceptNet5.
 
 Extracts behavioral defaults, exceptions, and taxonomic structure.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

@@ -5,7 +5,7 @@ Maps entity identifiers to image metadata for visually grounding
 defeasible reasoning instances. Supports multiple image sources
 (Wikidata P18, VisualSem, BabelNet) with preference-based selection.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

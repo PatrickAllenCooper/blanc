@@ -8,7 +8,7 @@ This is the baseline for E1 (plumbing certification): it verifies that the
 lift -> derive -> compile cycle produces correct results before any LLM is
 introduced.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

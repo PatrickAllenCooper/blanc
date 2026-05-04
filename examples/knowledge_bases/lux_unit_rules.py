@@ -17,7 +17,7 @@ Game mechanics source:
 
 Visual rendering: https://s3vis.lux-ai.org (web-based replay visualizer)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.core.theory import Theory, Rule, RuleType

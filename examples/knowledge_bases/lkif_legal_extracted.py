@@ -10,7 +10,7 @@ Rules: 201
 Citation: Hoekstra, R., Boer, A., van den Berg, K.
           LKIF Core ontology.
 
-Author: Extracted by Patrick Cooper
+Author: Extracted by Anonymous Authors
 Date: 2026-02-12
 """
 

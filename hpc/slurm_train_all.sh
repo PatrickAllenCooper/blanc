@@ -27,7 +27,7 @@
 # Usage:
 #   bash hpc/slurm_train_all.sh [--dpo-only] [--rlhf-only] [--sft-only] [--grpo-only] [--model MODEL]
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

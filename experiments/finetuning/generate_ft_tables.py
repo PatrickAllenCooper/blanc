@@ -15,7 +15,7 @@ Usage:
       --base-results-dir experiments/results/ \\
       --output-dir       experiments/results/finetuned/tables/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -2,7 +2,7 @@
 Tests for defeasible reasoning engine.
 
 Tests Definition 7 implementation, Proposition 2, and Theorem 11.
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

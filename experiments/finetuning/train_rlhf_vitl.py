@@ -36,7 +36,7 @@ Usage (CURC Alpine, standard RLHF):
       --data-dir experiments/finetuning/data/ \\
       --output-dir experiments/finetuning/checkpoints/rlhf_qwen72b/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

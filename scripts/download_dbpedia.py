@@ -4,7 +4,7 @@ Download DBpedia N-Triples dumps from the DBpedia Databus.
 Downloads English instance-types and mappingbased-objects files
 for use with the DbpediaExtractor.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

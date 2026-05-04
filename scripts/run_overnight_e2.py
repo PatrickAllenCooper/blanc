@@ -19,7 +19,7 @@ Usage::
     python scripts/run_overnight_e2.py
     python scripts/run_overnight_e2.py --games 10 --frames 100 --output-prefix overnight_v1
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

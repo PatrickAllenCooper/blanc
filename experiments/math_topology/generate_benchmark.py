@@ -32,7 +32,7 @@ Usage:
         --output-dir experiments/math/data/v1/ \
         --mathlib-root /path/to/mathlib4
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

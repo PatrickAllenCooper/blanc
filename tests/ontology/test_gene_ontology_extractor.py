@@ -6,7 +6,7 @@ annotation parsing (positive and NOT-qualified), evidence code filtering,
 gzipped GAF support, theory generation with strict/defeasible/defeater
 rule types, and taxonomy output.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

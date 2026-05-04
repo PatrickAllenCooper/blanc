@@ -8,7 +8,7 @@ Analyzes:
   - Does correctness require conservativity? (cross-tabulation)
   - AGM minimal-change adherence: do models prefer low d_rev solutions?
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

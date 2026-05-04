@@ -7,7 +7,7 @@ Extract BiologicalOrganism hierarchy and biological properties.
 Source: OpenCyc 2012 (Cycorp expert ontologists)
 Citation: Lenat, D. B. (1995). CYC: A Large-Scale Investment in Knowledge Infrastructure
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 
@@ -176,7 +176,7 @@ def main():
         f.write('Citation: Lenat, D. B. (1995). CYC: A Large-Scale Investment\n')
         f.write('          in Knowledge Infrastructure. CACM 38(11).\n')
         f.write('\n')
-        f.write('Author: Extracted by Patrick Cooper\n')
+        f.write('Author: Extracted by Anonymous Authors\n')
         f.write('Date: 2026-02-12\n')
         f.write('"""\n\n')
         f.write('from blanc.core.theory import Theory, Rule, RuleType\n\n\n')

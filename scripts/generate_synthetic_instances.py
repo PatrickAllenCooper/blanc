@@ -6,7 +6,7 @@ synthetic counterpart with invented predicate and entity names. The
 synthetic instances use the same difficulty structure but novel vocabulary
 that cannot appear in any training corpus.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import json

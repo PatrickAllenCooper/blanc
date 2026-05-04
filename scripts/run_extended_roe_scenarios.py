@@ -36,7 +36,7 @@ Usage::
     python scripts/run_extended_roe_scenarios.py
     python scripts/run_extended_roe_scenarios.py --games 3 --provider foundry-nano
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

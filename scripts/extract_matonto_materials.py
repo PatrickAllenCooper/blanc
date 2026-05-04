@@ -8,7 +8,7 @@ Source: MatPortal (materials science community)
 Citation: matportal.org/ontologies/MATONTO
 License: Open
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 
@@ -181,7 +181,7 @@ def main():
         f.write('Source: matportal.org/ontologies/MATONTO\n')
         f.write('Contact: Bryan Miller\n')
         f.write('\n')
-        f.write('Author: Extracted by Patrick Cooper\n')
+        f.write('Author: Extracted by Anonymous Authors\n')
         f.write('Date: 2026-02-12\n')
         f.write('"""\n\n')
         f.write('from blanc.core.theory import Theory, Rule, RuleType\n\n\n')

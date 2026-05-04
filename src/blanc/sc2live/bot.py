@@ -34,7 +34,7 @@ Usage (local, Windows/Mac)::
         realtime=False,
     )
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

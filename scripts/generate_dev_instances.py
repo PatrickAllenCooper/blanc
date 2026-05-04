@@ -4,7 +4,7 @@ Generate development instances from KB subsets.
 Fast local generation for development iteration.
 Uses manageable KB subsets (100-200 rules) for quick feedback.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

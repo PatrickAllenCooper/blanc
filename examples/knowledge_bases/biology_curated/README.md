@@ -2,7 +2,7 @@
 
 Comprehensive biology knowledge base designed for defeasible reasoning and instance generation.
 
-Author: Patrick Cooper  
+Author: Anonymous Authors  
 Date: 2026-02-12  
 Status: Operational, validated
 

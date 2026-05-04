@@ -3,7 +3,7 @@ Round-Trip Validation - Paper Section 4.8
 
 Validates codec round-trip accuracy for all modality/decoder combinations.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

@@ -6,5 +6,5 @@ Available policies:
     ScriptedPolicy  rule-derivation-only baseline, no LLM
     LLMPolicy       foundation model proposes defeaters each macro-tick
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """

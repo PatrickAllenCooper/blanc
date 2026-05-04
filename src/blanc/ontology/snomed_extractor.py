@@ -15,7 +15,7 @@ RF2 Relationship snapshot columns:
 OWL source: SNOMED CT International Edition OWL distribution
 RF2 source: https://www.nlm.nih.gov/healthit/snomedct/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -37,7 +37,7 @@
 #   VISUALSEM_DIR     Path to VisualSem download (required if sources
 #                     includes "visualsem")
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

@@ -4,7 +4,7 @@ Cascading Decoder: Three-Stage Decoder Pipeline
 Implements D1 → D2 → D3 cascading fallback strategy.
 Paper Section 4.4 (decoder pipeline).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

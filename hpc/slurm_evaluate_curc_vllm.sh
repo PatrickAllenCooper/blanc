@@ -59,7 +59,7 @@
 #   STRATEGIES        Space-separated list (default: "direct cot")
 #   INCLUDE_LEVEL3    Set to "true" to include Level 3 instances (default: true)
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # Date: 2026-02-18
 
 set -euo pipefail

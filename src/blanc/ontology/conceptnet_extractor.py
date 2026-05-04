@@ -5,7 +5,7 @@ Extracts behavioral defaults, taxonomic relations, and exceptions from
 ConceptNet5 (34M edges) to create rich defeasible knowledge bases.
 Supports parameterized domain extraction via DomainProfile.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

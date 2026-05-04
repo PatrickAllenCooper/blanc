@@ -13,7 +13,7 @@ and checks which ones (a) eliminate the anomaly and (b) are conservative.
 The neural--symbolic gap per level is:
     gap_L = Acc_solver(L) - Acc_model_best(L)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

@@ -5,7 +5,7 @@ A ProponentAgent searches for strongly supported conclusions;
 an OpponentAgent searches for defeaters or counter-conclusions.
 Both wrap the generic MCTS with role-specific reward shaping.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

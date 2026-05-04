@@ -24,7 +24,7 @@
 # Usage:
 #   sbatch hpc/slurm_generate_instances.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

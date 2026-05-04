@@ -34,7 +34,7 @@ This produces screenshots and videos that genuinely depict the system in
 action: the labels on the screen come from the verifier's output, not from
 hard coded captions.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

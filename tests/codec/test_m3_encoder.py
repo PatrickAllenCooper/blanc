@@ -1,7 +1,7 @@
 """
 Tests for M3 encoder (annotated formal modality).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

@@ -7,7 +7,7 @@ Provides:
 - Modality-specific rendering (M1-M4)
 - Integration with existing encoders
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

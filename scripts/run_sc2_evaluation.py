@@ -10,7 +10,7 @@ Usage::
     python scripts/run_sc2_evaluation.py --provider mock --instance-limit 6
     python scripts/run_sc2_evaluation.py --provider foundry-deepseek --modalities M4 --include-level3
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

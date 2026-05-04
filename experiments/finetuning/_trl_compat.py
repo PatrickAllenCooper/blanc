@@ -24,7 +24,7 @@ This module is import-only.  Importing it once -- ideally at the top of any
 script that instantiates ``DPOTrainer``, ``RewardTrainer`` or ``GRPOTrainer``
 -- patches every relevant class in place.  Re-importing is idempotent.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

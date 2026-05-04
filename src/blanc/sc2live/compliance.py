@@ -28,7 +28,7 @@ The verdict carries:
     violated_rule    Rule | None   -- the specific defeater that blocked the order
     reason           str           -- human-readable for re-prompt injection
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

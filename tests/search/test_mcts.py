@@ -4,7 +4,7 @@ Tests for the domain-agnostic Monte Carlo Tree Search engine.
 Validates UCB1 correctness, convergence on toy problems, and the
 exploration-exploitation balance.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import math

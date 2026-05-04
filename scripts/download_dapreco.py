@@ -8,7 +8,7 @@ Source: GitHub dapreco/daprecokb
 Citation: Robaldo, Bartolini, Lenzini (2020), LREC
 License: Open source
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

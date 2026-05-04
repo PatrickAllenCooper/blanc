@@ -31,7 +31,7 @@ Usage::
     # Load additional quiz scenarios from a JSON file
     python scripts/run_roe_compliance_experiment.py --scenarios data/extra_scenarios.json
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

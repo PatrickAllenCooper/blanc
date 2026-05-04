@@ -7,7 +7,7 @@ Based on legal concepts from LKIF Core taxonomy.
 These represent real legal entities that appear in legal reasoning.
 Used to populate the legal KB with ground facts for instance generation.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

@@ -23,7 +23,7 @@ Cache keying: responses are keyed on hash(theory.fingerprint()) + step_bucket,
 so identical theory states within the same macro-tick window reuse the cached
 response without polluting self-play diversity across different game states.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

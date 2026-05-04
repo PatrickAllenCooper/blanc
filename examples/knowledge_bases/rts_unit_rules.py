@@ -17,7 +17,7 @@ Grounding in the literature:
 - StarCraft II game mechanics documentation (Blizzard Entertainment).
 - PySC2 observation space (Google DeepMind, github.com/google-deepmind/pysc2).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.core.theory import Theory, Rule, RuleType

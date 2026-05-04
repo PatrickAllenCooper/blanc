@@ -3,7 +3,7 @@ Quick test of instance generation on expert KBs.
 
 Test with minimal instances to verify pipeline works.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

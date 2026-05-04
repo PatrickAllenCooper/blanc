@@ -5,7 +5,7 @@ This checks what the expert KBs ACTUALLY contain vs what we're adding.
 
 Critical question: Are we extracting or inventing?
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

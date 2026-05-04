@@ -3,7 +3,7 @@ Minimal test of instance generation using only behavioral rules.
 
 Create a small KB with just behavioral rules to verify generation works.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

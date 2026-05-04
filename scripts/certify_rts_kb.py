@@ -22,7 +22,7 @@ The report compares DeFAb-ROE to the other three domains:
     Legal    (LKIF Core):              201 rules,  63 facts
     Materials (MatOnto):             1190 rules,  86 facts
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import argparse

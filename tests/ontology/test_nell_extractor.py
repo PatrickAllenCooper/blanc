@@ -6,7 +6,7 @@ confidence filtering, generalization rules (strict), other relation
 rules (defeasible), conflict detection (defeaters with superiority),
 taxonomy, and property accessors.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

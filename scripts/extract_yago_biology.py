@@ -8,7 +8,7 @@ Extracts:
 
 Builds derivation chains from YAGO's expert-curated ontology.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 
@@ -236,7 +236,7 @@ def main():
         f.write(f'Classes: {len(bio_classes)}\n')
         f.write(f'Rules: {len(theory.rules)}\n')
         f.write('\n')
-        f.write('Author: Extracted by Patrick Cooper\n')
+        f.write('Author: Extracted by Anonymous Authors\n')
         f.write('Date: 2026-02-12\n')
         f.write('"""\n\n')
         f.write('from blanc.core.theory import Theory, Rule, RuleType\n\n\n')

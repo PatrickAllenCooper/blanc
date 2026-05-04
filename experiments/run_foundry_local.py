@@ -37,7 +37,7 @@ After the run, generate LaTeX tables with:
 
     python experiments/generate_paper_tables.py --results-dir experiments/results/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

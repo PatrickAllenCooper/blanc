@@ -28,7 +28,7 @@
 # Optional sbatch overrides:
 #   --time, --mem, --partition
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # Date: 2026-02-18
 
 set -euo pipefail

@@ -11,7 +11,7 @@ to a defeasible theory with:
 API docs: https://babelnet.org/guide
 Endpoint: https://babelnet.io/v9/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

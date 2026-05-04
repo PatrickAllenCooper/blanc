@@ -1,7 +1,7 @@
 """
 Tests for orders_schema.py: Order data class and tolerant LLM response parser.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

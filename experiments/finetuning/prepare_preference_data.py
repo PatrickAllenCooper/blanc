@@ -38,7 +38,7 @@ Usage
       --num-samples 16 \\
       --output-dir experiments/finetuning/data/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

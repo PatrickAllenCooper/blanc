@@ -11,7 +11,7 @@ costs.  Runs against:
 
 Expected output: no unhandled exceptions; summary statistics printed to stdout.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

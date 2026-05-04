@@ -3,7 +3,7 @@ Instance generation for Levels 1 and 2.
 
 Implements Definitions 20-21 from paper.tex lines 615-627.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

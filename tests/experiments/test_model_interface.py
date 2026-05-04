@@ -9,7 +9,7 @@ Tests:
 - CURCInterface (mocked OpenAI client)
 - Factory function
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

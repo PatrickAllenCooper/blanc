@@ -36,7 +36,7 @@ Usage examples:
     # Dry run with mock model
     python experiments/run_evaluation.py --provider mock --instance-limit 5
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

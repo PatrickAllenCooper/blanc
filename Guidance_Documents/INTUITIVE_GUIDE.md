@@ -2,7 +2,7 @@
 
 **Understanding What We're Testing and Why It Matters**
 
-Patrick Cooper  
+Anonymous Authors  
 February 13, 2026
 
 ---
@@ -833,7 +833,7 @@ With API keys, we can run the full evaluation:
 
 ---
 
-**Author**: Patrick Cooper  
+**Author**: Anonymous Authors  
 **Date**: February 13, 2026  
 **Project**: BLANC - Defeasible Abduction Benchmark  
 **Purpose**: Make the benchmark accessible to non-experts

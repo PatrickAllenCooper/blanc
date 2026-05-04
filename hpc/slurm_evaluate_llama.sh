@@ -33,7 +33,7 @@
 #   LLAMA_MODEL    - Ollama model tag (default: llama3:70b)
 #   OLLAMA_PORT    - Port for Ollama server (default: 11434)
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # Date: 2026-02-18
 
 set -euo pipefail

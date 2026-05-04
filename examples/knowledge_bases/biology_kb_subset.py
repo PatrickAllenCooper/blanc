@@ -6,7 +6,7 @@ Selected to maintain depth and interesting derivation chains.
 
 Based on vertebrate taxonomy from YAGO + WordNet expert sources.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

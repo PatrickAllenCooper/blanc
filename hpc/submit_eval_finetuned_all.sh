@@ -14,7 +14,7 @@
 # Usage:
 #   bash hpc/submit_eval_finetuned_all.sh [--dry-run] [--checkpoints-dir DIR]
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

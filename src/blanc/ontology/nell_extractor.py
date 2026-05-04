@@ -10,7 +10,7 @@ Conversion rules:
     - Other relations              -> defeasible property/behavioral rules
     - Conflicting beliefs           -> defeaters with superiority ordering
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

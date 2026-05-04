@@ -6,7 +6,7 @@ semantic type -> defeasible rules, inter-vocabulary contradictions ->
 defeaters, taxonomy from broader/narrower, theory generation, and
 the convenience function -- all using synthetic RRF files.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

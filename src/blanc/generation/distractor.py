@@ -3,7 +3,7 @@ Distractor generation for abductive instances.
 
 Implements distractor sampling strategies from paper.tex Section 4.2.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

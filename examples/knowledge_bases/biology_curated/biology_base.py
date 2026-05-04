@@ -5,7 +5,7 @@ Scales from 6 birds to 50+ organisms with rich behavioral rules.
 Designed for dependency depth >= 2 (required for instance generation).
 Facts validated against ConceptNet5 (15,583 biological edges).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

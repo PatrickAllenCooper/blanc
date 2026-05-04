@@ -3,7 +3,7 @@ Generate instances from biology KB with all 13 partition strategies.
 
 Implements systematic instance generation as per paper Section 4.2.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

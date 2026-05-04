@@ -18,7 +18,7 @@
 #   --skip-setup    Skip conda/pip installation (use if env already built)
 #   --skip-data     Skip data preparation (use if data already exists)
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # =============================================================================
 
 set -euo pipefail

@@ -30,7 +30,7 @@ Outputs (in --output-dir):
     sc2live_splits.json
     sc2live_preference_stats.json
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

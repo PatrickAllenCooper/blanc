@@ -3,7 +3,7 @@ Statistical Analysis - Paper Section 4.3
 
 Complete implementation of dataset statistics and structural analysis.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

@@ -20,7 +20,7 @@ Requirements:
     - pip install blanc[sc2live]
     - SC2PATH environment variable set on Linux
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import argparse

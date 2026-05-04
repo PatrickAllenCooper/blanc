@@ -11,7 +11,7 @@ Tables generated:
   Table 3 -- Level 3 formal metrics by model (novelty + conservativity)
   Table 4 -- Error taxonomy by model (E1-E5)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

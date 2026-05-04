@@ -7,7 +7,7 @@ strict taxonomic rules in a defeasible Theory.
 
 XML source: https://nlmpubs.nlm.nih.gov/projects/mesh/MESH_FILES/xmlmesh/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

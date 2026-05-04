@@ -4,7 +4,7 @@ Tests for compliance.py: ROE order compliance checker.
 Uses hand-built (theory, order) pairs covering each ROE predicate and
 known derivation outcomes.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import copy

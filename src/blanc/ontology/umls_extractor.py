@@ -12,7 +12,7 @@ RRF files use pipe-delimited (|) columns in a fixed order per file.
 
 Source: https://www.nlm.nih.gov/research/umls/licensedcontent/umlsknowledgesources.html
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

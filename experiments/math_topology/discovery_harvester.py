@@ -15,7 +15,7 @@ Subsequent (deferred) M4 work runs literature filtering -- ArXiv,
 MathOverflow, textbook -- against this same JSONL to identify the
 human-mathematics-novel subset.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

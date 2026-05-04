@@ -7,7 +7,7 @@ Provides persistent caching of model responses to:
 - Support checkpoint/resume
 - Track cache statistics
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

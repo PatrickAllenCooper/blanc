@@ -6,7 +6,7 @@ expected types of rules (defeasible defaults and defeaters), includes
 multi-body compound rules and superiority relations, and integrates
 correctly with the existing taxonomic KBs.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

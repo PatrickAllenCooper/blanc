@@ -11,7 +11,7 @@ Classifies prediction failures into five error classes:
 
 For Level 2 (rule abduction), only E1 and a simplified E3/E4 apply.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

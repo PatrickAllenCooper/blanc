@@ -19,7 +19,7 @@ Usage:
   python experiments/finetuning/analyze_scaling_projections.py \\
       --results-dir experiments/results/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

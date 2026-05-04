@@ -46,7 +46,7 @@
 #   bash hpc/run_all_experiments.sh --skip-foundry --skip-instances
 #   bash hpc/run_all_experiments.sh --resume-from B1
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

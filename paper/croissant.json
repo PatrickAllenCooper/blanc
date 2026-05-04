@@ -19,24 +19,24 @@
   ],
   "sc:creator": {
     "@type": "sc:Person",
-    "sc:name": "Patrick Cooper",
-    "sc:email": "patrick.cooper@colorado.edu",
+    "sc:name": "Anonymous Authors",
+    "sc:email": "anonymous@anonymous.org",
     "sc:affiliation": {
       "@type": "sc:Organization",
-      "sc:name": "University of Colorado Boulder"
+      "sc:name": "Anonymous Affiliation"
     }
   },
   "sc:publisher": {
     "@type": "sc:Organization",
-    "sc:name": "University of Colorado Boulder, Department of Computer Science"
+    "sc:name": "Anonymous Affiliation, Department of Computer Science"
   },
   "sc:dateCreated": "2025-01-01",
   "sc:datePublished": "2026-05-06",
   "sc:inLanguage": "en",
   "sc:maintainer": {
     "@type": "sc:Person",
-    "sc:name": "Patrick Cooper",
-    "sc:email": "patrick.cooper@colorado.edu"
+    "sc:name": "Anonymous Authors",
+    "sc:email": "anonymous@anonymous.org"
   },
   "sc:keywords": [
     "defeasible reasoning",
@@ -82,7 +82,7 @@
   ],
   "rai:dataSocialImpact": "Positive: improved evaluation of reasoning deficits may accelerate development of more reliable AI systems. Negative: low risk; formal logic benchmark with no direct path to harmful deployment. The dataset evaluates reasoning capabilities rather than producing actionable predictions.",
   "rai:personalSensitiveInformation": "None. No personal data, human subjects, or crowdsourcing involved. All instances are derived from formal logic programs over scientific and commonsense knowledge.",
-  "rai:dataReleaseMaintenancePlan": "The dataset will be maintained for at least 5 years from publication by Patrick Cooper at the University of Colorado Boulder. The generation pipeline enables re-generation from updated source KBs. Versioned releases follow semantic versioning (v1.0, v1.1, etc.). Tier 0 evaluation instances are frozen at v1.0 for cross-study comparability; additional tiers are additive. Bug reports and error corrections are tracked via the GitHub repository.",
+  "rai:dataReleaseMaintenancePlan": "The dataset will be maintained for at least 5 years from publication by Anonymous Authors at the Anonymous Affiliation. The generation pipeline enables re-generation from updated source KBs. Versioned releases follow semantic versioning (v1.0, v1.1, etc.). Tier 0 evaluation instances are frozen at v1.0 for cross-study comparability; additional tiers are additive. Bug reports and error corrections are tracked via the GitHub repository.",
 
   "distribution": [
     {

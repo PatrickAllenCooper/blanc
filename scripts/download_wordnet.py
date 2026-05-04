@@ -8,7 +8,7 @@ Source: Princeton University
 Citation: Miller, G. A. (1995). WordNet: A lexical database for English
 License: Free for research and commercial use
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

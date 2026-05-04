@@ -41,7 +41,7 @@
 #   INCLUDE_LEVEL3  "true" or "false" (default: true)
 #   LEVEL3_LIMIT    Max Level 3 instances (default: 33)
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

@@ -1,7 +1,7 @@
 # Knowledge Base Policy: Expert-Curated Sources Only
 
 **Status**: MANDATORY - Core Project Requirement  
-**Author**: Patrick Cooper  
+**Author**: Anonymous Authors  
 **Date**: 2026-02-12  
 **Enforcement**: ALL knowledge bases must comply
 

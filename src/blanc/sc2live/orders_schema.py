@@ -11,7 +11,7 @@ Order schema:
     unit   : str   -- atom name, e.g. "marine_00000041"
     target : str | None -- required for "attack"; None for "retreat" / "hold"
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

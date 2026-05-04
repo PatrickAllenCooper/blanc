@@ -25,7 +25,7 @@
 #   STALL_SECONDS    (default 900)
 #   MAX_RESTARTS     (default 6 per boot -- guards against restart loops)
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # =============================================================================
 
 set -u

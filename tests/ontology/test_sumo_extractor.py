@@ -5,7 +5,7 @@ Covers KIF tokenization, S-expression parsing, relation extraction
 (subclass, instance, domain, contraryAttribute, disjoint), theory
 generation with correct rule types, and taxonomy output.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """
 Download Gene Ontology OBO file and human GAF annotations.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys
@@ -14,7 +14,7 @@ _FILES = {
     "goa_human.gaf.gz": "https://release.geneontology.org/2024-06-17/annotations/goa_human.gaf.gz",
 }
 
-_HEADERS = {"User-Agent": "DeFAb/1.0 (patrick.cooper@colorado.edu)"}
+_HEADERS = {"User-Agent": "DeFAb/1.0 (anonymous@anonymous.org)"}
 
 
 def main():

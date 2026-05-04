@@ -12,7 +12,7 @@ The dropping policy is configurable:
     POLICY_SINGLE_ANY        -- one arbitrary hypothesis at a time
     POLICY_PAIRS_CRITICAL    -- all 2-subsets of critical hypotheses (M3)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

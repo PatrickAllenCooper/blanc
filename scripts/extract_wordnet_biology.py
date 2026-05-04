@@ -4,7 +4,7 @@ Extract biological taxonomy and behavioral predicates from WordNet.
 WordNet is an expert-curated lexical database from Princeton linguists.
 Extract hypernym/hyponym chains for biological organisms and behavioral verbs.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 
@@ -152,7 +152,7 @@ def main():
         f.write('\n')
         f.write('Citation: Miller, G. A. (1995). WordNet: A lexical database for English.\n')
         f.write('\n')
-        f.write('Author: Extracted by Patrick Cooper\n')
+        f.write('Author: Extracted by Anonymous Authors\n')
         f.write('Date: 2026-02-12\n')
         f.write('"""\n\n')
         f.write('from blanc.core.theory import Theory, Rule, RuleType\n\n\n')

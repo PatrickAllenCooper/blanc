@@ -23,7 +23,7 @@ Usage:
       --results-dir    experiments/results/ \\
       --instances-dir  instances/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

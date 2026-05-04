@@ -19,7 +19,7 @@ Expected results:
 
 Runtime: 10-30 minutes
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

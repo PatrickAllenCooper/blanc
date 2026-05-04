@@ -11,7 +11,7 @@ These instances are designed so that even reasoning-optimised models with CoT
 achieve ~50-70%, not 100%.  The discrimination gap between models should widen,
 providing the evaluation surface needed for the fine-tuning story.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

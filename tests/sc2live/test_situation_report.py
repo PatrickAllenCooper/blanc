@@ -1,7 +1,7 @@
 """
 Tests for situation_report.py: Theory -> LLM commander brief.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

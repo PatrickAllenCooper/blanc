@@ -3,7 +3,7 @@ Compute yield curves for development instances.
 
 Validates Proposition 3 on expert-curated KB instances.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

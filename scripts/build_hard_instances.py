@@ -2,7 +2,7 @@
 Generate DeFAb-Hard-ROE instances from the 4 verified hard seeds
 and write them to instances/rts_hard_instances.json.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 import copy, json, sys
 from pathlib import Path

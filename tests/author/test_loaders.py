@@ -8,7 +8,7 @@ Covers:
   - load_level3_instances
   - load_instances_from_json
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

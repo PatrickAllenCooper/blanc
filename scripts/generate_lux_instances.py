@@ -40,7 +40,7 @@ where a behavioral exception must be constructed:
        Ship would normally avoid a contested relic (enemy numerical advantage).
        In the final match with score deficit, the team must push anyway.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

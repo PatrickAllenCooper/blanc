@@ -17,7 +17,7 @@ Algorithm (from COMPREHENSIVE_KB_PIPELINE.md):
       4. Generate strict rules from IsA edges:
          (C, IsA, A)         -> A(X) :- C(X)      [STRICT]
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

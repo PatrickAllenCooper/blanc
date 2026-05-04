@@ -3,7 +3,7 @@ Avian Biology Knowledge Base
 
 Domain: Bird classification and behavior
 Purpose: MVP for DeFAb benchmark generation
-Author: Patrick Cooper
+Author: Anonymous Authors
 
 This KB demonstrates:
 - Strict rules (taxonomic facts)

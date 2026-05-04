@@ -3,7 +3,7 @@ Test all 3 expert-curated knowledge bases.
 
 Verify all KBs load, have proper depth, and can generate instances.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

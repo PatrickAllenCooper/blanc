@@ -6,7 +6,7 @@ grounded in the LKIF Core ontology concepts.  Legal reasoning is
 inherently defeasible: general rules admit exceptions for jurisdiction,
 capacity, immunity, and procedural requirements.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.core.theory import Theory, Rule, RuleType

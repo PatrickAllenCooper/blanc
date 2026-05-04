@@ -8,7 +8,7 @@ Source: https://github.com/RinkeHoekstra/lkif-core
 Citation: Hoekstra, Boer, van den Berg - University of Amsterdam
 License: Open source
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

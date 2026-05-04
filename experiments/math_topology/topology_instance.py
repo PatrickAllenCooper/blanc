@@ -17,7 +17,7 @@ DeFAb-Math-Topology benchmark.
         is masked and the model must propose a strictly weaker defeater
         (matched by :class:`blanc.math.NoveltyFilter`).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

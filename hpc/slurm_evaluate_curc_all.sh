@@ -18,7 +18,7 @@
 #   Override scale:
 #   INSTANCE_LIMIT=120 LEVEL3_LIMIT=35 bash hpc/slurm_evaluate_curc_all.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # Date: 2026-02-19
 
 set -euo pipefail

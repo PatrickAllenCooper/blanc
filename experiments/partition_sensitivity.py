@@ -16,7 +16,7 @@ Statistical tests used:
   - Kruskal-Wallis H (k-sample extension)
   - Bonferroni correction for multiple comparisons
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

@@ -3,7 +3,7 @@ Support sets and criticality computation.
 
 Implements Definitions 17-20 from paper.tex lines 603-625.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

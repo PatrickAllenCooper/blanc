@@ -13,7 +13,7 @@ When a real ``lean`` binary is on PATH and ``--real-lean`` is supplied,
 the demo swaps in :class:`SubprocessLeanHarness`.  The remainder of the
 pipeline is identical.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

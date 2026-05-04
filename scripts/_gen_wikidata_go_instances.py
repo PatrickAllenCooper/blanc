@@ -4,7 +4,7 @@ Handles these sources separately from the full multitier script
 to avoid the 409K-rule GO partitioning bottleneck. Uses smaller
 sub-samples for GO.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

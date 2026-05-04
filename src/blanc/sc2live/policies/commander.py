@@ -23,7 +23,7 @@ Usage::
 The policy exposes ``propose_orders(theory, step)`` which DeFAbBot dispatches
 to (in addition to the existing ``propose_defeaters`` path).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

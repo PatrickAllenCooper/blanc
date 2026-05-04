@@ -30,7 +30,7 @@ Grounding in the literature:
 - Lockheed Martin StarCraft II ROE proxy (personal communication, Tom Lee,
   Lockheed Martin, April 2026).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.core.theory import Theory, Rule, RuleType

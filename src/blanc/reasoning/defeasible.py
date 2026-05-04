@@ -4,7 +4,7 @@ Pure Python defeasible reasoning engine.
 Implements Definition 7 (tagged proof procedure) from paper.tex lines 548-564.
 Complexity: O(|R| · |F|) per Theorem 11 (line 775).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

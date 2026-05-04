@@ -3,7 +3,7 @@ Defeasible conversion of definite logic programs.
 
 Implements Definition 9 (defeasible conversion) from paper.tex lines 572-579.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

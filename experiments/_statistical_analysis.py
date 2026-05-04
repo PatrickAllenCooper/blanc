@@ -8,7 +8,7 @@ Computes:
   4. CoT vs direct paired significance (McNemar's test)
   5. Sample size adequacy assessment
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 import json, math, sys, collections, itertools
 from pathlib import Path

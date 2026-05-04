@@ -14,7 +14,7 @@ The shim lives at ``experiments/finetuning/_trl_compat.py``.  These tests:
   2. Verify each at-risk training script imports the shim so the patch is
      active before any trainer is instantiated.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

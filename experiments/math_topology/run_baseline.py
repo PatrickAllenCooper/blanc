@@ -23,7 +23,7 @@ Usage:
         --provider mock \
         --output-dir experiments/math/results/v0/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

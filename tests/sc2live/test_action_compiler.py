@@ -4,7 +4,7 @@ Unit tests for ActionCompiler.
 Pure unit tests: no SC2 binary required.
 Tests verify that derived ROE literals are correctly mapped to SC2 orders.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

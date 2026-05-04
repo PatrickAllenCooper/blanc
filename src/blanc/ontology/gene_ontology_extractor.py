@@ -10,7 +10,7 @@ to produce a defeasible theory with:
 OBO source: http://current.geneontology.org/ontology/go-basic.obo
 GAF source: http://current.geneontology.org/annotations/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

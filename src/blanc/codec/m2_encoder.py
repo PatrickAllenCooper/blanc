@@ -4,7 +4,7 @@ M2 Encoder: Semi-Formal Modality
 Encodes rules and facts using logical operators with natural language predicates.
 Paper Section 4.4 (M2: Semi-formal).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

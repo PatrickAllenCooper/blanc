@@ -26,7 +26,7 @@
 #   .\hpc\run_local.ps1 mock -InstanceLimit 5
 #   .\hpc\run_local.ps1  # auto-detects from .env
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # Date: 2026-02-19
 
 [CmdletBinding()]

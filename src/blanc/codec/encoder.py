@@ -3,7 +3,7 @@ Pure formal encoder (M4).
 
 Implements M4 encoding modality from paper.tex Appendix B, line 881.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 
 CRITICAL COMPONENT: This codec must have perfect round-trip consistency.

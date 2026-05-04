@@ -27,7 +27,7 @@ Usage:
         --harness lean_interact \
         --output experiments/math_topology/data/m2_real/sft.jsonl
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

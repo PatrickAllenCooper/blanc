@@ -28,7 +28,7 @@ Scale (after assembly):
 
 This is comparable in scale to the legal KB (LKIF Core: 201 rules).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.core.theory import Theory

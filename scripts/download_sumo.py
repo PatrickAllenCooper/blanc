@@ -1,7 +1,7 @@
 """
 Download SUMO ontology from GitHub.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import subprocess

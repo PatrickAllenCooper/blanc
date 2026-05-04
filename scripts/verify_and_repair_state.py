@@ -29,7 +29,7 @@ Exit codes:
   0 -- state matches disk (no changes needed or repair succeeded)
   2 -- state file missing or malformed
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

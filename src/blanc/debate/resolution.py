@@ -5,7 +5,7 @@ Provides robustness, grounding, and creativity metrics that evaluate
 how well agents defend their positions across debate rounds, plus
 an aggregate ``debate_outcome`` that determines the winner.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

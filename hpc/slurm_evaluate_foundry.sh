@@ -39,7 +39,7 @@
 #   SKIP_CLAUDE       "true" to skip claude-sonnet-4-6   (default: false)
 #   SKIP_DEEPSEEK     "true" to skip DeepSeek-R1         (default: false)
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 # Date: 2026-02-19
 
 set -euo pipefail

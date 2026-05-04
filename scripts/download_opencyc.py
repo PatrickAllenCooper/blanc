@@ -8,7 +8,7 @@ Source: GitHub therohk/opencyc-kb
 Citation: Cycorp ontology engineers
 License: Apache 2.0
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

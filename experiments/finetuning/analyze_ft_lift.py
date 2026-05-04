@@ -14,7 +14,7 @@ Usage:
       --results-dir experiments/results/ \\
       --base-results-dir experiments/results/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -2,7 +2,7 @@
 Integration tests for ontology extraction modules.
 
 Tests complete pipelines with real data (when available).
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

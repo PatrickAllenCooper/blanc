@@ -32,7 +32,7 @@ This is the only signal the rest of the pipeline (scorer, GRPO reward, novelty
 filter) consumes, so the choice of underlying backend is transparent above
 this line.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

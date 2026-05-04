@@ -4,7 +4,7 @@ Extended tests for generation/distractor.py to increase coverage.
 Targets lines 55-58, 103-106, 121, 144, 162, 177, 206-211, 225-250, 263-274, 280, 283
 for 59% -> 90% coverage improvement.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

@@ -7,7 +7,7 @@ and add them as facts to the biology KB.
 Source: yago-entities.jsonl (678 MB, 49M entities)
 Focus: Biological organisms for instance generation
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 
@@ -163,7 +163,7 @@ def main():
         f.write('Source: yago-entities.jsonl\n')
         f.write('Citation: Suchanek et al. (2024), YAGO 4.5, SIGIR 2024\n')
         f.write('\n')
-        f.write('Author: Extracted by Patrick Cooper\n')
+        f.write('Author: Extracted by Anonymous Authors\n')
         f.write('Date: 2026-02-12\n')
         f.write('"""\n\n')
         f.write('from blanc.core.theory import Theory\n\n\n')

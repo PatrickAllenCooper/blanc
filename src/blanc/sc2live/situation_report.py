@@ -8,7 +8,7 @@ The report is capped at ~30 lines to fit comfortably within a system-prompt
 context window.  Units are grouped by allegiance and type; zones and status
 conditions (under fire, numerical disadvantage) are highlighted.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

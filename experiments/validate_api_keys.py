@@ -10,7 +10,7 @@ Tests each API key with a minimal query to ensure:
 Usage:
     python validate_api_keys.py
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

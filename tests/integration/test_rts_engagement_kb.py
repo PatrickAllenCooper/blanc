@@ -13,7 +13,7 @@ These tests constitute the formal verification step described in the paper's
 ROE extension section: the same polynomial-time verifier that certifies
 biology/legal/materials instances certifies ROE instances.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import copy

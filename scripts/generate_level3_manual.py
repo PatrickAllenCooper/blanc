@@ -7,7 +7,7 @@ programmatically: anomaly provability, defeater effectiveness, and
 conservativity. Novelty (Nov) and revision distance (d_rev) are computed
 per Definition 14 and Definition 15 of paper.tex.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

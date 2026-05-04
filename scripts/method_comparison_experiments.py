@@ -17,7 +17,7 @@ For each method, measure:
   - Quality (sample validation)
   - Extraction time
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

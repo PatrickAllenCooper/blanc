@@ -26,7 +26,7 @@
 # Submit:
 #   sbatch --export=ALL,GAMES=32,PROVIDER_A=foundry-deepseek hpc/slurm_sc2_selfplay.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

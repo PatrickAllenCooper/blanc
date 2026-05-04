@@ -9,7 +9,7 @@ Four phases per round:
                   to restore their derivation.
   4. Resolution-- compare defense quality to score the round.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

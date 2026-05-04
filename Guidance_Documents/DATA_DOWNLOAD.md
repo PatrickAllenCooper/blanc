@@ -53,7 +53,7 @@ GitHub has a 100 MB file size limit. The expert KB files exceed this:
 
 ```bash
 # Clone repository
-git clone https://github.com/PatrickAllenCooper/blanc.git
+git clone https://github.com/anonymous-authors/defab.git
 cd blanc
 
 # Install dependencies

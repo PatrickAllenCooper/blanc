@@ -5,7 +5,7 @@ GPU-dependent code (actual training, model loading) is not tested here.
 Tests cover pure-Python logic: JSONL loading, curriculum filtering,
 data fraction subsampling, and the MarginDPOTrainer class structure.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

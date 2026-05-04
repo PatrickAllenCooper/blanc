@@ -1,7 +1,7 @@
 """
 Tests for D2 decoder (template extraction).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

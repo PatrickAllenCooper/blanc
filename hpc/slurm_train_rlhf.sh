@@ -33,7 +33,7 @@
 #   # Standard RLHF
 #   sbatch --export=ALL,BASE_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",RLHF_MODE="reward-model" hpc/slurm_train_rlhf.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

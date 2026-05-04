@@ -21,7 +21,7 @@
 #
 # Usage: sbatch hpc/slurm_gen_umls.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

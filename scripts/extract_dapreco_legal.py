@@ -8,7 +8,7 @@ Source: GitHub dapreco/daprecokb (University of Luxembourg)
 Citation: Robaldo, Bartolini, Lenzini (2020), LREC
 License: Open source
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 
@@ -184,7 +184,7 @@ def main():
         f.write('          The DAPRECO Knowledge Base: Representing the GDPR\n')
         f.write('          in LegalRuleML. LREC 2020.\n')
         f.write('\n')
-        f.write('Author: Extracted by Patrick Cooper\n')
+        f.write('Author: Extracted by Anonymous Authors\n')
         f.write('Date: 2026-02-12\n')
         f.write('"""\n\n')
         f.write('from blanc.core.theory import Theory, Rule, RuleType\n\n\n')

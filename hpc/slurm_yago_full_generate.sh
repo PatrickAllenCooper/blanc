@@ -22,7 +22,7 @@
 # Usage:
 #   sbatch hpc/slurm_yago_full_generate.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

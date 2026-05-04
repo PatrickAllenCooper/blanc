@@ -5,7 +5,7 @@ Extracts concepts, taxonomic relations, and properties from
 OpenCyc 4.0 (239K terms, 2M triples) and converts to definite logic
 programs.  Supports parameterized domain extraction via DomainProfile.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

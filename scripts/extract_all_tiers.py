@@ -7,7 +7,7 @@ and produces a cumulative summary.
 Usage:
     python scripts/extract_all_tiers.py [--sources nell,sumo,go,mesh,framenet,yago,wikidata]
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

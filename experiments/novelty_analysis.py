@@ -7,7 +7,7 @@ Analyses Nov(h, D^-) distributions for Level 3 model responses:
   - Correlation between Nov and correctness
   - Language bias detection (non-novel predicates in novel responses)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

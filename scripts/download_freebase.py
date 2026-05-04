@@ -7,7 +7,7 @@ so decompression is not required.
 
 Source: https://developers.google.com/freebase
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

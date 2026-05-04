@@ -10,7 +10,7 @@ Rules: 0
 Citation: Lenat, D. B. (1995). CYC: A Large-Scale Investment
           in Knowledge Infrastructure. CACM 38(11).
 
-Author: Extracted by Patrick Cooper
+Author: Extracted by Anonymous Authors
 Date: 2026-02-12
 """
 

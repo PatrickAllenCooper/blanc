@@ -32,7 +32,7 @@ Usage (local smoke test):
       --output-dir /tmp/sft_test/ \\
       --max-steps 10
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

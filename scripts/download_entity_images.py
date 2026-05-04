@@ -12,7 +12,7 @@ Usage:
         --visualsem-dir /path/to/visualsem
     python scripts/download_entity_images.py --qid-map data/qid_map.json
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

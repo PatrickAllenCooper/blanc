@@ -3,7 +3,7 @@ Generate Level 3 instances (hand-crafted for MVP).
 
 Level 3 requires working backwards from complete theory with defeaters.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

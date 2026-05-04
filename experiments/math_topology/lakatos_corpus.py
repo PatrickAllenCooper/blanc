@@ -18,7 +18,7 @@ The split keeps one critical hypothesis (h_convex) as the held-out
 evaluation site so SFT / DPO training never sees the genus condition
 plugged into a convexity-masked V-E+F=2 prompt.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

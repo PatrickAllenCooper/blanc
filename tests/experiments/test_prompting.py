@@ -7,7 +7,7 @@ Tests:
 - Batch rendering
 - Template formatting
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-13
 """
 

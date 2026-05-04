@@ -13,7 +13,7 @@ This allows scripts/generate_sc2live_instances.py to apply the full DeFAb
 instance generation pipeline (phi_kappa, generate_level{1,2,3}_instance)
 to real game data.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

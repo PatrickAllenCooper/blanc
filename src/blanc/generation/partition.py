@@ -3,7 +3,7 @@ Partition functions for defeasible conversion.
 
 Implements Definition 10 (structured partition classes) from paper.tex lines 586-593.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

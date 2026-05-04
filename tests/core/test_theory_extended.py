@@ -3,7 +3,7 @@ Extended tests for core/theory.py to improve coverage.
 
 Targets missing lines for 87% -> 95% coverage improvement.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

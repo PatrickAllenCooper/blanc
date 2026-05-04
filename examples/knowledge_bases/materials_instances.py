@@ -7,7 +7,7 @@ Based on materials that exist in MatOnto ontology.
 These are real materials documented in materials science.
 Used to populate the materials KB with ground facts for instance generation.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

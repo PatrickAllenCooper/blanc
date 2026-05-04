@@ -5,7 +5,7 @@ LLMPolicy tests use a canned LLM response that returns syntactically valid
 rules; the conservativity gate is exercised with both valid and invalid rules.
 No SC2 binary and no real LLM API call needed.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

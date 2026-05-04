@@ -9,7 +9,7 @@ Usage:
     python experiments/validate_decoder_pipeline.py
     python experiments/validate_decoder_pipeline.py --domain legal --limit 200
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

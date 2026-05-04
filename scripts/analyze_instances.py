@@ -3,7 +3,7 @@ Statistical analysis of generated instances.
 
 Implements Section 4.3 of paper: Dataset Statistics.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

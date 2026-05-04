@@ -4,7 +4,7 @@ novelty_analysis.py, conservativity_analysis.py, difficulty_analysis.py.
 
 All tests run against synthetic evaluation records so no files are needed.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 import sys
 from pathlib import Path

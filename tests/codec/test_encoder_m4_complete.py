@@ -1,7 +1,7 @@
 """
 Complete M4 encoder tests to push coverage from 38% to 70%+.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

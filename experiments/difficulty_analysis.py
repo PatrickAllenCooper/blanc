@@ -11,7 +11,7 @@ min|h| is 1 for Level 2 (single fact/rule candidate), and for Level 3
 is the number of body atoms in the gold defeater.
 Nov* is 0 for Level 2 and inst['nov'] for Level 3.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

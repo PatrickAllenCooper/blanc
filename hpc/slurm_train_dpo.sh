@@ -35,7 +35,7 @@
 #   sbatch --export=ALL,BASE_MODEL="Qwen/Qwen2.5-72B-Instruct-AWQ",DPO_VARIANT="standard",CURRICULUM="joint" \
 #          hpc/slurm_train_dpo.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

@@ -9,7 +9,7 @@ Usage::
 
     python scripts/capture_live_sc2_screenshots.py --output paper/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -3,7 +3,7 @@ Compute yield curves for Proposition 3 validation.
 
 Computes Y(κ_rand(δ), Q) for δ ∈ {0.1, 0.2, ..., 0.9} and fits models.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

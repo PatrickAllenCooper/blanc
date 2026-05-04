@@ -1,7 +1,7 @@
 """
 Download FrameNet 1.7 via NLTK.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

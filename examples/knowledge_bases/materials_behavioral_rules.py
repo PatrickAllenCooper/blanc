@@ -6,7 +6,7 @@ exceptions, grounded in the MatOnto ontology concepts.  Material
 properties are inherently defeasible: general class properties admit
 exceptions for specific alloys, treatments, and compositions.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.core.theory import Theory, Rule, RuleType

@@ -25,7 +25,7 @@
 # Usage:
 #   sbatch hpc/slurm_extract_and_generate.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

@@ -42,7 +42,7 @@ Foundry model providers:
     foundry-claude   Claude Sonnet 4.6
     foundry-kimi     Kimi K2.5
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

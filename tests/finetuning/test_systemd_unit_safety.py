@@ -25,7 +25,7 @@ These tests also enforce the broader hardening contract documented in
 ``KillSignal``, ``TimeoutStopSec``, ``Restart``, and have a sane PATH so
 conda-installed binaries (``python``, ``torchrun``) resolve from systemd.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -10,7 +10,7 @@ The vocabulary is produced by a context-free grammar over phonotactically
 valid syllable templates (CV, CVC, CVCV) with English consonant and vowel
 inventories.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

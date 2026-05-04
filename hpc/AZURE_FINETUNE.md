@@ -29,7 +29,7 @@ Azure Spot VMs can be deallocated at any time but cost 60--90% less. The `azure_
 ### One-Time Setup on a Fresh Azure VM
 
 ```bash
-git clone https://github.com/PatrickAllenCooper/blanc.git /home/azureuser/blanc
+git clone https://github.com/anonymous-authors/defab.git /home/azureuser/blanc
 cd /home/azureuser/blanc
 
 sudo mkdir -p /data/hf_cache /data/defab_results
@@ -135,7 +135,7 @@ sudo systemctl restart defab_finetune
 
 ```bash
 # Clone the repo
-git clone https://github.com/PatrickAllenCooper/blanc.git
+git clone https://github.com/anonymous-authors/defab.git
 cd blanc
 
 # Set your HuggingFace token (for the private DeFAb dataset)

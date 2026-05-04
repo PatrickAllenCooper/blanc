@@ -6,7 +6,7 @@ Implements systematic instance generation across all 3 domains:
 - Legal (LKIF Core): 201 rules, 63 facts
 - Materials (MatOnto): 1,190 rules, 86 facts
 
-Author: Patrick Cooper  
+Author: Anonymous Authors  
 Date: 2026-02-12
 """
 

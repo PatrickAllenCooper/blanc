@@ -15,7 +15,7 @@ by a custom wrapper.
 Usage:
     python scripts/run_e1_plumbing.py
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import os

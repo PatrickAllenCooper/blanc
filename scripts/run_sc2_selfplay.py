@@ -23,7 +23,7 @@ Usage::
 The --no-sc2 flag runs without a live SC2 binary by replaying a synthetic
 conflict sequence; useful for testing the GRPO pipeline on CI.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import argparse

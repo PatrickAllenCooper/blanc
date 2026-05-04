@@ -5,7 +5,7 @@ Queries external image sources (Wikidata P18, VisualSem, BabelNet)
 to build an ImageManifest that maps DeFAb entity identifiers to
 representative images.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ class WikidataImageHarvester:
 
     def __init__(
         self,
-        user_agent: str = "DeFAb/1.0 (patrick.cooper@colorado.edu)",
+        user_agent: str = "DeFAb/1.0 (anonymous@anonymous.org)",
         delay: float = 2.0,
         thumb_width: int = 640,
     ):

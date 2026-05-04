@@ -1,7 +1,7 @@
 """
 Explore OpenCyc structure to understand format.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

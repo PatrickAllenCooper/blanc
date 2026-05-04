@@ -6,7 +6,7 @@ Tests Definition 30 (round-trip consistency) from paper.tex line 727.
 CRITICAL: These tests validate the core guarantee of the codec.
 Proposition (line 903): D1 (exact match) satisfies round-trip by construction.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

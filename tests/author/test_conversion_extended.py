@@ -3,7 +3,7 @@ Extended tests for author/conversion.py to increase coverage.
 
 Targets lines 80, 151-162, 171-177 for 65% -> 90% coverage improvement.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

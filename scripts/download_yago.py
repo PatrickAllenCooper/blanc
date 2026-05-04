@@ -4,7 +4,7 @@ Download YAGO knowledge base.
 YAGO is a large-scale expert-curated knowledge base with rich taxonomy.
 We'll use it to extract inference rules and build derivation chains.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

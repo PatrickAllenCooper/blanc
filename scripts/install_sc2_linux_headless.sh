@@ -10,7 +10,7 @@
 # Sets SC2PATH=$SCRATCH/sc2 in ~/.bashrc.
 # Maps are downloaded to $SC2PATH/Maps/Melee/.
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

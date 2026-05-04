@@ -5,7 +5,7 @@ Generates:
 - 10 Level 1 instances (fact completion)
 - 10 Level 2 instances (rule abduction)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

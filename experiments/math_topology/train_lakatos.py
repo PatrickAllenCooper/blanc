@@ -27,7 +27,7 @@ Usage:
         --base-model Qwen/Qwen2.5-7B-Instruct \
         --output-dir experiments/math_topology/checkpoints/lakatos_v0/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

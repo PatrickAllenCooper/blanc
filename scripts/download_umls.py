@@ -7,7 +7,7 @@ prints the manual steps and verifies the local installation if present.
 
 Registration: https://uts.nlm.nih.gov/uts/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

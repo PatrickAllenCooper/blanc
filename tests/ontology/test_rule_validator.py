@@ -1,7 +1,7 @@
 """
 Tests for rule validation framework.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import json

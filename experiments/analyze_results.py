@@ -9,7 +9,7 @@ Usage:
     python experiments/analyze_results.py --results-dir experiments/results
     python experiments/analyze_results.py --results-file experiments/results/results_azure.json
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

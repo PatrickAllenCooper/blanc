@@ -9,7 +9,7 @@ if present.
 International Edition: https://www.snomed.org/get-snomed
 US Edition (via NLM): https://www.nlm.nih.gov/healthit/snomedct/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

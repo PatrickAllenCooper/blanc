@@ -3,7 +3,7 @@ Unit tests for ReplayTraceExtractor.
 
 Uses in-memory .jsonl content written to tmp files; no SC2 binary needed.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import json

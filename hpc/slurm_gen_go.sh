@@ -16,7 +16,7 @@
 #
 # Usage: sbatch hpc/slurm_gen_go.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

@@ -5,7 +5,7 @@ Covers XML parsing of DescriptorRecord elements, tree number parent
 derivation, category assignment, theory generation with strict rules,
 and taxonomy output -- all using small synthetic XML fragments.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

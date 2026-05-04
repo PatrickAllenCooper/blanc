@@ -52,7 +52,7 @@ Zone naming convention (map-grid based):
     main_base, enemy_base, engagement_zone_alpha, restricted_zone_alpha,
     worker_mining_area, neutral_zone
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

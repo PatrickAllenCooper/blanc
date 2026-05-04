@@ -15,7 +15,7 @@ Citation:
 
 REQUIRES DOMAIN EXPERT VALIDATION (per paper Section 4.1)
 
-Author: Extracted and organized by Patrick Cooper
+Author: Extracted and organized by Anonymous Authors
 Date: 2026-02-12
 """
 

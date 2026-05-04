@@ -8,7 +8,7 @@ Can run on:
 - Local multi-core CPU
 - HPC clusters (CURC Alpine with SLURM)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

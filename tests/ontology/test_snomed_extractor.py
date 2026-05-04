@@ -7,7 +7,7 @@ relationship types -> defeasible rules, property overrides in child
 concepts -> defeaters, theory generation, taxonomy output, and the
 convenience function -- all using synthetic RF2 data.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

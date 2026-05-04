@@ -26,7 +26,7 @@
 #   cd /projects/paco0228/blanc
 #   bash hpc/initial_experiment.sh [--model MODEL] [--dry-run]
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

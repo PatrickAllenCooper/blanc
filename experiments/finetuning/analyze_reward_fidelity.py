@@ -19,7 +19,7 @@ Usage:
       --preference-data experiments/finetuning/data/preferences_Qwen_Qwen2.5-72B-Instruct-AWQ.jsonl \\
       --base-model Qwen/Qwen2.5-72B-Instruct-AWQ
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

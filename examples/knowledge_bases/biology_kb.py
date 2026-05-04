@@ -16,7 +16,7 @@ Citations:
 - Miller, G. A. (1995). WordNet: A lexical database for English.
   CACM 38(11): 39-41.
 
-Author: Extracted and organized by Patrick Cooper
+Author: Extracted and organized by Anonymous Authors
 Date: 2026-02-12
 """
 

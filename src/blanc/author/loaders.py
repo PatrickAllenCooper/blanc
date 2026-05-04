@@ -6,7 +6,7 @@ Provides load_instances_from_json() which reads both Level 2 and Level 3
 instance files and returns a list of AbductiveInstance objects with the same
 field layout as run_evaluation.py.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

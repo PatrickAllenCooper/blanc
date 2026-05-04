@@ -2,7 +2,7 @@
 
 A dataset and generation pipeline for evaluating foundation models on grounded abductive reasoning, belief revision, and creative hypothesis generation.
 
-**Author**: Patrick Cooper, University of Colorado Boulder
+**Author**: Anonymous Authors, Anonymous Affiliation
 
 **Target venue**: NeurIPS 2026 Evaluations & Datasets Track
 
@@ -28,7 +28,7 @@ Foundation models excel at forward inference but struggle with abduction and bel
 ## Quick Start
 
 ```bash
-git clone https://github.com/PatrickAllenCooper/blanc.git
+git clone https://github.com/anonymous-authors/defab.git
 cd blanc
 pip install -r requirements.txt
 python -m pytest tests/ --tb=no -q
@@ -206,7 +206,7 @@ See `Guidance_Documents/COMPREHENSIVE_KB_PIPELINE.md` for milestone status (M0--
 
 ## HPC (CURC Alpine)
 
-Open-source model evaluations and large-scale instance generation run on the University of Colorado Research Computing Alpine cluster. See `hpc/` for SLURM submission scripts:
+Open-source model evaluations and large-scale instance generation run on the an anonymous HPC cluster. See `hpc/` for SLURM submission scripts:
 
 - `slurm_evaluate_curc_vllm.sh` -- vLLM-based evaluation of DeepSeek-R1, Qwen 2.5
 - `slurm_gen_go.sh` -- Gene Ontology instance generation (409K rules)

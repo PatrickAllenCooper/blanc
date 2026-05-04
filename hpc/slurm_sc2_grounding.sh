@@ -25,7 +25,7 @@
 # Submit:
 #   sbatch --export=ALL,GAMES=200 hpc/slurm_sc2_grounding.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 

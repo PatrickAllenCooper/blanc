@@ -17,7 +17,7 @@ Margins are derived from :class:`DefeaterScorer.compute_reward`, so the
 weights are exactly the verifier-aligned ones the loss should put gradient
 on (see paper Section 6.2 -- margin-weighted DPO).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

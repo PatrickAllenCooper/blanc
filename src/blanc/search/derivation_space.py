@@ -6,7 +6,7 @@ protocol expected by mcts.py.  A *state* is a frozen snapshot of
 which conclusions have been derived so far; an *action* is a ground
 rule instantiation that extends the derivation.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

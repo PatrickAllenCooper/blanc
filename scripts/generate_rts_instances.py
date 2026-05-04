@@ -28,7 +28,7 @@ Usage:
     python scripts/generate_rts_instances.py --output data/rts_instances.json
     python scripts/generate_rts_instances.py --level 3 --max-instances 50
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

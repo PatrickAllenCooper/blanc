@@ -4,7 +4,7 @@ Generate Level 1 (fact completion) instances from biology KB.
 Level 1 tests basic grounding by asking models to identify missing facts
 needed to derive a target conclusion.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

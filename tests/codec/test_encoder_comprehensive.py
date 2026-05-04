@@ -3,7 +3,7 @@ Comprehensive tests for codec/encoder.py (M4) to improve coverage.
 
 Targets M4 encoder for 38% -> 70%+ coverage improvement.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

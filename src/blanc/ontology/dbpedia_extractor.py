@@ -13,7 +13,7 @@ Conversion rules:
 Primary sources: instance-types, mappingbased-objects from
 https://databus.dbpedia.org/.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

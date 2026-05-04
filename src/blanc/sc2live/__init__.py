@@ -24,7 +24,7 @@ a Theory so that the existing verifier scores it without modification.
 
 Requires: pip install blanc[sc2live]  (adds burnysc2>=7.0)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.sc2live.observation import ObservationLifter

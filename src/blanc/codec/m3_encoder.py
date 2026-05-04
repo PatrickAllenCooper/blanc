@@ -4,7 +4,7 @@ M3 Encoder: Annotated Formal Modality
 Encodes rules and facts in formal syntax with natural language comments.
 Paper Section 4.4 (M3: Annotated formal).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

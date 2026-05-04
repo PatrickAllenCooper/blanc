@@ -12,7 +12,7 @@
 # Usage:
 #   bash hpc/setup_curc_env.sh
 #
-# Author: Patrick Cooper
+# Author: Anonymous Authors
 
 set -euo pipefail
 
@@ -29,7 +29,7 @@ PROJ_DIR="/projects/paco0228/blanc"
 if [ ! -d "$PROJ_DIR" ]; then
     echo "Cloning blanc repo..."
     cd /projects/paco0228
-    git clone git@github.com:PatrickAllenCooper/blanc.git
+    git clone git@github.com:anonymous-authors/defab.git
 else
     echo "Project directory exists: $PROJ_DIR"
     cd "$PROJ_DIR"

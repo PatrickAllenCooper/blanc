@@ -8,7 +8,7 @@ instances from each subgraph using the standard pipeline.
 
 Designed for CURC Alpine amilan partition (128GB RAM, 32--48 CPUs).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import json

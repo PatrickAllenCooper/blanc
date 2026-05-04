@@ -2,7 +2,7 @@
 Tests for support and criticality computation.
 
 Tests Definitions 17-20 and Proposition 4.
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

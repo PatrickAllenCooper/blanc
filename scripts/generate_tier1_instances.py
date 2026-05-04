@@ -5,7 +5,7 @@ Partitions large theories into manageable sub-theories by taxonomy
 subtree, then generates Level 1, 2, and 3 instances from each using
 all 13 partition strategies. Uses multiprocessing for parallelism.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

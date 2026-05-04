@@ -7,7 +7,7 @@ Tests:
 3. Defeasible reasoning works on biology KB
 4. Compute statistics for paper
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

@@ -6,7 +6,7 @@ constraint-exception extraction, domain-rule extraction, theory
 conversion (defeasible rules and defeaters), and rate-limiting
 behavior.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

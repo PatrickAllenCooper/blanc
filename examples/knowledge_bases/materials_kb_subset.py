@@ -6,7 +6,7 @@ Focuses on metals, alloys, and structure-property relationships.
 
 Based on MatOnto expert materials science ontology.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

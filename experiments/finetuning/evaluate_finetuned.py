@@ -27,7 +27,7 @@ Usage
       --instance-limit 5 \\
       --level3-limit 5
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

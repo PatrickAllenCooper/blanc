@@ -12,7 +12,7 @@ because they directly show the formal theory state alongside the game geometry.
 
 Also attempts to capture the live SC2 window via PIL.ImageGrab on Windows.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -14,7 +14,7 @@ Citation:
   LKIF Core: Legal Knowledge Interchange Format.
   University of Amsterdam.
 
-Author: Extracted and organized by Patrick Cooper
+Author: Extracted and organized by Anonymous Authors
 Date: 2026-02-12
 """
 

@@ -4,7 +4,7 @@ Unit tests for ObservationLifter.
 Uses frozen BotAI.state fixtures (plain Python objects mimicking the
 burnysc2 Unit API) so no SC2 binary is needed.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

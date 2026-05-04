@@ -6,7 +6,7 @@ classification, and produces:
   - table3_level3_metrics.tex (conservativity, novelty, revision distance)
   - table4_error_taxonomy.tex (E1-E5 error classification)
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 import json
 import sys

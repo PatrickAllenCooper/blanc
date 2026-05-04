@@ -15,7 +15,7 @@ Reward shape (default; configurable via ``reward_weights``):
     reward = w_lean + w_distance * d_norm   bonus from novelty distance,
                                             capped at 1.0
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

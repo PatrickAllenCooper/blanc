@@ -2,7 +2,7 @@
 Tests for partition functions.
 
 Tests Definition 10 (structured partition classes).
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import pytest

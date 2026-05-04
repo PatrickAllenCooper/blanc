@@ -8,7 +8,7 @@ tracked by coverage). Tests verify:
   - Table building with mock data
   - Graceful handling of missing data
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -5,7 +5,7 @@ Each DomainProfile encapsulates the keywords, relation mappings,
 behavioral predicates, and known exceptions for a specific knowledge
 domain, replacing hardcoded lists in the extractors.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from dataclasses import dataclass, field

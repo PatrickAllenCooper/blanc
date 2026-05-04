@@ -1,7 +1,7 @@
 """
 Tests for cascading decoder (D1→D2→D3 pipeline).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

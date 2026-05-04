@@ -1,7 +1,7 @@
 """
 Tests for M2 encoder (semi-formal modality).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

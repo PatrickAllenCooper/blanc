@@ -5,7 +5,7 @@ Covers N-Triples line parsing, rdf:type -> facts, rdfs:subClassOf -> strict
 rules, dbo:* -> defeasible rules, infobox/ontology type clash -> defeaters,
 theory generation, and taxonomy output -- all using synthetic NT data.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

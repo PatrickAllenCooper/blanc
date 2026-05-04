@@ -2,7 +2,7 @@
 Integration tests for biology KB instance generation.
 
 Tests the complete pipeline with curated biology KB.
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

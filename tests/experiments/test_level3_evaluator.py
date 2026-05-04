@@ -1,7 +1,7 @@
 """
 Tests for experiments/level3_evaluator.py.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 import sys
 from pathlib import Path

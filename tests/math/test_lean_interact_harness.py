@@ -10,7 +10,7 @@ Run the real-Lean tests:
 
     pytest tests/math/test_lean_interact_harness.py -m lean_real -v
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

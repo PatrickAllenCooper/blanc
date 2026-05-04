@@ -11,7 +11,7 @@ Conversion rules:
     - Non-core frame elements   -> defeasible role rules (priority 2-3)
     - Using relations           -> defeasible presupposition rules
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

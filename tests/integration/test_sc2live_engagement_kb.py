@@ -13,7 +13,7 @@ All tests are pure Python.  No SC2 binary or real API key required.
 
 Live-binary integration test is guarded by ``pytest -m sc2_live``.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import copy

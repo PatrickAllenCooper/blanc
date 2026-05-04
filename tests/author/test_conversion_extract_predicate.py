@@ -2,7 +2,7 @@
 Tests for conversion.py _extract_predicate helper (lines 171-177)
 and the continue-path for fact rules in phi_kappa (line 80).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

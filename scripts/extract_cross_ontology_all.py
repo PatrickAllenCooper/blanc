@@ -8,7 +8,7 @@ and saves per-domain Theory objects and statistics.
 Designed for efficiency: ConceptNet is streamed once and edges are bucketed
 into all matching domains simultaneously.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

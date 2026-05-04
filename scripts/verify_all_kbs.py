@@ -7,7 +7,7 @@ Checks:
 3. WordNet 3.0 Prolog
 4. Backup resources
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

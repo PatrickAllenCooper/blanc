@@ -11,7 +11,7 @@ Rules: 1190
 Source: matportal.org/ontologies/MATONTO
 Contact: Bryan Miller
 
-Author: Extracted by Patrick Cooper
+Author: Extracted by Anonymous Authors
 Date: 2026-02-12
 """
 

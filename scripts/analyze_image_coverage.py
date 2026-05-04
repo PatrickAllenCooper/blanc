@@ -11,7 +11,7 @@ Usage:
         --manifest data/images/manifest.json \
         --instances instances/biology_dev_instances.json
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

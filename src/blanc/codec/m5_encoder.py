@@ -15,7 +15,7 @@ carries both a text component and a list of ``PromptImage`` references.
 Downstream consumers (``render_prompt``, ``query_multimodal``) use
 this to build provider-specific API payloads.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

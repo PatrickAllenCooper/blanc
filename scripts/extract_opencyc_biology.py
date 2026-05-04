@@ -7,7 +7,7 @@ This script performs the complete extraction pipeline:
 3. Convert to definite LP
 4. Save as Prolog + Theory pickle
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

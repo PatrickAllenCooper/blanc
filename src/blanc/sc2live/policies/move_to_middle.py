@@ -6,7 +6,7 @@ to the map midpoint so that frames capture engagement_zone_alpha scenarios
 where authorized_to_engage can actually fire (enemy units in transit
 rather than inside the main base).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

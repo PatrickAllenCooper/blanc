@@ -4,7 +4,7 @@ D3 Decoder: Semantic Parser
 Parses natural language and semi-formal text back to formal rules using grammar.
 Paper Section 4.4 (D3: Semantic parser).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

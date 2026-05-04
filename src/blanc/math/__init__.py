@@ -20,7 +20,7 @@ Anchors:
     paper/ai_for_math_abstract.tex (DeFAb-Math design)
     .cursor/plans/defab-math-topology_research_agenda_56424d51.plan.md
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.math.types import (

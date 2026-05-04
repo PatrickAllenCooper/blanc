@@ -4,7 +4,7 @@ Targeted tests for codec/cascading_decoder.py coverage gaps.
 Covers: empty input paths, decode_with_confidence, decode_batch,
 get_decoder_statistics (lines 48, 53-54, 63-75, 93, 96-99, 104-147).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-18
 """
 

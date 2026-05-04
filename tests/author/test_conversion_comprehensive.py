@@ -3,7 +3,7 @@ Comprehensive tests for author/conversion.py to reach 85%+ coverage.
 
 Targets lines 80, 151-162, 171-177 (current 65% -> target 85%).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

@@ -1,7 +1,7 @@
 # HPC Deployment for DeFAb Instance Generation
 
 **Purpose**: Generate instances from large-scale expert KBs using HPC resources  
-**Target**: CURC Alpine (University of Colorado Boulder)  
+**Target**: CURC Alpine (Anonymous Affiliation)  
 **Scale**: 64+ CPU cores, 128+ GB RAM
 
 ---
@@ -36,7 +36,7 @@ python scripts/generate_instances_parallel.py
 
 ### Prerequisites
 
-1. **CURC Alpine account** (University of Colorado Boulder)
+1. **CURC Alpine account** (Anonymous Affiliation)
 2. **SSH access** to Alpine login nodes
 3. **Allocation** on compute partition (amilan recommended)
 
@@ -48,7 +48,7 @@ ssh username@login.rc.colorado.edu
 
 # Clone repository
 cd /projects/$USER
-git clone https://github.com/PatrickAllenCooper/blanc.git
+git clone https://github.com/anonymous-authors/defab.git
 cd blanc
 
 # Create logs directory
@@ -381,5 +381,5 @@ rsync -avz username@login.rc.colorado.edu:/projects/$USER/blanc/experiments/ ./e
 
 **Advantage**: Large expert KBs are a strength, not a weakness, with HPC resources!
 
-**Author**: Patrick Cooper  
+**Author**: Anonymous Authors  
 **Date**: 2026-02-12

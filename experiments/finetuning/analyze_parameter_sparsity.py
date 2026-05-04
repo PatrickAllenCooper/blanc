@@ -18,7 +18,7 @@ Usage:
       --checkpoints-dir experiments/finetuning/checkpoints/ \\
       --output-dir experiments/finetuning/analysis/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -3,7 +3,7 @@ Derivation tree structures for proof tracking.
 
 Implements Definition 13 (AND-OR derivation trees) from paper.tex line 638.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-11
 """
 

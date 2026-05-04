@@ -8,7 +8,7 @@ exceptions) and defeater rules that encode the exceptions.
 Based on WordNet behavioral predicates, ConceptNet biology edges, and
 domain knowledge from the DeFAb paper (paper.tex).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from blanc.core.theory import Theory, Rule, RuleType

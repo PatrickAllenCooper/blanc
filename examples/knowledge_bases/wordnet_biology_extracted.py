@@ -7,7 +7,7 @@ Behavioral predicates: 8
 
 Citation: Miller, G. A. (1995). WordNet: A lexical database for English.
 
-Author: Extracted by Patrick Cooper
+Author: Extracted by Anonymous Authors
 Date: 2026-02-12
 """
 

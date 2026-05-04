@@ -1,7 +1,7 @@
 """
 Tests for D3 decoder (semantic parser).
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 

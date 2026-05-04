@@ -1,7 +1,7 @@
 """
 Download MeSH descriptor XML.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import sys

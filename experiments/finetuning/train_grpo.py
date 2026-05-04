@@ -37,7 +37,7 @@ Usage (local smoke test):
       --num-generations 4 \\
       --max-steps 10
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

@@ -22,7 +22,7 @@ Usage::
 
     python scripts/capture_roe_scenarios.py --output-dir paper/sc2_screenshots/
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

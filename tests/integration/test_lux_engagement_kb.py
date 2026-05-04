@@ -4,7 +4,7 @@ Integration tests for the Lux AI S3 engagement knowledge base.
 Certifies that the DeFAb-Lux KB produces well-formed instances with the
 same formal verifier guarantees as the SC2, biology, legal, and materials KBs.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 import copy

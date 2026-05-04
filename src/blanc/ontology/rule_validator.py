@@ -5,7 +5,7 @@ Validates that a Theory meets the formal requirements defined in
 paper.tex: derivation depth, deduplication, consistency, anomaly
 structure, and coverage statistics.
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 """
 
 from __future__ import annotations

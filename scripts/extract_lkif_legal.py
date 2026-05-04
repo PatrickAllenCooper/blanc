@@ -8,7 +8,7 @@ Source: LKIF Core (U Amsterdam, ESTRELLA project)
 Citation: Hoekstra, Boer, van den Berg
 License: Open source
 
-Author: Patrick Cooper
+Author: Anonymous Authors
 Date: 2026-02-12
 """
 
@@ -170,7 +170,7 @@ def main():
         f.write('Citation: Hoekstra, R., Boer, A., van den Berg, K.\n')
         f.write('          LKIF Core ontology.\n')
         f.write('\n')
-        f.write('Author: Extracted by Patrick Cooper\n')
+        f.write('Author: Extracted by Anonymous Authors\n')
         f.write('Date: 2026-02-12\n')
         f.write('"""\n\n')
         f.write('from blanc.core.theory import Theory, Rule, RuleType\n\n\n')
