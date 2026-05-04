@@ -1,74 +1,106 @@
-% Verifier-as-exact-reward diagram — NeurIPS 2026 design system
-% Shows the polynomial-time verifier feeding four downstream uses
+% Figure 7: Verifier-as-reward diagram for the finetuning substrate.
+% Absolute coordinates throughout; explicit \draw arrows between named anchors.
+%
+% Layout:
+%   Properties strip   at (0,    2.4)   width 8cm height 0.6cm
+%   Input box          at (-5.5, 0)     width 3.0cm height 1.2cm
+%   Central verifier   at (0,    0)     width 4.0cm height 1.4cm
+%   Four output boxes at (5.5, +1.8 / +0.6 / -0.6 / -1.8)  width 4.5cm height 0.95cm
+%   Curriculum strip   at (0,   -2.4)   width 8cm height 0.6cm
+%
 \begin{tikzpicture}[
     >=stealth,
-    node distance=0.5cm and 1.1cm,
     verifier/.style={
         draw=defabRed!80, rounded corners=3pt,
-        font=\small\bfseries, inner sep=6pt,
-        fill=defabRed!8, line width=0.8pt,
-        minimum width=3.2cm, minimum height=0.9cm,
-        text centered, align=center, text=defabRed
+        font=\fontsize{8}{9.5}\selectfont\bfseries,
+        inner sep=5pt, fill=defabRed!8, line width=0.8pt,
+        text=defabRed, text centered, align=center
+    },
+    inputbox/.style={
+        draw=defabBlue!65, rounded corners=2.5pt,
+        font=\fontsize{7}{8.5}\selectfont,
+        inner sep=4pt, fill=defabBlue!6, line width=0.5pt,
+        text centered, align=center
     },
     outputbox/.style={
         draw=defabTeal!70, rounded corners=2.5pt,
-        font=\footnotesize, inner sep=5pt,
-        fill=defabTeal!7, line width=0.5pt,
-        minimum width=3.8cm, minimum height=0.75cm,
+        font=\fontsize{6.5}{8}\selectfont,
+        inner sep=4pt, fill=defabTeal!7, line width=0.5pt,
         text centered, align=center
     },
-    inputbox/.style={
-        draw=defabBlue!60, rounded corners=2.5pt,
-        font=\footnotesize, inner sep=4pt,
-        fill=defabBlue!6, line width=0.5pt,
-        minimum width=3.2cm, minimum height=0.72cm,
-        text centered, align=center
-    },
-    propertybox/.style={
+    propbox/.style={
         draw=defabGold!70, rounded corners=2pt,
-        font=\scriptsize\itshape, inner sep=3pt,
-        fill=defabGold!6, line width=0.4pt,
-        text=defabGold!80, minimum width=2.6cm,
-        text centered, align=center
+        font=\fontsize{6.5}{7.5}\selectfont\itshape,
+        inner sep=3.5pt, fill=defabGold!7, line width=0.4pt,
+        text=defabGold!85, text centered, align=center
     },
-    arr/.style={->, thick, color=defabRed!70},
-    arrin/.style={->, thick, color=defabBlue!60},
-    lbl/.style={font=\scriptsize\itshape, midway, text=defabGray},
+    arr/.style={->, thick, color=defabRed!70, line width=0.7pt},
+    arrin/.style={->, thick, color=defabBlue!60, line width=0.7pt},
+    arrlbl/.style={
+        font=\fontsize{6}{7}\selectfont\itshape,
+        text=defabGray, fill=white, inner sep=1pt
+    },
 ]
 
-% Central verifier node
-\node[verifier] (ver) {Polynomial-Time\\Defeasible Verifier\\$\Score \in \{0, 0.25, 0.5, 0.75, 1.0\}$};
+%% =================================================================
+%% Properties strip (top)
+%% =================================================================
+\node[propbox, minimum width=10cm, minimum height=0.55cm] (props)
+    at (0, 2.4)
+    {deterministic\ \ $\cdot$\ \ model-independent\ \ $\cdot$\ \ exact (no sampling)\ \ $\cdot$\ \ $<\!50\,\mu$s per call};
 
-% Input
-\node[inputbox, left=1.5cm of ver] (inst) {Instance $(\Dm, \alpha)$\\+ model hypothesis $h$};
-\draw[arrin] (inst.east) -- (ver.west) node[lbl, above] {verify};
+%% =================================================================
+%% Input box (left)
+%% =================================================================
+\node[inputbox, minimum width=3.0cm, minimum height=1.2cm] (inst)
+    at (-5.5, 0)
+    {Instance $(\Dm, \alpha)$\\[2pt] + model hypothesis $h$};
 
-% Properties of verifier
-\node[propertybox, above=0.3cm of ver, text width=5.5cm, align=center]
-    (props) {deterministic $\cdot$ model-independent $\cdot$ exact $\cdot$ no sampling $\cdot$ $<50\,\mu$s};
+%% =================================================================
+%% Central verifier
+%% =================================================================
+\node[verifier, minimum width=4.2cm, minimum height=1.4cm] (ver)
+    at (0, 0)
+    {Polynomial-Time\\Defeasible Verifier\\[2pt]
+     {\fontsize{7}{8}\selectfont $\Score \in \{0, 0.25, 0.5, 0.75, 1.0\}$}};
 
-% Output 1: Evaluation scoring
-\node[outputbox, right=1.5cm of ver, yshift=1.5cm] (eval)
-    {(i)~\textbf{Evaluation} at inference time\\accuracy $\cdot$ graded score $\cdot$ error class};
+%% Input -> verifier
+\draw[arrin] (inst.east) -- node[arrlbl, above] {verify} (ver.west);
+
+%% =================================================================
+%% Four output boxes (right column, stacked vertically)
+%% =================================================================
+\node[outputbox, minimum width=4.6cm, minimum height=0.95cm] (eval)
+    at (5.7, 1.95)
+    {(i) \textbf{Evaluation} at inference time\\[1pt]
+     accuracy / graded score / error class};
+
+\node[outputbox, minimum width=4.6cm, minimum height=0.95cm] (dpo)
+    at (5.7, 0.65)
+    {(ii) \textbf{DPO} preference pairs\\[1pt]
+     $\Score(h_1) > \Score(h_2)$, margin-weighted};
+
+\node[outputbox, minimum width=4.6cm, minimum height=0.95cm] (grpo)
+    at (5.7, -0.65)
+    {(iii) \textbf{RLVR / GRPO} rollout reward\\[1pt]
+     group-relative advantage $A_i$, no reward model};
+
+\node[outputbox, minimum width=4.6cm, minimum height=0.95cm] (gate)
+    at (5.7, -1.95)
+    {(iv) \textbf{Verifier-gated re-prompt} (RTS)\\[1pt]
+     B2 CommanderPolicy: reject + cite ROE};
+
+%% Verifier -> each output (explicit anchors)
 \draw[arr] (ver.east) -- (eval.west);
-
-% Output 2: DPO preference pairs
-\node[outputbox, right=1.5cm of ver, yshift=0.5cm] (dpo)
-    {(ii)~\textbf{DPO} preference pairs\\$\Score(h_1) > \Score(h_2)$, margin-weighted loss};
 \draw[arr] (ver.east) -- (dpo.west);
-
-% Output 3: GRPO reward
-\node[outputbox, right=1.5cm of ver, yshift=-0.5cm] (grpo)
-    {(iii)~\textbf{RLVR / GRPO} rollout reward\\group relative advantage $A_i$, no reward model};
 \draw[arr] (ver.east) -- (grpo.west);
-
-% Output 4: Verifier-gated re-prompt
-\node[outputbox, right=1.5cm of ver, yshift=-1.5cm] (gate)
-    {(iv)~\textbf{Verifier-gated re-prompt} (RTS)\\B2 CommanderPolicy: reject + cite ROE violation};
 \draw[arr] (ver.east) -- (gate.west);
 
-% Curriculum callout below
-\node[propertybox, below=0.5cm of ver, text width=7cm, align=center]
-    (curr) {Curriculum: SFT on L1/L2 (grounding) $\to$ DPO on L2 (rule selection) $\to$ GRPO on L3 (belief revision)};
+%% =================================================================
+%% Curriculum strip (bottom)
+%% =================================================================
+\node[propbox, minimum width=10cm, minimum height=0.55cm] (curr)
+    at (0, -2.4)
+    {Curriculum: SFT on L1/L2 (grounding) $\to$ DPO on L2 (rule selection) $\to$ GRPO on L3 (belief revision)};
 
 \end{tikzpicture}

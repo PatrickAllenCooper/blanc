@@ -1,100 +1,122 @@
-% Level 3 worked example: IDP defeater abduction — four-panel storyboard
-% Colors match design system: defabBlue, defabTeal, defabGold, defabRed, defabGray
+% Figure 4: IDP defeater abduction worked example.
+% Appendix-sized figure (text-width). 2x2 panel grid with absolute coords.
+% No nested tikzpictures. Score boxes are inline \colorbox labels.
+%
+% Grid (anchor=north west on every panel):
+%   Top-left  (i)   Complete theory D_full     at (0,    0)
+%   Top-right (ii)  Challenge theory D-        at (8.0,  0)
+%   Bot-left  (iii) Anomaly surfaces           at (0,   -5.5)
+%   Bot-right (iv)  Graded resolutions         at (8.0, -5.5)
+%
+% Each panel: 7.0cm wide, 5.0cm tall, anchored top-left.
+% Inter-panel horizontal gap: 1.0cm (8.0 - 7.0). Vertical gap: 0.5cm.
+% Arrows are drawn last, between named anchors.
+%
 \begin{tikzpicture}[
     >=stealth,
-    node distance=0.28cm and 0.6cm,
     panel/.style={
         draw=defabGray!50, rounded corners=3pt,
-        inner sep=6pt, align=left, font=\scriptsize,
-        fill=white, line width=0.4pt
+        inner sep=7pt, align=left, fill=white,
+        font=\fontsize{7}{8.5}\selectfont,
+        line width=0.45pt,
+        text width=6.6cm, minimum height=4.8cm, anchor=north west
     },
-    scorelbl/.style={
-        draw, rounded corners=1.5pt, inner sep=2pt,
-        font=\scriptsize\bfseries, minimum width=0.85cm,
-        text centered, line width=0.5pt
+    % inter-panel arrows
+    flow/.style={->, thick, color=defabGray!65, line width=0.7pt},
+    flowlbl/.style={
+        font=\fontsize{6.5}{7.5}\selectfont\itshape,
+        text=defabGray, fill=white, inner sep=1.5pt
     },
-    scoregood/.style={scorelbl, draw=defabTeal, fill=defabTeal!10, text=defabTeal!80},
-    scorebad/.style={scorelbl, draw=defabRed!70, fill=defabRed!8, text=defabRed!80},
-    scorezero/.style={scorelbl, draw=defabGray!60, fill=defabGray!5, text=defabGray},
-    scoremid/.style={scorelbl, draw=defabGold!70, fill=defabGold!8, text=defabGold!80},
 ]
 
-% ---- Panel (i): Complete theory D_full ----
-\node[panel, text width=5.6cm] (p1) {
-  \textbf{(i) Complete theory $\mathcal{D}^{\mathrm{full}}$} \\[3pt]
-  \textit{Facts:} \texttt{protein(p53\_idr).\ \ disordered(p53\_idr).} \\[2pt]
-  \textit{Defeasible rules:} \\
-  $r_1$: \texttt{protein(X)$\,\Rightarrow\,$has\_stable\_3d(X)} \\
-  $r_2$: \texttt{protein(X),\ has\_3d(X)$\,\Rightarrow\,$func(X,lock)} \\
-  $r_3$: \texttt{disordered(X)$\,\Rightarrow\,\neg$has\_stable\_3d(X)} \\
-  {\color{defabRed}$r_4$: \texttt{disordered(X), protein(X)}} \\
-  \phantom{$r_4$: }{\color{defabRed}\texttt{$\Rightarrow$ func(X,conf\_ensemble)}} \\[1pt]
-  \textit{Superiority:} $r_3 \succ r_1$,\ {\color{defabRed}$r_4 \succ r_2$} \\[2pt]
-  $\mathcal{D}^{\mathrm{full}} \vdash_\partial$ \texttt{func(p53\_idr,\ conf\_ensemble)} \checkmark
+%% =================================================================
+%% Panel (i): Complete theory D_full   (top-left)
+%% =================================================================
+\node[panel] at (0, 0) (p1) {
+  {\fontsize{8}{9.5}\selectfont\bfseries\color{defabBlue}(i) Complete theory $\Dfull$}\\[3pt]
+  \textbf{Facts:} \texttt{protein(p53\_idr).} \texttt{disordered(p53\_idr).}\\
+  \texttt{functional(p53\_idr).}\\[5pt]
+  \textbf{Defeasible rules:}\\
+  $r_1$: \texttt{protein(X) $\Rightarrow$ has\_3d(X)}\\
+  $r_2$: \texttt{protein(X), has\_3d(X) $\Rightarrow$ func(X, lock)}\\
+  $r_3$: \texttt{disordered(X) $\Rightarrow$ $\neg$has\_3d(X)}\\
+  {\color{defabRed}$r_4$: \texttt{disordered(X), protein(X)}}\\
+  \phantom{$r_4$:\ }{\color{defabRed}\texttt{$\Rightarrow$ func(X, conf)}}\\[5pt]
+  \textbf{Superiority:} $r_3 \succ r_1$, {\color{defabRed}$r_4 \succ r_2$}\\[3pt]
+  $\Dfull \pPartial$ \texttt{func(p53\_idr, conf)} \checkmark
 };
 
-% ---- Panel (ii): Ablation ----
-\node[panel, text width=5.6cm, right=0.55cm of p1] (p2) {
-  \textbf{(ii) Challenge theory $\mathcal{D}^{-}$ (ablate $r_4$)} \\[3pt]
-  Same facts and $r_1, r_2, r_3$ retained. \\[2pt]
-  {\color{defabRed}\textbf{Removed:} $r_4$: \texttt{disordered(X), protein(X)} $\Rightarrow$ \ldots} \\
-  {\color{defabRed}\textbf{Removed:} superiority $r_4 \succ r_2$.} \\[4pt]
-  \textit{Active derivation chain:} \\
-  \texttt{protein(p53\_idr)} + $r_1$
-  $\;\to\;$ \texttt{has\_stable\_3d(p53\_idr)} \\
-  \quad (unless $r_3$ blocks it) \\
-  $r_3$ fires via \texttt{disordered(p53\_idr)}, \\
-  so \texttt{has\_3d} blocked --- but $r_2$ needs it. \\
-  \textit{No alternative mechanism remains.}
+%% =================================================================
+%% Panel (ii): Challenge theory D-   (top-right)
+%% =================================================================
+\node[panel] at (8.0cm, 0) (p2) {
+  {\fontsize{8}{9.5}\selectfont\bfseries\color{defabBlue}(ii) Challenge theory $\Dm$ (ablate $r_4$)}\\[3pt]
+  Facts and rules $r_1, r_2, r_3$ retained.\\[5pt]
+  {\color{defabRed}\textbf{Removed:} $r_4$ and superiority $r_4 \succ r_2$.}\\[5pt]
+  \textbf{Active derivation chain in $\Dm$:}\\
+  \texttt{protein(p53\_idr)} + $r_1$\\
+  $\to$ \texttt{has\_3d(p53\_idr)} (unless blocked)\\
+  $r_3$ fires via \texttt{disordered(p53\_idr)},\\
+  blocking \texttt{has\_3d}; $r_2$ now lacks its premise.\\
+  \emph{No alternative mechanism remains.}
 };
 
-% ---- Panel (iii): Anomaly surfaces ----
-\node[panel, text width=5.6cm, below=0.55cm of p1] (p3) {
-  \textbf{(iii) Anomaly $\alpha$ surfaces in $\mathcal{D}^{-}$} \\[3pt]
-  $\mathcal{D}^{-} \vdash_\partial$ \texttt{func(p53\_idr,\ lock\_key)} \\
-  \quad (via $r_1$+$r_2$ if \texttt{has\_3d} fires) \\[2pt]
-  {\color{defabRed}\textbf{Anomalous observation:}} \\
-  {\color{defabRed}$\alpha$ = \texttt{func(p53\_idr,\ conf\_ensemble)}} \\[2pt]
-  $\mathcal{D}^{-} \vdash_\partial \neg\alpha$ \quad $\Rightarrow$ \textbf{anomaly!} \\[2pt]
-  \textbf{Task:} construct a defeater resolving $\alpha$ \\
-  while preserving all other expectations.
+%% =================================================================
+%% Panel (iii): Anomaly surfaces   (bottom-left)
+%% =================================================================
+\node[panel] at (0, -5.5cm) (p3) {
+  {\fontsize{8}{9.5}\selectfont\bfseries\color{defabBlue}(iii) Anomaly $\alpha$ surfaces}\\[3pt]
+  Default chain in $\Dm$ would derive\\
+  \texttt{func(p53\_idr, lock\_key)} via $r_1, r_2$\\
+  but $r_3$ blocks it; the established\\
+  observation is\\[3pt]
+  {\color{defabRed}\textbf{$\alpha$ = \texttt{func(p53\_idr, conf)}}}\\[3pt]
+  yet $\Dm \pPartial \neg\alpha$.\\[5pt]
+  \textbf{Task:} construct a defeater that\\
+  resolves $\alpha$ while preserving every\\
+  other expectation.
 };
 
-% ---- Panel (iv): Graded resolutions ----
-\node[panel, text width=5.6cm, right=0.55cm of p3] (p4) {
-  \textbf{(iv) Graded resolutions (verifier $\Score$)} \\[3pt]
-  \begin{tikzpicture}[remember picture, inner sep=0pt, node distance=3pt]
-    \node[scorezero] (s0) {0.0};
-    \node[right=4pt of s0, text width=4.4cm, font=\scriptsize, align=left] {
-      Restate $r_1$: \texttt{protein(X)$\!\Rightarrow\!$has\_3d(X)}. Anomaly unresolved.
-    };
-    \node[scorebad, below=8pt of s0] (s5) {0.5};
-    \node[right=4pt of s5, text width=4.4cm, font=\scriptsize, align=left] {
-      \texttt{protein(X)$\!\leadsto\!\neg$func(X,lock)}: resolves p53\_idr\\
-      but destroys all conventionally structured proteins. Not conservative.
-    };
-    \node[scoremid, below=16pt of s5] (s75) {0.75};
-    \node[right=4pt of s75, text width=4.4cm, font=\scriptsize, align=left] {
-      \texttt{disordered(X)$\!\Rightarrow\!$func(X,conf\_ensemble)}: weak\\
-      conservative resolution, incomplete mechanism.
-    };
-    \node[scoregood, below=14pt of s75] (s1) {\textbf{1.0}};
-    \node[right=4pt of s1, text width=4.4cm, font=\scriptsize, align=left, text=defabTeal] {
-      {\color{defabTeal}$r_4$: \texttt{disordered(X), protein(X)$\!\Rightarrow\!$func(X,conf)},
-      $r_4\!\succ\!r_2$.\\
-      Conservative. Novel. Mechanistically precise.}
-    };
-  \end{tikzpicture}
+%% =================================================================
+%% Panel (iv): Graded resolutions   (bottom-right)
+%% =================================================================
+\node[panel] at (8.0cm, -5.5cm) (p4) {
+  {\fontsize{8}{9.5}\selectfont\bfseries\color{defabBlue}(iv) Graded resolutions (verifier $\Score$)}\\[3pt]
+  \colorbox{defabGray!12}{\textcolor{defabGray}{\bfseries\,0.0\,}}\quad
+  Restate $r_1$ (\texttt{protein$\Rightarrow$has\_3d}).\\
+  \quad Anomaly unresolved.\\[4pt]
+  \colorbox{defabRed!12}{\textcolor{defabRed}{\bfseries\,0.5\,}}\quad
+  Global \texttt{$\neg$has\_3d $\leftarrow$ protein}.\\
+  \quad Resolves $\alpha$ but destroys all\\
+  \quad conventionally structured proteins.\\[4pt]
+  \colorbox{defabGold!18}{\textcolor{defabGold!90}{\bfseries\,0.75\,}}\quad
+  \texttt{disordered(X) $\leadsto$ func(X, conf)}.\\
+  \quad Conservative but mechanism\\
+  \quad incompletely restored.\\[4pt]
+  \colorbox{defabTeal!18}{\textcolor{defabTeal!90}{\bfseries\,1.0\,}}\quad
+  \textbf{$r_4$ exactly:}\\
+  \quad \texttt{disordered(X), protein(X)}\\
+  \quad \texttt{$\Rightarrow$ func(X, conf)}, $r_4 \succ r_2$.\\
+  \quad Conservative, novel, mechanistic.
 };
 
-% Arrows between panels
-\draw[->, thick, color=defabGray!60] (p1.east) -- (p2.west)
-    node[midway, above, font=\scriptsize\itshape, text=defabGray] {ablate $r_4$};
-\draw[->, thick, color=defabGray!60] (p1.south) -- (p3.north)
-    node[midway, right, font=\scriptsize\itshape, text=defabGray, xshift=2pt] {anomaly};
-\draw[->, thick, color=defabGray!60] (p2.south) -- (p4.north)
-    node[midway, right, font=\scriptsize\itshape, text=defabGray, xshift=2pt] {score};
-\draw[->, thick, color=defabGray!60] (p3.east) -- (p4.west)
-    node[midway, above, font=\scriptsize\itshape, text=defabGray] {construct};
+%% =================================================================
+%% Inter-panel arrows  (drawn last, between named anchors)
+%% =================================================================
+% (i) -> (ii) horizontal arrow at top
+\draw[flow] (p1.east |- 0,-1.2) -- node[flowlbl, above] {ablate $r_4$}
+            (p2.west |- 0,-1.2);
+
+% (i) -> (iii) vertical arrow at left
+\draw[flow] (p1.south |- 0,-5.0) -- node[flowlbl, right] {anomaly}
+            (p3.north |- 0,-5.5);
+
+% (ii) -> (iv) vertical arrow at right
+\draw[flow] (p2.south |- 0,-5.0) -- node[flowlbl, right] {score}
+            (p4.north |- 0,-5.5);
+
+% (iii) -> (iv) horizontal arrow at bottom
+\draw[flow] (p3.east |- 0,-7.9) -- node[flowlbl, above] {construct}
+            (p4.west |- 0,-7.9);
 
 \end{tikzpicture}
