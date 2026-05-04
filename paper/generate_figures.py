@@ -97,7 +97,9 @@ _GRADED = {
     'Claude 4.6':  [72.0, 13.0, 0.0,  2.9, 12.1],
     'Kimi-K2.5':   [83.7,  2.4, 0.0,  0.0, 13.9],
 }
-_SCORE_COLORS = [PAL['red'], '#C97A5E', PAL['gold'], '#8BA86B', PAL['teal']]
+# Score colors: sequential gradient through the palette endpoints
+# red(#B0413E) -> burnt-orange(#C07840) -> gold(#D9A441) -> sage-teal(#6A8A7A) -> teal(#3D6B7A)
+_SCORE_COLORS = [PAL['red'], '#C07840', PAL['gold'], '#6A8A7A', PAL['teal']]
 _SCORE_LABELS = ['Score 0 (unresolved)', '0.25', '0.5', '0.75 (weak conserv.)', '1.0 (conservative)']
 
 
