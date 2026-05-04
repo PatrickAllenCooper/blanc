@@ -104,12 +104,7 @@ _SCORE_LABELS = ['Score 0 (unresolved)', '0.25', '0.5', '0.75 (weak conserv.)', 
 
 
 def _draw_rend_rob_panel(ax, models_short=None, rend_rob=None):
-    """Panel (a): rendering-robust accuracy — all models clearly failing.
-
-    One bar per model, y-axis 0-100, dashed reference lines at 16.7%
-    (random chance for 6-choice) and 100% (ASP symbolic ceiling).
-    Two of four bars are at or below random chance.
-    """
+    """Panel (a): rendering-robust accuracy — all models clearly failing."""
     if models_short is None:
         models_short = _MODELS_SHORT
     if rend_rob is None:
@@ -119,45 +114,34 @@ def _draw_rend_rob_panel(ax, models_short=None, rend_rob=None):
     n_l2 = 374
     ci   = [_wilson_ci(n_l2, v/100)*100 for v in rend_rob]
 
-    # Colour bars by position relative to random baseline
     bar_colors = [PAL['red'] if v <= 16.7 else PAL['blue'] for v in rend_rob]
 
-    bars = ax.bar(x, rend_rob, 0.55,
+    bars = ax.bar(x, rend_rob, 0.52,
                   color=bar_colors, edgecolor='white', linewidth=0.4,
-                  yerr=ci, capsize=2.5,
-                  error_kw={'elinewidth': 0.8, 'ecolor': PAL['gray'], 'capthick': 0.8})
+                  yerr=ci, capsize=2.0,
+                  error_kw={'elinewidth': 0.7, 'ecolor': PAL['gray'], 'capthick': 0.7})
 
-    # Value labels on top of each bar
     for i, (v, b) in enumerate(zip(rend_rob, bars)):
-        ax.text(b.get_x() + b.get_width()/2, v + 1.5, f'{v:.1f}%',
-                ha='center', va='bottom', fontsize=6,
+        ax.text(b.get_x() + b.get_width()/2, v + ci[i] + 1.5, f'{v:.1f}%',
+                ha='center', va='bottom', fontsize=5.8,
                 color=PAL['red'] if rend_rob[i] <= 16.7 else PAL['blue'],
                 fontweight='bold')
 
-    # --- Reference lines ---
-    ax.axhline(16.7, color=PAL['red'], linewidth=1.2, linestyle='--', alpha=0.9,
-               zorder=3)
-    ax.axhline(100.0, color=PAL['gray'], linewidth=0.9, linestyle='--', alpha=0.7,
-               zorder=3)
-    ax.text(len(x) - 0.05, 16.7 + 1.2, 'Random chance (1/6)',
-            ha='right', va='bottom', fontsize=5.5, color=PAL['red'], alpha=0.95,
-            fontweight='bold')
-    ax.text(len(x) - 0.05, 100.0 + 0.8, 'ASP symbolic ceiling (100%)',
-            ha='right', va='bottom', fontsize=5.5, color=PAL['gray'])
+    ax.axhline(16.7, color=PAL['red'], linewidth=1.0, linestyle='--', alpha=0.85, zorder=3)
+    ax.axhline(100.0, color=PAL['gray'], linewidth=0.8, linestyle='--', alpha=0.65, zorder=3)
+    # Labels in pure data coordinates — avoids blended-transform PDF dimension errors
+    ax.text(0.05, 18.5, 'Random (1/6)',
+            ha='left', va='bottom', fontsize=5.5, color=PAL['red'], fontweight='bold')
+    ax.text(0.05, 101.5, 'ASP ceiling',
+            ha='left', va='bottom', fontsize=5.5, color=PAL['gray'])
 
-    ax.set_ylabel('Rendering-Robust Accuracy (%)', fontsize=7)
+    ax.set_ylabel('Rendering-Robust\nAccuracy (%)', fontsize=7)
     ax.set_xticks(x)
     ax.set_xticklabels(models_short, fontsize=6.5)
     ax.set_ylim(0, 108)
     ax.yaxis.set_major_locator(mticker.MultipleLocator(25))
     ax.tick_params(axis='x', length=0)
     ax.set_title('(a) Rendering-Robust Accuracy', fontsize=8, pad=4)
-
-    # Annotate below random with small indicator
-    ax.annotate('', xy=(1.35, 16.7), xycoords='data',
-                xytext=(1.35, 9.1), textcoords='data',
-                arrowprops=dict(arrowstyle='->', color=PAL['red'],
-                                lw=0.8, connectionstyle='arc3'))
 
 
 def _draw_heatmap_panel(ax):
@@ -216,8 +200,10 @@ def _draw_graded_panel(ax):
     ax.set_yticklabels(models_c, fontsize=6.5)
     ax.yaxis.set_tick_params(length=0)
     ax.set_title('(c) L3 Graded Score Distribution', fontsize=8, pad=4)
-    ax.legend(loc='lower right', fontsize=5, handlelength=0.9, handletextpad=0.3,
-              framealpha=0.85, edgecolor=PAL['gray'], ncol=1)
+    # Legend inside axes at top-left — clears the xlabel and sits above bar 0
+    ax.legend(loc='upper left', fontsize=4.8, handlelength=0.8, handletextpad=0.3,
+              framealpha=0.85, edgecolor=PAL['gray'], ncol=2,
+              borderpad=0.5, labelspacing=0.3)
     ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
@@ -232,8 +218,10 @@ def fig_results():
     4b: Accuracy by rendering modality M1-M4 plus rendering-robust column.
     4c: Graded score distribution at L3 — Score=0 dominates for Claude/Kimi.
     """
-    fig = plt.figure(figsize=(7.0, 4.5))
-    gs  = fig.add_gridspec(1, 3, width_ratios=[1.05, 1.0, 1.0], wspace=0.42)
+    fig = plt.figure(figsize=(7.2, 4.8), constrained_layout=False)
+    gs  = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.05, 1.1],
+                           wspace=0.52, left=0.10, right=0.97,
+                           top=0.90, bottom=0.22)
 
     ax_a = fig.add_subplot(gs[0])
     ax_b = fig.add_subplot(gs[1])
@@ -243,7 +231,6 @@ def fig_results():
     _draw_heatmap_panel(ax_b)
     _draw_graded_panel(ax_c)
 
-    fig.tight_layout(pad=0.6)
     return fig
 
 
