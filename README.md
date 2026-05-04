@@ -112,9 +112,9 @@ Guidance_Documents/     Project planning and documentation
 
 ## Papers
 
-- **`paper/dataset_paper.tex`** -- NeurIPS 2026 Evaluations & Datasets track submission. Focused on the DeFAb dataset: generation pipeline, cross-ontology extraction, contamination control, and baseline evaluation.
+- **`paper/paper.tex`** -- NeurIPS 2026 Evaluations & Datasets track submission. The single consolidated submission covering: dataset design, cross-ontology KB extraction (18 sources, 33.75M rules), synthetic contamination control, baseline evaluation (leading with worst results: symbolic ceiling 100% vs LLM rendering-robust 7.8--23.5%), M5 visual grounding, and DeFAb as a verifier-backed finetuning substrate (DPO, RLVR/GRPO, sc2live commander policies).
 
-- **`paper/paper.tex`** -- Full technical paper including fine-tuning via preference optimization (DPO, RLHF, GRPO) and adversarial defeasible debate via Monte Carlo Tree Search.
+- **`paper/paper_tmlr_archive.tex`** -- Archived TMLR-targeted long-form paper (~80 pages) covering the same dataset plus in-depth fine-tuning pipeline (DPO/RLHF/GRPO/MCTS), adversarial defeasible debate, and game-theoretic foundations. Preserved for future TMLR submission.
 
 ---
 
