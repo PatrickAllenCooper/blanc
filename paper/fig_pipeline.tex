@@ -1,59 +1,94 @@
-% DeFAb pipeline diagram -- clean layout for NeurIPS column width
+% DeFAb pipeline diagram — NeurIPS 2026 design system
+% Colors: defabBlue #1F3A6B, defabTeal #3D6B7A, defabGold #D9A441, defabRed #B0413E, defabGray #6B7280
 \begin{tikzpicture}[
     >=stealth,
-    node distance=0.8cm and 1.0cm,
+    node distance=0.75cm and 1.0cm,
     box/.style={
-        draw, rounded corners=2pt, minimum height=0.7cm,
-        font=\small, inner sep=4pt, text centered, align=center
+        draw=defabBlue!70, rounded corners=2pt, minimum height=0.72cm,
+        font=\small, inner sep=4pt, text centered, align=center,
+        fill=defabBlue!6, line width=0.5pt
     },
     levelbox/.style={
-        draw, rounded corners=2pt, minimum height=0.6cm,
-        font=\small, inner sep=4pt, text centered, align=center,
-        fill=black!4, minimum width=2.0cm
+        draw=defabTeal!80, rounded corners=2pt, minimum height=0.58cm,
+        font=\footnotesize, inner sep=3pt, text centered, align=center,
+        fill=defabTeal!10, minimum width=2.1cm, line width=0.5pt
+    },
+    exbox/.style={
+        draw=defabGray!60, rounded corners=1.5pt, minimum height=0.44cm,
+        font=\scriptsize\itshape, inner sep=2.5pt, text centered, align=center,
+        fill=defabGray!5, minimum width=2.6cm, line width=0.4pt, text=defabGray!80
     },
     modbox/.style={
-        draw, rounded corners=2pt, minimum height=0.6cm,
-        font=\small, inner sep=4pt, text centered, align=center,
-        fill=black!8, minimum width=1.5cm
+        draw=defabGold!80, rounded corners=2pt,
+        font=\footnotesize, inner sep=4pt, text centered, align=center,
+        fill=defabGold!8, minimum width=1.55cm, minimum height=2.5cm, line width=0.5pt
     },
-    arr/.style={->, thick},
-    lbl/.style={font=\scriptsize, midway, above, text=black!60},
-    stglbl/.style={font=\scriptsize\bfseries, text=black!50}
+    verbox/.style={
+        draw=defabRed!70, rounded corners=2pt, minimum height=0.52cm,
+        font=\scriptsize\bfseries, inner sep=3pt, text centered, align=center,
+        fill=defabRed!8, minimum width=2.1cm, line width=0.5pt, text=defabRed
+    },
+    arr/.style={->, thick, color=defabBlue!60},
+    arrthin/.style={->, thin, color=defabGray!70, dashed},
+    lbl/.style={font=\scriptsize\itshape, midway, above, text=defabGray},
+    stglbl/.style={font=\scriptsize\bfseries, text=defabGray!70}
 ]
 
-% --- Stage 1 ---
-\node[box, text width=1.8cm] (kb)
-    {Knowledge\\Bases\\[-1pt]{\scriptsize\itshape YAGO, GO,}\\[-2pt]{\scriptsize\itshape UMLS, \ldots}};
-\node[box, right=1.0cm of kb, text width=1.8cm] (lp)
+% --- Stage 1: KB → Logic Program ---
+\node[box, text width=1.75cm] (kb)
+    {Knowledge\\Bases\\[-1pt]{\scriptsize\color{defabGray}YAGO, GO,}\\[-2pt]{\scriptsize\color{defabGray}UMLS, \ldots}};
+\node[box, right=1.0cm of kb, text width=1.75cm] (lp)
     {Logic\\Program $\Pi$};
 \draw[arr] (kb) -- node[lbl] {formalize} (lp);
 
-% --- Stage 2 ---
-\node[box, right=1.0cm of lp, text width=1.8cm] (dt)
+% --- Stage 2: LP → Defeasible Theory ---
+\node[box, right=1.0cm of lp, text width=1.75cm] (dt)
     {Defeasible\\Theory $\mathcal{D}$};
 \draw[arr] (lp) -- node[lbl] {$\kappa$} (dt);
 
 % --- Stage 3: three levels, vertically stacked ---
-\node[levelbox, right=1.2cm of dt, yshift= 0.85cm] (l3) {L3 Defeater};
-\node[levelbox, right=1.2cm of dt]                  (l2) {L2 Rule};
-\node[levelbox, right=1.2cm of dt, yshift=-0.85cm]  (l1) {L1 Fact};
+\node[levelbox, right=1.15cm of dt, yshift= 0.93cm] (l3) {\textbf{L3} Defeater};
+\node[levelbox, right=1.15cm of dt]                  (l2) {\textbf{L2} Rule};
+\node[levelbox, right=1.15cm of dt, yshift=-0.93cm]  (l1) {\textbf{L1} Fact};
 
 \draw[arr] (dt.east) -- ++(0.35,0) |- (l3.west);
 \draw[arr] (dt.east) -- (l2.west);
 \draw[arr] (dt.east) -- ++(0.35,0) |- (l1.west);
 
-% --- Stage 4: rendering modalities as a single block ---
-\node[modbox, right=1.2cm of l2, text width=1.6cm, minimum height=2.2cm]
+% Micro-example boxes right of each level
+\node[exbox, right=0.35cm of l3] (ex3) {construct\\exception rule};
+\node[exbox, right=0.35cm of l2] (ex2) {reconstruct\\missing rule};
+\node[exbox, right=0.35cm of l1] (ex1) {identify\\missing fact};
+
+\draw[arrthin] (l3.east) -- (ex3.west);
+\draw[arrthin] (l2.east) -- (ex2.west);
+\draw[arrthin] (l1.east) -- (ex1.west);
+
+% Verifier badge below level boxes
+\node[verbox, below=0.38cm of l2] (ver)
+    {$O(|\mathcal{D}|^3)$\\verifier $\checkmark$};
+\draw[arrthin, color=defabRed!60] (l3.south) -- (ver.north -| l3.south);
+\draw[arrthin, color=defabRed!60] (l2.south) -- (ver.north);
+\draw[arrthin, color=defabRed!60] (l1.north) -- (ver.south -| l1.north);
+
+% --- Stage 4: rendering modalities ---
+\node[modbox, right=1.3cm of ex2, yshift=0.0cm]
     (render) {M1 Narrative\\[1pt]M2 Semi-formal\\[1pt]M3 Annotated\\[1pt]M4 Formal\\[1pt]M5 Visual};
 
-\draw[arr] (l3.east) -- (render.west |- l3.east);
-\draw[arr] (l2.east) -- (render.west);
-\draw[arr] (l1.east) -- (render.west |- l1.east);
+\draw[arr] (ex3.east) -- (render.west |- ex3.east);
+\draw[arr] (ex2.east) -- (render.west);
+\draw[arr] (ex1.east) -- (render.west |- ex1.east);
 
-% --- Edge annotations ---
-\node[font=\scriptsize\itshape, text=black!50, above=0.08cm of l3]
-    {ablate + verify};
-\node[font=\scriptsize\itshape, text=black!50, above right=-0.1cm and 0.15cm of render.north west]
-    {render};
+% Stage labels
+\node[stglbl, above=0.15cm of kb] {\textsf{Stage 1}};
+\node[stglbl, above=0.15cm of lp] {\textsf{Stage 2}};
+\node[stglbl, above=0.15cm of l3] {\textsf{Stage 3}};
+\node[stglbl, above=0.15cm of render] {\textsf{Stage 4}};
+
+% Verifier double-use annotation
+\node[font=\scriptsize\itshape, text=defabRed!80,
+      below right=-0.05cm and 0.2cm of ver.south east,
+      text width=3.2cm, align=left]
+    {also: DPO reward,\\GRPO reward,\\gated re-prompt};
 
 \end{tikzpicture}

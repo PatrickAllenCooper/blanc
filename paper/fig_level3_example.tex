@@ -1,0 +1,100 @@
+% Level 3 worked example: IDP defeater abduction — four-panel storyboard
+% Colors match design system: defabBlue, defabTeal, defabGold, defabRed, defabGray
+\begin{tikzpicture}[
+    >=stealth,
+    node distance=0.28cm and 0.6cm,
+    panel/.style={
+        draw=defabGray!50, rounded corners=3pt,
+        inner sep=6pt, align=left, font=\scriptsize,
+        fill=white, line width=0.4pt
+    },
+    scorelbl/.style={
+        draw, rounded corners=1.5pt, inner sep=2pt,
+        font=\scriptsize\bfseries, minimum width=0.85cm,
+        text centered, line width=0.5pt
+    },
+    scoregood/.style={scorelbl, draw=defabTeal, fill=defabTeal!10, text=defabTeal!80},
+    scorebad/.style={scorelbl, draw=defabRed!70, fill=defabRed!8, text=defabRed!80},
+    scorezero/.style={scorelbl, draw=defabGray!60, fill=defabGray!5, text=defabGray},
+    scoremid/.style={scorelbl, draw=defabGold!70, fill=defabGold!8, text=defabGold!80},
+]
+
+% ---- Panel (i): Complete theory D_full ----
+\node[panel, text width=5.6cm] (p1) {
+  \textbf{(i) Complete theory $\mathcal{D}^{\mathrm{full}}$} \\[3pt]
+  \textit{Facts:} \texttt{protein(p53\_idr).\ \ disordered(p53\_idr).} \\[2pt]
+  \textit{Defeasible rules:} \\
+  $r_1$: \texttt{protein(X)$\,\Rightarrow\,$has\_stable\_3d(X)} \\
+  $r_2$: \texttt{protein(X),\ has\_3d(X)$\,\Rightarrow\,$func(X,lock)} \\
+  $r_3$: \texttt{disordered(X)$\,\Rightarrow\,\neg$has\_stable\_3d(X)} \\
+  {\color{defabRed}$r_4$: \texttt{disordered(X), protein(X)}} \\
+  \phantom{$r_4$: }{\color{defabRed}\texttt{$\Rightarrow$ func(X,conf\_ensemble)}} \\[1pt]
+  \textit{Superiority:} $r_3 \succ r_1$,\ {\color{defabRed}$r_4 \succ r_2$} \\[2pt]
+  $\mathcal{D}^{\mathrm{full}} \vdash_\partial$ \texttt{func(p53\_idr,\ conf\_ensemble)} \checkmark
+};
+
+% ---- Panel (ii): Ablation ----
+\node[panel, text width=5.6cm, right=0.55cm of p1] (p2) {
+  \textbf{(ii) Challenge theory $\mathcal{D}^{-}$ (ablate $r_4$)} \\[3pt]
+  Same facts and $r_1, r_2, r_3$ retained. \\[2pt]
+  {\color{defabRed}\textbf{Removed:} $r_4$: \texttt{disordered(X), protein(X)} $\Rightarrow$ \ldots} \\
+  {\color{defabRed}\textbf{Removed:} superiority $r_4 \succ r_2$.} \\[4pt]
+  \textit{Active derivation chain:} \\
+  \texttt{protein(p53\_idr)} + $r_1$
+  $\;\to\;$ \texttt{has\_stable\_3d(p53\_idr)} \\
+  \quad (unless $r_3$ blocks it) \\
+  $r_3$ fires via \texttt{disordered(p53\_idr)}, \\
+  so \texttt{has\_3d} blocked --- but $r_2$ needs it. \\
+  \textit{No alternative mechanism remains.}
+};
+
+% ---- Panel (iii): Anomaly surfaces ----
+\node[panel, text width=5.6cm, below=0.55cm of p1] (p3) {
+  \textbf{(iii) Anomaly $\alpha$ surfaces in $\mathcal{D}^{-}$} \\[3pt]
+  $\mathcal{D}^{-} \vdash_\partial$ \texttt{func(p53\_idr,\ lock\_key)} \\
+  \quad (via $r_1$+$r_2$ if \texttt{has\_3d} fires) \\[2pt]
+  {\color{defabRed}\textbf{Anomalous observation:}} \\
+  {\color{defabRed}$\alpha$ = \texttt{func(p53\_idr,\ conf\_ensemble)}} \\[2pt]
+  $\mathcal{D}^{-} \vdash_\partial \neg\alpha$ \quad $\Rightarrow$ \textbf{anomaly!} \\[2pt]
+  \textbf{Task:} construct a defeater resolving $\alpha$ \\
+  while preserving all other expectations.
+};
+
+% ---- Panel (iv): Graded resolutions ----
+\node[panel, text width=5.6cm, right=0.55cm of p3] (p4) {
+  \textbf{(iv) Graded resolutions (verifier $\Score$)} \\[3pt]
+  \begin{tikzpicture}[remember picture, inner sep=0pt, node distance=3pt]
+    \node[scorezero] (s0) {0.0};
+    \node[right=4pt of s0, text width=4.4cm, font=\scriptsize, align=left] {
+      Restate $r_1$: \texttt{protein(X)$\!\Rightarrow\!$has\_3d(X)}. Anomaly unresolved.
+    };
+    \node[scorebad, below=8pt of s0] (s5) {0.5};
+    \node[right=4pt of s5, text width=4.4cm, font=\scriptsize, align=left] {
+      \texttt{protein(X)$\!\leadsto\!\neg$func(X,lock)}: resolves p53\_idr\\
+      but destroys all conventionally structured proteins. Not conservative.
+    };
+    \node[scoremid, below=16pt of s5] (s75) {0.75};
+    \node[right=4pt of s75, text width=4.4cm, font=\scriptsize, align=left] {
+      \texttt{disordered(X)$\!\Rightarrow\!$func(X,conf\_ensemble)}: weak\\
+      conservative resolution, incomplete mechanism.
+    };
+    \node[scoregood, below=14pt of s75] (s1) {\textbf{1.0}};
+    \node[right=4pt of s1, text width=4.4cm, font=\scriptsize, align=left, text=defabTeal] {
+      {\color{defabTeal}$r_4$: \texttt{disordered(X), protein(X)$\!\Rightarrow\!$func(X,conf)},
+      $r_4\!\succ\!r_2$.\\
+      Conservative. Novel. Mechanistically precise.}
+    };
+  \end{tikzpicture}
+};
+
+% Arrows between panels
+\draw[->, thick, color=defabGray!60] (p1.east) -- (p2.west)
+    node[midway, above, font=\scriptsize\itshape, text=defabGray] {ablate $r_4$};
+\draw[->, thick, color=defabGray!60] (p1.south) -- (p3.north)
+    node[midway, right, font=\scriptsize\itshape, text=defabGray, xshift=2pt] {anomaly};
+\draw[->, thick, color=defabGray!60] (p2.south) -- (p4.north)
+    node[midway, right, font=\scriptsize\itshape, text=defabGray, xshift=2pt] {score};
+\draw[->, thick, color=defabGray!60] (p3.east) -- (p4.west)
+    node[midway, above, font=\scriptsize\itshape, text=defabGray] {construct};
+
+\end{tikzpicture}

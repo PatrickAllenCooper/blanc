@@ -1,0 +1,74 @@
+% Verifier-as-exact-reward diagram — NeurIPS 2026 design system
+% Shows the polynomial-time verifier feeding four downstream uses
+\begin{tikzpicture}[
+    >=stealth,
+    node distance=0.5cm and 1.1cm,
+    verifier/.style={
+        draw=defabRed!80, rounded corners=3pt,
+        font=\small\bfseries, inner sep=6pt,
+        fill=defabRed!8, line width=0.8pt,
+        minimum width=3.2cm, minimum height=0.9cm,
+        text centered, align=center, text=defabRed
+    },
+    outputbox/.style={
+        draw=defabTeal!70, rounded corners=2.5pt,
+        font=\footnotesize, inner sep=5pt,
+        fill=defabTeal!7, line width=0.5pt,
+        minimum width=3.8cm, minimum height=0.75cm,
+        text centered, align=center
+    },
+    inputbox/.style={
+        draw=defabBlue!60, rounded corners=2.5pt,
+        font=\footnotesize, inner sep=4pt,
+        fill=defabBlue!6, line width=0.5pt,
+        minimum width=3.2cm, minimum height=0.72cm,
+        text centered, align=center
+    },
+    propertybox/.style={
+        draw=defabGold!70, rounded corners=2pt,
+        font=\scriptsize\itshape, inner sep=3pt,
+        fill=defabGold!6, line width=0.4pt,
+        text=defabGold!80, minimum width=2.6cm,
+        text centered, align=center
+    },
+    arr/.style={->, thick, color=defabRed!70},
+    arrin/.style={->, thick, color=defabBlue!60},
+    lbl/.style={font=\scriptsize\itshape, midway, text=defabGray},
+]
+
+% Central verifier node
+\node[verifier] (ver) {Polynomial-Time\\Defeasible Verifier\\$\Score \in \{0, 0.25, 0.5, 0.75, 1.0\}$};
+
+% Input
+\node[inputbox, left=1.5cm of ver] (inst) {Instance $(\Dm, \alpha)$\\+ model hypothesis $h$};
+\draw[arrin] (inst.east) -- (ver.west) node[lbl, above] {verify};
+
+% Properties of verifier
+\node[propertybox, above=0.3cm of ver, text width=5.5cm, align=center]
+    (props) {deterministic $\cdot$ model-independent $\cdot$ exact $\cdot$ no sampling $\cdot$ $<50\,\mu$s};
+
+% Output 1: Evaluation scoring
+\node[outputbox, right=1.5cm of ver, yshift=1.5cm] (eval)
+    {(i)~\textbf{Evaluation} at inference time\\accuracy $\cdot$ graded score $\cdot$ error class};
+\draw[arr] (ver.east) -- (eval.west);
+
+% Output 2: DPO preference pairs
+\node[outputbox, right=1.5cm of ver, yshift=0.5cm] (dpo)
+    {(ii)~\textbf{DPO} preference pairs\\$\Score(h_1) > \Score(h_2)$, margin-weighted loss};
+\draw[arr] (ver.east) -- (dpo.west);
+
+% Output 3: GRPO reward
+\node[outputbox, right=1.5cm of ver, yshift=-0.5cm] (grpo)
+    {(iii)~\textbf{RLVR / GRPO} rollout reward\\group relative advantage $A_i$, no reward model};
+\draw[arr] (ver.east) -- (grpo.west);
+
+% Output 4: Verifier-gated re-prompt
+\node[outputbox, right=1.5cm of ver, yshift=-1.5cm] (gate)
+    {(iv)~\textbf{Verifier-gated re-prompt} (RTS)\\B2 CommanderPolicy: reject + cite ROE violation};
+\draw[arr] (ver.east) -- (gate.west);
+
+% Curriculum callout below
+\node[propertybox, below=0.5cm of ver, text width=7cm, align=center]
+    (curr) {Curriculum: SFT on L1/L2 (grounding) $\to$ DPO on L2 (rule selection) $\to$ GRPO on L3 (belief revision)};
+
+\end{tikzpicture}
