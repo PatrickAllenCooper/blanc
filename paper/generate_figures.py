@@ -214,11 +214,14 @@ def fig_results():
         two models at or below 16.7% random chance. Primary failure visual.
     4b: Accuracy by rendering modality M1-M4 plus rendering-robust column.
     4c: Graded score distribution at L3 — Score=0 dominates for Claude/Kimi.
+
+    The score-color legend for panel (c) is rendered as a horizontal strip
+    below panel (c) so it never overlaps the bars and stays readable.
     """
-    fig = plt.figure(figsize=(7.2, 4.8), constrained_layout=False)
+    fig = plt.figure(figsize=(7.2, 4.4), constrained_layout=False)
     gs  = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.05, 1.1],
                            wspace=0.52, left=0.10, right=0.97,
-                           top=0.90, bottom=0.22)
+                           top=0.93, bottom=0.30)
 
     ax_a = fig.add_subplot(gs[0])
     ax_b = fig.add_subplot(gs[1])
@@ -228,16 +231,20 @@ def fig_results():
     _draw_heatmap_panel(ax_b)
     _draw_graded_panel(ax_c)
 
-    # Figure-level legend for panel (c) score colors, placed top-right above panel (c)
+    # Horizontal score-color legend for panel (c), centred under the full
+    # figure width at the bottom, outside all three plotting areas.
     score_handles = [mpatches.Patch(color=c, label=l)
                      for c, l in zip(_SCORE_COLORS, _SCORE_LABELS)]
     fig.legend(handles=score_handles,
-               loc='upper right',
-               bbox_to_anchor=(0.975, 0.985),
+               loc='lower center',
+               bbox_to_anchor=(0.5, 0.0),
                bbox_transform=fig.transFigure,
-               fontsize=4.8, handlelength=0.9, handletextpad=0.3,
-               framealpha=0.88, edgecolor=PAL['gray'],
-               ncol=1, borderpad=0.5, labelspacing=0.25)
+               fontsize=6.5, handlelength=1.0, handletextpad=0.4,
+               columnspacing=1.4,
+               framealpha=0.0, edgecolor='none',
+               ncol=5, borderpad=0.2,
+               title='Panel (c) graded-score key',
+               title_fontsize=6.5)
 
     return fig
 
