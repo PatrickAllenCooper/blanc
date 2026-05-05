@@ -323,7 +323,10 @@ def main() -> int:
     all_instances: list[AbductiveInstance] = []
 
     print("\nLoading instances...")
-    for domain in ["biology", "legal", "materials"]:
+    discovered = sorted({p.name.replace("_dev_instances.json", "")
+                         for p in instances_dir.glob("*_dev_instances.json")})
+    domains = discovered if discovered else ["biology", "legal", "materials"]
+    for domain in domains:
         domain_inst = _load_level2_instances(domain, args.instance_limit, instances_dir)
         print(f"  {domain:10s} Level 2: {len(domain_inst)} instances")
         all_instances.extend(domain_inst)
