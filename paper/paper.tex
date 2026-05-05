@@ -629,11 +629,11 @@ The reasoning-optimized models (DeepSeek, GPT) gain accuracy when distractor-rul
 
 \item {\bf Claims}
     \item[] Answer: \answerYes{}
-    \item[] Justification: The introduction lists six numbered contributions, each developed in corresponding sections (Sections~\ref{sec:design}--\ref{sec:finetuning}). All accuracy figures include Wilson 95\% CIs. Claims about dataset scale are backed by Table~\ref{tab:kbsummary}. The symbolic baseline is documented at \texttt{experiments/results/symbolic\_baseline\_l2.json} and \texttt{symbolic\_baseline\_l3.json}.
+    \item[] Justification: The introduction lists six numbered contributions, each developed in Sections~\ref{sec:design}--\ref{sec:finetuning}. The three classes of evaluative claim DeFAb supports (structural-deficit, prompting-strategy, contamination-resistance), with their assumptions and limits, are stated explicitly in Section~\ref{sec:conclusion}. All accuracy figures include Wilson 95\% CIs (Table~\ref{tab:main}); dataset scale claims are backed by Table~\ref{tab:kbsummary}; the symbolic baseline is documented at \texttt{experiments/results/symbolic\_baseline\_l2.json} and \texttt{symbolic\_baseline\_l3.json}.
 
 \item {\bf Limitations}
     \item[] Answer: \answerYes{}
-    \item[] Justification: Section~\ref{sec:discussion} discusses limitations: Tier~0 Level~3 sample size (35 instances, easy distribution), M1 decoder approximation, sparse automated Level~3 generation, structural contamination residual, and pending M5/DeFAb-Hard results.
+    \item[] Justification: The robust-headline-vs-upper-bound-diagnostic distinction is stated upfront in \S\ref{subsec:findings} (Tier~0 L2 with $n=374$ and $\pm 4$~pp Wilson is the headline; Tier~0 L3 with $n=35$ and $\pm 15$--$17$~pp is upper-bound diagnostic). Section~\ref{sec:discussion} discusses further limitations: Tier~0 L3 instances cluster in the easy region (mean $\Nov^* = 0.14$, single anomaly), the M1 narrative decoder operates approximately, automated Level~3 generation is constrained by exception-edge sparsity, the synthetic contamination control mitigates but does not eliminate the structural confound, the L3 direct prompt template inherits L1/L2 framing (\S\ref{subsec:findings}), the Tier~1 minimal-theory protocol is informationally weaker than Tier~0 (Appendix~\ref{app:tier1}), and M5 panel results are pending image-coverage indexing.
 
 \item {\bf Theory assumptions and proofs}
     \item[] Answer: \answerYes{}
@@ -645,7 +645,7 @@ The reasoning-optimized models (DeepSeek, GPT) gain accuracy when distractor-rul
 
 \item {\bf Open access to data and code}
     \item[] Answer: \answerYes{}
-    \item[] Justification: Dataset, pipeline, and harness released under MIT license (Section~\ref{sec:conclusion}). Evaluated models accessible via commercial APIs and open-source hosting.
+    \item[] Justification: Dataset, pipeline, and evaluation harness released under MIT license. For double-blind review they are available without authentication at the anonymous mirror \url{https://anonymous.4open.science/r/defab-anon}, with Croissant 1.0 + RAI 1.0 metadata (validated via \texttt{mlcroissant}, see \texttt{paper/croissant.json}). Camera-ready will mirror to HuggingFace Datasets per NeurIPS preferred-platform guidance. The mirror contains representative samples of every tier (per the $>$4\,GB sample-data requirement) plus the full generation pipeline source. Evaluated models are accessible via Azure AI Foundry (closed-source) and vLLM-hosted open weights (DeepSeek-R1-Distill-Llama-70B).
 
 \item {\bf Experimental setting/details}
     \item[] Answer: \answerYes{}
@@ -677,7 +677,7 @@ The reasoning-optimized models (DeepSeek, GPT) gain accuracy when distractor-rul
 
 \item {\bf New assets}
     \item[] Answer: \answerYes{}
-    \item[] Justification: DeFAb dataset documented via Datasheet (Appendix~\ref{app:datasheet}), released with README, JSON format specification, and Croissant metadata (core and RAI fields). Tier~RTS additions ship with formal certification report at \texttt{data/rts\_certification\_report.json} and verifier-gated commander policy at \texttt{src/blanc/sc2live/policies/commander.py}, all under MIT license.
+    \item[] Justification: DeFAb is documented via the Datasheet for Datasets (Appendix~\ref{app:datasheet}, structured per~\citep{gebru2018datasheets}), the validated Croissant~1.0 + RAI~1.0 metadata file (\texttt{paper/croissant.json}, all required core fields plus the seven RAI fields: \texttt{dataCollection}, \texttt{dataPreprocessingProtocol}, \texttt{dataAnnotationProtocol}, \texttt{dataReleaseMaintenancePlan}, \texttt{dataBiases}, \texttt{dataLimitations}, \texttt{dataUseCases}), a README with JSON format specification, and the executable evaluation harness. Tier~RTS additions ship with a formal certification report and verifier-gated commander policy. All under MIT license.
 
 \item {\bf Crowdsourcing and human subjects}
     \item[] Answer: \answerNA{}
