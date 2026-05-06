@@ -19,19 +19,6 @@
         line width=0.4pt,
         text width=3.7cm, minimum height=2.6cm, anchor=north
     },
-    titlea/.style={
-        font=\fontsize{7.5}{9}\selectfont\bfseries\color{defabBlue}
-    },
-    titleb/.style={
-        font=\fontsize{7.5}{9}\selectfont\bfseries\color{defabRed}
-    },
-    titlec/.style={
-        font=\fontsize{7.5}{9}\selectfont\bfseries\color{defabTeal}
-    },
-    badge/.style={
-        font=\fontsize{5.6}{6.6}\selectfont\bfseries,
-        inner sep=2pt, rounded corners=1.5pt
-    },
     flow/.style={->, thick, color=defabGray!75, line width=0.9pt,
                  shorten >=2pt, shorten <=2pt},
     flowlbl/.style={
@@ -51,7 +38,7 @@
 %% Panel A: The default (textbook biology)
 %% =================================================================
 \node[panel] at (-5.7, 0) (pa) {%
-  {\titlea (1) Default rule}\\[2pt]
+  {\fontsize{7.5}{9}\selectfont\bfseries\color{defabBlue}(1) Default rule}\\[2pt]
   Textbook dogma: every protein folds into a fixed 3D structure; function follows shape via lock-and-key.\\[2pt]
   {\fontsize{5.8}{6.8}\selectfont\color{defabGray}\texttt{protein(X)} $\Rightarrow$ \texttt{has\_3d(X)} $\Rightarrow$ \texttt{func(X,\,lock)}}\\[2pt]
   \colorbox{defabBlue!10}{\textcolor{defabBlue}{\bfseries\,fits PDB pre-1996\,}}%
@@ -61,7 +48,7 @@
 %% Panel B: The anomaly (p53 IDR observation)
 %% =================================================================
 \node[panel] at (0.0, 0) (pb) {%
-  {\titleb (2) Anomaly}\\[2pt]
+  {\fontsize{7.5}{9}\selectfont\bfseries\color{defabRed}(2) Anomaly}\\[2pt]
   \texttt{p53\_idr} is functional yet has no fixed 3D structure; the default predicts $\lnot$\texttt{func}.\\[2pt]
   {\fontsize{5.8}{6.8}\selectfont\color{defabRed}\texttt{disordered(p53\_idr)}, \texttt{functional(p53\_idr)}: both observed; default contradicts.}\\[2pt]
   \colorbox{defabRed!10}{\textcolor{defabRed}{\bfseries\,prediction contradicts observation\,}}%
@@ -71,7 +58,7 @@
 %% Panel C: The constructed defeater
 %% =================================================================
 \node[panel] at (5.7, 0) (pc) {%
-  {\titlec (3) Constructed defeater}\\[2pt]
+  {\fontsize{7.5}{9}\selectfont\bfseries\color{defabTeal}(3) Constructed defeater}\\[2pt]
   Required revision: override the default \emph{only} for disordered proteins, preserving every other prediction.\\[2pt]
   {\fontsize{5.8}{6.8}\selectfont\color{defabTeal}\texttt{disordered(X), protein(X)} $\Rightarrow$ \texttt{func(X,\,conf)},\ $r_4 \succ r_2$}\\[2pt]
   \colorbox{defabTeal!12}{\textcolor{defabTeal}{\bfseries\,conservative, novel, mechanistic\,}}%

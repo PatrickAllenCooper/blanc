@@ -20,6 +20,7 @@
 \usepackage[normalem]{ulem}
 \usepackage{tikz}
 \usetikzlibrary{positioning, arrows.meta, fit, backgrounds}
+\usepackage{listings}
 
 % =====================================================================
 % Design system: 5-color palette shared with generate_figures.py
@@ -33,6 +34,28 @@
 \newcommand{\imgplaceholder}{%
   \colorbox{defabGold!18}{%
     \fontsize{4.8}{5.4}\selectfont\bfseries\color{defabGold!85}\,IMG\,}%
+}
+
+% =====================================================================
+% Code listing style: bordered box, design-system palette, Python syntax.
+% Used in Appendix G (M5 Implementation Details) for the loader snippet.
+% =====================================================================
+\lstdefinestyle{defabpython}{%
+  language=Python,
+  basicstyle=\fontsize{7.5}{9}\ttfamily\color{defabGray!90!black},
+  keywordstyle=\color{defabBlue}\bfseries,
+  stringstyle=\color{defabTeal!85!black},
+  commentstyle=\color{defabGray!75}\itshape,
+  numberstyle=\fontsize{6}{7}\selectfont\color{defabGray!60},
+  numbers=left, numbersep=8pt, stepnumber=1, numberblanklines=false,
+  frame=single, rulecolor=\color{defabGray!50}, framerule=0.5pt,
+  backgroundcolor=\color{defabGold!4},
+  xleftmargin=12pt, xrightmargin=4pt, framexleftmargin=12pt,
+  aboveskip=4pt, belowskip=4pt,
+  breaklines=true, columns=fullflexible, keepspaces=true,
+  showstringspaces=false,
+  captionpos=b,
+  abovecaptionskip=4pt, belowcaptionskip=2pt,
 }
 
 % Theorem environments
@@ -480,16 +503,20 @@ Images for M5 are harvested from three linked knowledge bases. Wikidata's P18 ``
 
 The VLM evaluation panel comprises four models. The closed-source tier consists of GPT-5.2-chat and Claude~Sonnet~4.6, accessed via Azure AI Foundry's multimodal content blocks. The open-source tier consists of Qwen2.5-VL-72B-Instruct-AWQ (2$\times$A100, tensor parallel~2) and Qwen2.5-VL-7B-Instruct (1$\times$A100), served via vLLM on CURC Alpine.
 
-A minimal loader looks as follows.
-\begin{verbatim}
+A minimal Python loader for the released Tier~0 Level~3 evaluation instances is shown in Listing~\ref{lst:loader}; the same schema applies to Tier 1 and synthetic instances.
+
+\begin{lstlisting}[style=defabpython, caption={Minimal Python loader for the released Tier~0 Level~3 evaluation instances. Each \texttt{inst} is a dict with the challenge theory, target literal, and candidate hypothesis set; the same schema applies to Tier 1 and the synthetic contamination control.}, label={lst:loader}]
 import json
+
 with open("instances/tier0/level3_instances.json") as f:
     data = json.load(f)
+
 for inst in data["instances"]:
-    theory   = inst["theory"]
-    target   = inst["target"]
-    candidates = inst["candidates"]
-\end{verbatim}
+    theory     = inst["theory"]      # facts, strict + defeasible rules
+    target     = inst["target"]      # literal q to be explained
+    candidates = inst["candidates"]  # 6 hypotheses (1 gold + 5 distractors)
+    gold       = inst["gold"]        # the verifier-certified gold answer
+\end{lstlisting}
 
 
 %% =================================================================
