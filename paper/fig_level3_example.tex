@@ -5,12 +5,14 @@
 % Grid (anchor=north west on every panel):
 %   Top-left  (i)   Complete theory D_full     at (0,    0)
 %   Top-right (ii)  Challenge theory D-        at (8.0,  0)
-%   Bot-left  (iii) Anomaly surfaces           at (0,   -5.5)
-%   Bot-right (iv)  Graded resolutions         at (8.0, -5.5)
+%   Bot-left  (iii) Anomaly surfaces           at (0,   -7.0)
+%   Bot-right (iv)  Graded resolutions         at (8.0, -7.0)
 %
-% Each panel: 7.0cm wide, 5.0cm tall, anchored top-left.
-% Inter-panel horizontal gap: 1.0cm (8.0 - 7.0). Vertical gap: 0.5cm.
-% Arrows are drawn last, between named anchors.
+% Each panel: 7.0cm wide, 6.4cm tall (content can push to ~6.0cm in panel iv).
+% Inter-panel horizontal gap: 1.0cm; vertical gap: 0.6cm.
+% Arrows are drawn last, ROUTED THROUGH PANEL ANCHORS so they auto-track
+% the actual rendered panel sizes (avoids the broken-arrow problem caused
+% by hardcoded y values that fell inside taller-than-minimum panels).
 %
 \begin{tikzpicture}[
     >=stealth,
@@ -19,13 +21,13 @@
         inner sep=7pt, align=left, fill=white,
         font=\fontsize{7}{8.5}\selectfont,
         line width=0.45pt,
-        text width=6.6cm, minimum height=4.8cm, anchor=north west
+        text width=6.6cm, minimum height=6.4cm, anchor=north west
     },
-    % inter-panel arrows
-    flow/.style={->, thick, color=defabGray!65, line width=0.7pt},
+    flow/.style={->, thick, color=defabGray!75, line width=0.9pt,
+                 shorten >=2pt, shorten <=2pt},
     flowlbl/.style={
         font=\fontsize{6.5}{7.5}\selectfont\itshape,
-        text=defabGray, fill=white, inner sep=1.5pt
+        text=defabGray, fill=white, inner sep=2pt
     },
 ]
 
@@ -64,7 +66,7 @@
 %% =================================================================
 %% Panel (iii): Anomaly surfaces   (bottom-left)
 %% =================================================================
-\node[panel] at (0, -5.5cm) (p3) {
+\node[panel] at (0, -7.0cm) (p3) {
   {\fontsize{8}{9.5}\selectfont\bfseries\color{defabBlue}(iii) Anomaly $\alpha$ surfaces}\\[3pt]
   Default chain in $\Dm$ would derive\\
   \texttt{func(p53\_idr, lock\_key)} via $r_1, r_2$\\
@@ -80,7 +82,7 @@
 %% =================================================================
 %% Panel (iv): Graded resolutions   (bottom-right)
 %% =================================================================
-\node[panel] at (8.0cm, -5.5cm) (p4) {
+\node[panel] at (8.0cm, -7.0cm) (p4) {
   {\fontsize{8}{9.5}\selectfont\bfseries\color{defabBlue}(iv) Graded resolutions (verifier $\Score$)}\\[3pt]
   \colorbox{defabGray!12}{\textcolor{defabGray}{\bfseries\,0.0\,}}\quad
   Restate $r_1$ (\texttt{protein$\Rightarrow$has\_3d}).\\
@@ -101,22 +103,19 @@
 };
 
 %% =================================================================
-%% Inter-panel arrows  (drawn last, between named anchors)
+%% Inter-panel arrows  (use actual panel anchors so arrows track
+%% the rendered panel size and stay outside the panel boxes)
 %% =================================================================
-% (i) -> (ii) horizontal arrow at top
-\draw[flow] (p1.east |- 0,-1.2) -- node[flowlbl, above] {ablate $r_4$}
-            (p2.west |- 0,-1.2);
+% (i) -> (ii)  horizontal arrow between top panels (mid-height of each)
+\draw[flow] (p1.east) -- node[flowlbl, above] {ablate $r_4$} (p2.west);
 
-% (i) -> (iii) vertical arrow at left
-\draw[flow] (p1.south |- 0,-5.0) -- node[flowlbl, right] {anomaly}
-            (p3.north |- 0,-5.5);
+% (i) -> (iii)  vertical arrow between left panels (mid-width of each)
+\draw[flow] (p1.south) -- node[flowlbl, right] {anomaly} (p3.north);
 
-% (ii) -> (iv) vertical arrow at right
-\draw[flow] (p2.south |- 0,-5.0) -- node[flowlbl, right] {score}
-            (p4.north |- 0,-5.5);
+% (ii) -> (iv)  vertical arrow between right panels
+\draw[flow] (p2.south) -- node[flowlbl, right] {score} (p4.north);
 
-% (iii) -> (iv) horizontal arrow at bottom
-\draw[flow] (p3.east |- 0,-7.9) -- node[flowlbl, above] {construct}
-            (p4.west |- 0,-7.9);
+% (iii) -> (iv)  horizontal arrow between bottom panels
+\draw[flow] (p3.east) -- node[flowlbl, above] {construct} (p4.west);
 
 \end{tikzpicture}

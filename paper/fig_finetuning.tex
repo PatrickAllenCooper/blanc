@@ -1,12 +1,12 @@
 % Figure 7: Verifier-as-reward diagram for the finetuning substrate.
 % Absolute coordinates throughout; explicit \draw arrows between named anchors.
 %
-% Layout:
-%   Properties strip   at (0,    2.4)   width 8cm height 0.6cm
+% Layout (vertical positions chosen so strips never overlap output boxes):
+%   Properties strip   at (0,    3.0)   width 10cm height 0.55cm  (clears box i top y=2.425)
 %   Input box          at (-5.5, 0)     width 3.0cm height 1.2cm
-%   Central verifier   at (0,    0)     width 4.0cm height 1.4cm
-%   Four output boxes at (5.5, +1.8 / +0.6 / -0.6 / -1.8)  width 4.5cm height 0.95cm
-%   Curriculum strip   at (0,   -2.4)   width 8cm height 0.6cm
+%   Central verifier   at (0,    0)     width 4.2cm height 1.4cm
+%   Four output boxes  at (5.7, +1.95 / +0.65 / -0.65 / -1.95)  width 4.6cm height 0.95cm
+%   Curriculum strip   at (0,   -3.0)   width 10cm height 0.55cm (clears box iv bottom y=-2.425)
 %
 \begin{tikzpicture}[
     >=stealth,
@@ -46,7 +46,7 @@
 %% Properties strip (top)
 %% =================================================================
 \node[propbox, minimum width=10cm, minimum height=0.55cm] (props)
-    at (0, 2.4)
+    at (0, 3.0)
     {deterministic\ \ $\cdot$\ \ model-independent\ \ $\cdot$\ \ exact (no sampling)\ \ $\cdot$\ \ $<\!50\,\mu$s per call};
 
 %% =================================================================
@@ -100,7 +100,7 @@
 %% Curriculum strip (bottom)
 %% =================================================================
 \node[propbox, minimum width=10cm, minimum height=0.55cm] (curr)
-    at (0, -2.4)
+    at (0, -3.0)
     {Curriculum: SFT on L1/L2 (grounding) $\to$ DPO on L2 (rule selection) $\to$ GRPO on L3 (belief revision)};
 
 \end{tikzpicture}

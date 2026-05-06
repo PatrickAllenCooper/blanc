@@ -397,11 +397,15 @@ def fig_sources():
     ax_a.xaxis.set_major_locator(mticker.MultipleLocator(10))
     ax_a.tick_params(axis='y', length=0)
 
-    # Legend for classes
+    # Legend for classes: placed below the panel as a horizontal strip so it
+    # never overlaps the bars (especially the bottom ones: SUMO, FrameNet,
+    # sc2live/RTS).
     legend_patches = [mpatches.Patch(color=class_col[c], label=class_label[c])
                       for c in ['govt', 'encyclopedic', 'biomedical', 'game']]
-    ax_a.legend(handles=legend_patches, fontsize=5.5, loc='lower right',
-                framealpha=0.9, edgecolor=PAL['gray'], handlelength=1.0)
+    ax_a.legend(handles=legend_patches, fontsize=5.5,
+                loc='upper center', bbox_to_anchor=(0.5, -0.18),
+                ncol=4, framealpha=0.0, edgecolor='none',
+                handlelength=1.0, columnspacing=1.0, borderpad=0.2)
 
     # --- Panel (b): Dataset composition ---
     tiers     = ['Tier 0\n(baseline)', 'Tier 1\n(cross-ont.)',
