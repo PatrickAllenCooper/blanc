@@ -10,13 +10,13 @@
 %
 % Row y-coordinates (top of box, anchor=north):
 %   Pipeline arc   y =  0.00  (height ~0.56cm)
-%   Level headers  y = -0.90  (height  0.40cm -> bottom -1.30)
-%   Theory boxes   y = -1.50  (height  0.78cm -> bottom -2.28)  2 lines
-%   Ablated boxes  y = -2.50  (height  0.78cm -> bottom -3.28)  2 lines
-%   Gold boxes     y = -3.50  (height  0.50cm -> bottom -4.00)  1 line
-%   Distractor     y = -4.20  (height  0.50cm -> bottom -4.70)  1 line
-%   Modality strip y = -4.90  (height  0.42cm -> bottom -5.32)
-%   Footer label   y = -5.45
+%   Level headers  y = -0.80  (height  0.40cm -> bottom -1.20)
+%   Theory boxes   y = -1.30  (height  0.78cm -> bottom -2.08)  2 lines
+%   Ablated boxes  y = -2.20  (height  0.78cm -> bottom -2.98)  2 lines
+%   Gold boxes     y = -3.10  (height  0.50cm -> bottom -3.60)  1 line
+%   Distractor     y = -3.75  (height  0.50cm -> bottom -4.25)  1 line
+%   Modality strip y = -4.95  (height  0.42cm -> bottom -5.37)  -- 0.70cm gap for arrows
+%   Footer label   y = -5.55
 %
 %   Column x-centres: L1=-3.50, L2=0, L3=+3.50  (text width 3.2cm)
 %
@@ -156,13 +156,16 @@
 \node[dbox] at (  3.50, -3.75) (d3) {Score 0.5: \texttt{neg(X):-bear(X)} [not conserv.]};
 
 %% =================================================================
-%% MODALITY STRIP  (y = -4.38)
+%% MODALITY STRIP  (y = -4.95, 0.70cm below distractor row for arrow room)
 %% =================================================================
-\node[mbox] at (-3.50, -4.38) (m1) {M1 Narrative};
-\node[mbox] at (  0.00, -4.38) (m2) {M2--M4 Formal};
-\node[mbox] at (  3.50, -4.38) (m3) {M5 Visual};
+\node[mbox] at (-3.50, -4.95) (m1) {M1 Narrative};
+\node[mbox] at (  0.00, -4.95) (m2) {M2--M4 Formal};
+\node[mbox] at (  3.50, -4.95) (m3) {M5 Visual};
 
-\draw[sarr] (d1.south) -- (m1.north);
+% Vertical arrows from distractor boxes down to modality boxes; now have
+% 0.70cm of vertical room (was 0.13cm) so the arrowhead has space to render.
+\draw[sarr] (d1.south) -- node[font=\fontsize{4.6}{5.5}\selectfont\itshape,
+    text=defabGray, fill=white, inner sep=1pt, midway, right=0.5pt]{render}(m1.north);
 \draw[sarr] (d2.south) -- (m2.north);
 \draw[sarr] (d3.south) -- (m3.north);
 
@@ -172,7 +175,7 @@
     (m2.east) -- (m3.west);
 
 \node[font=\fontsize{5.0}{6}\selectfont\itshape, text=defabGold!80,
-      anchor=north] at (0, -4.93)
+      anchor=north] at (0, -5.55)
     {Five rendering modalities (M5 replaces entity names with images)};
 
 %% =================================================================
