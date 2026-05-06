@@ -453,72 +453,96 @@ def fig_sources():
 # =====================================================================
 
 def fig_difficulty():
-    """Two-panel difficulty stratification.
+    """Two-panel difficulty stratification (current L3 set vs DeFAb-Hard).
 
-    Left: novelty distribution. H1 target region [0.5, 1.0] sits on the
-    same linear axis as the data, with an inline annotation.
-
-    Right: support size distribution on a log x-axis so the current data
-    (4-10) and the H2 target region [50, 200] are both visible. A gray
-    bracket-arrow marks the empty gap between them.
+    Both panels share the same n=35 Tier 0 L3 release. Each shows the
+    current distribution in cool color (blue/teal), the DeFAb-Hard target
+    region in warm gold, and a labeled gap so the empty space between
+    them reads as an explicit pre-registered design target rather than
+    a quiet visual annotation.
     """
-    # Data from experiments/results/difficulty_distributions.json (level3)
-    # novelty: mean 0.143, std 0.226, min 0, max 0.5
-    # support_size: mean 6.743, std 1.38, min 4, max 10
-
-    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(6.0, 2.4),
-                                      gridspec_kw={'wspace': 0.32})
+    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(6.4, 2.6),
+                                      gridspec_kw={'wspace': 0.30})
 
     # ---- Panel (a): novelty distribution ----
-    novelty_vals = np.array([0.0] * 22 + [0.25] * 8 + [0.5] * 5)
+    # Data: 22 instances at Nov*=0, 8 at 0.25, 5 at 0.5.  Total n=35.
+    nov_centers = [0.0, 0.25, 0.5]
+    nov_counts  = [22, 8, 5]
+    bar_w = 0.10
+    bars_a = ax_a.bar(nov_centers, nov_counts, width=bar_w,
+                       color=PAL['blue'], edgecolor='white', linewidth=0.5,
+                       alpha=0.88, label='current L3 ($n=35$)')
+    for x, c in zip(nov_centers, nov_counts):
+        ax_a.text(x, c + 0.7, str(c), ha='center', va='bottom',
+                  fontsize=7, color=PAL['blue'], fontweight='bold')
 
-    ax_a.hist(novelty_vals, bins=[-0.05, 0.1, 0.35, 0.6],
-              color=PAL['blue'], edgecolor='white', linewidth=0.4,
-              alpha=0.85, rwidth=0.85)
-    ax_a.axvspan(0.5, 1.0, alpha=0.20, color=PAL['gold'])
-    ax_a.text(0.75, 16, 'H1 target\n$\\mathrm{Nov}^*\\!\\in\\![0.5, 1.0]$',
-              ha='center', va='center', fontsize=6.0,
+    # H1 target region [0.5, 1.0] -- shifted slightly so it does not visually
+    # merge with the boundary bar at exactly Nov*=0.5
+    ax_a.axvspan(0.55, 1.02, alpha=0.22, color=PAL['gold'])
+    ax_a.text(0.78, 14, 'H1 target',
+              ha='center', va='center', fontsize=8,
               color=PAL['gold'], fontweight='bold')
+    ax_a.text(0.78, 11, r'$\mathrm{Nov}^* \in [0.5, 1.0]$',
+              ha='center', va='center', fontsize=7.5,
+              color=PAL['gold'])
+    ax_a.text(0.78, 8.0, r'(0 of 35 in current set)',
+              ha='center', va='center', fontsize=6.5,
+              color=PAL['gray'], fontstyle='italic')
 
-    ax_a.set_xlabel('Predicate novelty $\\mathrm{Nov}^*$', fontsize=7)
-    ax_a.set_ylabel('Instance count', fontsize=7)
-    ax_a.set_title('(a) Novelty distribution (current L3, $n=35$)',
-                   fontsize=7.5, pad=3)
-    ax_a.set_xlim(-0.08, 1.05)
+    ax_a.set_xlabel(r'Predicate novelty $\mathrm{Nov}^*$', fontsize=8)
+    ax_a.set_ylabel('Instance count', fontsize=8)
+    ax_a.set_title('(a) Novelty distribution', fontsize=8.5, pad=4)
+    ax_a.set_xlim(-0.10, 1.05)
     ax_a.set_ylim(0, 26)
+    ax_a.set_xticks([0.0, 0.25, 0.5, 0.75, 1.0])
     ax_a.yaxis.set_major_locator(mticker.MultipleLocator(5))
+    ax_a.tick_params(axis='both', which='major', labelsize=7)
+    ax_a.spines['top'].set_visible(False)
+    ax_a.spines['right'].set_visible(False)
 
     # ---- Panel (b): support size on log x-axis ----
-    supp_vals = np.array([4] * 3 + [5] * 7 + [6] * 9 + [7] * 7 +
-                          [8] * 5 + [9] * 2 + [10] * 2)
-    log_bins = np.geomspace(3.5, 12, 9)  # bins covering current data
-    ax_b.hist(supp_vals, bins=log_bins,
-              color=PAL['teal'], edgecolor='white', linewidth=0.4,
-              alpha=0.85)
+    supp_centers = [4, 5, 6, 7, 8, 9, 10]
+    supp_counts  = [3, 7, 9, 7, 5, 2, 2]
+    bar_w_b = [0.15 * v for v in supp_centers]   # log-aware widths
+    for x, c in zip(supp_centers, supp_counts):
+        ax_b.bar(x, c, width=0.18 * x, color=PAL['teal'],
+                 edgecolor='white', linewidth=0.5, alpha=0.88)
+        ax_b.text(x, c + 0.25, str(c), ha='center', va='bottom',
+                  fontsize=6.5, color=PAL['teal'], fontweight='bold')
 
-    # H2 target region in real coordinates
-    ax_b.axvspan(50, 200, alpha=0.20, color=PAL['gold'])
-    ax_b.text(100, 7.5,
-              'H2 target\n$|\\mathcal{D}| \\in \\{50,100,200\\}$',
-              ha='center', va='center', fontsize=6.0,
+    # H2 target region [50, 200]
+    ax_b.axvspan(50, 200, alpha=0.22, color=PAL['gold'])
+    ax_b.text(100, 8.4, 'H2 target',
+              ha='center', va='center', fontsize=8,
               color=PAL['gold'], fontweight='bold')
+    ax_b.text(100, 7.0, r'$|\mathcal{D}| \in \{50,100,200\}$',
+              ha='center', va='center', fontsize=7.5,
+              color=PAL['gold'])
+    ax_b.text(100, 5.4, r'(0 of 35 in current set)',
+              ha='center', va='center', fontsize=6.5,
+              color=PAL['gray'], fontstyle='italic')
 
-    # Gap indicator: gray bracket between current max (10) and H2 min (50)
-    ax_b.annotate('', xy=(50, 1.5), xytext=(10, 1.5),
-                  arrowprops=dict(arrowstyle='|-|', color=PAL['gray'],
-                                  lw=0.7, mutation_scale=4))
-    ax_b.text(np.sqrt(10 * 50), 2.2, '5x gap', ha='center', va='bottom',
-              fontsize=5.5, color=PAL['gray'], fontstyle='italic')
+    # Prominent gap indicator: thick gray double-arrow with explicit label
+    ax_b.annotate('', xy=(48, 1.0), xytext=(11, 1.0),
+                  arrowprops=dict(arrowstyle='<->', color=PAL['gray'],
+                                  lw=1.2, mutation_scale=8, alpha=0.85))
+    ax_b.text(np.sqrt(11 * 48), 1.7,
+              r'$\mathbf{5\!\times\!}$ gap (empty)',
+              ha='center', va='bottom',
+              fontsize=7, color=PAL['gray'], fontweight='bold')
 
     ax_b.set_xscale('log')
-    ax_b.set_xlim(3, 250)
+    ax_b.set_xlim(3, 260)
     ax_b.set_ylim(0, 11)
-    ax_b.set_xlabel('Support size $|\\mathrm{Supp}|$ (log scale)', fontsize=7)
-    ax_b.set_ylabel('Instance count', fontsize=7)
-    ax_b.set_title('(b) Support size distribution (current L3, $n=35$)',
-                   fontsize=7.5, pad=3)
+    ax_b.set_xlabel(r'Support size $|\mathrm{Supp}|$ (log scale)', fontsize=8)
+    ax_b.set_ylabel('Instance count', fontsize=8)
+    ax_b.set_title('(b) Support size distribution', fontsize=8.5, pad=4)
     ax_b.xaxis.set_major_formatter(mticker.ScalarFormatter())
     ax_b.xaxis.set_minor_formatter(mticker.NullFormatter())
+    ax_b.set_xticks([4, 6, 10, 50, 100, 200])
+    ax_b.tick_params(axis='both', which='major', labelsize=7)
+    ax_b.spines['top'].set_visible(False)
+    ax_b.spines['right'].set_visible(False)
 
     return fig
 
