@@ -87,26 +87,37 @@
 };
 
 %% =================================================================
-%% Transformation arrows below the M4 -> M5-replace and M4 -> M5-supplement
-%% transitions.  Wording: subject + verb + object so the meaning is explicit.
+%% Horizontal transition arrows between adjacent panels at mid-height.
+%% Each arrow carries a compact label explaining what changes.
 %% =================================================================
-\draw[->, color=defabGray!70, thick, line width=0.7pt, shorten >=2pt, shorten <=2pt]
-    (m4.south east) ..controls +(0.5cm,-0.5cm) and +(-0.5cm,-0.5cm).. (m5r.south west);
-\node[font=\fontsize{6.2}{7.4}\selectfont\itshape, text=defabGray,
-      anchor=north, align=center, fill=white, inner sep=2pt]
-    at (2.4cm, -6.20cm) {M4 $\to$ M5-replace:\\replace text entity name with image};
 
-\draw[->, color=defabGray!70, thick, line width=0.7pt, shorten >=2pt, shorten <=2pt]
-    (m4.south) ..controls +(2.0cm,-1.5cm) and +(-2.5cm,-1.5cm).. (m5s.south west);
-\node[font=\fontsize{6.2}{7.4}\selectfont\itshape, text=defabGray,
-      anchor=north, align=center, fill=white, inner sep=2pt]
-    at (7.4cm, -6.20cm) {M4 $\to$ M5-supplement:\\image added alongside the text name};
+% M4 -> M5-replace (between panels 1 and 2)
+\draw[->, color=defabRed!65, line width=1.0pt, shorten >=3pt, shorten <=3pt]
+    (m4.east) -- (m5r.west);
+\node[font=\fontsize{6.0}{7.2}\selectfont, text=defabRed!80,
+      fill=white, inner sep=2.5pt, align=center, anchor=south]
+    at ($(m4.east)!0.5!(m5r.west) + (0, 0.05cm)$)
+    {\textbf{remove}\\[-1pt]\textbf{names}};
+
+% M5-replace -> M5-supplement (between panels 2 and 3)
+\draw[->, color=defabTeal!65, line width=1.0pt, shorten >=3pt, shorten <=3pt]
+    (m5r.east) -- (m5s.west);
+\node[font=\fontsize{6.0}{7.2}\selectfont, text=defabTeal!80,
+      fill=white, inner sep=2.5pt, align=center, anchor=south]
+    at ($(m5r.east)!0.5!(m5s.west) + (0, 0.05cm)$)
+    {\textbf{restore}\\[-1pt]\textbf{names}};
+
+%% Bottom annotation strip
+\node[font=\fontsize{6.2}{7.4}\selectfont\itshape, text=defabGray, anchor=north,
+      align=center]
+    at (7.0cm, -6.15cm)
+    {M4 (text only) $\xrightarrow{\text{remove names}}$ M5-replace (image only) $\xrightarrow{\text{restore names}}$ M5-supplement (text + image)};
 
 %% Single verifier-badge centred below
 \node[draw=defabRed!70, rounded corners=2pt, fill=defabRed!7,
       font=\fontsize{6.5}{7.5}\selectfont\bfseries, inner sep=4pt,
       text=defabRed, anchor=north]
-    at (7.0cm, -7.45cm)
+    at (7.0cm, -6.80cm)
     {Verifier-backed gold standard is identical across all five modalities};
 
 \end{tikzpicture}
