@@ -17,7 +17,7 @@
         font=\fontsize{5.8}{6.9}\selectfont,
         inner sep=3.5pt, align=left, fill=white,
         line width=0.4pt,
-        text width=3.7cm, minimum height=1.6cm, anchor=north
+        text width=3.7cm, minimum height=2.6cm, anchor=north
     },
     titlea/.style={
         font=\fontsize{7.5}{9}\selectfont\bfseries\color{defabBlue}
@@ -86,8 +86,8 @@
 %% =================================================================
 %% Verdict strip (gap-of-capability summary)
 %% =================================================================
-\node[verdict] at (0, -2.10) (v) {%
-  Verifier resolves any such instance in $<\!50\,\mu$s, 100\% accuracy. Best frontier LLM L3 direct: \textbf{0.8--37\%}; rendering-robust: \textbf{7.8--23.5\%}. \textsc{DeFAb} makes this gap measurable, contamination-controlled, and trainable.%
+\node[verdict] at (0, -3.10) (v) {%
+  Verifier resolves any such instance in under 50\,$\mu$s at 100\% accuracy. Best frontier LLM on L3 direct: \textbf{0.8--37\%}; rendering-robust: \textbf{7.8--23.5\%}. \textsc{DeFAb} makes this gap measurable, contamination-controlled, and trainable.%
 };
 
 \end{tikzpicture}
