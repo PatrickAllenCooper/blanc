@@ -499,20 +499,17 @@ Images for M5 are harvested from three linked knowledge bases. Wikidata's P18 ``
 
 The VLM evaluation panel comprises four models. The closed-source tier consists of GPT-5.2-chat and Claude~Sonnet~4.6, accessed via Azure AI Foundry's multimodal content blocks. The open-source tier consists of Qwen2.5-VL-72B-Instruct-AWQ (2$\times$A100, tensor parallel~2) and Qwen2.5-VL-7B-Instruct (1$\times$A100), served via vLLM on CURC Alpine.
 
-A minimal Python loader for the released Tier~0 Level~3 evaluation instances is shown in Listing~\ref{lst:loader}; the same schema applies to Tier 1 and synthetic instances.
-
-\begin{lstlisting}[style=defabpython, caption={Minimal Python loader for the released Tier~0 Level~3 evaluation instances. Each \texttt{inst} is a dict with the challenge theory, target literal, and candidate hypothesis set; the same schema applies to Tier 1 and the synthetic contamination control.}, label={lst:loader}]
+A minimal Python loader for the released instances:
+\begin{verbatim}
 import json
-
 with open("instances/tier0/level3_instances.json") as f:
     data = json.load(f)
-
 for inst in data["instances"]:
-    theory     = inst["theory"]      # facts, strict + defeasible rules
-    target     = inst["target"]      # literal q to be explained
-    candidates = inst["candidates"]  # 6 hypotheses (1 gold + 5 distractors)
-    gold       = inst["gold"]        # the verifier-certified gold answer
-\end{lstlisting}
+    theory     = inst["theory"]
+    target     = inst["target"]
+    candidates = inst["candidates"]
+    gold       = inst["gold"]
+\end{verbatim}
 
 
 %% =================================================================
