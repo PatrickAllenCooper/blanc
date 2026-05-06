@@ -103,19 +103,19 @@
 };
 
 %% =================================================================
-%% Inter-panel arrows  (use actual panel anchors so arrows track
-%% the rendered panel size and stay outside the panel boxes)
+%% Inter-panel arrows -- use midway labels offset from the arrow line
+%% so they do not collide with panel border text.
 %% =================================================================
-% (i) -> (ii)  horizontal arrow between top panels (mid-height of each)
-\draw[flow] (p1.east) -- node[flowlbl, above] {ablate $r_4$} (p2.west);
+% (i) -> (ii)  horizontal between top panels
+\draw[flow] ([yshift=-1.2cm]p1.north east) -- node[flowlbl, above=2pt] {\textbf{ablate} $r_4$} ([yshift=-1.2cm]p2.north west);
 
-% (i) -> (iii)  vertical arrow between left panels (mid-width of each)
-\draw[flow] (p1.south) -- node[flowlbl, right] {anomaly} (p3.north);
+% (i) -> (iii)  vertical between left panels
+\draw[flow] (p1.south) -- node[flowlbl, right=2pt] {\textbf{anomaly}} (p3.north);
 
-% (ii) -> (iv)  vertical arrow between right panels
-\draw[flow] (p2.south) -- node[flowlbl, right] {score} (p4.north);
+% (ii) -> (iv)  vertical between right panels
+\draw[flow] (p2.south) -- node[flowlbl, left=2pt] {\textbf{score}} (p4.north);
 
-% (iii) -> (iv)  horizontal arrow between bottom panels
-\draw[flow] (p3.east) -- node[flowlbl, above] {construct} (p4.west);
+% (iii) -> (iv)  horizontal between bottom panels
+\draw[flow] ([yshift=-1.2cm]p3.north east) -- node[flowlbl, above=2pt] {\textbf{construct}} ([yshift=-1.2cm]p4.north west);
 
 \end{tikzpicture}

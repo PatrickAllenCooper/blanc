@@ -319,13 +319,20 @@ def fig_cot_variance():
     ax.tick_params(axis='y', length=0)
     ax.spines['left'].set_visible(False)
 
-    # X-axis sub-labels for help / hurt regions
-    ax.text(-30, -1.1, 'CoT hurts', fontsize=6,
-            color=PAL['red'], fontweight='bold', ha='center')
-    ax.text( 45, -1.1, 'CoT helps', fontsize=6,
-            color=PAL['teal'], fontweight='bold', ha='center')
-
     fig.tight_layout(pad=0.6)
+
+    # Place CoT hurts/helps labels in figure coordinates below the x-axis,
+    # outside the plotting area so they never overlap bars.
+    ax.annotate('CoT hurts', xy=(-25, 0), xycoords='data',
+                xytext=(-25, -0.08), textcoords=('data', 'axes fraction'),
+                fontsize=6.5, color=PAL['red'], fontweight='bold',
+                ha='center', va='top',
+                arrowprops=dict(arrowstyle='-', color=PAL['red'], lw=0.6))
+    ax.annotate('CoT helps', xy=(50, 0), xycoords='data',
+                xytext=(50, -0.08), textcoords=('data', 'axes fraction'),
+                fontsize=6.5, color=PAL['teal'], fontweight='bold',
+                ha='center', va='top',
+                arrowprops=dict(arrowstyle='-', color=PAL['teal'], lw=0.6))
     return fig
 
 
@@ -476,24 +483,22 @@ def fig_difficulty():
         ax_a.text(x, c + 0.7, str(c), ha='center', va='bottom',
                   fontsize=7, color=PAL['blue'], fontweight='bold')
 
-    # H1 target region [0.5, 1.0] -- shifted slightly so it does not visually
-    # merge with the boundary bar at exactly Nov*=0.5
     ax_a.axvspan(0.55, 1.02, alpha=0.22, color=PAL['gold'])
-    ax_a.text(0.78, 14, 'H1 target',
+    ax_a.text(0.78, 20, 'H1 target',
               ha='center', va='center', fontsize=8,
               color=PAL['gold'], fontweight='bold')
-    ax_a.text(0.78, 11, r'$\mathrm{Nov}^* \in [0.5, 1.0]$',
-              ha='center', va='center', fontsize=7.5,
+    ax_a.text(0.78, 17, r'$\mathrm{Nov}^* \!\in\! [0.5, 1.0]$',
+              ha='center', va='center', fontsize=7,
               color=PAL['gold'])
-    ax_a.text(0.78, 8.0, r'(0 of 35 in current set)',
-              ha='center', va='center', fontsize=6.5,
+    ax_a.text(0.78, 14.5, r'(0 of 35 in set)',
+              ha='center', va='center', fontsize=6,
               color=PAL['gray'], fontstyle='italic')
 
     ax_a.set_xlabel(r'Predicate novelty $\mathrm{Nov}^*$', fontsize=8)
     ax_a.set_ylabel('Instance count', fontsize=8)
     ax_a.set_title('(a) Novelty distribution', fontsize=8.5, pad=4)
     ax_a.set_xlim(-0.10, 1.05)
-    ax_a.set_ylim(0, 26)
+    ax_a.set_ylim(0, 24)
     ax_a.set_xticks([0.0, 0.25, 0.5, 0.75, 1.0])
     ax_a.yaxis.set_major_locator(mticker.MultipleLocator(5))
     ax_a.tick_params(axis='both', which='major', labelsize=7)
@@ -503,23 +508,22 @@ def fig_difficulty():
     # ---- Panel (b): support size on log x-axis ----
     supp_centers = [4, 5, 6, 7, 8, 9, 10]
     supp_counts  = [3, 7, 9, 7, 5, 2, 2]
-    bar_w_b = [0.15 * v for v in supp_centers]   # log-aware widths
     for x, c in zip(supp_centers, supp_counts):
-        ax_b.bar(x, c, width=0.18 * x, color=PAL['teal'],
+        w = x * 0.12
+        ax_b.bar(x, c, width=w, color=PAL['teal'],
                  edgecolor='white', linewidth=0.5, alpha=0.88)
-        ax_b.text(x, c + 0.25, str(c), ha='center', va='bottom',
+        ax_b.text(x, c + 0.4, str(c), ha='center', va='bottom',
                   fontsize=6.5, color=PAL['teal'], fontweight='bold')
 
-    # H2 target region [50, 200]
     ax_b.axvspan(50, 200, alpha=0.22, color=PAL['gold'])
-    ax_b.text(100, 8.4, 'H2 target',
+    ax_b.text(100, 20, 'H2 target',
               ha='center', va='center', fontsize=8,
               color=PAL['gold'], fontweight='bold')
-    ax_b.text(100, 7.0, r'$|\mathcal{D}| \in \{50,100,200\}$',
-              ha='center', va='center', fontsize=7.5,
+    ax_b.text(100, 17, r'$|\mathcal{D}| \!\in\! \{50,100,200\}$',
+              ha='center', va='center', fontsize=7,
               color=PAL['gold'])
-    ax_b.text(100, 5.4, r'(0 of 35 in current set)',
-              ha='center', va='center', fontsize=6.5,
+    ax_b.text(100, 14.5, r'(0 of 35 in set)',
+              ha='center', va='center', fontsize=6,
               color=PAL['gray'], fontstyle='italic')
 
     # Prominent gap indicator: thick gray double-arrow with explicit label
@@ -533,7 +537,7 @@ def fig_difficulty():
 
     ax_b.set_xscale('log')
     ax_b.set_xlim(3, 260)
-    ax_b.set_ylim(0, 11)
+    ax_b.set_ylim(0, 24)
     ax_b.set_xlabel(r'Support size $|\mathrm{Supp}|$ (log scale)', fontsize=8)
     ax_b.set_ylabel('Instance count', fontsize=8)
     ax_b.set_title('(b) Support size distribution', fontsize=8.5, pad=4)
