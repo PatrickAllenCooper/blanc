@@ -320,19 +320,6 @@ def fig_cot_variance():
     ax.spines['left'].set_visible(False)
 
     fig.tight_layout(pad=0.6)
-
-    # Place CoT hurts/helps labels in figure coordinates below the x-axis,
-    # outside the plotting area so they never overlap bars.
-    ax.annotate('CoT hurts', xy=(-25, 0), xycoords='data',
-                xytext=(-25, -0.08), textcoords=('data', 'axes fraction'),
-                fontsize=6.5, color=PAL['red'], fontweight='bold',
-                ha='center', va='top',
-                arrowprops=dict(arrowstyle='-', color=PAL['red'], lw=0.6))
-    ax.annotate('CoT helps', xy=(50, 0), xycoords='data',
-                xytext=(50, -0.08), textcoords=('data', 'axes fraction'),
-                fontsize=6.5, color=PAL['teal'], fontweight='bold',
-                ha='center', va='top',
-                arrowprops=dict(arrowstyle='-', color=PAL['teal'], lw=0.6))
     return fig
 
 
