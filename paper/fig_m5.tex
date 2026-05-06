@@ -1,7 +1,12 @@
 % Figure 6: M5 visual grounding modality.
 % Three panels at absolute coordinates, each anchor=north west.
 % No nested tikzpictures; \imgplaceholder is defined in paper.tex preamble.
-% Uses inline LaTeX font commands rather than TikZ styles for in-text formatting.
+%
+% Header convention (consistent across all three panels):
+%   row 1: panel title in defabBlue 7.5pt bold, left-aligned with body text
+%   row 2: small modality badge (M4 / M5-replace / M5-supplement)
+% This avoids the colorbox-padding misalignment that occurs when the badge
+% and title are placed side-by-side on the same line.
 %
 \begin{tikzpicture}[
     >=stealth,
@@ -12,14 +17,24 @@
         line width=0.45pt,
         text width=4.0cm, minimum height=5.6cm, anchor=north west
     },
+    badge/.style={
+        font=\fontsize{6}{6.8}\selectfont\bfseries,
+        text=defabGold!85
+    },
 ]
+
+%% Header macro: title on first line, modality tag on second.
+%% This guarantees both rows align to the panel's left padding edge.
+\newcommand{\panelheader}[2]{%
+  {\fontsize{8.5}{10}\selectfont\bfseries\color{defabBlue}#1}\\[1pt]
+  {\fontsize{6.2}{7}\selectfont\bfseries\color{defabGold!85}#2}\\[6pt]%
+}
 
 %% =================================================================
 %% Panel 1: M4 Pure Formal (baseline)
 %% =================================================================
 \node[panel] at (0, 0) (m4) {
-  {\colorbox{defabGold!10}{\textcolor{defabGold!85}{\fontsize{6}{6.8}\selectfont\bfseries\,M4\,}}}\quad
-  {\fontsize{7.5}{8.5}\selectfont\bfseries\color{defabBlue}Pure Formal}\\[5pt]
+  \panelheader{Pure Formal (M4)}{baseline: text-only, no images}
   \textbf{Theory (facts):}\\[2pt]
   {\fontsize{6.5}{7.5}\selectfont\ttfamily bear(polar\_bear).}\\
   {\fontsize{6.5}{7.5}\selectfont\ttfamily arctic(polar\_bear).}\\[5pt]
@@ -36,8 +51,7 @@
 %% Panel 2: M5-replace
 %% =================================================================
 \node[panel] at (5.0cm, 0) (m5r) {
-  {\colorbox{defabGold!10}{\textcolor{defabGold!85}{\fontsize{6}{6.8}\selectfont\bfseries\,M5-replace\,}}}\quad
-  {\fontsize{7.5}{8.5}\selectfont\bfseries\color{defabBlue}Entity $\to$ Image}\\[5pt]
+  \panelheader{Entity Image (M5-replace)}{text name removed; image only}
   \textbf{Theory (facts):}\\[2pt]
   {\fontsize{6.5}{7.5}\selectfont\ttfamily bear(\imgplaceholder).}\\
   {\fontsize{6.5}{7.5}\selectfont\ttfamily arctic(\imgplaceholder).}\\[5pt]
@@ -56,8 +70,7 @@
 %% Panel 3: M5-supplement
 %% =================================================================
 \node[panel] at (10.0cm, 0) (m5s) {
-  {\colorbox{defabGold!10}{\textcolor{defabGold!85}{\fontsize{6}{6.8}\selectfont\bfseries\,M5-supplement\,}}}\quad
-  {\fontsize{7.5}{8.5}\selectfont\bfseries\color{defabBlue}Name + Image}\\[5pt]
+  \panelheader{Name + Image (M5-supplement)}{text name retained, image added}
   \textbf{Theory (facts):}\\[2pt]
   {\fontsize{6.5}{7.5}\selectfont\ttfamily bear(polar\_bear).}\
   {\color{defabGold!75}\fontsize{6.5}{7.5}\selectfont\ttfamily \%}\ \imgplaceholder\\
@@ -74,18 +87,26 @@
 };
 
 %% =================================================================
-%% Annotation strip below all three panels (between-panel arrows)
+%% Transformation arrows below the M4 -> M5-replace and M4 -> M5-supplement
+%% transitions.  Wording: subject + verb + object so the meaning is explicit.
 %% =================================================================
-\node[font=\fontsize{6}{7}\selectfont\itshape, text=defabGray, anchor=north]
-    at (2.2cm, -6.2cm) {hide name $\to$ M5-replace};
-\node[font=\fontsize{6}{7}\selectfont\itshape, text=defabGray, anchor=north]
-    at (7.2cm, -6.2cm) {add image $\to$ M5-supplement};
+\draw[->, color=defabGray!70, thick, line width=0.7pt, shorten >=2pt, shorten <=2pt]
+    (m4.south east) ..controls +(0.5cm,-0.5cm) and +(-0.5cm,-0.5cm).. (m5r.south west);
+\node[font=\fontsize{6.2}{7.4}\selectfont\itshape, text=defabGray,
+      anchor=north, align=center, fill=white, inner sep=2pt]
+    at (2.4cm, -6.20cm) {M4 $\to$ M5-replace:\\replace text entity name with image};
+
+\draw[->, color=defabGray!70, thick, line width=0.7pt, shorten >=2pt, shorten <=2pt]
+    (m4.south) ..controls +(2.0cm,-1.5cm) and +(-2.5cm,-1.5cm).. (m5s.south west);
+\node[font=\fontsize{6.2}{7.4}\selectfont\itshape, text=defabGray,
+      anchor=north, align=center, fill=white, inner sep=2pt]
+    at (7.4cm, -6.20cm) {M4 $\to$ M5-supplement:\\image added alongside the text name};
 
 %% Single verifier-badge centred below
 \node[draw=defabRed!70, rounded corners=2pt, fill=defabRed!7,
       font=\fontsize{6.5}{7.5}\selectfont\bfseries, inner sep=4pt,
       text=defabRed, anchor=north]
-    at (7.0cm, -7.0cm)
+    at (7.0cm, -7.45cm)
     {Verifier-backed gold standard is identical across all five modalities};
 
 \end{tikzpicture}
