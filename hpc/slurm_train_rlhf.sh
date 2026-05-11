@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=128G
 #SBATCH --partition=aa100
-#SBATCH --qos=normal
+#SBATCH --qos=long
 #SBATCH --gres=gpu:3
 
 # DeFAb Phase B3: RLHF Training (standard reward model or VITL)
