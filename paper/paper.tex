@@ -587,6 +587,29 @@ The reasoning-optimized models (DeepSeek, GPT) gain accuracy when distractor-rul
 
 
 %% =================================================================
+\section{\textsc{DeFReasing} Comparison Details}\label{app:defreasing}
+%% =================================================================
+
+We ran a side-by-side evaluation of three frontier models on 100 randomly sampled instances from \textsc{DeFReasing}~\citep{allaway2025defreasing} (3-way S/W/N classification, chance 33\%) and on DeFAb's L2 formal MCQ (100 matched instances, chance 17\%), both at M4 direct prompting. Full results:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrr|rr}
+\toprule
+ & \multicolumn{3}{c|}{\textsc{DeFReasing} (3-way)} & \multicolumn{2}{c}{DeFAb L2 (MCQ)} \\
+Model & Acc & Macro-F1 & Empty resp. & Acc & Decode fail \\
+\midrule
+GPT-5.2-chat       & 47.0\% & 0.442 & 11\% & 99.0\% & \phantom{0}2\% \\
+Claude Sonnet 4.6  & 51.0\% & 0.457 & \phantom{0}0\% & 100.0\% & \phantom{0}0\% \\
+DeepSeek-R1        & \phantom{0}1.0\% & 0.015 & 97\% & ---     & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The dramatic difference in DeepSeek-R1's behaviour warrants comment. DeepSeek-R1 leads all models on DeFAb L3 at 65\% accuracy but produces an empty response on 97 of 100 \textsc{DeFReasing} prompts. Inspection of the raw responses shows that the model typically outputs extensive chain-of-thought reasoning but then produces no final label, likely because the short 3-way classification format conflicts with its chain-of-thought completion pattern which expects a structured hypothesis output. This is evidence that model capability on defeasible tasks is task-format dependent and cannot be summarized by a single scalar.
+
+%% =================================================================
 \section{Tier~2 Coverage Probe}\label{app:tier2}
 %% =================================================================
 
