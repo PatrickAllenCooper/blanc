@@ -281,7 +281,7 @@ Kimi-K2.5 & 14.2\% & 13.9\% & 13.9\% & 0.11 & 80.9\% & \phantom{0}5.2\% & \phant
 \end{tabular}
 \end{table}
 
-The synthetic contamination control reproduces the same panel on the 35 structurally matched L3 synthetic instances at M2 and M4 with both prompting strategies (560 calls). Synthetic L3 instances were post-processed via a small deterministic fact-injection step (disclosed in the released pipeline) so each defeasible rule's body grounds; this preserves the no-pretraining-vocabulary property. Averaging across the two modalities, per-model L3 accuracy drops uniformly: DeepSeek-R1 65.0\%~$\to$~52.9\% ($\Delta_{\mathrm{synth}} = +12.1$~pp), GPT-5.2-chat 47.5\%~$\to$~30.9\% ($+16.6$~pp), Claude~Sonnet~4.6 16.4\%~$\to$~2.1\% ($+14.3$~pp), Kimi-K2.5 14.2\%~$\to$~2.9\% ($+11.3$~pp); mean $+13.6$~pp. M2 and M4 give the same directional result, ruling out modality-specific artifacts. The uniformly positive sign is consistent with partial vocabulary-level memorization, with cognitive-load of unfamiliar predicates a concurrent contributor. Even after gap correction the best-model L3 accuracy (52.9\%) remains far below the symbolic ceiling.
+The synthetic contamination control reproduces the same panel on the 35 structurally matched L3 synthetic instances at M2 and M4 with both prompting strategies (560 calls). Synthetic L3 instances were post-processed via a small deterministic fact-injection step (disclosed in the released pipeline) so each defeasible rule's body grounds; this preserves the no-pretraining-vocabulary property. Averaging across the two modalities, per-model L3 accuracy drops uniformly: DeepSeek-R1 65.0\%~$\to$~52.9\% ($\Delta_{\mathrm{synth}} = +12.1$~pp), GPT-5.2-chat 47.5\%~$\to$~30.9\% ($+16.6$~pp), Claude~Sonnet~4.6 16.4\%~$\to$~2.1\% ($+14.3$~pp), Kimi-K2.5 14.2\%~$\to$~2.9\% ($+11.3$~pp); mean $+13.6$~pp. M2 and M4 give the same directional result, ruling out modality-specific artifacts. To isolate vocabulary-level contamination from any artifact introduced by fact-injection, we ran a matched ablation (Appendix~\ref{app:factinj}): the same fact-injection was applied to the 35 naturalistic L3 instances and all four models re-evaluated. The matched contamination gap is $+19.4$~pp on average, larger than the uncorrected $+13.6$~pp, with three of four models (DeepSeek-R1 $+30.4$, GPT-5.2 $+19.1$, Kimi-K2.5 $+22.9$) showing larger true gaps and only Claude shrinking ($+5.0$~pp); the matched analysis therefore strengthens the contamination claim for the reasoning-style models. Even after gap correction the best-model L3 accuracy (52.9\%) remains far below the symbolic ceiling.
 
 A constrained-output ablation appends a JSON schema instruction to the L3 prompt (35 instances, M4, direct + CoT, all four models). Three of four models benefit on CoT: Kimi-K2.5's CoT rises from 27.6\% to 60.0\% ($+32.4$~pp, the largest single gain), GPT-5.2's CoT rises to 91.4\% ($+4.3$~pp), and DeepSeek-R1's CoT rises to 94.3\% ($+1.4$~pp). DeepSeek's direct prompting also rises ($+2.9$~pp to 40.0\%). Claude collapses: decoder failure rises from 26.8\% to 97.1\%, making the task structurally unattemptable, and CoT accuracy drops from 9.3\% to 2.9\% ($-6.4$~pp). The clean pattern is that schema enforcement helps reasoning-style decoding (CoT for all three reasoning-style models) while interacting badly with Claude's instruction-tuning. L3 failure is not a response-format problem; it is architecture-dependent.
 
@@ -585,6 +585,31 @@ Kimi-K2.5           & 55.8\% & 71.2\% & $-15.4$~pp & 44.2\% \\
 
 The reasoning-optimized models (DeepSeek, GPT) gain accuracy when distractor-rule context is removed, suggesting that a meaningful fraction of Tier~0 L2 difficulty for these models is attributable to attacker disambiguation rather than rule matching. Claude is essentially unchanged. Kimi loses 15~pp because its decoder failure rate rises from $\sim 30\%$ on Tier~0 to 44\% on Tier~1; the underlying rule-selection capability we cannot measure separately because the failures pre-empt the comparison. We treat this as a methodological note rather than a capability claim, and emphasize that the structural-deficit conclusions in \S\ref{sec:evaluation} are driven by the headline Tier~0 L2 and L3 results, not by this probe.
 
+
+%% =================================================================
+\section{Matched Fact-Injection Ablation}\label{app:factinj}
+%% =================================================================
+
+The synthetic L3 generation pipeline applies a deterministic fact-injection step that adds a minimal grounding fact to the theory whenever a defeasible rule's body does not already ground. To isolate vocabulary-level contamination from any artifact introduced by this step, we applied the same fact-injection procedure (\texttt{experiments/inject\_facts\_naturalistic.py}) to the 35 naturalistic Tier~0 L3 instances. Of the 35 instances, 10 (28.6\%) required injection and 25 (71.4\%) were already self-grounded. We then re-evaluated all four frontier models at M4 with both direct and CoT prompting (4 models $\times$ 2 strategies $\times$ 35 instances = 280 calls per model panel).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+Model & Nat-orig & Nat-inj & Syn-inj & $\Delta_{\mathrm{synth}}^{\mathrm{old}}$ & $\Delta_{\mathrm{synth}}^{\mathrm{matched}}$ & Inj.\ artifact \\
+\midrule
+DeepSeek-R1        & 65.0\% & 83.3\% & 52.9\% & $+12.1$~pp & $+30.4$~pp & $-18.3$~pp \\
+GPT-5.2-chat       & 47.5\% & 50.0\% & 30.9\% & $+16.6$~pp & $+19.1$~pp & $\phantom{0}-2.5$~pp \\
+Claude Sonnet 4.6  & 16.4\% & \phantom{0}7.1\% & \phantom{0}2.1\% & $+14.3$~pp & $\phantom{0}+5.0$~pp & $\phantom{0}+9.3$~pp \\
+Kimi-K2.5          & 14.2\% & 25.8\% & \phantom{0}2.9\% & $+11.3$~pp & $+22.9$~pp & $-11.6$~pp \\
+\midrule
+Mean               & 35.8\% & 41.6\% & 22.2\% & $+13.6$~pp & $+19.4$~pp & $\phantom{0}-5.8$~pp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The interpretation: $\Delta_{\mathrm{synth}}^{\mathrm{matched}}$ measures the contamination gap with both sides treated identically (both with injection); the $\Delta_{\mathrm{synth}}^{\mathrm{old}}$ comparison was confounded by the fact-injection step occurring only on the synthetic side. The matched ablation reverses the direction of bias for three of four models: fact-injection is on average mildly helpful (mean artifact $-5.8$~pp), so removing the artifact reveals a \emph{larger} true contamination gap. Only Claude shows the opposite pattern: injection harms its decode rate, inflating the apparent gap. The mean matched contamination gap rises from $+13.6$~pp (uncorrected) to $+19.4$~pp (matched), strengthening the structural-deficit claim for the reasoning-style models while exposing Claude's apparent contamination gap as largely an injection artifact.
 
 %% =================================================================
 \section{Constrained-Output Ablation Details}\label{app:constrained}
