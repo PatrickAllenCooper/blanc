@@ -640,6 +640,224 @@ def fig_defab_hard():
 
 
 # =====================================================================
+# Figure: Tier 1 cross-ontology pilot results
+# =====================================================================
+
+def fig_tier1():
+    """Tier 1 cross-ontology L2 accuracy vs Tier 0 reference.
+
+    Grouped bars: Tier-0 vs Tier-1 per model, with delta annotation.
+    Shows the ranking inversion: DeepSeek gains, Claude/Kimi lose ~16 pp.
+    """
+    models = ['DeepSeek\nR1', 'GPT\n5.2', 'Claude\n4.6', 'Kimi\nK2.5']
+    tier0  = [73.7, 78.5, 79.3, 71.9]
+    tier1  = [85.6, 75.0, 63.5, 55.8]
+    delta  = [t1 - t0 for t0, t1 in zip(tier0, tier1)]
+
+    x = np.arange(len(models))
+    bw = 0.35
+
+    fig, ax = plt.subplots(figsize=(5.5, 3.0))
+    bars0 = ax.bar(x - bw/2, tier0, bw, color=PAL['teal_l'],
+                   edgecolor=PAL['teal'], linewidth=0.6, label='Tier~0 (expert, $n=374$)')
+    bars1 = ax.bar(x + bw/2, tier1, bw, color=PAL['blue'],
+                   edgecolor='white', linewidth=0.4, label='Tier~1 (cross-ontology, $n=104$)')
+
+    for i, (b0, b1, d) in enumerate(zip(bars0, bars1, delta)):
+        color = PAL['teal'] if d > 0 else PAL['red']
+        sign = '+' if d > 0 else ''
+        ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 1.2,
+                f'{sign}{d:.1f}', ha='center', va='bottom', fontsize=6.5,
+                color=color, fontweight='bold')
+        ax.text(b0.get_x() + b0.get_width()/2, b0.get_height() + 0.5,
+                f'{tier0[i]:.0f}', ha='center', va='bottom', fontsize=5.5,
+                color=PAL['gray'])
+        ax.text(b1.get_x() + b1.get_width()/2, b1.get_height() + 4.2,
+                f'{tier1[i]:.0f}', ha='center', va='bottom', fontsize=5.5,
+                color=PAL['blue'])
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(models, fontsize=7)
+    ax.set_ylabel('L2 Accuracy (M4 direct, %)', fontsize=7)
+    ax.set_ylim(0, 100)
+    ax.yaxis.set_major_locator(mticker.MultipleLocator(20))
+    ax.legend(loc='lower left', fontsize=6.5, framealpha=0.9,
+              edgecolor=PAL['gray'], handlelength=1.0)
+    ax.set_title('Tier~1 vs Tier~0: cross-ontology vocabulary generalization',
+                 fontsize=8, pad=4)
+    ax.tick_params(axis='x', length=0)
+
+    ax.text(0.98, 0.97,
+            'Structural reasoning transfers (DeepSeek +11.9 pp).\n'
+            'Vocabulary-bound performance does not (Claude \u221215.8 pp).',
+            transform=ax.transAxes, ha='right', va='top', fontsize=6,
+            color=PAL['gray'], fontstyle='italic',
+            bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                      edgecolor=PAL['gray'], linewidth=0.4, alpha=0.9))
+
+    fig.tight_layout(pad=0.6)
+    return fig
+
+
+# =====================================================================
+# Figure: E4 ROE compliance quiz results
+# =====================================================================
+
+def fig_e4_roe():
+    """E4 quiz-mode ROE compliance: correct-abstain rate by model x mode.
+
+    Two panels:
+    (a) correct-abstain rate (6 scenarios per mode)
+    (b) orders admitted per mode (zero = degenerate abstain policy)
+    """
+    models = ['GPT-5.2', 'Claude 4.6', 'DeepSeek-R1', 'Kimi-K2.5']
+    modes  = ['B0', 'B1', 'B2']
+    # correct_abstain / 6 per (model, mode)
+    ca_data = {
+        'GPT-5.2':    [4, 4, 4],
+        'Claude 4.6': [4, 4, 4],
+        'DeepSeek-R1':[5, 6, 5],
+        'Kimi-K2.5':  [6, 6, 6],
+    }
+    orders_data = {
+        'GPT-5.2':    [6, 6, 6],
+        'Claude 4.6': [6, 6, 6],
+        'DeepSeek-R1':[3, 2, 3],
+        'Kimi-K2.5':  [0, 0, 0],
+    }
+    model_colors = [PAL['blue'], PAL['teal'], PAL['gold'], PAL['red']]
+
+    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(7.0, 3.0),
+                                      gridspec_kw={'wspace': 0.38})
+
+    x = np.arange(len(modes))
+    bw = 0.18
+    for i, (m, col) in enumerate(zip(models, model_colors)):
+        offsets = (i - 1.5) * bw
+        vals_a = [v / 6 * 100 for v in ca_data[m]]
+        vals_b = orders_data[m]
+        ax_a.bar(x + offsets, vals_a, bw, color=col,
+                 edgecolor='white', linewidth=0.3, label=m)
+        ax_b.bar(x + offsets, vals_b, bw, color=col,
+                 edgecolor='white', linewidth=0.3)
+
+    ax_a.axhline(100, color=PAL['gray'], linewidth=0.7, linestyle='--', alpha=0.5)
+    ax_a.set_xticks(x); ax_a.set_xticklabels(modes, fontsize=7)
+    ax_a.set_ylabel('Correct-abstain rate (%)', fontsize=7)
+    ax_a.set_ylim(0, 112)
+    ax_a.yaxis.set_major_locator(mticker.MultipleLocator(25))
+    ax_a.set_title('(a) Correct-abstain rate', fontsize=8, pad=4)
+    ax_a.legend(loc='lower right', fontsize=5.8, framealpha=0.9,
+                edgecolor=PAL['gray'], handlelength=0.8, handletextpad=0.3,
+                ncol=2, columnspacing=0.6)
+    ax_a.tick_params(axis='x', length=0)
+
+    ax_b.set_xticks(x); ax_b.set_xticklabels(modes, fontsize=7)
+    ax_b.set_ylabel('Orders admitted (of 6 scenarios)', fontsize=7)
+    ax_b.set_ylim(0, 8)
+    ax_b.yaxis.set_major_locator(mticker.MultipleLocator(2))
+    ax_b.set_title('(b) Orders admitted per mode', fontsize=8, pad=4)
+    ax_b.tick_params(axis='x', length=0)
+    ax_b.text(0.5, 0.92, 'Kimi: 0 orders (degenerate abstain)',
+              transform=ax_b.transAxes, ha='center', va='top', fontsize=6,
+              color=PAL['red'], fontstyle='italic')
+
+    fig.suptitle('E4 quiz-mode ROE compliance (n=72, six scenarios per model per mode)',
+                 fontsize=8.5, y=1.02, color=PAL['blue'])
+    fig.tight_layout(pad=0.6)
+    return fig
+
+
+# =====================================================================
+# Figure: DeFAb-Hard failure-mode taxonomy
+# =====================================================================
+
+def fig_failure_mode():
+    """Four-panel failure taxonomy for Claude vs GPT on DeFAb-Hard.
+
+    Top: error type distribution (direct vs CoT) for Claude and GPT.
+    Bottom: brief illustrative comparison of response shapes.
+    """
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.2),
+                              gridspec_kw={'wspace': 0.40})
+
+    # --- Panel (a): Claude error distribution ---
+    ax = axes[0]
+    strategies = ['Direct', 'CoT']
+    # Claude: antecedent-fact error dominates direct; extraction-fail dominates CoT
+    claude_wrong_pct = [100.0, 94.1]  # % of wrong that are the specific error
+    claude_correct_pct = [0.0, 5.9]  # H1 as representative
+    labels = ['Antecedent-fact\nerror (direct)', 'Extraction\nfailure (CoT)']
+    colors = [PAL['red'], '#C07840']
+
+    x = np.array([0, 1])
+    wrong = np.array(claude_wrong_pct)
+    correct = np.array(claude_correct_pct)
+    other = 100 - wrong - correct
+
+    bars_w = ax.bar(x, wrong, 0.5, color=PAL['red'], edgecolor='white',
+                    linewidth=0.4, label='Dominant error mode')
+    bars_c = ax.bar(x, correct, 0.5, bottom=wrong, color=PAL['teal'],
+                    edgecolor='white', linewidth=0.4, label='Correct')
+    bars_o = ax.bar(x, other, 0.5, bottom=wrong+correct, color=PAL['gray_l'],
+                    edgecolor=PAL['gray'], linewidth=0.4, label='Other error')
+
+    for b, v in zip(bars_w, wrong):
+        if v > 5:
+            ax.text(b.get_x()+b.get_width()/2, v/2, f'{v:.0f}%',
+                    ha='center', va='center', fontsize=6.5,
+                    color='white', fontweight='bold')
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(['H1\nDirect', 'H1\nCoT'], fontsize=7)
+    ax.set_ylabel('Share of evaluations (%)', fontsize=7)
+    ax.set_ylim(0, 108)
+    ax.yaxis.set_major_locator(mticker.MultipleLocator(25))
+    ax.set_title('(a) Claude Sonnet 4.6 failure modes', fontsize=8, pad=4)
+    ax.legend(loc='upper right', fontsize=5.8, framealpha=0.9,
+              edgecolor=PAL['gray'], handlelength=0.8)
+    ax.tick_params(axis='x', length=0)
+
+    # --- Panel (b): GPT H1 direct vs CoT ---
+    ax2 = axes[1]
+    gpt_direct_h1 = [100.0, 0.0, 0.0]   # wrong (all candidate-bypass), correct, other
+    gpt_cot_h1    = [0.0, 74.3, 25.7]   # CoT: mostly correct
+    cats = ['Wrong', 'Correct', 'Other']
+    colors2 = [PAL['red'], PAL['teal'], PAL['gray_l']]
+    ec = ['white', 'white', PAL['gray']]
+
+    x2 = np.array([0, 1])
+    bottoms = np.zeros(2)
+    for k, (cat, col, ec_) in enumerate(zip(cats, colors2, ec)):
+        vals = [gpt_direct_h1[k], gpt_cot_h1[k]]
+        ax2.bar(x2, vals, 0.5, bottom=bottoms, color=col,
+                edgecolor=ec_, linewidth=0.4, label=cat)
+        for i, (b, v) in enumerate(zip(bottoms, vals)):
+            if v > 8:
+                ax2.text(x2[i], b + v/2, f'{v:.0f}%',
+                         ha='center', va='center', fontsize=6.5,
+                         color='white' if col != PAL['gray_l'] else PAL['gray'],
+                         fontweight='bold')
+        bottoms += np.array(vals)
+
+    ax2.set_xticks(x2)
+    ax2.set_xticklabels(['H1\nDirect', 'H1\nCoT'], fontsize=7)
+    ax2.set_ylabel('Share of evaluations (%)', fontsize=7)
+    ax2.set_ylim(0, 108)
+    ax2.yaxis.set_major_locator(mticker.MultipleLocator(25))
+    ax2.set_title('(b) GPT-5.2-chat failure modes', fontsize=8, pad=4)
+    ax2.legend(loc='upper right', fontsize=5.8, framealpha=0.9,
+               edgecolor=PAL['gray'], handlelength=0.8)
+    ax2.tick_params(axis='x', length=0)
+
+    fig.suptitle(
+        'DeFAb-Hard failure taxonomy: format brittleness, not reasoning failure',
+        fontsize=8.5, y=1.02, color=PAL['blue'])
+    fig.tight_layout(pad=0.6)
+    return fig
+
+
+# =====================================================================
 # Entry point
 # =====================================================================
 
@@ -673,6 +891,24 @@ if __name__ == '__main__':
     fig_dh.savefig(os.path.join(OUT_DIR, 'fig_defab_hard.pdf'), format='pdf')
     plt.close(fig_dh)
     print(f'  -> {OUT_DIR}/fig_defab_hard.pdf')
+
+    print('Generating Tier 1 cross-ontology results figure...')
+    fig_t1 = fig_tier1()
+    fig_t1.savefig(os.path.join(OUT_DIR, 'fig_tier1.pdf'), format='pdf')
+    plt.close(fig_t1)
+    print(f'  -> {OUT_DIR}/fig_tier1.pdf')
+
+    print('Generating E4 ROE compliance figure...')
+    fig_roe = fig_e4_roe()
+    fig_roe.savefig(os.path.join(OUT_DIR, 'fig_e4_roe.pdf'), format='pdf')
+    plt.close(fig_roe)
+    print(f'  -> {OUT_DIR}/fig_e4_roe.pdf')
+
+    print('Generating failure-mode taxonomy figure...')
+    fig_fm = fig_failure_mode()
+    fig_fm.savefig(os.path.join(OUT_DIR, 'fig_failure_mode.pdf'), format='pdf')
+    plt.close(fig_fm)
+    print(f'  -> {OUT_DIR}/fig_failure_mode.pdf')
 
     print('Done.')
     print('Note: Figure 1 (pipeline+generation) is TikZ in fig_pipeline.tex')

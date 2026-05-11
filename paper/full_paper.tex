@@ -56,6 +56,11 @@
 \usepackage{amsthm}
 \usepackage{nicefrac}
 \usepackage{xcolor}
+\definecolor{defabBlue}{HTML}{1F3A6B}
+\definecolor{defabTeal}{HTML}{3D6B7A}
+\definecolor{defabGold}{HTML}{D9A441}
+\definecolor{defabRed}{HTML}{B0413E}
+\definecolor{defabGray}{HTML}{6B7280}
 \usepackage{enumitem}
 \usepackage{mathtools}
 \usepackage{thmtools}
@@ -157,7 +162,14 @@ We additionally extend the benchmark to a fourth, game-grounded family of source
 \section{Introduction}\label{sec:introduction}
 The challenge of creative AI extends across the scientific enterprise. Consider an AI capable of producing work worthy of a Nobel Prize in chemistry, physiology, or medicine. Such transformational creativity represents an extreme form of out-of-distribution generalization: the more novel an idea, the less likely it is to appear in the AI's training distribution.
 
-Yet creative AI faces a challenge beyond mere distributional sparsity. Transformational discoveries do not simply extend existing knowledge; they often contradict it. A striking example from biology is the discovery of intrinsically disordered proteins (IDPs): proteins that lack fixed three-dimensional structure yet remain functionally essential \cite{dunker2001intrinsically}. Prior to this discovery, the prevailing dogma held that proteins required stable 3D conformations to perform biological functions. An AI trained on data reflecting this conventional wisdom would be unlikely to hypothesize the existence of IDPs, since such a hypothesis directly contradicts the domain knowledge encoded in its training corpus.
+Yet creative AI faces a challenge beyond mere distributional sparsity. Transformational discoveries do not simply extend existing knowledge; they often contradict it. A striking example from biology is the discovery of intrinsically disordered proteins (IDPs): proteins that lack fixed three-dimensional structure yet remain functionally essential \cite{dunker2001intrinsically}. Prior to this discovery, the prevailing dogma held that proteins required stable 3D conformations to perform biological functions. An AI trained on data reflecting this conventional wisdom would be unlikely to hypothesize the existence of IDPs, since such a hypothesis directly contradicts the domain knowledge encoded in its training corpus. Figure~\ref{fig:intuition} renders this discovery as the canonical defeater abduction: the textbook default, the anomaly, and the conservative defeater that resolves it without disturbing the rest of the protein-folding theory.
+
+\begin{figure}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{fig_intuition}}
+\caption{The intrinsically disordered protein (IDP) discovery as a defeater abduction, illustrating the task DeFAb measures and trains for. (1)~textbook default: proteins fold into 3D structures that determine function. (2)~anomaly: \texttt{p53\_idr} is functional yet disordered, contradicting the default's prediction. (3)~required revision: a new rule that overrides the default \emph{only} for disordered proteins and posits a new mechanism (conformational ensembles). The polynomial-time verifier resolves any such instance in microseconds; frontier LLMs do not.}
+\label{fig:intuition}
+\end{figure}
 
 This failure reflects three entangled deficits in current foundation models. The first is a \textit{grounding deficit}: models lack an explicit epistemic structure distinguishing strict knowledge from revisable defaults, and cannot trace predictions to their supporting evidence (the root cause of hallucination). The second is a \textit{novelty deficit}: without knowing which beliefs are revisable, models cannot identify where creative exceptions might apply. The IDP discovery is hard for an AI precisely because the default ``proteins have stable 3D structure'' is not flagged as revisable anywhere in the model's representations. The third, and least recognized, is a \textit{belief revision deficit}: even when models do update their knowledge (through in-context learning, fine-tuning, or explicit editing methods such as ROME \cite{meng2022locating} and MEMIT \cite{meng2023mass}), they lack the formal machinery to ensure that changes satisfy the principle of minimal change \cite{alchourron1985logic, dalal1988investigations}: accommodating new evidence while disturbing as few existing commitments as possible. Without this principle, updating one fact risks cascading incoherence, precisely the ``ripple effect'' problem documented in knowledge editing evaluations \cite{cohen2024evaluating}. The IDP discovery illustrates all three: the creative act requires not merely asserting that disordered proteins exist, but doing so via a targeted revision that overrides the structure--function default for a specific subclass while leaving predictions about conventionally structured proteins intact.
 
@@ -243,6 +255,16 @@ The 1980s witnessed an unprecedented international investment in knowledge-based
 \section{Our Method}\label{sec:method}
 
 Our approach addresses the three deficits identified in Section~1 (grounding, novelty, and belief revision) by constructing evaluation instances from knowledge bases whose epistemic structure is fully explicit. The pipeline has four stages: (1)~formalizing legacy knowledge bases as definite logic programs, whose monotonic semantics provides a complete ground truth; (2)~converting them into defeasible theories via a parameterized transformation that makes the strict/default distinction explicit, giving every conclusion a traceable support set; (3)~generating abductive evaluation instances by systematically ablating elements of these theories, producing tasks that require grounded reasoning (Levels~1--2) or rational belief revision (Level~3); and (4)~rendering the resulting tasks into natural language for evaluation of foundation models. We present the essential definitions and constructions here; full proofs and extended formalisms appear in Appendices~\ref{app:definitions}--\ref{app:rendering}. In terms of the Orient Express analogy introduced in Section~1: Stage~(1) formalizes Christie's complete knowledge as a logic program; Stage~(2) marks which of her knowledge is strict fact versus revisable default; Stage~(3) constructs the mystery by ablating critical elements; and Stage~(4) presents the puzzle to the detective in readable form.
+
+
+Figure~\ref{fig:pipeline} illustrates the end-to-end pipeline on the running bear-hibernation theory across all three task levels.
+
+\begin{figure}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{fig_pipeline}}
+\caption{The DeFAb generation pipeline and per-level instance structure. \textbf{Top:} Legacy knowledge bases are converted to defeasible theories via partition function $\kappa$; a critical element is ablated and the polynomial-time verifier ($O(|\D|^3)$) certifies the gold hypothesis. \textbf{Bottom:} The same bear-hibernation theory, ablated three ways. \emph{Level~1} removes the fact \texttt{bear(grizzly)}: the model must identify the missing observation. \emph{Level~2} removes the defeasible rule $r_d$: the model reconstructs the missing generalization; the distractor \texttt{mammal(X)$\Rightarrow$hib(X)} is tempting but too broad. \emph{Level~3} removes the defeater $r^*$: the theory now incorrectly predicts \texttt{hib(polar\_bear)} despite \texttt{winter\_active(polar\_bear)}; the model must \emph{construct} a conservative exception rule (Score~1.0), not a broad one that destroys other predictions (Score~0.5). Any generated instance can be rendered in five modalities (M1--M5).}
+\label{fig:pipeline}
+\end{figure}
 
 
 \subsection{Source Theories}\label{subsec:source}
@@ -398,7 +420,14 @@ Our experimental evaluation serves four purposes: (1) demonstrating that the gen
 
 \subsection{Source Knowledge Bases}\label{subsec:sources}
 
-We instantiate the pipeline on a staged collection of knowledge bases organized into four tiers by extraction priority and source type. The present evaluation of Section~\ref{sec:results} uses the 409 expert-curated Tier~0 instances; Tier~1 cross-ontology extraction produces 289,305 rules and 324,511 instances across five domains, demonstrating pipeline scalability. Tiers~2--4 extend the extraction to eight additional sources totaling 4.28 million materialized rules.
+We instantiate the pipeline on a staged collection of knowledge bases organized into four tiers by extraction priority and source type. The present evaluation of Section~\ref{sec:results} uses the 409 expert-curated Tier~0 instances; Tier~1 cross-ontology extraction produces 289,305 rules and 324,511 instances across five domains, demonstrating pipeline scalability. Tiers~2--4 extend the extraction to eight additional sources totaling 4.28 million materialized rules. Figure~\ref{fig:sources} traces the historical provenance of all 18 source KBs from 1984 onward and shows the resulting dataset composition by tier and instance level.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_sources.pdf}
+\caption{(a)~Provenance timeline of 18 knowledge base sources spanning 1984 (Cyc) to 2025 (UMLS 2025AB), color-coded by source class: government AI programs (blue), encyclopedic / community (teal), biomedical (gold), and game-grounded (red). (b)~Dataset composition by tier and instance level on a symlog scale. Tier~1 (cross-ontology) provides the majority of instances; Level~3 (defeater abduction) appears only in Tier~0 and the matched synthetic control.}
+\label{fig:sources}
+\end{figure}
 
 \paragraph{Tier 1 (this paper): Cross-ontology extraction.}
 The primary scale mechanism pairs a taxonomic source with a behavioral property source. For each concept $c$ in the OpenCyc hierarchy \cite{lenat1995cyc} (239,000 terms, final release 2012, available as OWL), we traverse its full ancestor chain to inherit behavioral properties from ConceptNet~5.8 \cite{speer2017conceptnet} (34 million edges). The extraction produces three rule types that map directly onto the conversion of Section~\ref{subsec:conversion}: (i)~\emph{strict} taxonomic rules from \texttt{IsA} edges; (ii)~\emph{defeasible} behavioral rules from \texttt{CapableOf}, \texttt{HasProperty}, \texttt{Causes}, and \texttt{UsedFor} edges; and (iii)~\emph{defeaters} from \texttt{NotCapableOf} edges. After concept-name normalization and key alignment, the cross-ontology combination yields 289,305 rules across five domains, from which the instance generation pipeline produces 324,511 abductive instances (182,652 Level~1, 141,859 Level~2). YAGO~4.5 \cite{suchanek2024yago} (50 million entities, logically constrained taxonomy combining Wikidata with schema.org) supplements with species-level biological classification and cross-validates generated rules. Expert-curated bases provide domain-specific grounding: LKIF Core \cite{lkif2007} (201 legal inference rules at 7 depth levels) and MatOnto \cite{matonto2015} (1,190 structure--property relationships) for the legal and materials domains, and WordNet~3.0 \cite{miller1995wordnet} (117,000 synsets, 207,000 semantic relations) for lexical cross-validation. The five extraction domains are:
@@ -582,6 +611,13 @@ The rendering codec $\rho$ mediates between formal structures and natural langua
 
 \section{Results}\label{sec:results}
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_results.pdf}
+\caption{Three-panel results overview. (a)~Rendering-robust accuracy for all four models: every model falls below the symbolic solver ceiling (100\%) and two fall at or below random chance (16.7\%). (b)~Per-modality accuracy heatmap (M1--M4 plus rendering-robust column) showing the universal M1 collapse. (c)~Graded score distribution at Level~3 showing the dominance of score~0 (unresolved) for Claude and Kimi, and the CoT-dependent recovery pattern for reasoning-optimized models.}
+\label{fig:results}
+\end{figure}
+
 \subsection{Primary Accuracy Results}\label{subsec:primary}
 
 Table~\ref{tab:main} summarizes accuracy by level and prompting strategy for all four frontier models evaluated across 374 Level~2 and 35 Level~3 instances, four rendering modalities, and two prompting strategies. Table~\ref{tab:modality} breaks down accuracy by modality. All differences between models at Level~3 are statistically significant by McNemar's test ($p < 0.001$, 280 paired observations per model pair) except Claude vs.\ Kimi ($p = 0.556$).
@@ -674,7 +710,14 @@ This dissociation is not primarily a property of the models themselves but of th
 The central methodological implication is that Level~3 defeater abduction and Level~2 rule abduction require fundamentally different prompt structures. A uniform CoT scaffold (as used in prior preliminary evaluation) systematically underestimates reasoning-model capability on generation tasks while inflating instruction-model performance, because the two model families respond differently to the format mismatch between candidate-selection prompts and open-ended rule generation. Evaluation designs for formal abductive benchmarks must distinguish selection tasks from generation tasks in their prompting protocols.
 
 \paragraph{Narrative modality (M1) as a universal bottleneck.}
-Across all four models and both levels, M1 (narrative rendering) produces dramatically lower accuracy than formal modalities: 14--22\% versus 73--94\% on M2--M4. This $55$--$70$ pp gap is the largest performance difference in the entire evaluation---larger than the difference between any two models, and larger than the Level~2-to-Level~3 gap for the best-performing model. The gap confirms Conjecture~\ref{conj:modlevel}: narrative presentation is categorically harder than formal presentation for defeasible abduction, across all model families. This has practical implications for benchmark design: rendering-robust accuracy (worst-case over modalities) is dominated by M1 performance and is therefore a conservative lower bound on models' logical reasoning capability.
+Across all four models and both levels, M1 (narrative rendering) produces dramatically lower accuracy than formal modalities: 14--22\% versus 73--94\% on M2--M4. This $55$--$70$ pp gap is the largest performance difference in the entire evaluation---larger than the difference between any two models, and larger than the Level~2-to-Level~3 gap for the best-performing model. The gap confirms Conjecture~\ref{conj:modlevel}: narrative presentation is categorically harder than formal presentation for defeasible abduction, across all model families. This has practical implications for benchmark design: rendering-robust accuracy (worst-case over modalities) is dominated by M1 performance and is therefore a conservative lower bound on models' logical reasoning capability. Figure~\ref{fig:cot_variance} visualizes the signed CoT effect across all (model, level) cells, showing that the variance in the CoT effect ($\sigma = 36$ pp, range~$= 110$ pp) dwarfs any per-model or per-level difference.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.78\textwidth]{figures/fig_cot_variance.pdf}
+\caption{CoT effect ($\mathrm{Acc}_{\mathrm{CoT}} - \mathrm{Acc}_{\mathrm{Direct}}$, pp) across all (model, level) cells. Positive (teal) = CoT helps; negative (red) = CoT hurts. The $\sigma = 36$ pp variance and 110 pp range dwarf all other differences in the evaluation, establishing prompting strategy as the dominant performance driver on this benchmark.}
+\label{fig:cot_variance}
+\end{figure}
 
 
 \subsection{Contamination Analysis: Naturalistic vs.\ Synthetic Instances}\label{subsec:contam_results}
@@ -837,10 +880,24 @@ Kimi-K2.5           & 55.8\%          & 71.9\% & $-16.1$ \\
 \end{tabular}
 \end{table}
 
-The Tier~1 pilot inverts the Tier~0 ranking: DeepSeek-R1's structural reasoning advantage compounds at the broader cross-ontology vocabulary, while Claude and Kimi, whose Tier~0 performance benefited from instruction-tuning over familiar vocabulary, lose $\sim$16~pp on the same difficulty level when the predicate distribution shifts. This is consistent with the central thesis: structural defeasible-reasoning capability transfers across vocabulary, while vocabulary-bound performance does not. A full Tier~1 sweep across the 324K-instance set is queued on CURC under the same evaluation harness (\texttt{hpc/slurm\_evaluate\_curc\_vllm.sh} with \texttt{--tier 1}).
+The Tier~1 pilot inverts the Tier~0 ranking: DeepSeek-R1's structural reasoning advantage compounds at the broader cross-ontology vocabulary, while Claude and Kimi, whose Tier~0 performance benefited from instruction-tuning over familiar vocabulary, lose $\sim$16~pp on the same difficulty level when the predicate distribution shifts. This is consistent with the central thesis: structural defeasible-reasoning capability transfers across vocabulary, while vocabulary-bound performance does not. A full Tier~1 sweep across the 324K-instance set is queued on CURC under the same evaluation harness (\texttt{hpc/slurm\_evaluate\_curc\_vllm.sh} with \texttt{--tier 1}). Figure~\ref{fig:tier1} visualizes the ranking inversion.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/fig_tier1.pdf}
+\caption{Tier~1 cross-ontology vs Tier~0 Level~2 accuracy (M4 direct). Grouped bars show each model's Tier~0 reference and Tier~1 pilot score; signed deltas above each Tier~1 bar highlight the ranking inversion. DeepSeek-R1 gains $+11.9$ pp while Claude and Kimi lose $\sim$16 pp, consistent with structural reasoning transferring across vocabularies while vocabulary-bound performance does not.}
+\label{fig:tier1}
+\end{figure}
 
 
 \subsection{\textsc{DeFAb-Hard} Pilot}\label{subsec:defabhard_results}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_difficulty.pdf}
+\caption{Difficulty stratification of the current Tier~0 Level~3 release versus the \textsc{DeFAb-Hard} target regions. (a)~Predicate novelty $\mathrm{Nov}^*$ distribution: 63\% of Tier~0 instances have $\mathrm{Nov}^*=0$ (no novel predicates); the H1 target region ($\mathrm{Nov}^* \geq 0.5$) is essentially empty. (b)~Support size distribution (log scale): current instances cluster at 4--10; the H2 target ($|\mathcal{D}|\in\{50,100,200\}$, depth $\geq 5$) is far outside the current range. The current set rewards monster-barring; \textsc{DeFAb-Hard} targets lemma-incorporation.}
+\label{fig:difficulty}
+\end{figure}
 
 The Tier~2 coverage probe and the constrained-output ablation jointly suggest that current frontier models have largely solved L2 formal abduction and are bottlenecked on L3 defeater construction under generation-style prompts. This motivates a difficulty-extension axis that pushes specifically on the L3 dimensions where models actually fail: (H1)~vocabulary novelty, (H2)~derivation chain depth, and (H3)~simultaneous multi-anomaly resolution. \textsc{DeFAb-Hard} is a pre-registered difficulty extension generated by \texttt{scripts/generate\_defab\_hard.py} along these three axes:
 
@@ -903,6 +960,14 @@ The provisional results sharpen the central thesis. Under direct prompting both 
 \end{figure}
 
 \paragraph{Failure-mode taxonomy.}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/fig_failure_mode.pdf}
+\caption{DeFAb-Hard failure-mode taxonomy on the H1 high-novelty axis (representative of all three axes). Panel~(a): Claude Sonnet~4.6 failure breakdown. Under direct prompting 100\% of evaluations fail with the antecedent-fact error (model returns \texttt{bird(opus).} instead of a defeater rule). Under CoT, Claude correctly traces the anomaly chain but $94\%$ of evaluations fail at final-answer extraction. Panel~(b): GPT-5.2-chat, where CoT recovery to $74.3\%$ correct is a final-answer-format property: the CoT scaffold closes with a parseable rule, while direct prompting produces the same antecedent-fact error as Claude.}
+\label{fig:failure_mode}
+\end{figure}
+
 A response-level audit of every wrong response in the GPT-5.2 and Claude evaluations resolves the Claude collapse to a specific cognitive error rather than a decoder or verification artifact. Under direct prompting, both models systematically respond with the \emph{antecedent fact} of the anomalous derivation (e.g., \texttt{bird(opus).} when asked for the defeater that blocks \texttt{flies(opus)}, or \texttt{xekijef(tipono).} on a synthetic H2 instance) instead of generating a defeater rule. The output is well-formed Datalog but is a fact, not a rule, so the verifier rejects it without invoking any partial-credit machinery. Claude reproduces this error on every direct-prompt H1/H2/H3 evaluation in the panel. Under CoT prompting, Claude produces lengthy step-by-step reasoning that correctly traces the anomalous derivation but never closes with a parseable defeater rule, so $94\%$ of CoT evaluations fail at the final-answer extraction step despite acceptable intermediate reasoning. GPT-5.2's CoT recovery is therefore not a reasoning advantage per se: it is the difference between a model whose CoT \emph{does} terminate in a parseable defeater (GPT-5.2) and one whose CoT terminates in further analysis (Claude). This task-format brittleness is precisely what the constrained-output ablation of Section~\ref{subsec:constrained_results} predicts; the implication for benchmark design is that any evaluation pipeline used to score \emph{generation}-task defeater abduction at scale should report constrained and unconstrained metrics side by side, since the ``model failure'' attributed to one is in many cases an extraction failure on the other.
 
 \textsc{DeFAb-Hard} is intended as the primary difficulty extension for the next round of benchmark evolution. As fine-tuned model checkpoints become available (Section~\ref{sec:finetuning}) the same axes provide a controlled ablation surface: an SFT or DPO checkpoint that improves uniformly across H1/H2/H3 has acquired domain-general defeasible reasoning, while an axis-specific improvement (e.g.\ better on H2 but not H1) localizes the improvement to a specific cognitive operation (chain traversal vs.\ vocabulary generalization).
@@ -1079,6 +1144,13 @@ We define three curriculum schedules and compare them experimentally:
 
 
 \subsection{Evaluation Framework}\label{subsec:ft_results}
+
+\begin{figure}[h]
+\centering
+\resizebox{\textwidth}{!}{\input{fig_finetuning}}
+\caption{The DeFAb fine-tuning pipeline: verifier-graded scores generate DPO preference pairs and RLVR/GRPO reward signals from the same polynomial-time oracle. SFT supplies the base imitation layer; DPO and GRPO are the primary preference-optimization stages; the verifier-in-the-loop RLHF variant eliminates reward model approximation by querying the verifier directly at each rollout. Spectral LoRA initialization and level-curriculum scheduling are applied uniformly across all four methods.}
+\label{fig:finetuning}
+\end{figure}
 
 Table~\ref{tab:ft_main} defines the evaluation framework for reporting fine-tuning results across models, optimization methods, and levels. All entries are populated upon completion of the training runs described in Section~\ref{subsec:ft_setup}.
 
@@ -1999,6 +2071,13 @@ Kimi-K2.5           & B2 & 6/6 & 0 & N/A   & 0 \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[h]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_e4_roe.pdf}
+\caption{E4 quiz-mode ROE compliance ($n=72$, six scenarios per model per mode). Panel~(a): correct-abstain rate by model and enforcement mode. DeepSeek-R1 reaches a perfect $6/6$ under B1 (audit-only); GPT-5.2 and Claude plateau at $4/6$ across all modes; Kimi achieves $6/6$ trivially via zero-order abstain. Panel~(b): orders admitted per mode, showing Kimi's degenerate policy (0 orders across all modes) and DeepSeek-R1's selective ordering.}
+\label{fig:e4_roe}
+\end{figure}
+
 Three observations refine the abstract claim that LLM commanders are or are not ``ROE compliant.'' First, every model achieves $100\%$ verifier compliance on every order it issues across all three enforcement modes: the formal ROE check, when invoked, is rarely violated by orders that the model is willing to commit to. The B2 re-prompt mechanism therefore consumes \emph{zero} re-prompts in the quiz panel for all four models, so the K-budget convergence theorem (Theorem~\ref{thm:b2_kbudget}) is not exercised on this curated scenario set. Second, the model-level differential lies entirely in the \emph{correct-abstain} dimension: GPT-5.2 and Claude both decline to issue orders on $4$ of $6$ scenarios under every mode, while DeepSeek-R1 declines on $5$ of $6$ under B0 / B2 and on \emph{all six} under B1 (audit-only); the audit signal alone is sufficient to push DeepSeek-R1 from $5/6$ to $6/6$. Third, Kimi-K2.5 abstains on all six scenarios under every mode and admits no orders at all: this is vacuously perfect on the correct-abstain metric but is also a degenerate policy. The combined signal is that pre-registered hypothesis $H_{\mathrm{GATE}}$ (B2 strictly improves correct-abstain over B0) is \emph{not} confirmed on this six-scenario set: B1 achieves the largest improvement on DeepSeek-R1, and B2 leaves GPT-5.2 and Claude unchanged from B0. The six-scenario quiz set is statistically underpowered to falsify $H_{\mathrm{GATE}}$ at $n=6$ (Wilson 95\% CI half-width $\pm 35$~pp), so the live-mode CURC evaluation with hundreds of macro-tick decisions per game remains the discriminating test.
 
 \paragraph{Experiment~E5: Cross-environment transfer.}\label{subsec:cross-env-transfer}
@@ -2515,6 +2594,13 @@ For Level 1 tasks, narrative rendering yields highest accuracy (cloze-like). For
 
 %% =================================================================
 \section{Worked Example}\label{app:example}
+
+\begin{figure}[h]
+\centering
+\resizebox{0.9\textwidth}{!}{\input{fig_level3_example}}
+\caption{Level~3 worked example using the bear-hibernation theory. The polar bear exception is the gold defeater: it is conservative (blocks only the anomalous hibernation conclusion for polar bears) and novel (introduces a new condition). The four distractor candidates illustrate common error modes: over-broad defeaters (Score~0.5), unrelated defeaters (Score~0), and ill-formed candidates (E1 decoder failures).}
+\label{fig:l3_example}
+\end{figure}
 
 \begin{example}[IDP Discovery as Defeater Abduction]\label{ex:idp}
 Consider a simplified biochemistry program $\Pi_{\mathrm{bio}}$:
