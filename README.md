@@ -18,10 +18,11 @@ Foundation models excel at forward inference but struggle with abduction and bel
 
 ### Scale
 
-- **33.7 million materialized rules** from 15 knowledge sources
-- **356,000+ evaluation instances** across Tiers 0--2
+- **33.75 million materialized rules** from 18 knowledge sources
+- **372,648+ evaluation instances** across Tiers 0--2 plus a 235-instance DeFAb-Hard pilot (H1 high-novelty, H2 deep-chain, H3 multi-anomaly)
 - **4 frontier models evaluated**: GPT-5.2-chat, Claude Sonnet 4.6, DeepSeek-R1, Kimi-K2.5
-- **Synthetic contamination control** with invented predicate names
+- **Synthetic contamination control** with invented predicate names; matched fact-injection ablation isolates true contamination gap (mean Delta_synth = +19.4 pp)
+- **Cross-benchmark comparison** with DEFREASING reveals reasoning-vs-instruction architectural divide (97--100% empty responses on short classification, normal performance on construction)
 
 ---
 
@@ -70,14 +71,18 @@ Source knowledge bases span 1984 (Cyc) to 2025 (UMLS 2025AB, YAGO 4.5) and inclu
 
 Accuracy (%) by model and task level (formal modalities, best prompting strategy):
 
-| Model | Level 2 (Rule Abduction) | Level 3 (Defeater Abduction) |
-|-------|--------------------------|------------------------------|
-| DeepSeek-R1 | 73.7 | 65.0 (CoT: 92.9) |
-| GPT-5.2-chat | 78.5 | 47.5 (CoT: 87.1) |
-| Claude Sonnet 4.6 | 79.3 | 23.6 (direct) |
-| Kimi-K2.5 | 71.9 | 27.6 (CoT) |
+| Model | L2 (Rule Abduction) | L3 (Defeater Abduction) | L3 Rendering-Robust |
+|-------|---------------------|-------------------------|----------------------|
+| DeepSeek-R1 | 73.7 | 65.0 (CoT: 92.9) | 23.5 |
+| GPT-5.2-chat | 78.5 | 47.5 (CoT: 87.1) | 9.1 |
+| Claude Sonnet 4.6 | 79.3 | 16.4 (direct: 23.6) | 15.5 |
+| Kimi-K2.5 | 71.9 | 14.2 (CoT: 27.6) | 7.8 |
 
-Key finding: Grounding is largely solved at Level 2 (73--79%). Belief revision at Level 3 is latent and highly prompt-sensitive, with a 56--79 pp swing between direct and chain-of-thought prompting for reasoning-optimized models.
+Key findings:
+- Grounding is largely solved at L2 (73--79%) but L3 collapses on the rendering-robust metric (worst case over four surface renderings of the same logical content): 7.8--23.5%, while a symbolic solver achieves 100% in <50 us per instance.
+- Belief revision at L3 is latent and highly prompt-sensitive, with a 36 pp prompting-strategy variance and a 56--79 pp swing between direct and CoT prompting for reasoning-optimized models. CoT helps reasoning models (+79 pp) but hurts instruction-tuned models (-14 pp).
+- Constrained-output ablation (JSON schema): reasoning models gain accuracy under constraints (DeepSeek +1.4 pp, GPT +6.2 pp, Kimi +32.4 pp on L3 CoT) while Claude's instruction-tuned model collapses (97.1% decoder failures).
+- Matched fact-injection ablation reveals the true Delta_synth contamination gap is +19.4 pp (vs +13.6 pp uncorrected), strengthening the structural-deficit claim for reasoning models.
 
 ---
 
