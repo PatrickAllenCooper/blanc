@@ -207,12 +207,44 @@ def evaluate_one_environment(
     summary = getattr(results, "summary", {}) if results else {}
     if isinstance(results, dict):
         summary = results.get("summary", {})
+        evals = results.get("evaluations", [])
+    else:
+        evals = getattr(results, "evaluations", []) or []
+
+    def _eval_field(e, key, default=None):
+        if isinstance(e, dict):
+            return e.get(key, default)
+        return getattr(e, key, default)
+
+    def _eval_level(e):
+        lvl = _eval_field(e, "level", None)
+        if lvl is None:
+            inst = _eval_field(e, "instance", None)
+            lvl = _eval_field(inst, "level", None) if inst is not None else None
+        return lvl
+
+    def _eval_correct(e):
+        m = _eval_field(e, "metrics", {})
+        return _eval_field(m, "correct", _eval_field(e, "correct", False))
+
+    def _eval_score(e):
+        m = _eval_field(e, "metrics", {})
+        return _eval_field(m, "graded_score", _eval_field(e, "graded_score", None))
+
+    l2_evals = [e for e in evals if _eval_level(e) == 2]
+    l3_evals = [e for e in evals if _eval_level(e) == 3]
+    l2_acc = (sum(1 for e in l2_evals if _eval_correct(e)) / len(l2_evals)) if l2_evals else None
+    l3_acc = (sum(1 for e in l3_evals if _eval_correct(e)) / len(l3_evals)) if l3_evals else None
+    l3_scores = [_eval_score(e) for e in l3_evals if _eval_score(e) is not None]
+    l3_graded = (sum(l3_scores) / len(l3_scores)) if l3_scores else None
     return {
         "env": env_key,
         "n": len(instances),
-        "level2_accuracy": summary.get("level2_accuracy"),
-        "level3_accuracy": summary.get("level3_accuracy"),
-        "level3_graded": summary.get("level3_graded"),
+        "level2_accuracy": l2_acc,
+        "level3_accuracy": l3_acc,
+        "level3_graded": l3_graded,
+        "pooled_accuracy": summary.get("accuracy"),
+        "total_evaluations": summary.get("total_evaluations"),
     }
 
 
