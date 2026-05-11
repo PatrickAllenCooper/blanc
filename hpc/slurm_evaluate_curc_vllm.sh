@@ -87,6 +87,7 @@ MODALITIES="${MODALITIES:-M4 M2 M1 M3}"
 STRATEGIES="${STRATEGIES:-direct cot}"
 INCLUDE_LEVEL3="${INCLUDE_LEVEL3:-true}"
 LEVEL3_LIMIT="${LEVEL3_LIMIT:-33}"
+INCLUDE_DEFAB_HARD="${INCLUDE_DEFAB_HARD:-false}"
 
 VLLM_BASE_URL="http://localhost:${VLLM_PORT}"
 VLLM_READY_URL="${VLLM_BASE_URL}/health"
@@ -209,6 +210,11 @@ if [ "$INCLUDE_LEVEL3" = "true" ]; then
     LEVEL3_FLAG="--include-level3 --level3-limit $LEVEL3_LIMIT"
 fi
 
+HARD_FLAG=""
+if [ "$INCLUDE_DEFAB_HARD" = "true" ]; then
+    HARD_FLAG="--include-defab-hard"
+fi
+
 echo "Starting evaluation..."
 python experiments/run_evaluation.py \
     --provider      curc \
@@ -220,7 +226,8 @@ python experiments/run_evaluation.py \
     --results-dir   "$RESULTS_DIR" \
     --cache-dir     "$CACHE_DIR" \
     --checkpoint    "$CHECKPOINT" \
-    $LEVEL3_FLAG
+    $LEVEL3_FLAG \
+    $HARD_FLAG
 
 EVAL_EXIT=$?
 
