@@ -539,6 +539,107 @@ def fig_difficulty():
 
 
 # =====================================================================
+# Figure: DeFAb-Hard provisional results (May 11 2026)
+# =====================================================================
+
+def fig_defab_hard():
+    """Two-panel DeFAb-Hard results figure.
+
+    Panel (a): per-axis accuracy (H1, H2, H3) under direct vs CoT prompting
+    for the two completed frontier models (GPT-5.2 and Claude 4.6).
+
+    Panel (b): pooled accuracy comparison with the symbolic solver baseline,
+    visualizing the model-LLM structural gap on the difficulty extension.
+    """
+    fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(7.0, 3.0),
+                                      gridspec_kw={'width_ratios': [1.5, 1.0],
+                                                   'wspace': 0.35})
+
+    axes_labels = ['H1\nhigh-novelty', 'H2\ndeep-chain', 'H3\nmulti-anomaly']
+    n_axes = [35, 100, 100]
+
+    gpt_direct   = [0.0, 20.2, 3.0]
+    gpt_cot      = [74.3, 79.8, 54.5]
+    claude_direct = [0.0, 0.0, 0.0]
+    claude_cot   = [5.9, 4.1, 1.0]
+
+    x = np.arange(len(axes_labels))
+    bw = 0.18
+
+    bars_gpt_d = ax_a.bar(x - 1.5*bw, gpt_direct, bw,
+                           color=PAL['blue_l'], edgecolor=PAL['blue'], linewidth=0.6,
+                           label='GPT-5.2 direct')
+    bars_gpt_c = ax_a.bar(x - 0.5*bw, gpt_cot, bw,
+                           color=PAL['blue'], edgecolor='white', linewidth=0.4,
+                           label='GPT-5.2 CoT')
+    bars_cl_d  = ax_a.bar(x + 0.5*bw, claude_direct, bw,
+                           color=PAL['red_l'], edgecolor=PAL['red'], linewidth=0.6,
+                           label='Claude 4.6 direct')
+    bars_cl_c  = ax_a.bar(x + 1.5*bw, claude_cot, bw,
+                           color=PAL['red'], edgecolor='white', linewidth=0.4,
+                           label='Claude 4.6 CoT')
+
+    for bars, vals in [(bars_gpt_d, gpt_direct), (bars_gpt_c, gpt_cot),
+                       (bars_cl_d, claude_direct), (bars_cl_c, claude_cot)]:
+        for b, v in zip(bars, vals):
+            if v >= 1.0:
+                ax_a.text(b.get_x() + b.get_width()/2, v + 1.5, f'{v:.0f}',
+                          ha='center', va='bottom', fontsize=5.8,
+                          color=PAL['gray'], fontweight='bold')
+
+    ax_a.axhline(100.0, color=PAL['gray'], linewidth=0.7, linestyle='--', alpha=0.6)
+    ax_a.text(0.02, 102, 'Symbolic solver (100%)',
+              ha='left', va='bottom', fontsize=5.8, color=PAL['gray'])
+    ax_a.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle=':', alpha=0.6)
+    ax_a.text(2.4, 18.5, 'Random (1/6)',
+              ha='right', va='bottom', fontsize=5.8, color=PAL['red'])
+
+    ax_a.set_xticks(x)
+    ax_a.set_xticklabels([f'{lbl}\n(n={n})' for lbl, n in zip(axes_labels, n_axes)],
+                          fontsize=6.5)
+    ax_a.set_ylabel('Per-axis accuracy (%)', fontsize=7)
+    ax_a.set_ylim(0, 110)
+    ax_a.yaxis.set_major_locator(mticker.MultipleLocator(25))
+    ax_a.set_title('(a) DeFAb-Hard per-axis accuracy by prompting strategy',
+                    fontsize=8, pad=4)
+    ax_a.legend(loc='upper left', fontsize=6, framealpha=0.92,
+                edgecolor=PAL['gray'], handlelength=1.0)
+
+    pooled_models = ['Symbolic\nverifier', 'GPT-5.2\n(M4 pooled)',
+                     'Claude 4.6\n(M4 pooled)']
+    pooled_acc = [100.0, 39.1, 1.5]
+    pooled_n = [235, 466, 464]
+    pooled_colors = [PAL['gray'], PAL['blue'], PAL['red']]
+
+    xb = np.arange(len(pooled_models))
+    bars_b = ax_b.bar(xb, pooled_acc, 0.55,
+                       color=pooled_colors, edgecolor='white', linewidth=0.4)
+
+    for b, v, n in zip(bars_b, pooled_acc, pooled_n):
+        ax_b.text(b.get_x() + b.get_width()/2, v + 2.5, f'{v:.1f}%',
+                  ha='center', va='bottom', fontsize=7, fontweight='bold',
+                  color=PAL['gray'])
+        ax_b.text(b.get_x() + b.get_width()/2, -6.5, f'$n={n}$',
+                  ha='center', va='top', fontsize=5.5, color=PAL['gray'])
+
+    ax_b.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle=':', alpha=0.5)
+    ax_b.set_xticks(xb)
+    ax_b.set_xticklabels(pooled_models, fontsize=6.5)
+    ax_b.set_ylabel('Pooled accuracy (%)', fontsize=7)
+    ax_b.set_ylim(0, 110)
+    ax_b.yaxis.set_major_locator(mticker.MultipleLocator(25))
+    ax_b.set_title('(b) Symbolic vs frontier LLM\non DeFAb-Hard',
+                    fontsize=8, pad=4)
+    ax_b.tick_params(axis='x', length=0)
+
+    fig.suptitle('DeFAb-Hard provisional results (May 11 2026; DeepSeek-R1, Kimi-K2.5 in progress)',
+                  fontsize=8.5, y=1.02, color=PAL['blue'])
+
+    fig.tight_layout(pad=0.6)
+    return fig
+
+
+# =====================================================================
 # Entry point
 # =====================================================================
 
@@ -566,6 +667,12 @@ if __name__ == '__main__':
     fig5.savefig(os.path.join(OUT_DIR, 'fig_difficulty.pdf'), format='pdf')
     plt.close(fig5)
     print(f'  -> {OUT_DIR}/fig_difficulty.pdf')
+
+    print('Generating DeFAb-Hard provisional results figure...')
+    fig_dh = fig_defab_hard()
+    fig_dh.savefig(os.path.join(OUT_DIR, 'fig_defab_hard.pdf'), format='pdf')
+    plt.close(fig_dh)
+    print(f'  -> {OUT_DIR}/fig_defab_hard.pdf')
 
     print('Done.')
     print('Note: Figure 1 (pipeline+generation) is TikZ in fig_pipeline.tex')

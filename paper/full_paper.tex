@@ -62,6 +62,7 @@
 \usepackage{multirow}
 \usepackage{tikz}
 \usetikzlibrary{positioning, arrows.meta}
+\usepackage{graphicx}
 
 % Theorem environments
 \newtheorem{theorem}{Theorem}[section]
@@ -870,7 +871,14 @@ Pooled (Claude)     & \multicolumn{6}{c}{$1.5\%$ across $n=464$ evaluations}    
 \end{tabular}
 \end{table}
 
-The provisional results sharpen the central thesis. Under direct prompting both completed models collapse to $\leq 20\%$ on every \textsc{DeFAb-Hard} axis (Claude is at $0\%$ on every axis). Under CoT prompting GPT-5.2 recovers strongly on H1 high-novelty ($74.3\%$) and H2 deep-theory ($79.8\%$) but loses substantial performance on H3 multi-anomaly ($54.5\%$), confirming that simultaneous-anomaly resolution is the most structurally demanding of the three difficulty axes. Claude's near-total failure ($1.5\%$ pooled) under both strategies, despite Claude's competitive Tier~0 direct-prompt baseline, indicates that the architectural dissociation between reasoning-optimized and instruction-tuned models (Section~\ref{subsec:cot_results}) widens dramatically under \textsc{DeFAb-Hard}: the same instruction-tuned profile that helps Claude on Tier~0 short-context defeater abduction breaks down completely once the difficulty axes (predicate novelty, chain depth, multi-anomaly) are pushed beyond the Tier~0 distribution. \textsc{DeFAb-Hard} thus emerges as a discriminating benchmark not only between the symbolic solver and frontier LLMs (the structural gap) but also \emph{between architectural families} of LLMs (the reasoning-vs-instruction divide).
+The provisional results sharpen the central thesis. Under direct prompting both completed models collapse to $\leq 20\%$ on every \textsc{DeFAb-Hard} axis (Claude is at $0\%$ on every axis). Under CoT prompting GPT-5.2 recovers strongly on H1 high-novelty ($74.3\%$) and H2 deep-theory ($79.8\%$) but loses substantial performance on H3 multi-anomaly ($54.5\%$), confirming that simultaneous-anomaly resolution is the most structurally demanding of the three difficulty axes. Claude's near-total failure ($1.5\%$ pooled) under both strategies, despite Claude's competitive Tier~0 direct-prompt baseline, indicates that the architectural dissociation between reasoning-optimized and instruction-tuned models (Section~\ref{subsec:cot_results}) widens dramatically under \textsc{DeFAb-Hard}: the same instruction-tuned profile that helps Claude on Tier~0 short-context defeater abduction breaks down completely once the difficulty axes (predicate novelty, chain depth, multi-anomaly) are pushed beyond the Tier~0 distribution. \textsc{DeFAb-Hard} thus emerges as a discriminating benchmark not only between the symbolic solver and frontier LLMs (the structural gap) but also \emph{between architectural families} of LLMs (the reasoning-vs-instruction divide). Figure~\ref{fig:defab_hard} visualizes both the per-axis split between direct and CoT for the two completed models and the pooled symbolic-versus-LLM gap.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_defab_hard.pdf}
+\caption{\textsc{DeFAb-Hard} provisional results (May~11, 2026). Panel~(a) shows per-axis accuracy across the H1 high-novelty, H2 deep-chain, and H3 multi-anomaly axes for GPT-5.2-chat and Claude Sonnet~4.6 under direct vs.\ CoT prompting in the M4 (pure formal) modality. Panel~(b) places the pooled LLM accuracies against the symbolic solver's $100\%$ baseline (235 instances). DeepSeek-R1 and Kimi-K2.5 evaluations are still running on Foundry and CURC vLLM and will be reflected in the next revision. The dotted red line marks chance-level rendering-robust accuracy ($1/6 \approx 16.7\%$) for reference.}
+\label{fig:defab_hard}
+\end{figure}
 
 \textsc{DeFAb-Hard} is intended as the primary difficulty extension for the next round of benchmark evolution. As fine-tuned model checkpoints become available (Section~\ref{sec:finetuning}) the same axes provide a controlled ablation surface: an SFT or DPO checkpoint that improves uniformly across H1/H2/H3 has acquired domain-general defeasible reasoning, while an axis-specific improvement (e.g.\ better on H2 but not H1) localizes the improvement to a specific cognitive operation (chain traversal vs.\ vocabulary generalization).
 
