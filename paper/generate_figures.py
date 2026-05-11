@@ -558,69 +558,65 @@ def fig_defab_hard():
     axes_labels = ['H1\nhigh-novelty', 'H2\ndeep-chain', 'H3\nmulti-anomaly']
     n_axes = [35, 100, 100]
 
-    gpt_direct   = [0.0, 20.2, 3.0]
+    # Per-axis CoT accuracy (best strategy per model for each axis)
     gpt_cot      = [74.3, 79.8, 54.5]
-    claude_direct = [0.0, 0.0, 0.0]
-    claude_cot   = [5.9, 4.1, 1.0]
+    claude_cot   = [5.9,  4.1,  1.0]
+    kimi_cot     = [17.1, 3.0,  9.1]
 
     x = np.arange(len(axes_labels))
-    bw = 0.18
+    bw = 0.22
 
-    bars_gpt_d = ax_a.bar(x - 1.5*bw, gpt_direct, bw,
-                           color=PAL['blue_l'], edgecolor=PAL['blue'], linewidth=0.6,
-                           label='GPT-5.2 direct')
-    bars_gpt_c = ax_a.bar(x - 0.5*bw, gpt_cot, bw,
-                           color=PAL['blue'], edgecolor='white', linewidth=0.4,
-                           label='GPT-5.2 CoT')
-    bars_cl_d  = ax_a.bar(x + 0.5*bw, claude_direct, bw,
-                           color=PAL['red_l'], edgecolor=PAL['red'], linewidth=0.6,
-                           label='Claude 4.6 direct')
-    bars_cl_c  = ax_a.bar(x + 1.5*bw, claude_cot, bw,
-                           color=PAL['red'], edgecolor='white', linewidth=0.4,
-                           label='Claude 4.6 CoT')
+    bars_gpt = ax_a.bar(x - bw, gpt_cot, bw,
+                         color=PAL['blue'], edgecolor='white', linewidth=0.4,
+                         label='GPT-5.2 CoT')
+    bars_kim = ax_a.bar(x,        kimi_cot, bw,
+                         color=PAL['gold'], edgecolor='white', linewidth=0.4,
+                         label='Kimi-K2.5 CoT')
+    bars_cl  = ax_a.bar(x + bw,  claude_cot, bw,
+                         color=PAL['red'], edgecolor='white', linewidth=0.4,
+                         label='Claude 4.6 CoT')
 
-    for bars, vals in [(bars_gpt_d, gpt_direct), (bars_gpt_c, gpt_cot),
-                       (bars_cl_d, claude_direct), (bars_cl_c, claude_cot)]:
+    for bars, vals in [(bars_gpt, gpt_cot), (bars_kim, kimi_cot), (bars_cl, claude_cot)]:
         for b, v in zip(bars, vals):
-            if v >= 1.0:
+            if v >= 2.0:
                 ax_a.text(b.get_x() + b.get_width()/2, v + 1.5, f'{v:.0f}',
-                          ha='center', va='bottom', fontsize=5.8,
+                          ha='center', va='bottom', fontsize=5.5,
                           color=PAL['gray'], fontweight='bold')
 
     ax_a.axhline(100.0, color=PAL['gray'], linewidth=0.7, linestyle='--', alpha=0.6)
-    ax_a.text(0.02, 102, 'Symbolic solver (100%)',
-              ha='left', va='bottom', fontsize=5.8, color=PAL['gray'])
-    ax_a.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle=':', alpha=0.6)
+    ax_a.text(0.02, 102, 'Symbolic (100%)',
+              ha='left', va='bottom', fontsize=5.5, color=PAL['gray'])
+    ax_a.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle=':', alpha=0.5)
     ax_a.text(2.4, 18.5, 'Random (1/6)',
-              ha='right', va='bottom', fontsize=5.8, color=PAL['red'])
+              ha='right', va='bottom', fontsize=5.5, color=PAL['red'])
 
     ax_a.set_xticks(x)
     ax_a.set_xticklabels([f'{lbl}\n(n={n})' for lbl, n in zip(axes_labels, n_axes)],
                           fontsize=6.5)
-    ax_a.set_ylabel('Per-axis accuracy (%)', fontsize=7)
+    ax_a.set_ylabel('Per-axis CoT accuracy (%)', fontsize=7)
     ax_a.set_ylim(0, 110)
     ax_a.yaxis.set_major_locator(mticker.MultipleLocator(25))
-    ax_a.set_title('(a) DeFAb-Hard per-axis accuracy by prompting strategy',
-                    fontsize=8, pad=4)
+    ax_a.set_title('(a) DeFAb-Hard per-axis CoT accuracy\n(3/4 models; all direct = 0%)',
+                    fontsize=7.5, pad=4)
     ax_a.legend(loc='upper left', fontsize=6, framealpha=0.92,
                 edgecolor=PAL['gray'], handlelength=1.0)
 
-    pooled_models = ['Symbolic\nverifier', 'GPT-5.2\n(M4 pooled)',
-                     'Claude 4.6\n(M4 pooled)']
-    pooled_acc = [100.0, 39.1, 1.5]
-    pooled_n = [235, 466, 464]
-    pooled_colors = [PAL['gray'], PAL['blue'], PAL['red']]
+    pooled_models = ['Symbolic\nverifier', 'GPT-5.2\n(pooled)',
+                     'Kimi-K2.5\n(pooled)', 'Claude 4.6\n(pooled)']
+    pooled_acc = [100.0, 39.1, 3.8, 1.5]
+    pooled_n = [235, 466, 468, 464]
+    pooled_colors = [PAL['gray'], PAL['blue'], PAL['gold'], PAL['red']]
 
     xb = np.arange(len(pooled_models))
-    bars_b = ax_b.bar(xb, pooled_acc, 0.55,
+    bars_b = ax_b.bar(xb, pooled_acc, 0.5,
                        color=pooled_colors, edgecolor='white', linewidth=0.4)
 
     for b, v, n in zip(bars_b, pooled_acc, pooled_n):
         ax_b.text(b.get_x() + b.get_width()/2, v + 2.5, f'{v:.1f}%',
-                  ha='center', va='bottom', fontsize=7, fontweight='bold',
+                  ha='center', va='bottom', fontsize=6.5, fontweight='bold',
                   color=PAL['gray'])
-        ax_b.text(b.get_x() + b.get_width()/2, -6.5, f'$n={n}$',
-                  ha='center', va='top', fontsize=5.5, color=PAL['gray'])
+        ax_b.text(b.get_x() + b.get_width()/2, -7, f'$n={n}$',
+                  ha='center', va='top', fontsize=5.0, color=PAL['gray'])
 
     ax_b.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle=':', alpha=0.5)
     ax_b.set_xticks(xb)
