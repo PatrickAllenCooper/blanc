@@ -180,6 +180,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--output-dir", default="experiments/finetuning/data")
     p.add_argument("--splits-file", default="instances/splits.json")
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--include-tier1", action="store_true",
+                   help="Include Tier 1 L2 instances (from instances/tier1_eval/) "
+                        "in the SFT training data to increase volume.")
+    p.add_argument("--include-defab-hard", action="store_true",
+                   help="Include DeFAb-Hard L3 instances (from instances/defab_hard/) "
+                        "to give the SFT curriculum harder examples.")
     return p.parse_args()
 
 
@@ -205,7 +211,70 @@ def main() -> int:
         level2_limit=args.instance_limit,
         level3_limit=args.level3_limit,
     )
-    print(f"  Loaded {len(all_instances)} instances")
+    print(f"  Tier 0: {len(all_instances)} instances")
+
+    # --include-tier1: add Tier 1 L2 instances from the tier1_eval directory
+    if getattr(args, "include_tier1", False):
+        tier1_dir = ROOT / "instances" / "tier1_eval"
+        if tier1_dir.exists():
+            extra = load_instances_from_json(
+                tier1_dir,
+                domains=[],  # auto-discover from *_dev_instances.json files
+                include_level3=False,
+                level2_limit=args.instance_limit,
+                level3_limit=0,
+            )
+            print(f"  Tier 1: {len(extra)} instances (from {tier1_dir})")
+            all_instances.extend(extra)
+        else:
+            print(f"  WARNING: --include-tier1 set but {tier1_dir} not found. "
+                  "Run experiments/build_tier1_eval_dir.py first.")
+
+    # --include-defab-hard: add DeFAb-Hard L3 instances
+    if getattr(args, "include_defab_hard", False):
+        import json as _json
+        hard_dir = ROOT / "instances" / "defab_hard"
+        hard_added = 0
+        for axis_dir in sorted(hard_dir.glob("*")) if hard_dir.exists() else []:
+            hard_path = axis_dir / "instances.json"
+            if not hard_path.exists():
+                continue
+            with open(hard_path) as _f:
+                hard_data = _json.load(_f).get("instances", [])
+            # Convert to AbductiveInstance-like objects via the level3 loader
+            import sys as _sys
+            _sys.path.insert(0, str(ROOT / "experiments"))
+            from run_evaluation import _load_level3_instances, _reconstruct_theory_from_level3
+            from blanc.author.generation import AbductiveInstance
+            for item in hard_data:
+                try:
+                    D_minus = _reconstruct_theory_from_level3(item)
+                    inst = AbductiveInstance(
+                        D_minus=D_minus,
+                        target=item["anomaly"],
+                        candidates=item["candidates"],
+                        gold=[item["gold"]],
+                        level=3,
+                        metadata={
+                            "domain": item.get("domain", "defab_hard"),
+                            "nov": item.get("nov", 0.0),
+                            "d_rev": item.get("d_rev", 1),
+                            "conservative": item.get("conservative", True),
+                            "axis": item.get("axis", "h?"),
+                        },
+                    )
+                    inst.id = f"hard-{item['name']}"
+                    all_instances.append(inst)
+                    hard_added += 1
+                except Exception:
+                    continue
+        if hard_added:
+            print(f"  DeFAb-Hard: {hard_added} instances (from {hard_dir})")
+        else:
+            print(f"  WARNING: --include-defab-hard set but no instances found in {hard_dir}. "
+                  "Run scripts/generate_defab_hard.py first.")
+
+    print(f"  Total: {len(all_instances)} instances")
 
     splits_file = ROOT / args.splits_file
     train_set, val_set, _ = _load_or_create_splits(

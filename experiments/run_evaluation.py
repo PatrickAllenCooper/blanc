@@ -231,6 +231,16 @@ def parse_args() -> argparse.Namespace:
                    help="Include Level 3 (defeater abduction) instances.")
     p.add_argument("--level3-limit", type=int, default=33,
                    help="Max Level 3 instances.")
+    p.add_argument("--include-defab-hard", action="store_true",
+                   help="Also eval DeFAb-Hard instances in --instances-dir/defab_hard/.")
+    p.add_argument("--constrained", action="store_true",
+                   help=(
+                       "Constrained-output mode: wrap every L3 prompt with an explicit "
+                       "JSON schema instruction so the model must reply in "
+                       '{\"hypothesis\": \"<rule>\", \"rationale\": \"...\"} format. '
+                       "This separates format-compliance failures from reasoning failures. "
+                       "The decoder then extracts the hypothesis field before scoring."
+                   ))
 
     # Paths
     p.add_argument("--instances-dir", default=str(ROOT / "instances"),
@@ -361,6 +371,35 @@ def main() -> int:
         print(f"M5 variant  : {args.m5_variant}")
 
     # ---------------------------------------------------------------------------
+    # Constrained-output mode: wrap L3 prompts with JSON schema instruction
+    # ---------------------------------------------------------------------------
+    constrained_suffix = ""
+    if getattr(args, "constrained", False):
+        constrained_suffix = "_constrained"
+        print("\nConstrained-output mode ENABLED.")
+        print("  L3 prompts will include an explicit JSON-format instruction.")
+        print("  Decoder will extract the 'hypothesis' field before scoring.")
+        # Patch the prompting module to inject the constraint
+        import prompting as _prompting_mod
+        _CONSTRAINT_INSTR = (
+            "\n\n[OUTPUT FORMAT REQUIREMENT]\n"
+            "You MUST reply ONLY with a valid JSON object on a single line:\n"
+            '{"hypothesis": "<rule in formal notation>", "rationale": "<one-sentence reason>"}\n'
+            "Do not include any other text, explanation, or markdown outside this JSON object."
+        )
+        _orig_render = _prompting_mod.render_prompt
+
+        def _constrained_render(instance, modality, strategy="direct", **kwargs):
+            rp = _orig_render(instance, modality, strategy, **kwargs)
+            # Only inject for Level 3 (construction task)
+            if getattr(instance, "level", 2) == 3:
+                object.__setattr__(rp, "prompt", rp.prompt + _CONSTRAINT_INSTR)
+            return rp
+
+        _prompting_mod.render_prompt = _constrained_render
+        print("  Prompting module patched for constrained output.")
+
+    # ---------------------------------------------------------------------------
     # Run pipeline
     # ---------------------------------------------------------------------------
     pipeline = EvaluationPipeline(
@@ -379,7 +418,9 @@ def main() -> int:
     # ---------------------------------------------------------------------------
     # Save and report
     # ---------------------------------------------------------------------------
-    out_path = Path(args.results_dir) / f"results_{args.provider}.json"
+    # Include constrained suffix in filename if applicable
+    prov_slug = args.provider + constrained_suffix
+    out_path = Path(args.results_dir) / f"results_{prov_slug}.json"
     results.save(str(out_path))
     print(f"\nResults saved to: {out_path}")
 
