@@ -840,9 +840,10 @@ With API keys, we can run the full evaluation:
 - DeFAb L2 (6-way MCQ): GPT-5.2 99.0%, Claude 100.0%
 - Finding: formal L2 MCQ is solved; L3 construction task is the genuine challenge
 
-### Tier 2 Coverage Probe (190 instances from 7 KB sources, M4 direct)
-- Claude 100%, GPT-5.2 100%, Kimi 94.7%, DeepSeek pending
-- Finding: models generalize across KB sources at L2; tier breadth is structural, not difficulty
+### Tier 2 Coverage Probe (190 instances from 7 KB sources)
+- M4 direct: Claude 100%, GPT-5.2 100%, Kimi 94.7%, DeepSeek-R1 94.7%
+- DeepSeek-R1 full panel: M4 CoT 97.9%, M2 direct 95.8%, M2 CoT 93.2% (n=758)
+- Finding: models generalize across KB sources at L2 formal modalities; tier breadth is structural, not difficulty
 
 ### DEFREASING Extended Comparison (all 3 providers, 100 instances M4 direct)
 - GPT-5.2: 47.0% acc, 0.442 F1, 11% empty responses

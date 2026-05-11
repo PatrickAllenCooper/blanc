@@ -285,7 +285,7 @@ The synthetic contamination control reproduces the same panel on the 35 structur
 
 A constrained-output ablation appends a JSON schema instruction to the L3 prompt (35 instances, M4, direct + CoT, all four models). Three of four models benefit on CoT: Kimi-K2.5's CoT rises from 27.6\% to 60.0\% ($+32.4$~pp, the largest single gain), GPT-5.2's CoT rises to 91.4\% ($+4.3$~pp), and DeepSeek-R1's CoT rises to 94.3\% ($+1.4$~pp). DeepSeek's direct prompting also rises ($+2.9$~pp to 40.0\%). Claude collapses: decoder failure rises from 26.8\% to 97.1\%, making the task structurally unattemptable, and CoT accuracy drops from 9.3\% to 2.9\% ($-6.4$~pp). The clean pattern is that schema enforcement helps reasoning-style decoding (CoT for all three reasoning-style models) while interacting badly with Claude's instruction-tuning. L3 failure is not a response-format problem; it is architecture-dependent.
 
-A coverage probe on 52 Tier~1 L2 instances across all five cross-ontology domains (M4, direct + CoT, minimal-grounded-theory protocol, 416 calls) yields DeepSeek-R1 85.6\%, GPT-5.2 75.0\%, Claude 63.5\%, Kimi 55.8\%; reasoning models gain $+12$ to $+13$~pp over Tier~0 L2 while non-reasoning models lose ground due to elevated decoder failure (Appendix~\ref{app:tier1}). A Tier~2 coverage probe (190 instances across seven additional KB sources: BabelNet, FrameNet, Gene Ontology, SUMO, UMLS, Wikidata, YAGO-Full) confirms structural coverage: Claude and GPT-5.2 achieve 100\%; Kimi achieves 94.7\%. L2 is solved by frontier models across all KB sources at formal modalities, confirming that the benchmark's difficulty concentration lies at L3 and rendering-robust evaluation (Appendix~\ref{app:tier2}).
+A coverage probe on 52 Tier~1 L2 instances across all five cross-ontology domains (M4, direct + CoT, minimal-grounded-theory protocol, 416 calls) yields DeepSeek-R1 85.6\%, GPT-5.2 75.0\%, Claude 63.5\%, Kimi 55.8\%; reasoning models gain $+12$ to $+13$~pp over Tier~0 L2 while non-reasoning models lose ground due to elevated decoder failure (Appendix~\ref{app:tier1}). A Tier~2 coverage probe (190 instances across seven additional KB sources: BabelNet, FrameNet, Gene Ontology, SUMO, UMLS, Wikidata, YAGO-Full) confirms structural coverage: Claude and GPT-5.2 achieve 100\%; Kimi-K2.5 and DeepSeek-R1 each achieve 94.7\% at M4 direct, with DeepSeek reaching 97.9\% with CoT and 93.2--95.8\% across M2 modalities. L2 is solved by frontier models across all KB sources at formal modalities, confirming that the benchmark's difficulty concentration lies at L3 and rendering-robust evaluation (Appendix~\ref{app:tier2}).
 
 
 %% ====================================================================
@@ -673,24 +673,24 @@ No frontier-model evaluation of DeFAb-Hard has been run yet (pending CURC GPU al
 \section{Tier~2 Coverage Probe}\label{app:tier2}
 %% =================================================================
 
-Tier~2 sources (BabelNet, FrameNet, Gene Ontology, SUMO, UMLS, Wikidata, YAGO-Full) provide 190 L2 instances across seven cross-domain knowledge bases (30 per domain except FrameNet with 10). We evaluated three frontier models at M4 with direct prompting (190 calls per model); DeepSeek-R1 results are pending due to inference cost.
+Tier~2 sources (BabelNet, FrameNet, Gene Ontology, SUMO, UMLS, Wikidata, YAGO-Full) provide 190 L2 instances across seven cross-domain knowledge bases (30 per domain except FrameNet with 10). We evaluated all four frontier models. GPT-5.2, Claude, and Kimi were run at M4 direct only (190 calls each, total 570). DeepSeek-R1 was run on the full $\{$M4, M2$\}$ $\times$ $\{$direct, CoT$\}$ matrix (758 calls).
 
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{lrr}
+\begin{tabular}{lrrrr|r}
 \toprule
-Model & Tier~2 L2 acc & $n$ \\
+Model & M4 direct & M4 CoT & M2 direct & M2 CoT & $n$ \\
 \midrule
-Claude Sonnet 4.6  & 100.0\% & 190 \\
-GPT-5.2-chat       & 100.0\% & 190 \\
-Kimi-K2.5          & \phantom{0}94.7\% & 190 \\
-DeepSeek-R1        & --- & --- \\
+Claude Sonnet 4.6  & 100.0\% & --- & --- & --- & 190 \\
+GPT-5.2-chat       & 100.0\% & --- & --- & --- & 190 \\
+Kimi-K2.5          & \phantom{0}94.7\% & --- & --- & --- & 190 \\
+DeepSeek-R1        & \phantom{0}94.7\% & 97.9\% & 95.8\% & 93.2\% & 758 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The high L2 accuracy across all tested models on Tier~2 formal instances reflects the M4 formal-modality ceiling identified in the main evaluation. It also indicates that the benchmark's KB-diversity objective is being met at the structural level: instances from diverse sources (gene pathways, legal frames, encyclopedic facts) are correctly formatted and evaluable. Whether Tier~2 instances are harder or easier than Tier~0 at other modalities (M1 narrative) is not yet measured. As with the Tier~1 probe, these results are framed as coverage evidence, not as a difficulty comparison.
+The high L2 accuracy across all tested models on Tier~2 formal instances reflects the M4 formal-modality ceiling identified in the main evaluation. It also indicates that the benchmark's KB-diversity objective is being met at the structural level: instances from diverse sources (gene pathways, legal frames, encyclopedic facts) are correctly formatted and evaluable. DeepSeek's full modality-by-strategy panel shows that this generalizes within formal modalities: M2 (semi-formal) and M4 (pure formal) accuracies all sit between 93\% and 98\%, with no degradation under CoT. Whether Tier~2 instances are harder or easier than Tier~0 under M1 narrative or M3 annotated-formal modalities is not yet measured. As with the Tier~1 probe, these results are framed as coverage evidence, not as a difficulty comparison.
 
 %% =================================================================
 \section{Datasheet for DeFAb}\label{app:datasheet}
