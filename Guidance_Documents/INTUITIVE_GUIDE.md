@@ -844,6 +844,19 @@ With API keys, we can run the full evaluation:
 - Claude 100%, GPT-5.2 100%, Kimi 94.7%, DeepSeek pending
 - Finding: models generalize across KB sources at L2; tier breadth is structural, not difficulty
 
+### DEFREASING Extended Comparison (all 3 providers, 100 instances M4 direct)
+- GPT-5.2: 47.0% acc, 0.442 F1, 11% empty responses
+- Claude Sonnet 4.6: 51.0% acc, 0.457 F1, 0% empty
+- DeepSeek-R1: 1.0% acc, 0.015 F1, 97% empty responses
+- Finding: DeepSeek-R1 dominates DeFAb L3 (65%) but collapses on DEFREASING (1%, 97% empty). Task format interacts strongly with model architecture; reasoning-optimized models are not universally better at defeasible tasks.
+
+### DeFAb-Hard Pilot (235 instances released)
+- H1 (high novelty, Nov >= 0.5): 35 instances, symbolic solver 100%
+- H2 (deep chain, |D| in {50, 100, 200}): 100 instances, symbolic solver 100%
+- H3 (multi-anomaly, k >= 3): 100 instances, symbolic solver 100%
+- Frontier model evaluation pending (requires CURC GPU allocation for fine-tuned checkpoint comparison)
+- All gold answers confirmed in candidate set: gold-in-candidates 100% on all three axes
+
 ### Domain examples at a glance
 
 | Domain | Default | Exception | Defeater rule | Nov > 0? |
