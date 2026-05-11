@@ -283,7 +283,7 @@ Kimi-K2.5 & 14.2\% & 13.9\% & 13.9\% & 0.11 & 80.9\% & \phantom{0}5.2\% & \phant
 
 The synthetic contamination control reproduces the same panel on the 35 structurally matched L3 synthetic instances at M2 and M4 with both prompting strategies (560 calls). Synthetic L3 instances were post-processed via a small deterministic fact-injection step (disclosed in the released pipeline) so each defeasible rule's body grounds; this preserves the no-pretraining-vocabulary property. Averaging across the two modalities, per-model L3 accuracy drops uniformly: DeepSeek-R1 65.0\%~$\to$~52.9\% ($\Delta_{\mathrm{synth}} = +12.1$~pp), GPT-5.2-chat 47.5\%~$\to$~30.9\% ($+16.6$~pp), Claude~Sonnet~4.6 16.4\%~$\to$~2.1\% ($+14.3$~pp), Kimi-K2.5 14.2\%~$\to$~2.9\% ($+11.3$~pp); mean $+13.6$~pp. M2 and M4 give the same directional result, ruling out modality-specific artifacts. The uniformly positive sign is consistent with partial vocabulary-level memorization, with cognitive-load of unfamiliar predicates a concurrent contributor. Even after gap correction the best-model L3 accuracy (52.9\%) remains far below the symbolic ceiling.
 
-A constrained-output ablation appends a JSON schema instruction to the L3 prompt (35 instances, M4, direct + CoT). GPT-5.2's CoT accuracy rises to 91.4\% ($+4.3$~pp over baseline), but its direct accuracy collapses to 0.0\% ($-7.9$~pp); Claude's decoder-failure rate rises from 26.8\% to 97.1\%, meaning the JSON constraint makes the task structurally unattemptable for this instruction-tuned model. The result confirms that L3 failure is not simply a response-format problem: different models fail for qualitatively different reasons, and schema enforcement simultaneously helps reasoning-optimized CoT and destroys direct and instruction-tuned evaluation.
+A constrained-output ablation appends a JSON schema instruction to the L3 prompt (35 instances, M4, direct + CoT). Reasoning-optimized models benefit or are neutral: DeepSeek-R1's CoT accuracy rises to 94.3\% ($+1.4$~pp) and its direct accuracy rises to 40.0\% ($+2.9$~pp); GPT-5.2's CoT rises to 91.4\% ($+4.3$~pp) while its direct collapses to 0.0\% ($-7.9$~pp). The instruction-tuned model collapses completely: Claude's decoder-failure rate rises from 26.8\% to 97.1\%, making the task structurally unattemptable. The result reveals a clean architecture-by-constraint interaction: JSON schema constraints help reasoning CoT (94.3\%, 91.4\%) while destroying instruction-tuned evaluation (Claude) and direct prompting for non-reasoning models. L3 failure is not a response-format problem; it is architecture-dependent.
 
 A coverage probe on 52 Tier~1 L2 instances across all five cross-ontology domains (M4, direct + CoT, minimal-grounded-theory protocol, 416 calls) yields DeepSeek-R1 85.6\%, GPT-5.2 75.0\%, Claude 63.5\%, Kimi 55.8\%; reasoning models gain $+12$ to $+13$~pp over Tier~0 L2 while non-reasoning models lose ground due to elevated decoder failure (Appendix~\ref{app:tier1}). A Tier~2 coverage probe (190 instances across seven additional KB sources: BabelNet, FrameNet, Gene Ontology, SUMO, UMLS, Wikidata, YAGO-Full) confirms structural coverage: Claude and GPT-5.2 achieve 100\%; Kimi achieves 94.7\%. L2 is solved by frontier models across all KB sources at formal modalities, confirming that the benchmark's difficulty concentration lies at L3 and rendering-robust evaluation (Appendix~\ref{app:tier2}).
 
@@ -585,6 +585,40 @@ Kimi-K2.5           & 55.8\% & 71.2\% & $-15.4$~pp & 44.2\% \\
 
 The reasoning-optimized models (DeepSeek, GPT) gain accuracy when distractor-rule context is removed, suggesting that a meaningful fraction of Tier~0 L2 difficulty for these models is attributable to attacker disambiguation rather than rule matching. Claude is essentially unchanged. Kimi loses 15~pp because its decoder failure rate rises from $\sim 30\%$ on Tier~0 to 44\% on Tier~1; the underlying rule-selection capability we cannot measure separately because the failures pre-empt the comparison. We treat this as a methodological note rather than a capability claim, and emphasize that the structural-deficit conclusions in \S\ref{sec:evaluation} are driven by the headline Tier~0 L2 and L3 results, not by this probe.
 
+
+%% =================================================================
+\section{Constrained-Output Ablation Details}\label{app:constrained}
+%% =================================================================
+
+We appended the following JSON schema instruction to the M4 direct and CoT L3 prompts (35 instances each, $n=70$ evaluations per model):
+
+\begin{verbatim}
+Respond ONLY in JSON: {"name": "...", "rule": "subject(X) ~> ~property(X)"}
+\end{verbatim}
+
+Full per-model results (L3 only, $n=35$ per strategy):
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrr|r}
+\toprule
+ & \multicolumn{2}{c}{Accuracy} & & \\
+Model & Direct & CoT & $\Delta$CoT vs.\ baseline & Decode fail \\
+\midrule
+DeepSeek-R1 (baseline) & 37.1\% & 92.9\% & --- & 16.8\% \\
+DeepSeek-R1 (constrained) & 40.0\% & 94.3\% & $+1.4$~pp & 17.1\% \\
+\midrule
+GPT-5.2-chat (baseline) & \phantom{0}7.9\% & 87.1\% & --- & 26.1\% \\
+GPT-5.2-chat (constrained) & \phantom{0}0.0\% & 91.4\% & $+4.3$~pp & 34.3\% \\
+\midrule
+Claude Sonnet 4.6 (baseline) & 23.6\% & \phantom{0}9.3\% & --- & 26.8\% \\
+Claude Sonnet 4.6 (constrained) & \phantom{0}0.0\% & \phantom{0}2.9\% & $-6.4$~pp & 97.1\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The clean architecture-by-constraint interaction: reasoning-optimized models (DeepSeek-R1, GPT-5.2) see CoT improvement or stability under schema enforcement; Claude's decoder-failure rate rises to 97.1\%, collapsing both strategies. The direct-prompt collapse for GPT-5.2 (7.9\% $\to$ 0.0\%) while CoT improves (87.1\% $\to$ 91.4\%) suggests that JSON schema prompting shifts inference into chain-of-thought mode even for models that do not explicitly activate it. For reasoning models, the schema constraint is congruent with their structured-output prior; for instruction-tuned models following instruction templates, it imposes a conflicting format.
 
 %% =================================================================
 \section{\textsc{DeFReasing} Comparison Details}\label{app:defreasing}
