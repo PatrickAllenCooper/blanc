@@ -610,6 +610,28 @@ DeepSeek-R1        & \phantom{0}1.0\% & 0.015 & 97\% & ---     & --- \\
 The dramatic difference in DeepSeek-R1's behaviour warrants comment. DeepSeek-R1 leads all models on DeFAb L3 at 65\% accuracy but produces an empty response on 97 of 100 \textsc{DeFReasing} prompts. Inspection of the raw responses shows that the model typically outputs extensive chain-of-thought reasoning but then produces no final label, likely because the short 3-way classification format conflicts with its chain-of-thought completion pattern which expects a structured hypothesis output. This is evidence that model capability on defeasible tasks is task-format dependent and cannot be summarized by a single scalar.
 
 %% =================================================================
+\section{DeFAb-Hard Pilot Instance Statistics}\label{app:defabhard}
+%% =================================================================
+
+The 235 DeFAb-Hard pilot instances (H1: 35, H2: 100, H3: 100) were generated locally from Tier~0 theories using three axes of hardness. All instances are formally valid: the symbolic solver selects the correct gold defeater in 100\% of cases (235/235), confirming that the instances are solvable by the verifier and that the gold label is correctly placed among the 6 candidate defeaters. Key statistics:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Axis & $n$ & Solver acc. & Mean $\Nov^*$ & Mean $|\D|$ \\
+\midrule
+H1 (high novelty)    & \phantom{0}35 & 100\% & $\geq 0.50$ & 6--10 \\
+H2 (deep chain)      & 100 & 100\% & $\leq 0.10$ & 50--200 \\
+H3 (multi-anomaly)   & 100 & 100\% & $\leq 0.10$ & 6--10 (3+ anomalies) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+No frontier-model evaluation of DeFAb-Hard has been run yet (pending CURC GPU allocation for SFT/DPO fine-tuned checkpoints). We release these instances as a pre-registered difficulty extension and report solver ceiling as the reference for future neural evaluations.
+
+%% =================================================================
 \section{Tier~2 Coverage Probe}\label{app:tier2}
 %% =================================================================
 
@@ -648,7 +670,7 @@ The high L2 accuracy across all tested models on Tier~2 formal instances reflect
 
 \begin{itemize}[nosep]
 \item \textbf{Instance types:} Each instance is an abductive reasoning task: ablated defeasible theory $\Dm$, target literal $q$, candidate hypothesis set $\Hcand$, gold-standard answers $\Hgold$. Level~1: fact completion. Level~2: rule abduction. Level~3: conservative defeater construction.
-\item \textbf{Instance count:} Tier~0: 409 (374 L2, 35 L3). Tier~1: 324,511 (182K L1, 142K L2) across five domains. Tier~2: 44,902. Tier~3: 2,580. Tier~RTS: 246+ (100 L1 + 60 L2 + 6 L3 for \texttt{rts\_engagement}, $\sim$80 for \texttt{lux\_ai\_s3}, session-dependent for \texttt{sc2live}). Synthetic: 409 contamination-control instances. \textsc{DeFAb-Hard} (pre-registered, TBD): target 1{,}000+ H1 + 300 H2 + 100 H3 + $\geq 50$ intersection instances. Total (Tiers 0--3 + RTS, excluding pending): 372,648+.
+\item \textbf{Instance count:} Tier~0: 409 (374 L2, 35 L3). Tier~1: 324,511 (182K L1, 142K L2) across five domains. Tier~2: 44,902. Tier~3: 2,580. Tier~RTS: 246+ (100 L1 + 60 L2 + 6 L3 for \texttt{rts\_engagement}, $\sim$80 for \texttt{lux\_ai\_s3}, session-dependent for \texttt{sc2live}). Synthetic: 409 contamination-control instances. \textsc{DeFAb-Hard} pilot: 235 released (35 H1 high-novelty, 100 H2 deep-chain, 100 H3 multi-anomaly); full target: 1{,}000+ H1 + 300 H2 + 100 H3. Total (Tiers 0--3 + RTS + DeFAb-Hard pilot, excluding pending): 372,883+.
 \item \textbf{Rule base:} 33.75 million materialized rules from 18 knowledge sources.
 \item \textbf{Sensitive content:} None. All instances derived from formal logic programs over scientific and commonsense knowledge.
 \item \textbf{Personal data:} None. No human subjects, no crowdsourcing.
