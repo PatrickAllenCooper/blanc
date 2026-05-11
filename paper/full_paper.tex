@@ -2612,6 +2612,101 @@ The correspondence is verified by checking that each component of the Lakatosian
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+\section{Reproducibility on CURC Alpine}\label{app:curc_repro}
+
+This appendix documents the SLURM job specifications, environment setup, and submission commands used for the CURC Alpine experimental campaign. All scripts are version-controlled under \texttt{hpc/}; the section below is the canonical reference for re-running the open-source-model arm of the benchmark.
+
+\subsection{Environment setup (one-time)}
+
+The CURC home directory ships only minimal Python; the benchmark runs in a dedicated conda environment:
+
+\begin{verbatim}
+ssh login.rc.colorado.edu
+cd /projects/$USER/blanc
+bash hpc/setup_curc_env.sh         # creates conda env mono_s2s, installs CUDA-aware pytorch
+                                   #   plus vllm, trl, transformers, bitsandbytes, peft
+\end{verbatim}
+
+The setup script provisions an environment compatible with all SLURM scripts in \texttt{hpc/} and installs the optional \texttt{[sc2live]} extra for the live SC2 bridge.
+
+\subsection{Open-source model evaluation (vLLM on aa100)}
+
+The \texttt{slurm\_evaluate\_curc\_vllm.sh} job spawns a vLLM server on a single A100 80GB and runs the standard evaluation harness against it. It accepts environment variables to control modality, strategy, model, and instance subset, including the \texttt{INCLUDE\_DEFAB\_HARD=true} flag added in this revision (Section~\ref{subsec:defabhard_results}).
+
+\begin{verbatim}
+sbatch --export=ALL,MODEL=DeepSeek-R1-Distill-Llama-70B,INCLUDE_DEFAB_HARD=true \
+    hpc/slurm_evaluate_curc_vllm.sh
+sbatch --export=ALL,MODEL=Qwen2.5-72B-Instruct,INCLUDE_DEFAB_HARD=true \
+    hpc/slurm_evaluate_curc_vllm.sh
+sbatch --export=ALL,MODEL=Qwen2.5-32B-Instruct,INCLUDE_DEFAB_HARD=true \
+    hpc/slurm_evaluate_curc_vllm.sh
+\end{verbatim}
+
+Each job requests a single A100 80GB on the \texttt{aa100} partition for up to 24 hours under \texttt{--qos=normal}. Per-instance latency is approximately 5--12 seconds at M4, yielding a $\sim$2.5-hour wall-clock per (model, modality, strategy) combination over the full 770-instance L3 plus 235-instance \textsc{DeFAb-Hard} pool.
+
+\subsection{Open-source model fine-tuning (aa100)}
+
+Four training scripts cover the four post-training methods (Section~\ref{sec:finetuning}):
+
+\begin{verbatim}
+sbatch hpc/slurm_train_sft.sh        # SFT, gpu:3 aa100, 24h, qos=normal
+sbatch hpc/slurm_train_dpo.sh        # DPO, gpu:3 aa100, 24h, qos=normal
+sbatch hpc/slurm_train_grpo.sh       # GRPO, gpu:3 aa100, 36h, qos=long
+sbatch hpc/slurm_train_rlhf.sh       # RLHF, gpu:3 aa100, 36h, qos=long
+\end{verbatim}
+
+The per-job GPU request is set to \texttt{gpu:3} to comply with the May~2026 CURC per-job limit on the \texttt{aa100} partition; the longer-running GRPO and RLHF jobs use \texttt{--qos=long} (up to 7 days) since their requested 36-hour wall-clock exceeds the 24-hour ceiling of \texttt{--qos=normal}. The convenience script \texttt{hpc/slurm\_train\_all.sh} submits all four with appropriate dependencies (\texttt{--dependency=afterok:\$SFT\_JOBID}) so the DPO/GRPO/RLHF jobs queue behind their SFT pre-condition.
+
+\subsection{M5 visual grounding pipeline (amilan + aa100)}
+
+The M5 modality requires a pre-flight image-collection job on the CPU \texttt{amilan} partition followed by a multimodal evaluation on \texttt{aa100}:
+
+\begin{verbatim}
+PREP_JOB=$(sbatch --parsable hpc/slurm_prepare_m5_images.sh)
+sbatch --dependency=afterok:$PREP_JOB hpc/slurm_evaluate_m5_curc.sh
+sbatch --dependency=afterok:$PREP_JOB hpc/slurm_evaluate_m5_foundry.sh
+\end{verbatim}
+
+\subsection{Live SC2 grounding (aa100)}
+
+The live \texttt{sc2live} bridge is invoked by \texttt{slurm\_sc2\_grounding.sh}, which runs the headless SC2 binary plus the verifier-gated \texttt{DeFAbBot} on a single A100 80GB node. The SLURM script handles SC2 binary installation via \texttt{scripts/install\_sc2\_linux\_headless.sh} and the bot loop via \texttt{scripts/run\_roe\_compliance\_experiment.py --backend live}.
+
+\begin{verbatim}
+sbatch hpc/slurm_sc2_grounding.sh
+sbatch hpc/slurm_sc2_selfplay.sh    # self-play data collection for E3 fine-tuning
+\end{verbatim}
+
+\subsection{Foundry API evaluation (amilan; thin shim over Azure)}
+
+Closed-source models are best evaluated from the CURC login node or a CPU node with API egress; the \texttt{slurm\_evaluate\_foundry.sh} script wraps \texttt{python experiments/run\_evaluation.py --provider foundry-\{gpt,claude,deepseek,kimi\}} with the appropriate environment variables loaded from \texttt{.env}. The job runs on the \texttt{amilan} partition under \texttt{--qos=normal}.
+
+\begin{verbatim}
+sbatch --export=ALL,PROVIDER=foundry-gpt      hpc/slurm_evaluate_foundry.sh
+sbatch --export=ALL,PROVIDER=foundry-claude   hpc/slurm_evaluate_foundry.sh
+sbatch --export=ALL,PROVIDER=foundry-deepseek hpc/slurm_evaluate_foundry.sh
+sbatch --export=ALL,PROVIDER=foundry-kimi     hpc/slurm_evaluate_foundry.sh
+\end{verbatim}
+
+\subsection{Result transfer and analysis}
+
+Per-job results land in \texttt{experiments/results/} on CURC and are pulled to the analysis machine via \texttt{rsync} or the convenience script \texttt{scripts/pull\_curc\_results.sh}. The analysis pipeline (\texttt{experiments/analyze\_defab\_hard.py}, \texttt{experiments/analyze\_fact\_injection.py}, \texttt{experiments/dataset\_statistics.py}) reads the result files and emits per-axis accuracy tables that are pasted directly into Section~\ref{subsec:defabhard_results} and the corresponding entries in \texttt{Guidance\_Documents/INTUITIVE\_GUIDE.md}.
+
+\subsection{Job monitoring}
+
+Long-running jobs are monitored with the standard SLURM commands plus a one-line status helper that summarizes queue position, resource usage, and recent log tails:
+
+\begin{verbatim}
+squeue -u $USER --noheader | wc -l            # job count
+squeue -u $USER -o "%A %j %T %M %R" | head    # status table
+sacct -X -j $JOBID --format=JobID,JobName,State,Elapsed,MaxRSS,ReqMem
+tail -f experiments/results/$RESULT_DIR/run.log
+\end{verbatim}
+
+The campaign's policy is to fail-fast on the first job and only release dependent submissions once the leading job has produced expected first-iteration log lines, avoiding wasted SU on misconfigured downstream jobs. The full campaign budgets approximately 9{,}500~SU; the QoS-restricted variant suitable for a $\sim$10{,}000-SU best-effort allocation is documented at the top of \texttt{hpc/run\_all\_experiments.sh}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \newpage
 \section*{NeurIPS Paper Checklist}
 
