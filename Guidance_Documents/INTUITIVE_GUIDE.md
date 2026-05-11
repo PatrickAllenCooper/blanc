@@ -863,6 +863,15 @@ With API keys, we can run the full evaluation:
 - DeepSeek-R1: in progress (Foundry + CURC vLLM)
 - Kimi-K2.5: in progress (Foundry + CURC vLLM)
 - Finding: GPT-5.2 CoT scales partially to H1 high-novelty and H2 deep-chain but loses on H3 multi-anomaly. Claude collapses on every DeFAb-Hard axis under both prompting strategies; the reasoning-vs-instruction architectural divide widens dramatically beyond Tier 0.
+- Failure mode (audit): Claude direct returns the antecedent fact (e.g., bird(opus)) instead of a defeater rule; Claude CoT does correct trace-then-reasoning but never terminates in a parseable rule. The Claude collapse is task-format brittleness, not reasoning failure.
+
+### E4 ROE Compliance Quiz (May 11 2026, 6 scenarios x 4 models x 3 modes)
+- All four models achieve 100% verifier compliance on orders they admit
+- GPT-5.2 / Claude: 4/6 correct-abstain across B0/B1/B2 (no improvement from B1/B2)
+- DeepSeek-R1: 5/6 (B0) -> 6/6 (B1, perfect) -> 5/6 (B2). Audit signal alone is sufficient
+- Kimi-K2.5: 0 orders admitted in any mode (vacuous compliance via degenerate abstain)
+- B2 K-budget convergence theorem not exercised (zero re-prompts at n=6); H_GATE not yet confirmed
+- The 6-scenario quiz set is statistically underpowered (Wilson 95% CI half-width = 35 pp at n=6); live-mode CURC evaluation remains the discriminating test
 
 ### Domain examples at a glance
 
