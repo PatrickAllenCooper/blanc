@@ -1,0 +1,33 @@
+\frametitle{How to Run}
+
+\textbf{Mock (no API keys, validates pipeline):}
+\begin{lstlisting}[language=bash]
+python scripts/run_jailbreak_roe_experiment.py --provider mock
+\end{lstlisting}
+
+\textbf{Full Foundry sweep (all 4 models, all payloads, all modes):}
+\begin{lstlisting}[language=bash]
+FOUNDRY_API_KEY=... \
+python scripts/run_jailbreak_roe_experiment.py \
+    --provider foundry-gpt \
+    --modes B0 B1 B2 \
+    --payloads clean JB0 JB1 JB2 JB3 \
+    --budget 15.0
+\end{lstlisting}
+
+\textbf{Results:} \texttt{data/roe\_compliance/<provider>\_jailbreak\_<timestamp>.jsonl}
+
+\bigskip
+\textbf{Analysis:}
+\begin{lstlisting}[language=bash]
+python experiments/analyze_roe_compliance.py
+\end{lstlisting}
+
+\bigskip
+\textbf{CURC (parallel sweep):}
+\begin{lstlisting}[language=bash]
+for M in foundry-gpt foundry-claude foundry-deepseek foundry-kimi; do
+  sbatch --export=ALL,PROVIDER=$M hpc/slurm_evaluate_foundry.sh
+done
+\end{lstlisting}
+
