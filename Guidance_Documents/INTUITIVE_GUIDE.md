@@ -851,12 +851,18 @@ With API keys, we can run the full evaluation:
 - DeepSeek-R1: 1.0% acc, 0.015 F1, 97% empty responses
 - Finding: DeepSeek-R1 dominates DeFAb L3 (65%) but collapses on DEFREASING (1%, 97% empty). Task format interacts strongly with model architecture; reasoning-optimized models are not universally better at defeasible tasks.
 
-### DeFAb-Hard Pilot (235 instances released)
+### DeFAb-Hard Pilot (235 instances released, frontier evaluation in progress)
 - H1 (high novelty, Nov >= 0.5): 35 instances, symbolic solver 100%
 - H2 (deep chain, |D| in {50, 100, 200}): 100 instances, symbolic solver 100%
 - H3 (multi-anomaly, k >= 3): 100 instances, symbolic solver 100%
-- Frontier model evaluation pending (requires CURC GPU allocation for fine-tuned checkpoint comparison)
 - All gold answers confirmed in candidate set: gold-in-candidates 100% on all three axes
+
+### DeFAb-Hard Frontier Model Accuracy (M4 modality, provisional, May 11 2026)
+- GPT-5.2-chat (n=466): 39.1% pooled. Direct: H1 0.0%, H2 20.2%, H3 3.0%. CoT: H1 74.3%, H2 79.8%, H3 54.5%.
+- Claude Sonnet 4.6 (n=464): 1.5% pooled. Direct: 0% on every axis. CoT: H1 5.9%, H2 4.1%, H3 1.0%.
+- DeepSeek-R1: in progress (Foundry + CURC vLLM)
+- Kimi-K2.5: in progress (Foundry + CURC vLLM)
+- Finding: GPT-5.2 CoT scales partially to H1 high-novelty and H2 deep-chain but loses on H3 multi-anomaly. Claude collapses on every DeFAb-Hard axis under both prompting strategies; the reasoning-vs-instruction architectural divide widens dramatically beyond Tier 0.
 
 ### Domain examples at a glance
 
