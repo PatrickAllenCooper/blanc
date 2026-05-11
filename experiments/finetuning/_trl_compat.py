@@ -97,25 +97,25 @@ def patch_all() -> None:
     try:
         from trl import DPOTrainer
         candidates.append(DPOTrainer)
-    except ImportError:
+    except Exception:
         pass
 
     try:
         from trl import GRPOTrainer
         candidates.append(GRPOTrainer)
-    except ImportError:
+    except Exception:
         pass
 
     try:
         from trl import RewardTrainer
         candidates.append(RewardTrainer)
-    except ImportError:
+    except Exception:
         pass
 
     try:
         from trl import SFTTrainer
         candidates.append(SFTTrainer)
-    except ImportError:
+    except Exception:
         pass
 
     for cls in candidates:

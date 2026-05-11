@@ -147,7 +147,8 @@ class TestPrepareSFTData:
 _has_trl = True
 try:
     import trl  # noqa: F401
-except ImportError:
+    from trl import GRPOTrainer  # noqa: F401  -- triggers version-compat check
+except Exception:
     _has_trl = False
 
 

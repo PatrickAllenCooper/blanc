@@ -48,94 +48,81 @@ except ImportError:
 # ---------------------------------------------------------------------------
 
 def load_defreasing(defreasing_dir: Path, n: int = 200, seed: int = 42) -> list:
-    """Load and convert DEFREASING instances to AbductiveInstance-like dicts."""
-    # DEFREASING is a multiple-choice dataset. Each example has:
-    #   entity, property, candidates (list), label (index of correct)
-    # We map: target = f"has_property({entity}, {property})"
-    #         candidates = [formatted rule strings]
-    #         gold = [candidates[label]]
-    from blanc.author.generation import AbductiveInstance
-    from blanc.core.theory import Theory
+    """Load and convert DEFREASING CSV to 3-way classification instances.
+
+    DEFREASING (Allaway & McKeown, NAACL 2025) is a defeasible NLI dataset.
+    Each row gives:
+      premise   - generic rule + subtype membership ("Birds fly. Bafus are birds.")
+      hypothesis - expected conclusion ("Bafus fly.")
+      extra      - additional sentence that may strengthen/weaken/negate the conclusion
+      label      - S (strengthens), W (weakens), or N (negates)
+
+    We convert to a 3-way MCQ: given premise + hypothesis + extra, which of
+    {S, W, N} best describes the effect of the extra information?
+    Gold = the correct label.  Chance = 0.333.
+    """
+    import csv
+
+    csv_path = defreasing_dir / "data" / "defreasing.csv"
+    if not csv_path.exists():
+        raise FileNotFoundError(
+            f"DEFREASING CSV not found at {csv_path}. "
+            "Clone with: git clone https://github.com/emilyallaway/DEFREASING data/defreasing"
+        )
 
     rng = random.Random(seed)
+    rows = []
+    with open(csv_path, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            rows.append(row)
 
-    # Try common file layouts
-    candidates = []
-    for subdir in ["data", ".", "test", "dev"]:
-        for fname in ["test.jsonl", "dev.jsonl", "data.jsonl", "defreasing.jsonl",
-                      "test.json", "dev.json"]:
-            p = defreasing_dir / subdir / fname
-            if p.exists():
-                with open(p) as f:
-                    for line in f:
-                        try:
-                            candidates.append(json.loads(line.strip()))
-                        except Exception:
-                            pass
-                break
-        if candidates:
-            break
+    rng.shuffle(rows)
+    subset = rows[:n]
 
-    if not candidates:
-        # Try top-level
-        for fname in defreasing_dir.glob("**/*.jsonl"):
-            with open(fname) as f:
-                for line in f:
-                    try:
-                        candidates.append(json.loads(line.strip()))
-                    except Exception:
-                        pass
-            if candidates:
-                break
-
-    if not candidates:
-        raise FileNotFoundError(
-            f"No DEFREASING data files found in {defreasing_dir}. "
-            "Expected *.jsonl with JSON objects containing 'entity', 'property', 'candidates', 'label'."
-        )
-
-    rng.shuffle(candidates)
-    subset = candidates[:n]
+    # Candidate set is fixed for all instances (3-way classification)
+    CANDIDATES = ["S", "W", "N"]
+    CANDIDATE_TEXT = {
+        "S": "strengthens the conclusion (the extra information supports it more strongly)",
+        "W": "weakens the conclusion (the extra information makes it less certain)",
+        "N": "negates the conclusion (the extra information overrides the expected conclusion)",
+    }
 
     instances = []
-    for i, ex in enumerate(subset):
-        entity   = ex.get("entity", ex.get("subject", f"entity_{i}"))
-        prop     = ex.get("property", ex.get("predicate", f"prop_{i}"))
-        cands    = ex.get("choices", ex.get("candidates", ex.get("options", [])))
-        label    = ex.get("label", ex.get("answer", ex.get("correct", 0)))
+    for i, row in enumerate(subset):
+        premise    = row["premise"].strip()
+        hypothesis = row["hypothesis"].strip()
+        extra      = row["extra"].strip()
+        gold_label = row["label"].strip()  # S, W, or N
 
-        if isinstance(label, str):
-            try:
-                label = int(label)
-            except ValueError:
-                label = cands.index(label) if label in cands else 0
-
-        if not cands:
+        if gold_label not in CANDIDATES:
             continue
 
-        gold = [cands[label]] if label < len(cands) else [cands[0]]
+        # Format as a compact multiple-choice prompt string.
+        # The EvaluationPipeline will wrap this in its standard prompt template.
+        # We encode the task directly in the target string, and use candidates
+        # that the decoder can match exactly.
+        cand_texts = [f"{c}: {CANDIDATE_TEXT[c]}" for c in CANDIDATES]
+        gold = [f"{gold_label}: {CANDIDATE_TEXT[gold_label]}"]
 
-        target = f"{prop}({entity})"
-        fake_theory = Theory(
-            facts={f"entity({entity})", f"has_{prop}({entity})"},
-            rules=[],
-            superiority={},
-        )
-
-        inst = AbductiveInstance(
-            D_minus=fake_theory,
-            target=target,
-            candidates=cands,
-            gold=gold,
-            level=2,
-            metadata={
-                "domain": "defreasing",
-                "entity": entity,
-                "property": prop,
-                "instance_id": f"defreasing_{i:04d}",
+        # Use a lightweight dict matching EvaluationPipeline's expected shape.
+        # We store the NLI context in the theory_facts/theory_rules fields
+        # so the standard M4 renderer can display them.
+        inst = {
+            "id": f"defreasing_{i:04d}",
+            "domain": "defreasing",
+            "level": 2,
+            "target": hypothesis,
+            "candidates": cand_texts,
+            "gold": gold,
+            "theory_facts": [premise, f"extra: {extra}"],
+            "theory_rules": [],
+            "metadata": {
+                "reasoning_type": row.get("reasoning_type", ""),
+                "extra_type": row.get("extra_type", ""),
+                "reasoning_steps": row.get("reasoning_steps", ""),
             },
-        )
-        inst.id = f"defreasing_{i:04d}"
+        }
         instances.append(inst)
 
     return instances
@@ -165,6 +152,144 @@ def load_defab_subset(n: int = 200, seed: int = 42) -> list:
 # Entry point
 # ---------------------------------------------------------------------------
 
+def _eval_defreasing_provider(instances: list, interface, results_dir: Path, provider: str) -> dict:
+    """Run 3-way S/W/N classification on DEFREASING instances and return summary."""
+    import re
+
+    correct = 0
+    total = 0
+    per_label: dict[str, dict] = {"S": {"tp": 0, "fp": 0, "fn": 0},
+                                   "W": {"tp": 0, "fp": 0, "fn": 0},
+                                   "N": {"tp": 0, "fp": 0, "fn": 0}}
+
+    LABEL_WORDS = {
+        "S": ["strengthens", "strengthen", "supports", "support", "stronger"],
+        "W": ["weakens", "weaken", "weakens", "undermines", "reduces", "uncertain"],
+        "N": ["negates", "negate", "negated", "overrides", "defeats", "contradicts", "impossible"],
+    }
+
+    records = []
+    for inst in instances:
+        premise_lines = inst["theory_facts"]
+        premise_text  = premise_lines[0] if premise_lines else ""
+        extra_text    = premise_lines[1].replace("extra: ", "") if len(premise_lines) > 1 else ""
+        hypothesis    = inst["target"]
+        gold_cand     = inst["gold"][0]
+        gold_label    = gold_cand.split(":")[0].strip()  # "S", "W", or "N"
+
+        prompt = (
+            "Defeasible reasoning classification task.\n\n"
+            f"Generic rule + subtype membership: {premise_text}\n"
+            f"Expected conclusion: {hypothesis}\n"
+            f"Additional information: {extra_text}\n\n"
+            "Does the additional information strengthen (S), weaken (W), or negate (N) the conclusion?\n"
+            "Think briefly, then output one of: S, W, or N."
+        )
+
+        try:
+            response = interface.query(prompt, max_tokens=256)
+            text = response.text if hasattr(response, "text") else str(response)
+        except Exception as exc:
+            text = f"ERROR: {exc}"
+
+        # Decode: look for explicit label letters first, then key words
+        text_stripped = text.strip()
+        pred_label = "?"
+
+        # Priority 1: standalone label on its own line or at end of response
+        for pattern in [r"(?m)^([SWN])\s*$", r"\bAnswer:\s*([SWN])\b", r"(?m)([SWN])\s*$"]:
+            m = re.search(pattern, text_stripped, re.IGNORECASE)
+            if m:
+                pred_label = m.group(1).upper()
+                break
+
+        # Priority 2: look for label words
+        if pred_label == "?":
+            text_lower = text_stripped.lower()
+            for lbl, words in LABEL_WORDS.items():
+                if any(w in text_lower for w in words):
+                    pred_label = lbl
+                    break
+
+        # Priority 3: look for any standalone S, W, or N letter
+        if pred_label == "?":
+            m = re.search(r"\b([SWN])\b", text_stripped, re.IGNORECASE)
+            if m:
+                pred_label = m.group(1).upper()
+
+        is_correct = (pred_label == gold_label)
+        correct += int(is_correct)
+        total += 1
+
+        for lbl in ["S", "W", "N"]:
+            if gold_label == lbl:
+                if pred_label == lbl:
+                    per_label[lbl]["tp"] += 1
+                else:
+                    per_label[lbl]["fn"] += 1
+            elif pred_label == lbl:
+                per_label[lbl]["fp"] += 1
+
+        records.append({
+            "id": inst["id"],
+            "gold": gold_label,
+            "pred": pred_label,
+            "correct": is_correct,
+            "response": text[:200],
+        })
+
+    accuracy = correct / total if total else 0.0
+
+    # Macro F1
+    f1s = []
+    for lbl in ["S", "W", "N"]:
+        tp = per_label[lbl]["tp"]
+        fp = per_label[lbl]["fp"]
+        fn = per_label[lbl]["fn"]
+        prec = tp / (tp + fp) if (tp + fp) else 0.0
+        rec  = tp / (tp + fn) if (tp + fn) else 0.0
+        f1   = 2 * prec * rec / (prec + rec) if (prec + rec) else 0.0
+        f1s.append(f1)
+    macro_f1 = sum(f1s) / len(f1s)
+
+    summary = {
+        "provider": provider,
+        "total": total,
+        "accuracy": round(accuracy, 4),
+        "macro_f1": round(macro_f1, 4),
+        "per_label": per_label,
+    }
+    out = {
+        "summary": summary,
+        "records": records,
+    }
+    out_path = results_dir / f"results_{provider}.json"
+    with open(out_path, "w") as f:
+        json.dump(out, f, indent=2)
+
+    return summary
+
+
+def _eval_defab_l2_provider(instances: list, interface, results_dir: Path, provider: str) -> dict:
+    """Run DeFAb L2 MCQ eval using the standard EvaluationPipeline."""
+    from evaluation_pipeline import EvaluationPipeline
+
+    pipeline = EvaluationPipeline(
+        instances=instances,
+        models={interface.model_name: interface},
+        modalities=["M4"],
+        strategies=["direct"],
+        cache_dir=str(ROOT / "experiments" / "cache"),
+        results_dir=str(results_dir),
+    )
+    res = pipeline.run()
+    out_path = results_dir / f"results_{provider}.json"
+    res.save(str(out_path))
+    s = res.summary
+    return {"provider": provider, "accuracy": s.get("accuracy", 0),
+            "total": s.get("total_evaluations", 0)}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="DEFREASING side-by-side comparison")
     ap.add_argument("--defreasing-dir", default=str(ROOT / "data" / "defreasing"),
@@ -181,11 +306,15 @@ def main() -> int:
     args = ap.parse_args()
 
     from model_interface import create_model_interface
-    from evaluation_pipeline import EvaluationPipeline
 
     defreasing_dir = Path(args.defreasing_dir)
     results_dir = Path(args.results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
+
+    foundry_key = os.environ.get("FOUNDRY_API_KEY", "")
+    if not foundry_key:
+        print("ERROR: FOUNDRY_API_KEY not set. Add to .env file.")
+        return 1
 
     # Load instances
     print("Loading DEFREASING instances...")
@@ -194,41 +323,49 @@ def main() -> int:
         print(f"  {len(defreasing_insts)} DEFREASING instances loaded.")
     except FileNotFoundError as e:
         print(f"ERROR: {e}")
-        print("\nTo clone DEFREASING:\n  git clone https://github.com/elizaallaway/defreasing data/defreasing")
         return 1
 
     print("Loading DeFAb Tier 0 L2 subset...")
     defab_insts = load_defab_subset(n=args.n, seed=args.seed)
     print(f"  {len(defab_insts)} DeFAb L2 instances loaded.")
 
-    foundry_key = os.environ.get("FOUNDRY_API_KEY", "")
-    if not foundry_key:
-        print("ERROR: FOUNDRY_API_KEY not set. Add to .env file.")
-        return 1
+    summary_rows = []
 
     for provider in args.providers:
         print(f"\n=== Evaluating {provider} ===")
-        interface = create_model_interface(provider)
+        interface = create_model_interface(provider, api_key=foundry_key)
 
-        for dataset_name, instances in [
-            ("defreasing", defreasing_insts),
-            ("defab_l2", defab_insts),
-        ]:
-            sub_dir = results_dir / dataset_name
-            sub_dir.mkdir(parents=True, exist_ok=True)
-            pipeline = EvaluationPipeline(
-                instances=instances,
-                models={interface.model_name: interface},
-                modalities=["M4"],
-                strategies=["direct"],
-                cache_dir=str(ROOT / "experiments" / "cache"),
-                results_dir=str(sub_dir),
-            )
-            res = pipeline.run()
-            out = sub_dir / f"results_{provider}.json"
-            res.save(str(out))
-            s = res.summary
-            print(f"  {dataset_name:15s} acc={s.get('accuracy', 0):.3f}  n={s.get('total_evaluations', 0)}")
+        # DEFREASING: 3-way classification
+        dref_dir = results_dir / "defreasing"
+        dref_dir.mkdir(parents=True, exist_ok=True)
+        print(f"  Running DEFREASING 3-way classification (n={len(defreasing_insts)})...")
+        dref_s = _eval_defreasing_provider(defreasing_insts, interface, dref_dir, provider)
+        print(f"  DEFREASING: acc={dref_s['accuracy']:.3f}  macro_f1={dref_s['macro_f1']:.3f}")
+
+        # DeFAb L2: standard MCQ eval
+        defab_dir = results_dir / "defab_l2"
+        defab_dir.mkdir(parents=True, exist_ok=True)
+        print(f"  Running DeFAb L2 MCQ eval (n={len(defab_insts)})...")
+        defab_s = _eval_defab_l2_provider(defab_insts, interface, defab_dir, provider)
+        print(f"  DeFAb L2:   acc={defab_s['accuracy']:.3f}  n={defab_s['total']}")
+
+        summary_rows.append({
+            "provider": provider,
+            "defreasing_acc": dref_s["accuracy"],
+            "defreasing_macro_f1": dref_s["macro_f1"],
+            "defab_l2_acc": defab_s["accuracy"],
+        })
+
+    # Write combined summary table
+    summary_path = results_dir / "comparison_summary.json"
+    with open(summary_path, "w") as f:
+        json.dump(summary_rows, f, indent=2)
+
+    print(f"\n{'Provider':<25} {'DEFREASING acc':>16} {'DEFREASING F1':>14} {'DeFAb-L2 acc':>13}")
+    print("-" * 72)
+    for row in summary_rows:
+        print(f"  {row['provider']:<23} {row['defreasing_acc']:>16.3f} "
+              f"{row['defreasing_macro_f1']:>14.3f} {row['defab_l2_acc']:>13.3f}")
 
     print(f"\nAll results saved to {results_dir}")
     return 0

@@ -22,9 +22,17 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "experiments"))
 sys.path.insert(0, str(ROOT / "experiments" / "finetuning"))
 
-# TRL and torch must both be present for the training module to import
-trl   = pytest.importorskip("trl",   reason="trl not installed — training tests skipped")
-torch = pytest.importorskip("torch", reason="torch not installed — training tests skipped")
+# TRL, torch and compatible transformers must all be importable.
+# On local Windows machines with mismatched package versions, skip gracefully.
+try:
+    import torch  # noqa: F401
+    import trl  # noqa: F401  - triggers trl's internal imports
+    from trl import DPOTrainer  # noqa: F401
+except Exception as _trl_exc:
+    pytest.skip(
+        f"trl/transformers environment incompatible (likely version mismatch or GPU-only host): {_trl_exc}",
+        allow_module_level=True,
+    )
 
 
 # ---------------------------------------------------------------------------
