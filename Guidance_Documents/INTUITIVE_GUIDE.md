@@ -815,13 +815,34 @@ With API keys, we can run the full evaluation:
 
 ## Quick Reference: Levels, Objectives, and Dataset Counts
 
-| Level | Task | Grounding | Novelty | Belief Revision | Dataset (Feb 2026) |
+| Level | Task | Grounding | Novelty | Belief Revision | Dataset (May 2026) |
 |-------|------|:---------:|:-------:|:---------------:|-------------------|
 | 1 | Fact completion | Yes | No | No | 0 instances (future) |
-| 2 | Rule abduction | Yes | No | No | 374 instances |
-| 3 | Defeater abduction | Yes | Yes | Yes | 35 instances |
+| 2 | Rule abduction | Yes | No | No | 374 instances (Tier 0) |
+| 3 | Defeater abduction | Yes | Yes | Yes | 35 instances (Tier 0); 235 DeFAb-Hard pilot (H1=35, H2=100, H3=100) |
 
 **Critical point**: Only Level 3 tests all three objectives simultaneously. The paper's title — "Grounding, Novelty, and Belief Revision" — requires Level 3 instances to be substantiated.
+
+## Current Experimental Results (May 2026)
+
+### Baseline Evaluation (Tier 0, 4 frontier models)
+- L2 rendering-robust accuracy: Kimi 7.8%, GPT-5.2 9.1%, Claude 15.5%, DeepSeek-R1 23.5%
+- L3 best (direct or CoT): DeepSeek-R1 65%, GPT-5.2 47.5%, Claude 16.4%, Kimi 14.2%
+- Delta_synth (contamination gap): +13.6 pp average drop on novel-predicate synthetic control
+
+### Constrained Output Ablation (JSON schema on L3 prompt)
+- GPT-5.2 CoT: 91.4% (+4.3 pp vs baseline); direct: 0.0% (-7.9 pp)
+- Claude: 97.1% decode failures (vs 26.8% baseline) — constraint makes task unattemptable
+- Finding: L3 failure is not a format problem; models fail for qualitatively different reasons
+
+### DEFREASING Comparison (100 instances, M4 direct)
+- DEFREASING (3-way S/W/N): GPT-5.2 47.0% acc / 0.442 F1; Claude 51.0% / 0.457 F1
+- DeFAb L2 (6-way MCQ): GPT-5.2 99.0%, Claude 100.0%
+- Finding: formal L2 MCQ is solved; L3 construction task is the genuine challenge
+
+### Tier 2 Coverage Probe (190 instances from 7 KB sources, M4 direct)
+- Claude 100%, GPT-5.2 100%, Kimi 94.7%, DeepSeek pending
+- Finding: models generalize across KB sources at L2; tier breadth is structural, not difficulty
 
 ### Domain examples at a glance
 
