@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=64G
 #SBATCH --partition=amilan
+#SBATCH --qos=normal
 
 # DeFAb Instance Generation on CURC Alpine
 #

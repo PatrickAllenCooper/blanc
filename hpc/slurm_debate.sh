@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --partition=amilan
+#SBATCH --qos=normal
 
 # DeFAb Adversarial Defeasible Debate Experiments (Paper Section 7)
 #

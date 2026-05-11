@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --partition=amilan
+#SBATCH --qos=normal
 
 # DeFAb Phase B6: Fine-Tuning Analysis Pipeline (Paper Section 6.7-6.8)
 #

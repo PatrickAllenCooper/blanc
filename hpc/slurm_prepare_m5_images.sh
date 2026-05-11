@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --partition=amilan
+#SBATCH --qos=normal
 
 # DeFAb M5 Image Preparation
 #

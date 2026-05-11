@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --partition=amilan
+#SBATCH --qos=normal
 
 # DeFAb Phase A4: Full Analysis Pipeline (Paper Section 5)
 #
