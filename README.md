@@ -100,8 +100,9 @@ src/blanc/              Core library
                           extractor, hypothesis dropper, novelty filter,
                           defeater scorer
 paper/                  LaTeX papers
-  dataset_paper.tex       NeurIPS 2026 E&D track submission
-  paper.tex               Full technical paper (includes fine-tuning + debate)
+  full_paper.tex          Primary project document (no length limit). Reflects all
+                          results, ablations, theory, and the live SC2 bridge in full.
+  paper.tex               NeurIPS 2026 E&D track submission (9-page main + appendix)
 experiments/            Evaluation pipeline, model interfaces, analysis
   math_topology/          DeFAb-Math-Topology benchmark generator, baseline,
                           Lakatos rediscovery, at-scale dropping, GRPO
@@ -117,9 +118,11 @@ Guidance_Documents/     Project planning and documentation
 
 ## Papers
 
-- **`paper/paper.tex`** -- NeurIPS 2026 Evaluations & Datasets track submission. The single consolidated submission covering: dataset design, cross-ontology KB extraction (18 sources, 33.75M rules), synthetic contamination control, baseline evaluation (leading with worst results: symbolic ceiling 100% vs LLM rendering-robust 7.8--23.5%), M5 visual grounding, and DeFAb as a verifier-backed finetuning substrate (DPO, RLVR/GRPO, sc2live commander policies).
+- **`paper/full_paper.tex`** (PRIMARY) -- The comprehensive project document. No length limit; reflects all results, ablations, theory, and the live SC2 bridge in full detail. Covers: dataset design and 18-KB cross-ontology extraction, synthetic contamination control with matched fact-injection ablation (Delta_synth = +19.4 pp), constrained-output ablation, DEFREASING cross-benchmark comparison, Tier 2 coverage probe, DeFAb-Hard pilot (235 instances, H1/H2/H3 axes), the verifier-backed fine-tuning substrate (DPO/RLHF/RLVR/GRPO + spectral LoRA + curriculum), defeasible conflict games and theory construction MDP, neural-guided MCTS with adversarial debate, and the deeply-expanded SC2 live bridge (ObservationLifter signature with soundness theorem, Order schema and tolerant parser, B0/B1/B2 verifier-gated commander policy with K-budget convergence theorem, replay extraction protocol, practical utility, limitations, edge cases, ROE evaluation experiments E1--E5, and a conservativity-under-noise theorem). Compiles to ~89 pages.
 
-- **`paper/paper_tmlr_archive.tex`** -- Archived TMLR-targeted long-form paper (~80 pages) covering the same dataset plus in-depth fine-tuning pipeline (DPO/RLHF/GRPO/MCTS), adversarial defeasible debate, and game-theoretic foundations. Preserved for future TMLR submission.
+- **`paper/paper.tex`** -- NeurIPS 2026 Evaluations & Datasets track submission (9-page main + unlimited appendix). A trimmed presentation of the same work calibrated to the track page limit.
+
+- **`paper/paper_tmlr_archive.tex`** -- Archived TMLR-targeted long-form paper. Superseded by `full_paper.tex` going forward.
 
 ---
 
