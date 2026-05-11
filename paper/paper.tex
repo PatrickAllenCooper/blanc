@@ -692,7 +692,8 @@ H3 (multi-anomaly)   & 100 & 100\% & $\leq 0.10$ & 6--10 (3+ anomalies) \\
 \end{tabular}
 \end{table}
 
-No frontier-model evaluation of DeFAb-Hard has been run yet (pending CURC GPU allocation for SFT/DPO fine-tuned checkpoints). We release these instances as a pre-registered difficulty extension and report solver ceiling as the reference for future neural evaluations.
+\paragraph{Frontier model evaluation (provisional, May~11 2026).}
+Two of four frontier models have completed M4 evaluation on the 235 \textsc{DeFAb-Hard} instances (direct and CoT pooled, $n \approx 465$ per model after accounting for 4 Azure content-filter rejections on synthetic predicate vocabulary and 1 upstream timeout). GPT-5.2-chat scores $39.1\%$ pooled: $0.0/74.3\%$ on H1 (direct/CoT), $20.2/79.8\%$ on H2, and $3.0/54.5\%$ on H3. Claude Sonnet~4.6 scores $1.5\%$ pooled: $0.0\%$ on every axis under direct prompting, and $5.9/4.1/1.0\%$ on H1/H2/H3 under CoT. DeepSeek-R1 and Kimi-K2.5 are still running. The provisional results show that the architectural dissociation reported on Tier~0 (CoT helps reasoning models, hurts instruction-tuned ones) widens dramatically under \textsc{DeFAb-Hard}: GPT-5.2 CoT scales partially to H1 high-novelty and H2 deep-chain instances, while Claude collapses to near-zero on every axis under both prompting strategies despite its competitive Tier~0 direct-prompt baseline.
 
 %% =================================================================
 \section{Tier~2 Coverage Probe}\label{app:tier2}
