@@ -867,9 +867,9 @@ With API keys, we can run the full evaluation:
 ### DeFAb-Hard Frontier Model Accuracy (M4 modality, provisional, May 11 2026)
 - GPT-5.2-chat (n=466): 39.1% pooled. Direct: H1 0.0%, H2 20.2%, H3 3.0%. CoT: H1 74.3%, H2 79.8%, H3 54.5%.
 - Claude Sonnet 4.6 (n=464): 1.5% pooled. Direct: 0% on every axis. CoT: H1 5.9%, H2 4.1%, H3 1.0%.
-- DeepSeek-R1: in progress (Foundry + CURC vLLM)
-- Kimi-K2.5: in progress (Foundry + CURC vLLM)
-- Finding: GPT-5.2 CoT scales partially to H1 high-novelty and H2 deep-chain but loses on H3 multi-anomaly. Claude collapses on every DeFAb-Hard axis under both prompting strategies; the reasoning-vs-instruction architectural divide widens dramatically beyond Tier 0.
+- DeepSeek-R1: in progress (est. +4h remaining)
+- Kimi-K2.5 (n=468): 3.8% pooled. Direct: 0% all axes. CoT: H1 17.1%, H2 3.0%, H3 9.1%
+- Finding: GPT (39.1%) >> Kimi (3.8%) >> Claude (1.5%) pooled. All fail under direct (0%). CoT partially rescues only GPT on H1/H2. H3 multi-anomaly is most demanding for all models. 10:1 GPT/Kimi ratio and 26:1 GPT/Claude ratio cleanly discriminates architectural families.
 - Failure mode (audit): Claude direct returns the antecedent fact (e.g., bird(opus)) instead of a defeater rule; Claude CoT does correct trace-then-reasoning but never terminates in a parseable rule. The Claude collapse is task-format brittleness, not reasoning failure.
 
 ### E4 ROE Compliance Quiz (May 11 2026, 6 scenarios x 4 models x 3 modes)
