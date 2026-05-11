@@ -840,6 +840,13 @@ With API keys, we can run the full evaluation:
 - DeFAb L2 (6-way MCQ): GPT-5.2 99.0%, Claude 100.0%
 - Finding: formal L2 MCQ is solved; L3 construction task is the genuine challenge
 
+### Tier 1 Cross-Ontology L2 Pilot (n=104, M4 direct, May 5 2026)
+- DeepSeek-R1: 85.6% (Tier 0 was 73.7%; +11.9 pp - structural advantage compounds)
+- GPT-5.2: 75.0% (Tier 0 was 78.5%; -3.5 pp)
+- Claude Sonnet 4.6: 63.5% (Tier 0 was 79.3%; -15.8 pp - instruction-tuned advantage erodes)
+- Kimi-K2.5: 55.8% (Tier 0 was 71.9%; -16.1 pp - same erosion pattern)
+- Finding: ranking inverts vs Tier 0 - structural reasoning capability transfers across vocabulary, vocabulary-bound performance does not
+
 ### Tier 2 Coverage Probe (190 instances from 7 KB sources)
 - M4 direct: Claude 100%, GPT-5.2 100%, Kimi 94.7%, DeepSeek-R1 94.7%
 - DeepSeek-R1 full panel: M4 CoT 97.9%, M2 direct 95.8%, M2 CoT 93.2% (n=758)

@@ -817,6 +817,28 @@ DeepSeek-R1        & \phantom{0}94.7\% & 97.9\% & 95.8\% & 93.2\% & 758 \\
 
 Two structural conclusions follow. First, the cross-domain breadth of the dataset is matched at the structural level: Gene Ontology gene-pathway instances, UMLS biomedical term exceptions, FrameNet semantic-role frames, Wikidata encyclopedic facts, and SUMO upper-ontology rules are all formatted into instances that frontier models can solve at L2-formal at $\geq 94.7\%$ across the four-model panel. Second, the modality-by-strategy interaction observed at Tier~0 is preserved at Tier~2: DeepSeek-R1's M4-direct (94.7\%) is matched by M2-direct (95.8\%) and exceeded by M4-CoT (97.9\%), with no degradation pattern that would suggest Tier~2's broader vocabulary triggers different failure modes. The benchmark's difficulty concentration remains where Tier~0 placed it: at L3 (defeater abduction) and at the rendering-robust metric.
 
+\paragraph{Tier~1 cross-ontology pilot.}
+A complementary pilot at Tier~1 confirms that the cross-ontology pipeline, which combines OpenCyc taxonomy with ConceptNet behavioral properties across five domains to produce 324{,}511 instances, transfers to frontier-model evaluation at the same modality. We sampled 104 Level~2 instances uniformly across the five Tier~1 domains and evaluated the four-model panel at M4 direct (May~5, 2026). Table~\ref{tab:tier1} reports the panel; the spread is wider than at Tier~0 or Tier~2, with reasoning-optimized DeepSeek-R1 leading and instruction-tuned models showing larger drops.
+
+\begin{table}[h]
+\centering
+\caption{Tier~1 cross-ontology Level~2 pilot ($n=104$, M4 direct). The Tier~0 reference column reports the same model on the original 374-instance L2 set under matched conditions. The negative deltas for Claude and Kimi (and the positive delta for DeepSeek-R1) suggest that the cross-ontology vocabulary expansion of Tier~1 is a non-trivial generalization test even at L2.}
+\label{tab:tier1}
+\small
+\begin{tabular}{@{}lcc r@{}}
+\toprule
+\textbf{Model} & Tier~1 L2 (M4 dir.) & Tier~0 L2 (M4 dir.) & $\Delta$ \\
+\midrule
+DeepSeek-R1         & \textbf{85.6\%} & 73.7\% & $+11.9$ \\
+GPT-5.2-chat        & 75.0\%          & 78.5\% & $-3.5$  \\
+Claude Sonnet 4.6   & 63.5\%          & 79.3\% & $-15.8$ \\
+Kimi-K2.5           & 55.8\%          & 71.9\% & $-16.1$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Tier~1 pilot inverts the Tier~0 ranking: DeepSeek-R1's structural reasoning advantage compounds at the broader cross-ontology vocabulary, while Claude and Kimi, whose Tier~0 performance benefited from instruction-tuning over familiar vocabulary, lose $\sim$16~pp on the same difficulty level when the predicate distribution shifts. This is consistent with the central thesis: structural defeasible-reasoning capability transfers across vocabulary, while vocabulary-bound performance does not. A full Tier~1 sweep across the 324K-instance set is queued on CURC under the same evaluation harness (\texttt{hpc/slurm\_evaluate\_curc\_vllm.sh} with \texttt{--tier 1}).
+
 
 \subsection{\textsc{DeFAb-Hard} Pilot}\label{subsec:defabhard_results}
 
