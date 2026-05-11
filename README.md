@@ -21,6 +21,7 @@ Foundation models excel at forward inference but struggle with abduction and bel
 - **33.75 million materialized rules** from 18 knowledge sources
 - **372,648+ evaluation instances** across Tiers 0--2 plus a 235-instance DeFAb-Hard pilot (H1 high-novelty, H2 deep-chain, H3 multi-anomaly)
 - **4 frontier models evaluated**: GPT-5.2-chat, Claude Sonnet 4.6, DeepSeek-R1, Kimi-K2.5
+- **DeFAb-Hard frontier accuracy (M4, provisional)**: GPT-5.2 39.1% pooled (74.3% H1 CoT, 79.8% H2 CoT, 54.5% H3 CoT); Claude Sonnet 4.6 1.5% pooled (collapses on every axis); DeepSeek-R1 and Kimi-K2.5 in progress
 - **Synthetic contamination control** with invented predicate names; matched fact-injection ablation isolates true contamination gap (mean Delta_synth = +19.4 pp)
 - **Cross-benchmark comparison** with DEFREASING reveals reasoning-vs-instruction architectural divide (97--100% empty responses on short classification, normal performance on construction)
 

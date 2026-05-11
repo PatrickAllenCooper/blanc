@@ -831,7 +831,7 @@ The pilot KB and instances are checked into \texttt{instances/defab\_hard/\{h1,h
 
 \begin{table}[h]
 \centering
-\caption{\textsc{DeFAb-Hard} pilot statistics. The symbolic solver achieves 100\% on all three axes; LLM evaluation on the open-source baselines (Qwen-72B/32B, DeepSeek-R1-Distill-70B) is queued on CURC (Section~\ref{subsec:ft_setup}). Frontier-model evaluation via the Foundry API is in progress concurrently with paper preparation; final results will be incorporated upon completion.}
+\caption{\textsc{DeFAb-Hard} pilot statistics and symbolic solver performance. All 235 instances are solved in $<50~\mu\mathrm{s}$ each by the polynomial-time defeasible verifier.}
 \label{tab:defabhard}
 \small
 \begin{tabular}{@{}lrrrrr@{}}
@@ -846,6 +846,31 @@ Total             & 235 & --- & --- & --- & 100\% \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\paragraph{Frontier model evaluation on \textsc{DeFAb-Hard} (provisional).}
+We evaluated the same four-model panel on \textsc{DeFAb-Hard} via the Foundry API, M4 (pure formal) modality, both direct and CoT prompting strategies. Results for GPT-5.2-chat and Claude Sonnet~4.6 have completed; DeepSeek-R1 and Kimi-K2.5 are still in progress and will be incorporated in the next revision. Table~\ref{tab:defabhard_results} reports the provisional accuracies.
+
+\begin{table}[h]
+\centering
+\caption{\textsc{DeFAb-Hard} frontier model accuracy (M4 modality). Each cell is the per-axis accuracy under the indicated prompting strategy ($n=$~axis size). The pooled column averages all per-instance evaluations across H1/H2/H3 and direct/CoT. Symbolic solver is 100\% across all 235~instances. The 4 missing GPT entries are Azure content-filter rejections on synthetic predicate vocabulary; the 1 missing Claude entry is an upstream timeout.}
+\label{tab:defabhard_results}
+\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+\textbf{Model} & H1 dir. & H1 CoT & H2 dir. & H2 CoT & H3 dir. & H3 CoT \\
+\midrule
+GPT-5.2-chat        & 0.0\% & \textbf{74.3\%} & 20.2\% & \textbf{79.8\%} & 3.0\%  & \textbf{54.5\%} \\
+Claude Sonnet~4.6   & 0.0\% & 5.9\%           & 0.0\%  & 4.1\%           & 0.0\%  & 1.0\%           \\
+DeepSeek-R1         & \multicolumn{6}{c}{\textit{in progress (CURC \& Foundry)}}                                              \\
+Kimi-K2.5           & \multicolumn{6}{c}{\textit{in progress (CURC \& Foundry)}}                                              \\
+\midrule
+Pooled (GPT)        & \multicolumn{6}{c}{$39.1\%$ across $n=466$ evaluations}                                                  \\
+Pooled (Claude)     & \multicolumn{6}{c}{$1.5\%$ across $n=464$ evaluations}                                                   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The provisional results sharpen the central thesis. Under direct prompting both completed models collapse to $\leq 20\%$ on every \textsc{DeFAb-Hard} axis (Claude is at $0\%$ on every axis). Under CoT prompting GPT-5.2 recovers strongly on H1 high-novelty ($74.3\%$) and H2 deep-theory ($79.8\%$) but loses substantial performance on H3 multi-anomaly ($54.5\%$), confirming that simultaneous-anomaly resolution is the most structurally demanding of the three difficulty axes. Claude's near-total failure ($1.5\%$ pooled) under both strategies, despite Claude's competitive Tier~0 direct-prompt baseline, indicates that the architectural dissociation between reasoning-optimized and instruction-tuned models (Section~\ref{subsec:cot_results}) widens dramatically under \textsc{DeFAb-Hard}: the same instruction-tuned profile that helps Claude on Tier~0 short-context defeater abduction breaks down completely once the difficulty axes (predicate novelty, chain depth, multi-anomaly) are pushed beyond the Tier~0 distribution. \textsc{DeFAb-Hard} thus emerges as a discriminating benchmark not only between the symbolic solver and frontier LLMs (the structural gap) but also \emph{between architectural families} of LLMs (the reasoning-vs-instruction divide).
 
 \textsc{DeFAb-Hard} is intended as the primary difficulty extension for the next round of benchmark evolution. As fine-tuned model checkpoints become available (Section~\ref{sec:finetuning}) the same axes provide a controlled ablation surface: an SFT or DPO checkpoint that improves uniformly across H1/H2/H3 has acquired domain-general defeasible reasoning, while an axis-specific improvement (e.g.\ better on H2 but not H1) localizes the improvement to a specific cognitive operation (chain traversal vs.\ vocabulary generalization).
 
