@@ -587,6 +587,29 @@ The reasoning-optimized models (DeepSeek, GPT) gain accuracy when distractor-rul
 
 
 %% =================================================================
+\section{Tier~2 Coverage Probe}\label{app:tier2}
+%% =================================================================
+
+Tier~2 sources (BabelNet, FrameNet, Gene Ontology, SUMO, UMLS, Wikidata, YAGO-Full) provide 190 L2 instances across seven cross-domain knowledge bases (30 per domain except FrameNet with 10). We evaluated three frontier models at M4 with direct prompting (190 calls per model); DeepSeek-R1 results are pending due to inference cost.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrr}
+\toprule
+Model & Tier~2 L2 acc & $n$ \\
+\midrule
+Claude Sonnet 4.6  & 100.0\% & 190 \\
+GPT-5.2-chat       & 100.0\% & 190 \\
+Kimi-K2.5          & \phantom{0}94.7\% & 190 \\
+DeepSeek-R1        & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The high L2 accuracy across all tested models on Tier~2 formal instances reflects the M4 formal-modality ceiling identified in the main evaluation. It also indicates that the benchmark's KB-diversity objective is being met at the structural level: instances from diverse sources (gene pathways, legal frames, encyclopedic facts) are correctly formatted and evaluable. Whether Tier~2 instances are harder or easier than Tier~0 at other modalities (M1 narrative) is not yet measured. As with the Tier~1 probe, these results are framed as coverage evidence, not as a difficulty comparison.
+
+%% =================================================================
 \section{Datasheet for DeFAb}\label{app:datasheet}
 %% =================================================================
 
