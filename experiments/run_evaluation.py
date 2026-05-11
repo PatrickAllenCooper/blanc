@@ -346,6 +346,34 @@ def main() -> int:
         print(f"  {'level3':10s} Level 3: {len(l3)} instances")
         all_instances.extend(l3)
 
+    if args.include_defab_hard:
+        for axis in ("h1", "h2", "h3"):
+            hard_path = instances_dir / "defab_hard" / axis / "instances.json"
+            if not hard_path.exists():
+                print(f"  Warning: {hard_path} not found, skipping {axis}.")
+                continue
+            with open(hard_path) as fh:
+                hard_data = json.load(fh)
+            for item in hard_data.get("instances", []):
+                D_minus = _reconstruct_theory_from_level3(item)
+                inst = AbductiveInstance(
+                    D_minus=D_minus,
+                    target=item["anomaly"],
+                    candidates=item["candidates"],
+                    gold=[item["gold"]],
+                    level=3,
+                    metadata={
+                        "domain":       item.get("domain", ""),
+                        "axis":         axis,
+                        "nov":          item.get("nov", 0.0),
+                        "d_rev":        item.get("d_rev", 1),
+                        "conservative": item.get("conservative", True),
+                    },
+                )
+                inst.id = f"{axis}-{item['name']}"
+                all_instances.append(inst)
+            print(f"  {('hard-' + axis):10s} Level 3: {len(hard_data.get('instances', []))} instances")
+
     print(f"  Total: {len(all_instances)} instances")
 
     if not all_instances:
