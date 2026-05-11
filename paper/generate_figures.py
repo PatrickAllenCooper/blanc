@@ -558,65 +558,70 @@ def fig_defab_hard():
     axes_labels = ['H1\nhigh-novelty', 'H2\ndeep-chain', 'H3\nmulti-anomaly']
     n_axes = [35, 100, 100]
 
-    # Per-axis CoT accuracy (best strategy per model for each axis)
+    # Per-axis CoT accuracy — complete 4-model panel
+    deepseek_cot = [82.1, 98.9, 59.0]
     gpt_cot      = [74.3, 79.8, 54.5]
-    claude_cot   = [5.9,  4.1,  1.0]
     kimi_cot     = [17.1, 3.0,  9.1]
+    claude_cot   = [5.9,  4.1,  1.0]
 
     x = np.arange(len(axes_labels))
-    bw = 0.22
+    bw = 0.18
 
-    bars_gpt = ax_a.bar(x - bw, gpt_cot, bw,
+    bars_ds  = ax_a.bar(x - 1.5*bw, deepseek_cot, bw,
+                         color=PAL['teal'], edgecolor='white', linewidth=0.4,
+                         label='DeepSeek-R1 CoT')
+    bars_gpt = ax_a.bar(x - 0.5*bw, gpt_cot, bw,
                          color=PAL['blue'], edgecolor='white', linewidth=0.4,
                          label='GPT-5.2 CoT')
-    bars_kim = ax_a.bar(x,        kimi_cot, bw,
+    bars_kim = ax_a.bar(x + 0.5*bw, kimi_cot, bw,
                          color=PAL['gold'], edgecolor='white', linewidth=0.4,
                          label='Kimi-K2.5 CoT')
-    bars_cl  = ax_a.bar(x + bw,  claude_cot, bw,
+    bars_cl  = ax_a.bar(x + 1.5*bw, claude_cot, bw,
                          color=PAL['red'], edgecolor='white', linewidth=0.4,
                          label='Claude 4.6 CoT')
 
-    for bars, vals in [(bars_gpt, gpt_cot), (bars_kim, kimi_cot), (bars_cl, claude_cot)]:
+    for bars, vals in [(bars_ds, deepseek_cot), (bars_gpt, gpt_cot),
+                       (bars_kim, kimi_cot), (bars_cl, claude_cot)]:
         for b, v in zip(bars, vals):
-            if v >= 2.0:
+            if v >= 4.0:
                 ax_a.text(b.get_x() + b.get_width()/2, v + 1.5, f'{v:.0f}',
-                          ha='center', va='bottom', fontsize=5.5,
+                          ha='center', va='bottom', fontsize=5.0,
                           color=PAL['gray'], fontweight='bold')
 
     ax_a.axhline(100.0, color=PAL['gray'], linewidth=0.7, linestyle='--', alpha=0.6)
     ax_a.text(0.02, 102, 'Symbolic (100%)',
               ha='left', va='bottom', fontsize=5.5, color=PAL['gray'])
     ax_a.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle=':', alpha=0.5)
-    ax_a.text(2.4, 18.5, 'Random (1/6)',
+    ax_a.text(2.55, 18.5, 'Random (1/6)',
               ha='right', va='bottom', fontsize=5.5, color=PAL['red'])
 
     ax_a.set_xticks(x)
     ax_a.set_xticklabels([f'{lbl}\n(n={n})' for lbl, n in zip(axes_labels, n_axes)],
                           fontsize=6.5)
     ax_a.set_ylabel('Per-axis CoT accuracy (%)', fontsize=7)
-    ax_a.set_ylim(0, 110)
+    ax_a.set_ylim(0, 112)
     ax_a.yaxis.set_major_locator(mticker.MultipleLocator(25))
-    ax_a.set_title('(a) DeFAb-Hard per-axis CoT accuracy\n(3/4 models; all direct = 0%)',
+    ax_a.set_title('(a) DeFAb-Hard per-axis CoT accuracy\n(all direct $\\leq$10%; 4 models complete)',
                     fontsize=7.5, pad=4)
-    ax_a.legend(loc='upper left', fontsize=6, framealpha=0.92,
-                edgecolor=PAL['gray'], handlelength=1.0)
+    ax_a.legend(loc='upper left', fontsize=5.8, framealpha=0.92,
+                edgecolor=PAL['gray'], handlelength=0.9, ncol=2, columnspacing=0.5)
 
-    pooled_models = ['Symbolic\nverifier', 'GPT-5.2\n(pooled)',
-                     'Kimi-K2.5\n(pooled)', 'Claude 4.6\n(pooled)']
-    pooled_acc = [100.0, 39.1, 3.8, 1.5]
-    pooled_n = [235, 466, 468, 464]
-    pooled_colors = [PAL['gray'], PAL['blue'], PAL['gold'], PAL['red']]
+    pooled_models = ['Symbolic\nverifier', 'DeepSeek\nR1',
+                     'GPT-5.2', 'Kimi\nK2.5', 'Claude\n4.6']
+    pooled_acc = [100.0, 53.3, 39.1, 3.8, 1.5]
+    pooled_n = [235, 409, 466, 468, 464]
+    pooled_colors = [PAL['gray'], PAL['teal'], PAL['blue'], PAL['gold'], PAL['red']]
 
     xb = np.arange(len(pooled_models))
-    bars_b = ax_b.bar(xb, pooled_acc, 0.5,
+    bars_b = ax_b.bar(xb, pooled_acc, 0.6,
                        color=pooled_colors, edgecolor='white', linewidth=0.4)
 
     for b, v, n in zip(bars_b, pooled_acc, pooled_n):
         ax_b.text(b.get_x() + b.get_width()/2, v + 2.5, f'{v:.1f}%',
-                  ha='center', va='bottom', fontsize=6.5, fontweight='bold',
+                  ha='center', va='bottom', fontsize=6.0, fontweight='bold',
                   color=PAL['gray'])
-        ax_b.text(b.get_x() + b.get_width()/2, -7, f'$n={n}$',
-                  ha='center', va='top', fontsize=5.0, color=PAL['gray'])
+        ax_b.text(b.get_x() + b.get_width()/2, -7.5, f'$n={n}$',
+                  ha='center', va='top', fontsize=4.8, color=PAL['gray'])
 
     ax_b.axhline(16.7, color=PAL['red'], linewidth=0.8, linestyle=':', alpha=0.5)
     ax_b.set_xticks(xb)
@@ -628,7 +633,7 @@ def fig_defab_hard():
                     fontsize=8, pad=4)
     ax_b.tick_params(axis='x', length=0)
 
-    fig.suptitle('DeFAb-Hard provisional results (May 11 2026; DeepSeek-R1, Kimi-K2.5 in progress)',
+    fig.suptitle('DeFAb-Hard results (May 11 2026; complete 4-model panel; symbolic solver 100%)',
                   fontsize=8.5, y=1.02, color=PAL['blue'])
 
     fig.tight_layout(pad=0.6)

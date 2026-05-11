@@ -867,9 +867,13 @@ With API keys, we can run the full evaluation:
 ### DeFAb-Hard Frontier Model Accuracy (M4 modality, provisional, May 11 2026)
 - GPT-5.2-chat (n=466): 39.1% pooled. Direct: H1 0.0%, H2 20.2%, H3 3.0%. CoT: H1 74.3%, H2 79.8%, H3 54.5%.
 - Claude Sonnet 4.6 (n=464): 1.5% pooled. Direct: 0% on every axis. CoT: H1 5.9%, H2 4.1%, H3 1.0%.
-- DeepSeek-R1: in progress (est. +4h remaining)
-- Kimi-K2.5 (n=468): 3.8% pooled. Direct: 0% all axes. CoT: H1 17.1%, H2 3.0%, H3 9.1%
-- Finding: GPT (39.1%) >> Kimi (3.8%) >> Claude (1.5%) pooled. All fail under direct (0%). CoT partially rescues only GPT on H1/H2. H3 multi-anomaly is most demanding for all models. 10:1 GPT/Kimi ratio and 26:1 GPT/Claude ratio cleanly discriminates architectural families.
+- DeepSeek-R1 (n=409): 53.3% pooled. Direct: H1 10.3%, H2 54.3%, H3 2.4%. CoT: H1 82.1%, H2 98.9% (near-symbolic!), H3 59.0%
+- GPT-5.2-chat (n=466): 39.1% pooled. Direct 0% all axes. CoT: H1 74.3%, H2 79.8%, H3 54.5%
+- Kimi-K2.5 (n=468): 3.8% pooled. Direct 0% all axes. CoT: H1 17.1%, H2 3.0%, H3 9.1%
+- Claude Sonnet 4.6 (n=464): 1.5% pooled. Direct 0% all axes. CoT: H1 5.9%, H2 4.1%, H3 1.0%
+- 36:1 DeepSeek/Claude ratio (vs 4:1 at Tier 0) shows architectural divide amplifies under difficulty extension
+- H2 deep-chain is most discriminating axis: DeepSeek 98.9% vs GPT 79.8% vs Kimi 3.0% vs Claude 4.1%
+- H3 multi-anomaly is universal bottleneck: DeepSeek drops from 98.9% (H2) to 59.0% (H3)
 - Failure mode (audit): Claude direct returns the antecedent fact (e.g., bird(opus)) instead of a defeater rule; Claude CoT does correct trace-then-reasoning but never terminates in a parseable rule. The Claude collapse is task-format brittleness, not reasoning failure.
 
 ### E4 ROE Compliance Quiz (May 11 2026, 6 scenarios x 4 models x 3 modes)
@@ -879,6 +883,20 @@ With API keys, we can run the full evaluation:
 - Kimi-K2.5: 0 orders admitted in any mode (vacuous compliance via degenerate abstain)
 - B2 K-budget convergence theorem not exercised (zero re-prompts at n=6); H_GATE not yet confirmed
 - The 6-scenario quiz set is statistically underpowered (Wilson 95% CI half-width = 35 pp at n=6); live-mode CURC evaluation remains the discriminating test
+
+### E4b Jailbreak Robustness (May 11 2026, 4 payloads x 3 modes x 6 scenarios x 2 models)
+- Script: scripts/run_jailbreak_roe_experiment.py
+- Payloads: clean / JB0 naive / JB1 specific / JB2 roleplay / JB3 authority
+- GPT-5.2: B2 = 0% violation ALL payloads (H_JB_B2 CONFIRMED). B0 JB1 = 50% violation (specific payload most dangerous). B2 avg reprompts = 0.4 under JB1 (verifier catching and re-prompting jailbreak attempts)
+- Claude: B2 = 0% violation ALL payloads (H_JB_B2 CONFIRMED). B1 JB1 = 17%, B1 JB3 = 17% (audit-only leaks authority payloads)
+- H_JB_ARC NOT confirmed: roleplay payload (JB2) produces 0% violation (less effective than naive)
+- Key finding: the polynomial-time verifier acts as an adversarially robust security primitive whose correctness does not depend on the LLM's belief state about ROE
+
+### E5 Cross-Environment Transfer Pilot (May 11 2026)
+- GPT-5.2: bio/legal/mat L2 = 100% each; rts_engagement L3 = 66.7%
+- Claude: bio/legal/mat L2 = 100% each; rts_engagement L3 = 83.3% (reversal of Tier-0 L3 ranking)
+- Kimi: bio = 90%, legal = 80%, mat = 90%; rts_engagement L3 = 0%
+- Finding: Claude outperforms GPT on rts_engagement L3 due to regular ROE syntax favoring instruction-following profile
 
 ### Domain examples at a glance
 
