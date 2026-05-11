@@ -127,7 +127,11 @@ def _make_record(inst, axis: str, seed_name: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def generate_h1(seed_instances: list[dict], target: int, rng: random.Random) -> list[dict]:
-    """Generate H1 (high-novelty) instances from Tier 0 L3 seeds."""
+    """Generate H1 (high-novelty) instances from Tier 0 L3 seeds.
+
+    Tier 0 L3 seeds have top-level keys: theory_facts, theory_rules, anomaly.
+    We reconstruct D^- from these, then attach a fresh high-novelty defeater.
+    """
     from blanc.author.generation import generate_level3_instance, AbductiveInstance
     from blanc.reasoning.defeasible import defeasible_provable
 
@@ -135,50 +139,66 @@ def generate_h1(seed_instances: list[dict], target: int, rng: random.Random) -> 
     for seed in seed_instances:
         if len(results) >= target:
             break
-        for attempt in range(8):
+        for attempt in range(12):
             try:
-                # Reconstruct D^- from seed
-                facts = set(seed["theory_facts"])
+                # Reconstruct D^- from Tier 0 L3 seed
+                facts = set(seed.get("theory_facts", []))
                 rules = []
-                for rule_str in seed["theory_rules"]:
+                for rule_str in seed.get("theory_rules", []):
                     rules.append(_parse_rule_str(rule_str))
+                anomaly_from_seed = seed.get("anomaly", "")
                 base_theory = Theory(facts=facts, rules=rules, superiority={})
 
-                # Find a firing defeasible rule for the anomaly
-                firing = _find_firing_defeasible(base_theory)
+                # Use the seed's anomaly if available; otherwise find a firing rule
+                anomaly = anomaly_from_seed
+                firing = None
+                for r in base_theory.rules:
+                    if r.rule_type == RuleType.DEFEASIBLE and r.head == anomaly:
+                        firing = r
+                        break
+                if firing is None:
+                    firing = _find_firing_defeasible(base_theory)
                 if firing is None:
                     break
-                anomaly = firing.head
+                if not anomaly:
+                    anomaly = firing.head
 
-                # Generate two novel predicates
+                # Verify anomaly is derivable in D^-
+                if not defeasible_provable(base_theory, anomaly):
+                    # Inject body fact
+                    for ba in firing.body:
+                        base_theory.facts.add(ba.replace("(X)", f"({list(base_theory.facts)[0].split('(')[1].rstrip(')')})" if base_theory.facts else "(a)"))
+                    if not defeasible_provable(base_theory, anomaly):
+                        break
+
+                # Generate two novel predicates (guaranteed Nov* = 1.0)
                 salt = len(results) * 100 + attempt
                 novel_preds, novel_consts = generate_vocabulary(4, 2, seed=salt + rng.randint(0, 9999))
                 novel_body_pred = novel_preds[0]
-                novel_head_pred = novel_preds[1]
                 novel_const = novel_consts[0]
 
+                # Extract subject from the anomaly literal
+                anom_pred = anomaly.split("(")[0].lstrip("~")
+                anom_arg  = anomaly.split("(")[1].rstrip(")") if "(" in anomaly else novel_const
+
                 # Add the novel body-grounding fact
-                novel_fact = f"{novel_body_pred}({novel_const})"
+                novel_fact = f"{novel_body_pred}({anom_arg})"
                 extended_theory = Theory(
-                    facts=set(facts) | {novel_fact},
-                    rules=list(rules),
-                    superiority={},
+                    facts=set(base_theory.facts) | {novel_fact},
+                    rules=list(base_theory.rules),
+                    superiority=dict(base_theory.superiority),
                 )
 
-                # Build novel defeater: novel_body_pred(X) ~> ~anomaly_head
-                # with a second novel predicate in the head to boost novelty
-                anom_pred = anomaly.split("(")[0].lstrip("~")
-                anom_arg  = anomaly.split("(")[1].rstrip(")") if "(" in anomaly else "X"
-
+                # Build novel defeater with a novel body predicate (Nov* = 1.0)
                 gold_defeater = Rule(
                     head=f"~{anom_pred}({anom_arg})",
                     body=(f"{novel_body_pred}({anom_arg})",),
                     rule_type=RuleType.DEFEATER,
-                    label=f"h1_df_{len(results)}",
+                    label=f"h1_df_{len(results)}_{attempt}",
                 )
                 extended_theory.add_superiority(gold_defeater.label, (firing.label or ""))
 
-                # Verify
+                # Verify and record
                 inst = generate_level3_instance(extended_theory, anomaly, gold_defeater, k_distractors=5)
                 nov_val = _nov(gold_defeater, base_theory)
                 if nov_val >= 0.5:
